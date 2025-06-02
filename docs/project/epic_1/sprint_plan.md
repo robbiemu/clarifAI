@@ -95,12 +95,15 @@
   * Embed [[Concept]] links inline where relevant in Tier 2 Markdown
 * [ ] Vault file watcher with dirty block detection (based on `clarifai:id` comments)
 * [ ] Block ID hashing + sync loop: update graph nodes if content changes
-* [ ] Use hnswlib for embedding-based concept detection
-  * Initialize the HNSW index using the `concept_candidates` vector store.
-  * Use it to detect duplicates:
-    * For each candidate, query the index for similar items (e.g., cosine_sim ≥ 0.9)
-    * If a match exists, link it to the existing concept or skip promotion.
-  * Store results: Mark each as "merged" or "promoted" depending on match.
+* [ ] Create noun phrase extractor on claims + summaries
+  * Fetch `(:Claim)` and `(:Summary)` nodes from the graph
+  * Extract noun phrases using spaCy from each node’s text
+  * Normalize each noun phrase (lowercase, lemmatize, strip punctuation)
+  * Embed and store each phrase in the `concept_candidates` vector index with metadata
+  * Mark each entry as "pending" for future deduplication and promotion
+
+### Notes
+This is a heavy sprint by about 3 points. Each sprint is set up for roughly 20 points for two developers and a week time frame.
 
 ## 🟣 **Sprint 5: Concept Linking and Tier 3 Generation**
 
@@ -108,12 +111,12 @@
 
 **Tasks:**
 
-* [ ] Create noun phrase extractor on claims + summaries
-  * Fetch `(:Claim)` and `(:Summary)` nodes from the graph
-  * Extract noun phrases using spaCy from each node’s text
-  * Normalize each noun phrase (lowercase, lemmatize, strip punctuation)
-  * Embed and store each phrase in the `concept_candidates` vector index with metadata
-  * Mark each entry as "pending" for future deduplication and promotion
+* [ ] Use hnswlib for embedding-based concept detection
+  * Initialize the HNSW index using the `concept_candidates` vector store.
+  * Use it to detect duplicates:
+    * For each candidate, query the index for similar items (e.g., cosine_sim ≥ 0.9)
+    * If a match exists, link it to the existing concept or skip promotion.
+  * Store results: Mark each as "merged" or "promoted" depending on match.
 * [ ] Create/update Tier 3 Markdown files (`[[Concept]]`) and `(:Concept)` nodes
 * [ ] Link claims to concepts with `SUPPORTS_CONCEPT`, `MENTIONS_CONCEPT`, etc.
 * [ ] Refresh embeddings from concept files nightly
