@@ -1,10 +1,6 @@
-To convert the current ClarifAI architecture and UX spec into a practical POC delivery plan, we’ll define **tasks organized into sprints**. Each sprint should represent a coherent layer of functionality, with dependencies respected and intermediate value demonstrated early.
+# 🧭 Sprint Plan for POC
 
----
-
-## 🧭 Sprint Plan for POC
-
-### 🟢 **Sprint 1: Foundational Infrastructure**
+## 🟢 **Sprint 1: Foundational Infrastructure**
 
 **Goal:** Fully containerized backend with file watching, vault sync, and service scaffolding.
 
@@ -20,9 +16,8 @@ To convert the current ClarifAI architecture and UX spec into a practical POC de
 * [ ] Implement `.env` injection and `host.docker.internal` fallback for external DBs
 * [ ] Set up github and github actions for CI before merges into main.
 
----
 
-### 🟡 **Sprint 2: Ingestion and Block Generation**
+## 🟡 **Sprint 2: Ingestion and Block Generation**
 
 **Goal:** Ingest ChatGPT JSON → generate Tier 1 Markdown with block anchors + IDs
 
@@ -42,9 +37,7 @@ To convert the current ClarifAI architecture and UX spec into a practical POC de
   * Annotate each utterance with `clarifai:id` and `^anchor`
   * Embed file-level metadata at top (participants, timestamps, plugin)
 
----
-
-### 🔵 **Sprint 3: Claimify MVP**
+## 🔵 **Sprint 3: Claimify MVP**
 
 **Goal:** Extract and embed high-quality claims using the first 3 Claimify roles
 
@@ -93,9 +86,7 @@ To convert the current ClarifAI architecture and UX spec into a practical POC de
   * Log job execution start, finish, and result
   * No external queue or UI controls yet — runs unconditionally
 
----
-
-### **Sprint 4:**
+## **Sprint 4:**
 
 **Goal:** Establish reactive vault sync infrastructure for detecting and syncing changed blocks.
 
@@ -111,9 +102,7 @@ To convert the current ClarifAI architecture and UX spec into a practical POC de
     * If a match exists, link it to the existing concept or skip promotion.
   * Store results: Mark each as "merged" or "promoted" depending on match.
 
----
-
-### 🟣 **Sprint 5: Concept Linking and Tier 3 Generation**
+## 🟣 **Sprint 5: Concept Linking and Tier 3 Generation**
 
 **Goal:** Create and link concepts to claims and summaries.
 
@@ -129,9 +118,7 @@ To convert the current ClarifAI architecture and UX spec into a practical POC de
 * [ ] Link claims to concepts with `SUPPORTS_CONCEPT`, `MENTIONS_CONCEPT`, etc.
 * [ ] Refresh embeddings from concept files nightly
 
----
-
-### 🔶 **Sprint 6: Config Panel & Automation Control**
+## 🔶 **Sprint 6: Config Panel & Automation Control**
 
 **Goal:** Support runtime customization of models, windows, and thresholds.
 
@@ -144,9 +131,7 @@ To convert the current ClarifAI architecture and UX spec into a practical POC de
   * Support `enabled`, `manual_only`, and UI toggles for jobs like concept hygiene, sync, summary agents.
 * [ ] Add “pause automation” feature (via file flags or UI switch)
 
----
-
-### 🧪 **Sprint 7: Evaluation Agents & Filtering**
+## 🧪 **Sprint 7: Evaluation Agents & Filtering**
 
 **Goal:** Support the full 9-role Claimify flow including evaluation agents and claim filtering. Use `entailed_score`, `coverage_score`, and `decontextualization_score` as defined in `on-evaluation_agents.md`.
 
@@ -177,9 +162,7 @@ To convert the current ClarifAI architecture and UX spec into a practical POC de
   * Skips concept linking, promotion, or summary export for claims below threshold or with nulls
   * Integrates into existing claim-to-concept and vault update logic
 
----
-
-### 🧪 **Sprint 8: Import UX & Evaluation Display**
+## 🧪 **Sprint 8: Import UX & Evaluation Display**
 
 **Goal:** Surface evaluation results in the vault and support import via Gradio. 
 Build on the pluggable import system introduced in Sprint 2 by adding a coordinated plugin orchestrator and user-facing import workflow.
@@ -205,8 +188,6 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
   * Append `<!-- clarifai:... -->` blocks to Tier 1 Markdown after evaluation
   * One line per score: entailment, coverage, decontextualization
   * Use consistent formatting and null handling
-
----
 
 ## 🟣 Sprint 9: Concept Highlight Pages
 
@@ -249,8 +230,6 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
 
   * Add `concept_highlight_refresh` and `concept_summary_refresh` to the scheduler
   * Ensure output uses atomic write and supports vault sync
-
----
 
 ## 🟡 **Sprint 10: Subject-Level Clustering & Summary**
 
