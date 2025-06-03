@@ -15,6 +15,7 @@ Desenvolver um agente inteligente e sua integração para gerar resumos Tier 2 a
 - Configuração de integração com o pipeline existente (recebendo grupos de claims/sentenças processados).
 - Documentação do processo de geração e formato dos resumos Tier 2 (`on-writing_vault_documents.md`).
 - Implementação de logging detalhado e rastreabilidade para o processo de geração de resumos.
+- Garantia de que cada bloco de resumo Tier 2 gerado inclua seus próprios marcadores <!-- clarifai:id=clm_<id> ver=N --> e ^clm_<id> para compatibilidade com o sistema de sincronização do vault (docs/arch/on-graph_vault_synchronization.md). (Note: clm_ is used for summary blocks in on-graph_vault_synchronization.md for Tier 2).
 
 ### Excluído
 - Vinculação de conceitos dentro dos resumos (será adicionada no Sprint 4).
@@ -30,6 +31,7 @@ Desenvolver um agente inteligente e sua integração para gerar resumos Tier 2 a
 - A integração do agente funciona corretamente com o pipeline existente, recebendo os dados necessários para a geração de resumos.
 - A documentação descreve claramente o processo de geração, a estrutura do output Markdown Tier 2 e o formato dos links (`on-writing_vault_documents.md`).
 - Testes automatizados demonstram a funcionalidade do agente, a correção dos links e a robustez da escrita atômica de arquivos.
+- Cada bloco de resumo Tier 2 gerado inclui seus próprios marcadores clarifai:id e ver= e ^anchor.
 
 ## Dependências
 - Pipeline Claimify implementado (da tarefa anterior deste sprint), fornecendo `(:Claim)` e `(:Sentence)` nodes.

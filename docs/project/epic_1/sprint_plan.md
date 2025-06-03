@@ -127,9 +127,11 @@ This is a heavy sprint by about 3 points. Each sprint is set up for roughly 20 p
 
 **Tasks:**
 
-* [ ] UI or config file for model roles, similarity thresholds, and context windows
-  * This expands the config scope to include: All Claimify model roles (including the Embedding model choices), Claim/concept thresholds, Window parameters (p, f)
 
+* [ ] Implement ClarifAI's core configuration system, providing **both** a UI panel and a persistent YAML config file, for:
+  * LLM and embedding model selections (e.g., for Claimify stages).
+  * Claim and concept processing thresholds (e.g., similarity, quality).
+  * Claimify context window parameters (p, f).
 * [ ] Add configuration controls for scheduled jobs
   * Support `enabled`, `manual_only`, and UI toggles for jobs like concept hygiene, sync, summary agents.
 * [ ] Add “pause automation” feature (via file flags or UI switch)
@@ -141,26 +143,19 @@ This is a heavy sprint by about 3 points. Each sprint is set up for roughly 20 p
 **Tasks:**
 
 * [ ] Implement entailment evaluation agent
-
   * Uses source + claim to produce `entailed_score`
   * Writes score to graph edges and Markdown metadata
   * Sets `null` on failure with retries
-
 * [ ] Implement coverage evaluation agent
-
   * Computes `coverage_score` from claim + source
   * Extracts omitted verifiable elements
   * Adds `(:Element)` nodes and `[:OMITS]` edges to graph
   * Writes score to Markdown and graph; handles null
-
 * [ ] Implement decontextualization evaluation agent
-
   * Determines `decontextualization_score` from claim + source
   * Writes to graph + Markdown
   * Follows same retry/null logic
-
 * [ ] Apply evaluation thresholds to linking and filtering
-
   * Computes geomean from all scores
   * Skips concept linking, promotion, or summary export for claims below threshold or with nulls
   * Integrates into existing claim-to-concept and vault update logic
@@ -173,21 +168,16 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
 **Tasks:**
 
 * [ ] Create plugin manager and import orchestrator
-
   * Scans all known plugins and runs the first one where `can_accept()` returns true
   * Passes file to plugin and records import status
   * Supports fallback plugin if none match
-
 * [ ] Build Gradio Import Panel
-
   * File picker for uploading raw conversation files
   * Selects appropriate format plugin automatically via `can_accept()`
   * Invokes plugin orchestrator to emit Tier 1 Markdown
   * Displays import status (success, skipped, error)
   * Supports fallback plugin if no plugin accepts the file
-
 * [ ] Display evaluation scores in Markdown metadata
-
   * Append `<!-- clarifai:... -->` blocks to Tier 1 Markdown after evaluation
   * One line per score: entailment, coverage, decontextualization
   * Use consistent formatting and null handling
@@ -196,41 +186,31 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
 
 **🎯 Goal:** Generate `Top Concepts.md`, `Trending Topics.md`, and `[[Concept]]` pages using agentic processes and the existing ClarifAI graph and vector stores.
 
----
 
 ### Tasks
 
-* [ ] **Implement Top Concepts Job**
-
+* [ ] Implement Top Concepts Job
   * Run Neo4j PageRank on `(:Concept)` nodes
   * Select top N by score
   * Write `Top Concepts.md` listing concept names, rank, and backlinks
-
-* [ ] **Implement Trending Topics Job**
-
+* [ ] Implement Trending Topics Job
   * Track `SUPPORTS_CONCEPT` and `MENTIONS_CONCEPT` edge creation timestamps
   * Compute per-concept mention deltas over the last 7 days
   * Write `Trending Topics - <date>.md` with top changed concepts
-
-* [ ] **Implement Concept Summary Agent**
-
+* [ ] Implement Concept Summary Agent
   * For each canonical `(:Concept)`, generate a `[[Concept]]` Markdown file
   * Pull supporting claims, summaries, utterances, and related concepts from local sources
   * Include:
-
     * `## Concept: <name>`
     * Bullet-point examples with `^clarifai:id`
     * See Also section
   * Skip if insufficient claim links
-
 * [ ] Design Config Panel UI for Concept Highlight Jobs
   * Add inputs for top_concepts and trending_topics under a new “Highlight & Summary” section
   * Support metric, count, percent, window_days, and target_file fields
   * Include toggle inputs for min_mentions and preview field for output filenames
   * Display selected agent model (model.trending_concepts_agent) as read-only or dropdown
-
-* [ ] **Schedule Highlight & Concept Jobs**
-
+* [ ] Schedule Highlight & Concept Jobs
   * Add `concept_highlight_refresh` and `concept_summary_refresh` to the scheduler
   * Ensure output uses atomic write and supports vault sync
 
@@ -238,40 +218,29 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
 
 **🎯 Goal:** Cluster related concepts and generate `[[Subject:XYZ]]` pages via an external-research-capable agent. Establish bi-directional links to member concepts.
 
----
-
 ### Tasks
 
-* [ ] **Implement Concept Clustering Job**
-
+* [ ] Implement Concept Clustering Job
   * Use concept embedding HNSW index to form thematic clusters
   * Filter by minimum cluster size and similarity threshold
   * Cache group assignments
-
-* [ ] **Implement Subject Summary Agent**
-
+* [ ] Implement Subject Summary Agent
   * For each concept cluster, generate a `[[Subject:XYZ]]` Markdown file
   * Pull shared claims, common summaries, and top concept names
   * **May use web search or open-source references** to provide background context
   * Include:
-
     * `## Subject: <name>`
     * Member `[[Concept]]`s with backlinks
     * Sectioned summary of key themes or issues
-
 * [ ] Design Config Panel UI for Subject Summary & Concept Summary Agents
   * For subject_summaries: sliders or inputs for similarity_threshold, min_concepts, max_concepts
   * Toggle switches for allow_web_search and skip_if_incoherent
   * Dropdown or read-only field for model.subject_summary
   * For concept_summaries: input for max_examples, toggles for skip_if_no_claims, include_see_also
   * Collapsible section for agent-specific settings grouped under “Highlight & Summary”
-
-* [ ] **Link Concepts to Subjects**
-
+* [ ] Link Concepts to Subjects
   * Add footer links in each `[[Concept]]` to its subject page
   * Optionally update the graph with `(:Concept)-[:PART_OF]->(:Subject)` edges
-
-* [ ] **Schedule Subject Jobs**
-
+* [ ] Schedule Subject Jobs
   * Add `subject_group_refresh` to the scheduler with configurable frequency
   * Ensure safe overwrite and optional pause toggle

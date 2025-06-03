@@ -1,9 +1,3 @@
-## **Revised Task Document**
-
-Here is the revised task document, incorporating these enhancements:
-
----
-
 # Tarefa: Atualizar embeddings de arquivos de conceito diariamente
 
 ## Descrição
