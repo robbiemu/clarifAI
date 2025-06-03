@@ -18,7 +18,7 @@ Implementar um sistema de detecção de conceitos baseado em embeddings utilizan
 - Implementação de testes unitários e de integração para verificar a **correta funcionalidade da lógica de detecção e classificação de similaridade**, utilizando um conjunto de dados de teste **mock ou pre-populado minimamente** na tabela `concept_candidates`.
 
 ### Excluído
-- A população *completa e contínua* da tabela `concept_candidates` com frases nominais (este é o escopo da tarefa de Sprint 5 "Criar extrator de frases nominais em claims + resumos").
+- A população *completa e contínua* da tabela `concept_candidates` com frases nominais (este é o escopo da tarefa de Sprint 4 "Criar extrator de frases nominais em claims + resumos").
 - A criação efetiva dos `(:Concept)` nodes no Neo4j ou dos arquivos Markdown Tier 3 a partir de candidatos "promovidos" (isso será feito em Sprint 5).
 - A vinculação de claims a conceitos ou a atualização de `last_seen` e `aliases` em `(:Concept)` nodes existentes.
 - Interface de usuário para visualização ou sugestão interativa de conceitos similares.
@@ -48,7 +48,7 @@ Implementar um sistema de detecção de conceitos baseado em embeddings utilizan
 - Testes unitários e de integração para a lógica de detecção de similaridade, usando dados de teste **mock ou mínimos**.
 
 ## Estimativa de Esforço
-- 3 dias de trabalho
+- 8 dias de trabalho
 
 ## Riscos e Mitigações
 - **Risco**: Falsos positivos (conceitos distintos marcados como similares) ou falsos negativos (conceitos similares não detectados) na detecção de similaridade.

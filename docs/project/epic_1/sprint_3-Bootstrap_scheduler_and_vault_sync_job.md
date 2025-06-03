@@ -60,7 +60,7 @@ Desenvolver e configurar um contêiner de agendador (scheduler) para o ClarifAI,
 - **Risco**: Problemas de desempenho com grandes volumes de arquivos ou muitos blocos.
   - **Mitigação**: Implementar processamento incremental (apenas blocos modificados/novos); otimizar as consultas Neo4j para comparação de hashes; considerar processamento em lote para atualizações no Neo4j.
 - **Risco**: Conflitos de acesso a arquivos durante a leitura/hash por outros processos (e.g., Obsidian).
-  - **Mitigação**: O `on-filehandle_conflicts.md` já descreve que o Obsidian não usa locks exclusivos para leitura. O scheduler deve apenas ler os arquivos. A mitigação principal é garantir que *suas próprias escritas* no vault sejam atômicas (já coberto em tarefa anterior). Para leituras, a probabilidade de um problema é baixa, mas robustecer com retries em caso de erro de leitura de I/O.
+  - **Mitigação**: O `on-filehandle_conflicts.md` já descreve que o Obsidian não usa locks exclusivos para leitura. O scheduler deve apenas ler os arquivos. Para leituras, a probabilidade de um problema é baixa, mas robustecer com retries em caso de erro de leitura de I/O.
 
 ## Notas Técnicas
 - Utilizar `APScheduler` para gerenciamento de jobs cron pela sua simplicidade e capacidade de execução em contêineres Docker.

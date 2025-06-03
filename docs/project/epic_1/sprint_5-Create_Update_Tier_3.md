@@ -17,7 +17,7 @@ Desenvolver um sistema para criar e atualizar arquivos Markdown Tier 3 (`[[Conce
 - Implementação de testes para verificar a correta criação de arquivos Markdown e nós `(:Concept)`, a atualização de propriedades e a prevenção de duplicação.
 
 ### Excluído
-- A lógica de extração de frases nominais (`on-noun_phrase_extraction.md`, tarefa de Sprint 5).
+- A lógica de extração de frases nominais (`on-noun_phrase_extraction.md`, tarefa de Sprint 4).
 - A lógica de detecção de similaridade e marcação de candidatos como "promoted" ou "merged" (`hnswlib`, tarefa de Sprint 4). Esta tarefa **consome** o resultado.
 - Geração de conteúdo definicional para os conceitos via LLM (será implementada em tarefa posterior, Sprint 9 "Implement Concept Summary Agent").
 - Vinculação de claims a conceitos (tarefa "Link claims to concepts with SUPPORTS\_CONCEPT, MENTIONS\_CONCEPT, etc." deste sprint).
@@ -35,7 +35,7 @@ Desenvolver um sistema para criar e atualizar arquivos Markdown Tier 3 (`[[Conce
 - Testes automatizados demonstram a funcionalidade e robustez da criação e atualização de conceitos, incluindo cenários de novos conceitos e atualização de conceitos existentes.
 
 ## Dependências
-- Sistema de extração de frases nominais (`sprint_5-Create_noun_phrase_extractor.md`) para gerar candidatos.
+- Sistema de extração de frases nominais (`sprint_4-Create_noun_phrase_extractor.md`) para gerar candidatos.
 - Sistema de detecção de conceitos baseado em embeddings (`sprint_4-hnswlib.md`) que classifica candidatos como "promoted".
 - Neo4j configurado e acessível para armazenar nós `(:Concept)`.
 - Acesso ao sistema de arquivos para criação de arquivos Markdown.

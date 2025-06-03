@@ -9,7 +9,7 @@ Implementar um sistema para criar arquivos Markdown Tier 1 durante o processo de
 - Implementação de cálculo e verificação de **hash do conteúdo total do arquivo de entrada** para detectar e evitar importações duplicadas.
 - Desenvolvimento de sistema para emitir arquivos Markdown para o vault, utilizando as saídas padronizadas dos plugins de conversão.
 - Anotação de cada enunciado (bloco de conversa) com um `clarifai:id` único e um `^anchor` Obsidian correspondente, conforme o formato especificado em `idea-creating_tier1_documents.md`.
-- Incorporação de metadados em nível de arquivo no topo do documento Markdown (ex: `participantes`, `timestamps`, `plugin_metadata`), conforme definido na estrutura `MarkdownOutput` de `on-pluggable_formats.md`.
+- Incorporação de metadados em nível de arquivo no topo do documento Markdown (ex: `participantes`, `timestamps`, `plugin_metadata`) como **comentários HTML padronizados**, conforme definido na estrutura `MarkdownOutput` de `on-pluggable_formats.md`.
 - Implementação de estrutura de diretórios consistente para arquivos Tier 1, seguindo a configuração `paths.tier1` definida em `on-vault_layout_and_type_inference.md`.
 - Documentação do formato e processo de importação para arquivos Tier 1.
 
@@ -24,7 +24,8 @@ Implementar um sistema para criar arquivos Markdown Tier 1 durante o processo de
 - Sistema calcula e verifica hash do conteúdo de entrada corretamente para evitar importações duplicadas, pulando arquivos que já foram importados.
 - Arquivos Markdown Tier 1 são criados no diretório `paths.tier1` com o formato padronizado (i.e., `speaker: text` seguido por `clarifai:id` e `^anchor`).
 - Cada enunciado é anotado com um `clarifai:id` único (e.g., `blk_xyz`) e um `^anchor` correspondente.
-- Metadados de arquivo (ex: título, `created_at`, `participants`, `message_count`, `plugin_metadata`) são incorporados corretamente no topo do documento Markdown.
+- Metadados de arquivo (ex: título, `created_at`, `participants`, `message_count`, `plugin_metadata`) são incorporados corretamente no topo do documento Markdown como **comentários HTML padronizados**.
+- **A escrita dos arquivos Markdown Tier 1 utiliza a lógica de escrita atômica (`.tmp` -> `fsync` -> `rename`) para garantir a segurança e integridade dos arquivos.**
 - Estrutura de diretórios para Tier 1 é criada automaticamente se não existir.
 - Documentação clara sobre o formato e processo de importação de arquivos Tier 1.
 - Testes automatizados demonstrando a funcionalidade, incluindo a detecção e o pulo de importações duplicadas.
@@ -58,6 +59,6 @@ Implementar um sistema para criar arquivos Markdown Tier 1 durante o processo de
 - Utilizar algoritmos de hash robustos como SHA-256 para detecção de duplicatas do *conteúdo de entrada bruto*.
 - Implementar a geração determinística de `clarifai:id` para cada enunciado/bloco para garantir consistência em re-importações ou reprocessamento.
 - **Implementar a escrita atômica para todos os arquivos Markdown (escrever para `.tmp`, `fsync`, depois `rename`) para garantir a segurança e integridade do arquivo no vault, prevenindo corrupção ou leituras parciais por outros processos como o Obsidian.**
-- Estruturar metadados no topo do arquivo Markdown de forma padronizada (e.g., YAML front-matter ou comentários HTML padronizados) para facilitar processamento futuro e legibilidade.
+- Estruturar metadados no topo do arquivo Markdown de forma padronizada **usando comentários HTML** para facilitar processamento futuro e legibilidade.
 - O mapeamento dos arquivos Markdown para os diretórios do vault deve ser configurável via `paths.tier1` (e.g., `vault/conversations/`).
 - Gerar nomes de arquivo canônicos e únicos para os arquivos Tier 1 (e.g., `YYYY-MM-DD_Source_Title.md`).

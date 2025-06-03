@@ -29,6 +29,7 @@ Aprimorar o sistema de resumos Tier 2 para incluir links para conceitos relevant
 - O processo de geração/atualização de resumos Tier 2 é aprimorado para incluir a vinculação automática de conceitos.
 - Documentação clara e atualizada do processo e do formato dos resumos Tier 2 aprimorados.
 - Testes automatizados demonstram a funcionalidade de adição de links de conceitos e a robustez da atualização dos arquivos Markdown.
+- Cada bloco de resumo Tier 2 gerado inclui seus próprios marcadores clarifai:id e ver= e ^anchor.
 
 ## Dependências
 - Sistema de resumos Tier 2 implementado (de Sprint 3), que gera os blocos de resumo.
@@ -45,7 +46,7 @@ Aprimorar o sistema de resumos Tier 2 para incluir links para conceitos relevant
 - Exemplos de arquivos de resumo Tier 2 gerados com links funcionais para conceitos.
 
 ## Estimativa de Esforço
-- 2 dias de trabalho
+- 3 dias de trabalho
 
 ## Riscos e Mitigações
 - **Risco**: Vinculação excessiva ou irrelevante de conceitos, poluindo os resumos.
@@ -61,15 +62,3 @@ Aprimorar o sistema de resumos Tier 2 para incluir links para conceitos relevant
 - **Esta tarefa tem uma dependência cruzada com a tarefa de Sprint 5 "Link claims to concepts with SUPPORTS_CONCEPT, MENTIONS_CONCEPT, etc." e "Create/update Tier 3 Markdown files and (:Concept) nodes." O ideal é que esta tarefa só comece *após* a conclusão das partes relevantes de Sprint 5 que criam os conceitos e seus links aos claims.**
 - Manter a consistência na formatação dos links e nomes dos conceitos para facilitar o processamento futuro e a interoperabilidade com o Obsidian.
 - A lógica deve ser resiliente a cenários onde não há conceitos vinculados a um resumo.
-
----
-
-### Key Adjustments:
-
-1.  **Dependency Clarification (Critical):** The description and dependencies section now explicitly state that `(:Concept)` nodes and their relationships (`SUPPORTS_CONCEPT`, `MENTIONS_CONCEPT`) must *already exist* in the graph. This points directly to the tasks in **Sprint 5** that create these. This is a crucial dependency clarification, as this task cannot function without those graph elements.
-    *   **Recommendation:** Given this explicit dependency on Sprint 5 tasks (which were previously ordered *after* Sprint 4 in the `sprint_plan.md`), you should re-evaluate the overall sprint order. Perhaps some Sprint 5 tasks (like concept creation and linking) should be moved *into* Sprint 4, or this specific task should be moved to Sprint 5, or you acknowledge it's an inter-sprint dependency that requires partial completion of S5 before S4 can finish. *My audit assumes the current sprint is Sprint 4, so I've highlighted the dependency.*
-2.  **Output Structure:** Linked to `on-writing_vault_documents.md` for the format of Tier 2 summaries with inline concept links.
-3.  **Atomic Write Re-use:** Explicitly mentioned re-using the atomic write logic from Sprint 3.
-4.  **Exclusions:** Added explicit exclusion of creating concepts or their relationships, as those are Sprint 5 tasks. Also excluded bidirecional linking (footers in concept files) as that's distinct.
-5.  **Risk Mitigation:** Added concrete suggestions for filtering relevant concepts (thresholds) and optimizing Neo4j queries.
-6.  **Notes:** Added a strong note emphasizing the Sprint 5 dependency.

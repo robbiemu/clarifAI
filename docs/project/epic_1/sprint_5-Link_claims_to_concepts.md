@@ -62,7 +62,7 @@ Implementar um sistema para vincular `(:Claim)` nodes a `(:Concept)` nodes no gr
 - Exemplos de vinculações criadas no grafo e de arquivos Markdown Tier 2 atualizados.
 
 ## Estimativa de Esforço
-- **8 dias de trabalho**
+- 8 dias de trabalho
 
 ## Riscos e Mitigações
 - **Risco**: Qualidade da classificação do LLM (vinculações incorretas ou irrelevantes).
