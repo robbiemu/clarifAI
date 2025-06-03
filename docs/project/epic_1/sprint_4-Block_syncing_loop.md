@@ -6,8 +6,8 @@ Implementar o loop de sincronização que recebe notificações do `vault-watche
 ## Escopo
 
 ### Incluído
-- **Consumo de Notificações de Blocos Alterados:** Receber ou consumir eventos/notificações do `vault-watcher` sobre quais blocos Markdown foram modificados (`clarifai:id` e caminho do arquivo).
-- **Leitura e Parsing de Blocos:** Para cada bloco notificado, ler seu conteúdo atual do arquivo Markdown e parsear o texto visível (`semantic_text`) e a versão (`ver=`).
+- **Consumo de Notificações de Blocos Alterados:** Implementar um **consumidor de mensagens** dentro do `clarifai-core` (ou um componente dedicado) que se conecte ao RabbitMQ e escute por mensagens na fila (e.g., `clarifai_dirty_blocks`) publicadas pelo `vault-watcher`. Cada mensagem conterá o `clarifai:id` do bloco e o `file_path` do arquivo Markdown modificado.
+- **Leitura e Parsing de Blocos:** Para cada bloco notificado via mensagem, ler seu conteúdo atual do arquivo Markdown e parsear o texto visível (`semantic_text`) e a versão (`ver=`).
 - **Lógica de Verificação de Versão e Otimistic Locking (`on-graph_vault_synchronization.md`):**
     - Recuperar a versão (`ver=`) do nó correspondente no Neo4j.
     - Comparar a versão do vault com a versão do grafo:
@@ -18,7 +18,7 @@ Implementar o loop de sincronização que recebe notificações do `vault-watche
     - Para blocos que passaram na verificação de versão, atualizar o nó `(:Block)` (ou `(:Claim)`, `(:Concept)` dependendo do tier) no Neo4j com o novo `text` e o hash do `semantic_text`.
     - **Incrementar a propriedade `ver=` (versão) do nó no Neo4j** (`ver = ver + 1`).
 - **Marcação para Reprocessamento:** Marcar os nós atualizados no Neo4j com uma flag como `needs_reprocessing: true` para indicar que eles precisam ser processados novamente pelo pipeline Claimify e outros agentes.
-- **Integração com `vault-watcher`:** Garantir que o `clarifai-core` (ou um novo serviço/componente) possa receber as notificações do `vault-watcher`.
+- **Integração com `vault-watcher`:** Garantir que o `clarifai-core` possa receber as notificações do `vault-watcher` via RabbitMQ.
 - Documentação detalhada da lógica de sincronização de blocos e do fluxo de atualização.
 - Implementação de testes para verificar a correta atualização de nós, o controle de versão e o tratamento de conflitos.
 

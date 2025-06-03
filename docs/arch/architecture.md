@@ -21,7 +21,7 @@ This document outlines a containerized architecture for **ClarifAI**, leveraging
 
 ```yaml
 # ClarifAI Docker Compose Stack
-version: '3.9'
+# no version: this is officially deprecated now
 
 services:
   postgres:  # Vector DB backend for sentence embeddings and similarity checks
@@ -53,6 +53,23 @@ services:
     networks:
       - clarifai_net
 
+  rabbitmq: # Message broker for inter-service communication (e.g., vault-watcher -> clarifai-core)
+    image: rabbitmq:3-management # Includes management UI on port 15672
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: user # Replace with environment variables or Docker secrets
+      RABBITMQ_DEFAULT_PASS: password # Replace with environment variables or Docker secrets
+    ports:
+      - "5672:5672" # Standard AMQP port
+      - "15672:15672" # Management UI
+    networks:
+      - clarifai_net
+    healthcheck: # Basic health check
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   clarifai-core:  # Main processing pipeline: claim extraction, summarization, linking
     build: ./clarifai-core
     depends_on:
@@ -66,6 +83,7 @@ services:
       - clarifai_net
     environment:
       - VAULT_PATH=/vault
+      - RABBITMQ_HOST=rabbitmq 
 
   vault-watcher:  # Watches vault for Markdown edits and emits dirty blocks
     build: ./vault-watcher
@@ -79,6 +97,7 @@ services:
       - clarifai_net
     environment:
       - VAULT_PATH=/vault
+      - RABBITMQ_HOST=rabbitmq 
 
   scheduler:  # Runs periodic jobs: concept hygiene, vault sync, reprocessing
     build: ./scheduler

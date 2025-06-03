@@ -12,6 +12,7 @@
   - Set up /import page as the default route
   - Add simple file picker and log area (unattached, can simulate plugin output)
   - No integration work needed: Connect to backend later via REST or file drop
+
 * [ ] Build Docker Compose stack (Neo4j, Postgres w/pgvector, `clarifai-core`, `vault-watcher`, `scheduler`)
 * [ ] Implement `.env` injection and `host.docker.internal` fallback for external DBs
 * [ ] Set up github and github actions for CI before merges into main.
@@ -31,6 +32,7 @@
     * `clarifai:id` (parent block)
     * `chunk_index`
     * original text
+
 * [ ] Create Tier 1 Markdown files during import:
   * Compute and check file-level hash to skip duplicate imports
   * Use plugin outputs to emit Markdown files to the vault
@@ -44,14 +46,12 @@
 **Tasks:**
 
 * [ ] Implement core Claimify pipeline components:
-
   * Selection → Disambiguation → Decomposition
   * Process one sentence at a time using configured models
   * Structure output for later quality evaluation and graph ingestion
 
 * [ ] Create `(:Claim)` and `(:Sentence)` nodes in Neo4j
 * [ ] Create the agent and integration to generate Tier 2 summaries with links back to Tier 1
-
   * Atomic write logic for Markdown files:
     ✅ **What the task entails**
 
@@ -73,12 +73,11 @@
     os.replace("note.md.tmp", "note.md")  # atomic
     ```
   * Concept linking will be added in Sprint 4 after concepts exist.
-* [ ] Bootstrap scheduler container + vault sync job
 
+* [ ] Bootstrap scheduler container + vault sync job
   * Add a new `clarifai-scheduler` service to the monorepo
   * Use `APScheduler` to run jobs on a cron schedule (e.g. nightly at 2am)
   * Implement `sync_vault_to_graph()` job:
-
     * Read all Tier 1 Markdown files
     * For each block with a `clarifai:id`, hash the text
     * Compare against stored hash in Neo4j
@@ -98,6 +97,7 @@
   * Normalize each noun phrase (lowercase, lemmatize, strip punctuation)
   * Embed and store each phrase in the `concept_candidates` vector index with metadata
   * Mark each entry as "pending" for future deduplication and promotion
+
 * [ ] Use hnswlib for embedding-based concept detection
   * Initialize the HNSW index using the `concept_candidates` vector store.
   * Use it to detect duplicates:
@@ -114,6 +114,7 @@
 * [ ] Enhance Tier 2 summaries to include linked concepts
   * Scan each summary block for SUPPORTS_CONCEPT and MENTIONS_CONCEPT relationships
   * Embed [[Concept]] links inline where relevant in Tier 2 Markdown
+
 * [ ] Create/update Tier 3 Markdown files (`[[Concept]]`) and `(:Concept)` nodes
 * [ ] Link claims to concepts with `SUPPORTS_CONCEPT`, `MENTIONS_CONCEPT`, etc.
 * [ ] Refresh embeddings from concept files nightly
@@ -129,8 +130,10 @@
   * LLM and embedding model selections (e.g., for Claimify stages).
   * Claim and concept processing thresholds (e.g., similarity, quality).
   * Claimify context window parameters (p, f).
+
 * [ ] Add configuration controls for scheduled jobs
   * Support `enabled`, `manual_only`, and UI toggles for jobs like concept hygiene, sync, summary agents.
+
 * [ ] Add “pause automation” feature (via file flags or UI switch)
 
 ## 🧪 **Sprint 7: Evaluation Agents & Filtering**
@@ -143,15 +146,18 @@
   * Uses source + claim to produce `entailed_score`
   * Writes score to graph edges and Markdown metadata
   * Sets `null` on failure with retries
+
 * [ ] Implement coverage evaluation agent
   * Computes `coverage_score` from claim + source
   * Extracts omitted verifiable elements
   * Adds `(:Element)` nodes and `[:OMITS]` edges to graph
   * Writes score to Markdown and graph; handles null
+
 * [ ] Implement decontextualization evaluation agent
   * Determines `decontextualization_score` from claim + source
   * Writes to graph + Markdown
   * Follows same retry/null logic
+
 * [ ] Apply evaluation thresholds to linking and filtering
   * Computes geomean from all scores
   * Skips concept linking, promotion, or summary export for claims below threshold or with nulls
@@ -168,12 +174,14 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
   * Scans all known plugins and runs the first one where `can_accept()` returns true
   * Passes file to plugin and records import status
   * Supports fallback plugin if none match
+
 * [ ] Build Gradio Import Panel
   * File picker for uploading raw conversation files
   * Selects appropriate format plugin automatically via `can_accept()`
   * Invokes plugin orchestrator to emit Tier 1 Markdown
   * Displays import status (success, skipped, error)
   * Supports fallback plugin if no plugin accepts the file
+
 * [ ] Display evaluation scores in Markdown metadata
   * Append `<!-- clarifai:... -->` blocks to Tier 1 Markdown after evaluation
   * One line per score: entailment, coverage, decontextualization
@@ -190,10 +198,12 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
   * Run Neo4j PageRank on `(:Concept)` nodes
   * Select top N by score
   * Write `Top Concepts.md` listing concept names, rank, and backlinks
+
 * [ ] Implement Trending Topics Job
   * Track `SUPPORTS_CONCEPT` and `MENTIONS_CONCEPT` edge creation timestamps
   * Compute per-concept mention deltas over the last 7 days
   * Write `Trending Topics - <date>.md` with top changed concepts
+
 * [ ] Implement Concept Summary Agent
   * For each canonical `(:Concept)`, generate a `[[Concept]]` Markdown file
   * Pull supporting claims, summaries, utterances, and related concepts from local sources
@@ -202,11 +212,13 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
     * Bullet-point examples with `^clarifai:id`
     * See Also section
   * Skip if insufficient claim links
+
 * [ ] Design Config Panel UI for Concept Highlight Jobs
   * Add inputs for top_concepts and trending_topics under a new “Highlight & Summary” section
   * Support metric, count, percent, window_days, and target_file fields
   * Include toggle inputs for min_mentions and preview field for output filenames
   * Display selected agent model (model.trending_concepts_agent) as read-only or dropdown
+
 * [ ] Schedule Highlight & Concept Jobs
   * Add `concept_highlight_refresh` and `concept_summary_refresh` to the scheduler
   * Ensure output uses atomic write and supports vault sync
@@ -221,6 +233,7 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
   * Use concept embedding HNSW index to form thematic clusters
   * Filter by minimum cluster size and similarity threshold
   * Cache group assignments
+
 * [ ] Implement Subject Summary Agent
   * For each concept cluster, generate a `[[Subject:XYZ]]` Markdown file
   * Pull shared claims, common summaries, and top concept names
@@ -229,15 +242,18 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
     * `## Subject: <name>`
     * Member `[[Concept]]`s with backlinks
     * Sectioned summary of key themes or issues
+
 * [ ] Design Config Panel UI for Subject Summary & Concept Summary Agents
   * For subject_summaries: sliders or inputs for similarity_threshold, min_concepts, max_concepts
   * Toggle switches for allow_web_search and skip_if_incoherent
   * Dropdown or read-only field for model.subject_summary
   * For concept_summaries: input for max_examples, toggles for skip_if_no_claims, include_see_also
   * Collapsible section for agent-specific settings grouped under “Highlight & Summary”
+
 * [ ] Link Concepts to Subjects
   * Add footer links in each `[[Concept]]` to its subject page
   * Optionally update the graph with `(:Concept)-[:PART_OF]->(:Subject)` edges
+
 * [ ] Schedule Subject Jobs
   * Add `subject_group_refresh` to the scheduler with configurable frequency
   * Ensure safe overwrite and optional pause toggle

@@ -10,6 +10,7 @@ Desenvolver um sistema de observação de arquivos (`vault-watcher`) que monitor
 - Desenvolvimento de lógica para detectar blocos modificados (dirty blocks) por meio de `Block Diffing` (`on-graph_vault_synchronization.md`):
     - Parsing do conteúdo dos arquivos Markdown para identificar `clarifai:id` e `ver=` dos blocos.
     - Comparação do conteúdo (hash do texto visível) e da versão (`ver=`) dos blocos entre o estado anterior (em memória ou no grafo) e o novo estado.
+- Implementação de um mecanismo de notificação baseado em mensagens: O vault-watcher atuará como um publisher, enviando mensagens para uma fila RabbitMQ (e.g., clarifai_dirty_blocks) sempre que um bloco modificado for detectado. As mensagens incluirão o clarifai:id do bloco, o file_path do arquivo modificado, a new_version detectada e o change_type (e.g., modified, deleted).
 - Implementação de parsing de Markdown para identificação precisa de blocos e seus metadados `clarifai:id`.
 - Criação de um sistema de notificação (e.g., uma fila interna ou um evento de pub/sub) para alterações detectadas, indicando quais blocos foram modificados.
 - Integração com o sistema de sincronização existente (o job `sync_vault_to_graph` de Sprint 3) para sinalizar a necessidade de reprocessamento para blocos dirty.
