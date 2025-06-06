@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "clarifai-core"
+version = "0.1.0"
+description = "Main processing engine for claim extraction, summarization, and concept linking"
+authors = ["ClarifAI Team"]
+readme = "README.md"
+packages = [{include = "clarifai_core"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+# Shared package
+clarifai-shared = {path = "../../shared", develop = true}
+# AI/ML dependencies
+openai = "^1.0.0"
+anthropic = "^0.25.0"
+langchain = "^0.2.0"
+langchain-openai = "^0.1.0"
+sentence-transformers = "^2.7.0"
+# Vector/Graph databases
+neo4j = "^5.19.0"
+psycopg2-binary = "^2.9.9"
+pgvector = "^0.2.5"
+# Data processing
+pydantic = "^2.7.0"
+pandas = "^2.2.0"
+numpy = "^1.26.0"
+# Text processing
+spacy = "^3.7.0"
+tiktoken = "^0.7.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pytest-asyncio = "^0.23.0"
+pytest-mock = "^3.14.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

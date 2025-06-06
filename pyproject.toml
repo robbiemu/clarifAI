@@ -1,0 +1,53 @@
+[tool.poetry]
+name = "clarifai"
+version = "0.1.0"
+description = "ClarifAI - AI-powered knowledge extraction and organization system"
+authors = ["ClarifAI Team"]
+readme = "README.md"
+packages = [
+    {include = "shared"},
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pytest-cov = "^4.0.0"
+black = "^24.0.0"
+ruff = "^0.4.0"
+mypy = "^1.10.0"
+pre-commit = "^3.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Ruff configuration
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+lint.select = ["E", "W", "F", "I", "B", "C4", "ARG", "SIM"]
+lint.ignore = ["E501", "E203"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# Black configuration
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+# MyPy configuration
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+# Pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["tests", "services/*/tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "--cov=shared --cov=services --cov-report=term-missing --cov-report=xml"
