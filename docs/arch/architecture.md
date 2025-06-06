@@ -185,4 +185,4 @@ Concept creation and drift merging (from \[on\_concepts.md]) runs in two modes:
 
 ## ✅ Summary
 
-This Docker Compose setup cleanly separates ClarifAI’s data storage (Neo4j, Postgres), processing agents (claimify, summarizer, concept linker), and scheduling logic. It offers a reproducible local deployment and a strong base for small-team or remote usage.
+This Docker Compose setup cleanly separates ClarifAI’s data storage (Neo4j, Postgres), processing agents ([claimify](https://arxiv.org/pdf/2502.10855), summarizer, concept linker), and scheduling logic. It offers a reproducible local deployment and a strong base for small-team or remote usage.

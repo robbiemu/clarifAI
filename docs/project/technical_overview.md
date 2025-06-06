@@ -10,7 +10,7 @@ ClarifAI's primary goal is to leverage LlamaIndex agents to achieve the followin
 
 * **Ingest and Standardize Conversations:** Take various conversation formats (like JSON exports) and convert them into a consistent Markdown format.
 * **Manage Duplicates:** Effectively detect and handle duplicate conversations to maintain a clean knowledge base.
-* **Extract Factual Claims:** Identify and extract factual statements from dialogues, rigorously evaluating them against Claimify-inspired quality principles (entailment, coverage, and decontextualization).
+* **Extract Factual Claims:** Identify and extract factual statements from dialogues, rigorously evaluating them against [Claimify](https://arxiv.org/pdf/2502.10855)-inspired quality principles (entailment, coverage, and decontextualization).
 * **Generate Multi-Tier Obsidian Documents:** Create a structured hierarchy of Markdown files within your Obsidian vault:
   * **Tier 1: Raw Conversation Histories:** The original, processed conversations, with precise internal links (Markdown block IDs) for easy reference.
   * **Tier 2: Conversation Summaries:** Concise summaries of each conversation, linking extracted claims back to Tier 1 and key concepts to Tier 3.

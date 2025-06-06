@@ -45,7 +45,7 @@ ClarifAI's claim extraction is powered by a sophisticated three-factor evaluatio
 * **Coverage:** Ensures claims capture all important details and omit no critical elements  
 * **Decontextualization:** Confirms claims can stand independently without requiring additional context
 
-This evaluation framework (inspired by the Claimify rubric) uses graded scoring to capture nuanced quality levels rather than simple pass/fail judgments.
+This evaluation framework (inspired by the [Claimify](https://arxiv.org/pdf/2502.10855) rubric) uses graded scoring to capture nuanced quality levels rather than simple pass/fail judgments.
 
 ---
 
