@@ -1,0 +1,16 @@
+[project]
+name = "clarifai-shared"
+version = "0.1.0"
+description = "Shared utilities and models for ClarifAI services"
+authors = [
+    {name = "ClarifAI Team"}
+]
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0.0",
+    "sqlalchemy>=2.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

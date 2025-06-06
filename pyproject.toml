@@ -1,27 +1,36 @@
-[tool.poetry]
+[project]
 name = "clarifai"
 version = "0.1.0"
 description = "ClarifAI - AI-powered knowledge extraction and organization system"
-authors = ["ClarifAI Team"]
+authors = [
+    {name = "ClarifAI Team"}
+]
 readme = "README.md"
-packages = [
-    {include = "shared"},
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=24.0.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+    "pre-commit>=3.7.0",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.0.0"
-pytest-cov = "^4.0.0"
-black = "^24.0.0"
-ruff = "^0.4.0"
-mypy = "^1.10.0"
-pre-commit = "^3.7.0"
+[tool.uv.workspace]
+members = [
+    "services/clarifai-core",
+    "services/vault-watcher", 
+    "services/scheduler",
+    "services/clarifai-ui",
+    "shared"
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 # Ruff configuration
 [tool.ruff]
