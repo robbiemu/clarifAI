@@ -1,0 +1,14 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "clarifai-ui"
+version = "0.1.0"
+description = "User interface for ClarifAI."
+dependencies = [
+    "gradio"
+]
+
+[tool.ruff]
+# Service-specific ruff config
