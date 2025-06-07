@@ -1,0 +1,12 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "clarifai-vault-watcher"
+version = "0.1.0"
+description = "Service to monitor vault file changes."
+dependencies = []
+
+[tool.ruff]
+# Service-specific ruff config
