@@ -33,8 +33,10 @@ def main():
     
     # Main service loop (placeholder)
     try:
+        logger.info("ClarifAI Core service is running...")
         while True:
-            logger.info("ClarifAI Core service is running...")
+            # TODO: Implement actual claim extraction, summarization, and concept linking logic
+            # This will be implemented in future tasks as per the sprint plan
             time.sleep(30)  # Keep the service alive
     except KeyboardInterrupt:
         logger.info("Shutting down ClarifAI Core service...")

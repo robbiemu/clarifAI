@@ -36,8 +36,15 @@ def main():
     
     # Main service loop (placeholder)
     try:
+        logger.info("Vault Watcher service is monitoring for changes...")
         while True:
-            logger.info("Vault Watcher service is monitoring for changes...")
+            # TODO: Implement actual file watching and dirty block ID emission
+            # This will include:
+            # - Monitoring Markdown files for changes using watchfiles or similar
+            # - Parsing clarifai:id and ver= markers
+            # - Emitting dirty block IDs to RabbitMQ
+            # - Handling atomic file operations (.tmp → rename)
+            # This will be implemented in future tasks as per the sprint plan
             time.sleep(30)  # Keep the service alive
     except KeyboardInterrupt:
         logger.info("Shutting down Vault Watcher service...")

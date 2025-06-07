@@ -39,11 +39,21 @@ def main():
     
     # Main service loop (placeholder)
     try:
+        previous_state = None
+        current_state = "paused" if automation_pause else "running"
+        logger.info(f"Scheduler service is {current_state}...")
+        
         while True:
-            if not automation_pause:
-                logger.info("Scheduler service is running periodic jobs...")
-            else:
-                logger.info("Scheduler service is paused...")
+            current_state = "paused" if automation_pause else "running"
+            if current_state != previous_state:
+                if current_state == "running":
+                    logger.info("Scheduler service is running periodic jobs...")
+                else:
+                    logger.info("Scheduler service is paused...")
+                previous_state = current_state
+            
+            # TODO: Implement actual periodic jobs (concept hygiene, vault sync, reprocessing)
+            # This will be implemented in future tasks as per the sprint plan
             time.sleep(60)  # Check every minute
     except KeyboardInterrupt:
         logger.info("Shutting down Scheduler service...")

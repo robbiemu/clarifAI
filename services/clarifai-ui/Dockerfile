@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 COPY pyproject.toml /app/
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -e .
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir -e .
 
 # Copy the service code
 COPY . /app/
