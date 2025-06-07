@@ -5,10 +5,10 @@ services:
   postgres:  # Vector DB backend for sentence embeddings and similarity checks
     image: ankane/pgvector
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
-      POSTGRES_DB: clarifai
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pg_data:/var/lib/postgresql/data
     ports:
@@ -19,8 +19,6 @@ services:
   neo4j:  # Knowledge graph for claims, summaries, and concepts
     image: neo4j:5
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
     volumes:
