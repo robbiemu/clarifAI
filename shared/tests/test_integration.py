@@ -39,13 +39,13 @@ class TestEnvironmentIntegration:
 POSTGRES_HOST=external-postgres.example.com
 POSTGRES_PORT=5432
 POSTGRES_USER=test_user
-POSTGRES_PASSWORD=secure_password
+POSTGRES_PASSWORD=fake_test_password_123
 POSTGRES_DB=test_db
 
 NEO4J_HOST=external-neo4j.example.com
 NEO4J_BOLT_PORT=7687
 NEO4J_USER=neo4j
-NEO4J_PASSWORD=secure_neo4j_password
+NEO4J_PASSWORD=fake_neo4j_test_password_456
 
 RABBITMQ_HOST=external-rabbitmq.example.com
 RABBITMQ_PORT=5672
@@ -54,8 +54,8 @@ VAULT_PATH=/custom/vault
 LOG_LEVEL=DEBUG
 DEBUG=true
 
-OPENAI_API_KEY=test-openai-key
-ANTHROPIC_API_KEY=test-anthropic-key
+OPENAI_API_KEY=sk-fake_test_key_1234567890abcdef
+ANTHROPIC_API_KEY=sk-ant-fake_test_key_9876543210fedcba
 """
                 env_file.write_text(env_content)
                 
@@ -66,16 +66,16 @@ ANTHROPIC_API_KEY=test-anthropic-key
                 # but the original configuration loading from .env should work
                 assert config.postgres.port == 5432
                 assert config.postgres.user == "test_user"
-                assert config.postgres.password == "secure_password"
+                assert config.postgres.password == "fake_test_password_123"
                 assert config.postgres.database == "test_db"
                 
                 assert config.neo4j.port == 7687
                 assert config.neo4j.user == "neo4j"
-                assert config.neo4j.password == "secure_neo4j_password"
+                assert config.neo4j.password == "fake_neo4j_test_password_456"
                 
                 # Verify connection URLs can be generated (host might be fallback)
                 postgres_url = config.postgres.get_connection_url()
-                assert "test_user:secure_password" in postgres_url
+                assert "test_user:fake_test_password_123" in postgres_url
                 assert ":5432/test_db" in postgres_url
                 
                 neo4j_url = config.neo4j.get_neo4j_bolt_url()
@@ -85,8 +85,8 @@ ANTHROPIC_API_KEY=test-anthropic-key
                 assert config.vault_path == "/custom/vault"
                 assert config.log_level == "DEBUG"
                 assert config.debug is True
-                assert config.openai_api_key == "test-openai-key"
-                assert config.anthropic_api_key == "test-anthropic-key"
+                assert config.openai_api_key == "sk-fake_test_key_1234567890abcdef"
+                assert config.anthropic_api_key == "sk-ant-fake_test_key_9876543210fedcba"
         
         finally:
             # Restore original environment
@@ -100,9 +100,9 @@ ANTHROPIC_API_KEY=test-anthropic-key
         test_vars = {
             "DOCKER_CONTAINER": "true",
             "POSTGRES_HOST": "192.168.1.100",
-            "POSTGRES_PASSWORD": "test_password",
+            "POSTGRES_PASSWORD": "fake_test_db_password_123",
             "NEO4J_HOST": "my-external-neo4j.local",
-            "NEO4J_PASSWORD": "test_neo4j_password"
+            "NEO4J_PASSWORD": "fake_test_neo4j_password_456"
         }
         
         # Save original values and set test values
@@ -169,8 +169,8 @@ ANTHROPIC_API_KEY=test-anthropic-key
         assert hasattr(ui_config, 'neo4j')
         
         # Test with minimal required environment for core services
-        os.environ["POSTGRES_PASSWORD"] = "test_pass"
-        os.environ["NEO4J_PASSWORD"] = "test_pass"
+        os.environ["POSTGRES_PASSWORD"] = "fake_test_core_password_789"
+        os.environ["NEO4J_PASSWORD"] = "fake_test_core_neo4j_password_012"
         
         try:
             core_config = load_config(validate=True)

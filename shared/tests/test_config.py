@@ -18,11 +18,11 @@ class TestDatabaseConfig:
             host="localhost",
             port=5432,
             user="testuser",
-            password="testpass",
+            password="fake_test_password_abcd1234",
             database="testdb"
         )
         
-        expected = "postgresql://testuser:testpass@localhost:5432/testdb"
+        expected = "postgresql://testuser:fake_test_password_abcd1234@localhost:5432/testdb"
         assert db_config.get_connection_url() == expected
     
     def test_get_neo4j_bolt_url(self):
@@ -31,7 +31,7 @@ class TestDatabaseConfig:
             host="localhost",
             port=7687,
             user="neo4j",
-            password="password"
+            password="fake_test_neo4j_password_5678"
         )
         
         expected = "bolt://localhost:7687"
@@ -85,9 +85,9 @@ class TestClarifAIConfig:
         os.environ["POSTGRES_HOST"] = "custom-postgres"
         os.environ["POSTGRES_PORT"] = "5433"
         os.environ["POSTGRES_USER"] = "custom_user"
-        os.environ["POSTGRES_PASSWORD"] = "custom_pass"
+        os.environ["POSTGRES_PASSWORD"] = "fake_test_custom_password_9abc"
         os.environ["NEO4J_HOST"] = "custom-neo4j"
-        os.environ["NEO4J_PASSWORD"] = "neo4j_pass"
+        os.environ["NEO4J_PASSWORD"] = "fake_test_neo4j_password_def0"
         os.environ["LOG_LEVEL"] = "DEBUG"
         os.environ["DEBUG"] = "true"
         
@@ -96,9 +96,9 @@ class TestClarifAIConfig:
         assert config.postgres.host == "custom-postgres"
         assert config.postgres.port == 5433
         assert config.postgres.user == "custom_user"
-        assert config.postgres.password == "custom_pass"
+        assert config.postgres.password == "fake_test_custom_password_9abc"
         assert config.neo4j.host == "custom-neo4j"
-        assert config.neo4j.password == "neo4j_pass"
+        assert config.neo4j.password == "fake_test_neo4j_password_def0"
         assert config.log_level == "DEBUG"
         assert config.debug is True
     
@@ -106,8 +106,8 @@ class TestClarifAIConfig:
         """Test configuration loading from .env file."""
         with tempfile.NamedTemporaryFile(mode='w', suffix='.env', delete=False) as f:
             f.write("POSTGRES_HOST=file-postgres\n")
-            f.write("POSTGRES_PASSWORD=file-password\n")
-            f.write("NEO4J_PASSWORD=file-neo4j-pass\n")
+            f.write("POSTGRES_PASSWORD=fake_test_file_password_xyz123\n")
+            f.write("NEO4J_PASSWORD=fake_test_file_neo4j_password_abc789\n")
             f.write("DEBUG=true\n")
             env_file = f.name
         
@@ -115,8 +115,8 @@ class TestClarifAIConfig:
             config = ClarifAIConfig.from_env(env_file)
             
             assert config.postgres.host == "file-postgres"
-            assert config.postgres.password == "file-password"
-            assert config.neo4j.password == "file-neo4j-pass"
+            assert config.postgres.password == "fake_test_file_password_xyz123"
+            assert config.neo4j.password == "fake_test_file_neo4j_password_abc789"
             assert config.debug is True
         finally:
             os.unlink(env_file)
@@ -154,8 +154,8 @@ class TestClarifAIConfig:
     
     def test_validate_required_vars_present(self):
         """Test validation with all required variables present."""
-        os.environ["POSTGRES_PASSWORD"] = "postgres_pass"
-        os.environ["NEO4J_PASSWORD"] = "neo4j_pass"
+        os.environ["POSTGRES_PASSWORD"] = "fake_test_validation_password_567"
+        os.environ["NEO4J_PASSWORD"] = "fake_test_validation_neo4j_password_890"
         
         config = ClarifAIConfig.from_env()
         

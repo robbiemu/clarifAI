@@ -54,7 +54,7 @@ class ClarifAIConfig:
     rabbitmq_host: str = "rabbitmq"
     rabbitmq_port: int = 5672
     rabbitmq_user: str = "user"
-    rabbitmq_password: str = "password"
+    rabbitmq_password: str = ""
     
     # Service configuration
     vault_path: str = "/vault"
@@ -115,7 +115,7 @@ class ClarifAIConfig:
             rabbitmq_host=os.getenv("RABBITMQ_HOST", "rabbitmq"),
             rabbitmq_port=int(os.getenv("RABBITMQ_PORT", "5672")),
             rabbitmq_user=os.getenv("RABBITMQ_USER", "user"),
-            rabbitmq_password=os.getenv("RABBITMQ_PASSWORD", "password"),
+            rabbitmq_password=os.getenv("RABBITMQ_PASSWORD", ""),
             vault_path=os.getenv("VAULT_PATH", "/vault"),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             debug=os.getenv("DEBUG", "false").lower() == "true",

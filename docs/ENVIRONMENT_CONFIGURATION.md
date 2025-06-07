@@ -199,9 +199,29 @@ except ValueError as e:
 
 ### Security
 - Never commit `.env` files to version control
-- Use strong passwords for database connections
+- Use strong passwords for database connections (use a password manager)
 - Rotate API keys regularly
 - Use Docker secrets in production deployments
+- All test files use obviously fake credentials (e.g., `fake_test_password_123`)
+- GitGuardian and similar security scanners should not flag placeholder values
+
+#### Password Security Guidelines
+```bash
+# Generate secure passwords for production
+openssl rand -base64 32  # For database passwords
+openssl rand -base64 64  # For JWT secrets
+
+# Example strong password patterns (for documentation only)
+# PostgreSQL: Use password manager or generated string like "Kf8$mQ9#vL2@pR7"
+# Neo4j: Use password manager or generated string like "Yx3&nB6!wM4$tZ9"
+# RabbitMQ: Use password manager or generated string like "Cm7^hS2*qE8@rV5"
+```
+
+#### Testing Security
+- Tests use clearly identifiable fake credentials
+- Test passwords follow pattern: `fake_test_*_password_*`
+- API keys in tests use format: `sk-fake_test_key_*` or `sk-ant-fake_test_key_*`
+- All test credentials are obviously non-production values
 
 ### Development
 - Copy `.env.example` to `.env` and customize
