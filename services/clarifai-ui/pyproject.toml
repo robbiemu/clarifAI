@@ -10,5 +10,8 @@ dependencies = [
     "gradio"
 ]
 
+[project.scripts]
+clarifai-ui = "clarifai_ui.main:main"
+
 [tool.ruff]
 # Service-specific ruff config
