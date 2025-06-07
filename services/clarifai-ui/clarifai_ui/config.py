@@ -8,6 +8,7 @@ environment variables with sensible defaults.
 import os
 from dataclasses import dataclass
 from typing import Dict, Any
+from clarifai_shared import ClarifAIConfig
 
 
 @dataclass
@@ -25,6 +26,9 @@ class UIConfig:
     server_port: int = 7860
     debug_mode: bool = False
     
+    # Shared configuration access
+    _shared_config: ClarifAIConfig = None
+    
     @classmethod
     def from_env(cls) -> 'UIConfig':
         """Create configuration from environment variables with defaults."""
@@ -40,6 +44,14 @@ class UIConfig:
             server_port=int(os.getenv("CLARIFAI_UI_PORT", "7860")),
             debug_mode=os.getenv("CLARIFAI_UI_DEBUG", "false").lower() == "true"
         )
+    
+    @property
+    def shared_config(self) -> ClarifAIConfig:
+        """Get shared configuration (lazy loaded)."""
+        if self._shared_config is None:
+            from clarifai_shared import load_config
+            self._shared_config = load_config(validate=False)  # UI can work without all DB credentials
+        return self._shared_config
     
     def get_next_steps_links(self) -> Dict[str, str]:
         """Generate next steps links based on configured paths."""

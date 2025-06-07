@@ -8,34 +8,29 @@ and emits dirty block IDs for processing.
 import os
 import time
 import logging
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+from clarifai_shared import load_config
 
 
 def main():
     """Main entry point for the Vault Watcher service."""
-    logger.info("Starting ClarifAI Vault Watcher service...")
-    
-    # Check environment variables
-    vault_path = os.getenv('VAULT_PATH', '/vault')
-    rabbitmq_host = os.getenv('RABBITMQ_HOST', 'rabbitmq')
-    
-    logger.info(f"Watching vault path: {vault_path}")
-    logger.info(f"RabbitMQ host: {rabbitmq_host}")
-    
-    # Ensure vault directory exists
-    if not os.path.exists(vault_path):
-        logger.warning(f"Vault path does not exist: {vault_path}")
-        os.makedirs(vault_path, exist_ok=True)
-        logger.info(f"Created vault directory: {vault_path}")
-    
-    # Main service loop (placeholder)
     try:
+        # Load configuration with validation
+        config = load_config(validate=True)
+        
+        logger = logging.getLogger(__name__)
+        logger.info("Starting ClarifAI Vault Watcher service...")
+        
+        # Log configuration details
+        logger.info(f"Watching vault path: {config.vault_path}")
+        logger.info(f"RabbitMQ host: {config.rabbitmq_host}")
+        
+        # Ensure vault directory exists
+        if not os.path.exists(config.vault_path):
+            logger.warning(f"Vault path does not exist: {config.vault_path}")
+            os.makedirs(config.vault_path, exist_ok=True)
+            logger.info(f"Created vault directory: {config.vault_path}")
+        
+        # Main service loop (placeholder)
         logger.info("Vault Watcher service is monitoring for changes...")
         while True:
             # TODO: Implement actual file watching and dirty block ID emission
@@ -46,10 +41,16 @@ def main():
             # - Handling atomic file operations (.tmp → rename)
             # This will be implemented in future tasks as per the sprint plan
             time.sleep(30)  # Keep the service alive
+            
+    except ValueError as e:
+        # Configuration validation error
+        logging.error(f"Configuration error: {e}")
+        logging.error("Please check your .env file and ensure all required variables are set.")
+        raise
     except KeyboardInterrupt:
-        logger.info("Shutting down Vault Watcher service...")
+        logging.info("Shutting down Vault Watcher service...")
     except Exception as e:
-        logger.error(f"Error in Vault Watcher service: {e}")
+        logging.error(f"Error in Vault Watcher service: {e}")
         raise
 
 
