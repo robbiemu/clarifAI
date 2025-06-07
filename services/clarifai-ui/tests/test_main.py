@@ -140,9 +140,11 @@ class TestPluginOrchestrator:
     
     def test_simulate_no_file(self):
         """Test simulation with no file provided."""
-        queue_display, summary_display = simulate_plugin_orchestrator(None)
+        import_status = ImportStatus()
+        queue_display, summary_display, updated_status = simulate_plugin_orchestrator(None, import_status)
         assert queue_display == "No file selected for import."
         assert summary_display == ""
+        assert updated_status == import_status
     
     def test_simulate_new_file(self):
         """Test simulation with a new file."""
@@ -151,14 +153,15 @@ class TestPluginOrchestrator:
             temp_path = temp_file.name
         
         try:
-            # Clear any existing queue state
-            clear_import_queue()
+            # Start with fresh import status
+            import_status = ImportStatus()
             
-            queue_display, summary_display = simulate_plugin_orchestrator(temp_path)
+            queue_display, summary_display, updated_status = simulate_plugin_orchestrator(temp_path, import_status)
             
             # Check that the file was processed
             assert "test" in queue_display.lower() or os.path.basename(temp_path) in queue_display
             assert "Import Summary" in summary_display
+            assert len(updated_status.import_queue) == 1
         finally:
             # Clean up the temporary file
             os.unlink(temp_path)
@@ -170,14 +173,14 @@ class TestPluginOrchestrator:
             temp_path = temp_file.name
         
         try:
-            # Clear any existing queue state
-            clear_import_queue()
+            # Start with fresh import status
+            import_status = ImportStatus()
             
             # Process the file once
-            simulate_plugin_orchestrator(temp_path)
+            _, _, updated_status = simulate_plugin_orchestrator(temp_path, import_status)
             
             # Process the same file again (should be detected as duplicate)
-            queue_display, summary_display = simulate_plugin_orchestrator(temp_path)
+            queue_display, summary_display, final_status = simulate_plugin_orchestrator(temp_path, updated_status)
             
             # Check that duplicate was detected
             assert "Skipped" in queue_display or "Duplicate" in queue_display
@@ -218,27 +221,22 @@ class TestClearQueue:
     
     def test_clear_import_queue(self):
         """Test clearing the import queue."""
-        # First clear any existing queue state from previous tests
-        clear_import_queue()
-        
-        # Add some files to the queue
-        from clarifai_ui.main import import_status
-        initial_count = len(import_status.import_queue)
+        # Create an import status with some files
+        import_status = ImportStatus()
         import_status.add_file("test1.json", "/path/to/test1.json")
         import_status.add_file("test2.txt", "/path/to/test2.txt")
         
         # Verify files were added
-        assert len(import_status.import_queue) == initial_count + 2
+        assert len(import_status.import_queue) == 2
         
         # Clear the queue
-        queue_display, summary_display = clear_import_queue()
+        queue_display, summary_display, new_status = clear_import_queue(import_status)
         
         # Verify queue was cleared
         assert queue_display == "Import queue cleared."
         assert summary_display == ""
         
-        # Verify global state was reset
-        from clarifai_ui.main import import_status as new_status
+        # Verify new status was reset
         assert len(new_status.import_queue) == 0
 
 

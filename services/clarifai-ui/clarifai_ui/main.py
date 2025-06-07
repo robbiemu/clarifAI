@@ -7,6 +7,8 @@ import time
 from typing import Optional, Tuple, List
 from datetime import datetime
 
+from .config import config
+
 
 # Configure structured logging as per docs/arch/on-error-handling-and-resilience.md
 logging.basicConfig(
@@ -125,7 +127,7 @@ class ImportStatus:
             return "Error displaying import queue. Please check logs for details."
     
     def get_summary(self) -> str:
-        """Get post-import summary."""
+        """Get post-import summary with configurable paths."""
         try:
             if not self.import_queue:
                 return ""
@@ -147,6 +149,9 @@ class ImportStatus:
                 "skipped": skipped
             })
             
+            # Get configured paths for next steps links
+            next_steps_links = config.get_next_steps_links()
+            
             summary = f"""## 📊 Import Summary
 
 **Total Files Processed:** {total}
@@ -157,8 +162,8 @@ class ImportStatus:
 ⏸️ **Skipped (Duplicates):** {skipped} files
 
 ### Next Steps:
-- [View Imported Files](./vault/tier1/) (files written to vault)
-- [Download Import Log](./.clarifai/import_logs/) (detailed processing logs)
+- [View Imported Files]({next_steps_links['vault']}) (files written to vault)
+- [Download Import Log]({next_steps_links['logs']}) (detailed processing logs)
 """
             return summary
         except Exception as e:
@@ -171,9 +176,6 @@ class ImportStatus:
             })
             # Graceful degradation: return basic error message
             return "## 📊 Import Summary\n\nError generating summary. Please check logs for details."
-
-# Global import status tracker
-import_status = ImportStatus()
 
 
 def detect_file_format(file_path: str, filename: str) -> Tuple[str, str]:
@@ -234,14 +236,15 @@ def detect_file_format(file_path: str, filename: str) -> Tuple[str, str]:
         return "error", "❌ Failed"
 
 
-def simulate_plugin_orchestrator(file_path: Optional[str]) -> Tuple[str, str]:
+def simulate_plugin_orchestrator(file_path: Optional[str], import_status: ImportStatus) -> Tuple[str, str, ImportStatus]:
     """Simulate the plugin orchestrator processing a file with proper error handling.
     
     Args:
         file_path: Path to uploaded file
+        import_status: Current import status state
         
     Returns:
-        Tuple of (queue_display, summary_display)
+        Tuple of (queue_display, summary_display, updated_import_status)
     """
     try:
         if not file_path:
@@ -250,7 +253,7 @@ def simulate_plugin_orchestrator(file_path: Optional[str]) -> Tuple[str, str]:
                 "component": "plugin_orchestrator",
                 "action": "simulate_import"
             })
-            return "No file selected for import.", ""
+            return "No file selected for import.", "", import_status
         
         filename = os.path.basename(file_path)
         
@@ -272,7 +275,7 @@ def simulate_plugin_orchestrator(file_path: Optional[str]) -> Tuple[str, str]:
                 "file_name": filename
             })
             import_status.update_file_status(filename, "⏸️ Skipped", "Duplicate")
-            return import_status.format_queue_display(), import_status.get_summary()
+            return import_status.format_queue_display(), import_status.get_summary(), import_status
         
         # Add file to queue
         import_status.add_file(filename, file_path)
@@ -296,7 +299,7 @@ def simulate_plugin_orchestrator(file_path: Optional[str]) -> Tuple[str, str]:
             "detector": detector
         })
         
-        return import_status.format_queue_display(), import_status.get_summary()
+        return import_status.format_queue_display(), import_status.get_summary(), import_status
         
     except Exception as e:
         logger.error("Plugin orchestrator simulation failed", extra={
@@ -309,21 +312,27 @@ def simulate_plugin_orchestrator(file_path: Optional[str]) -> Tuple[str, str]:
         })
         # Graceful degradation: return error message instead of crashing
         error_msg = f"Error processing file: {str(e)}"
-        return error_msg, "Processing failed. Please check logs for details."
+        return error_msg, "Processing failed. Please check logs for details.", import_status
 
 
-def clear_import_queue() -> Tuple[str, str]:
-    """Clear the import queue and reset statistics."""
+def clear_import_queue(import_status: ImportStatus) -> Tuple[str, str, ImportStatus]:
+    """Clear the import queue and reset statistics.
+    
+    Args:
+        import_status: Current import status state
+        
+    Returns:
+        Tuple of (queue_display, summary_display, new_import_status)
+    """
     try:
-        global import_status
         logger.info("Clearing import queue", extra={
             "service": "clarifai-ui",
             "component": "queue_manager",
             "action": "clear_queue",
             "queue_size": len(import_status.import_queue)
         })
-        import_status = ImportStatus()
-        return "Import queue cleared.", ""
+        new_import_status = ImportStatus()
+        return "Import queue cleared.", "", new_import_status
     except Exception as e:
         logger.error("Failed to clear import queue", extra={
             "service": "clarifai-ui",
@@ -333,7 +342,7 @@ def clear_import_queue() -> Tuple[str, str]:
             "error_type": type(e).__name__
         })
         # Graceful degradation: return error message
-        return "Error clearing queue. Please refresh the page.", ""
+        return "Error clearing queue. Please refresh the page.", "", import_status
 
 
 def create_import_interface():
@@ -346,6 +355,9 @@ def create_import_interface():
         })
         
         with gr.Blocks(title="ClarifAI - Import Panel", theme=gr.themes.Soft()) as interface:
+            # Session-based state management for import status
+            import_status_state = gr.State(ImportStatus())
+            
             gr.Markdown("# 📥 ClarifAI Import Panel")
             gr.Markdown(
                 """Upload conversation files from various sources (ChatGPT exports, Slack logs, generic text files) 
@@ -383,10 +395,11 @@ def create_import_interface():
                     label="Summary"
                 )
             
-            # Event handlers with error handling
-            def safe_simulate_plugin_orchestrator(file_input_value):
+            # Event handlers with error handling and state management
+            def safe_simulate_plugin_orchestrator(file_input_value, import_status):
                 try:
-                    return simulate_plugin_orchestrator(file_input_value)
+                    queue_display, summary_display, updated_status = simulate_plugin_orchestrator(file_input_value, import_status)
+                    return queue_display, summary_display, updated_status
                 except Exception as e:
                     logger.error("Error in plugin orchestrator simulation", extra={
                         "service": "clarifai-ui",
@@ -395,11 +408,12 @@ def create_import_interface():
                         "error": str(e),
                         "error_type": type(e).__name__
                     })
-                    return "Error processing file. Please try again.", "Processing failed."
+                    return "Error processing file. Please try again.", "Processing failed.", import_status
             
-            def safe_clear_import_queue():
+            def safe_clear_import_queue(import_status):
                 try:
-                    return clear_import_queue()
+                    queue_display, summary_display, new_status = clear_import_queue(import_status)
+                    return queue_display, summary_display, new_status
                 except Exception as e:
                     logger.error("Error clearing import queue", extra={
                         "service": "clarifai-ui",
@@ -408,26 +422,26 @@ def create_import_interface():
                         "error": str(e),
                         "error_type": type(e).__name__
                     })
-                    return "Error clearing queue. Please refresh the page.", ""
+                    return "Error clearing queue. Please refresh the page.", "", import_status
             
             import_btn.click(
                 fn=safe_simulate_plugin_orchestrator,
-                inputs=[file_input],
-                outputs=[queue_display, summary_display]
+                inputs=[file_input, import_status_state],
+                outputs=[queue_display, summary_display, import_status_state]
             )
             
             # Auto-process on file upload
             file_input.change(
                 fn=safe_simulate_plugin_orchestrator,
-                inputs=[file_input],
-                outputs=[queue_display, summary_display]
+                inputs=[file_input, import_status_state],
+                outputs=[queue_display, summary_display, import_status_state]
             )
             
             # Clear queue handler
             clear_btn.click(
                 fn=safe_clear_import_queue,
-                inputs=[],
-                outputs=[queue_display, summary_display]
+                inputs=[import_status_state],
+                outputs=[queue_display, summary_display, import_status_state]
             )
         
         logger.info("Import interface created successfully", extra={
@@ -464,11 +478,16 @@ def main():
             "service": "clarifai-ui",
             "component": "main",
             "action": "launch",
-            "host": "0.0.0.0",
-            "port": 7860
+            "host": config.server_host,
+            "port": config.server_port
         })
         
-        interface.launch(server_name="0.0.0.0", server_port=7860, share=False, debug=False)
+        interface.launch(
+            server_name=config.server_host,
+            server_port=config.server_port,
+            share=False,
+            debug=config.debug_mode
+        )
         
     except Exception as e:
         logger.error("Failed to start ClarifAI UI service", extra={
