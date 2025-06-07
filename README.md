@@ -60,20 +60,22 @@ This project uses GitHub Actions for continuous integration. The CI pipeline aut
 
 #### CI Pipeline Overview
 
-The CI workflow includes:
+The CI workflow includes four separate jobs for clear separation of concerns:
 
-1. **Code Quality Checks:**
+1. **Lint and Format:**
    - **Ruff linting:** Ensures code follows style and quality standards
    - **Ruff formatting:** Validates code formatting consistency
-   - **Black formatting:** Double-checks code formatting
    - **MyPy type checking:** Validates type annotations (currently permissive)
-   - **Bandit security scanning:** Checks for common security issues
 
-2. **Testing:**
+2. **Security Scan:**
+   - **Bandit security scanning:** Checks for common security vulnerabilities
+   - **Configured to minimize false positives:** Uses `.bandit` config to skip assert usage in tests and intentional 0.0.0.0 bindings for containerized apps
+
+3. **Testing:**
    - **Unit tests:** Runs all test suites across services using pytest
    - **Coverage reporting:** Monitors test coverage for the codebase
 
-3. **Docker Validation:**
+4. **Docker Validation:**
    - **Individual service builds:** Validates each service's Dockerfile
    - **Docker Compose validation:** Ensures the full stack configuration is valid
    - **Multi-service build:** Tests building all services together
@@ -87,7 +89,9 @@ You can run the same checks locally before submitting a pull request:
 ruff check .
 ruff format --check .
 mypy .
-bandit -r . -x tests/
+
+# Security scan
+bandit -r . -c .bandit
 
 # Run tests
 python -m pytest
