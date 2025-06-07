@@ -91,7 +91,7 @@ jobs:
         
         # Install dependencies for each service that has tests
         for service_dir in services/*/; do
-          if [ -f "$service_dir/pyproject.toml" ] && [ -d "$service_dir/tests" ]; then
+          if [ -f "$service_dir/pyproject.toml" ]; then
             echo "Installing dependencies for $service_dir"
             cd "$service_dir"
             # Install gradio specifically for clarifai-ui to avoid dependency issues
@@ -115,7 +115,25 @@ jobs:
         
         # Run tests with verbose output and continue on failure
         echo "Running tests with PYTHONPATH: $PYTHONPATH"
-        python -m pytest -v --tb=short || echo "Some tests may have failed, but continuing..."
+        
+        # Run tests from different sections
+        echo "=== Running repository structure tests ==="
+        python -m pytest tests/ -v --tb=short || echo "Repository tests had issues, continuing..."
+        
+        echo "=== Running shared module tests ==="
+        python -m pytest shared/tests/ -v --tb=short || echo "Shared module tests had issues, continuing..."
+        
+        echo "=== Testing individual service tests (if available) ==="
+        for service_dir in services/*/; do
+          if [ -d "$service_dir/tests" ]; then
+            echo "Testing $service_dir"
+            cd "$service_dir"
+            python -m pytest tests/ -v --tb=short || echo "Service $service_dir tests had issues, continuing..."
+            cd - > /dev/null
+          fi
+        done
+        
+        echo "=== Test execution completed ==="
 
   docker-build:
     name: Docker Build Validation
