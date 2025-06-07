@@ -86,7 +86,6 @@ You can run the same checks locally before submitting a pull request:
 # Code quality checks
 ruff check .
 ruff format --check .
-black --check .
 mypy .
 bandit -r . -x tests/
 
