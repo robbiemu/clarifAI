@@ -10,12 +10,7 @@ def test_service_structure():
     repo_root = Path(__file__).parent.parent
     services_dir = repo_root / "services"
 
-    expected_services = [
-        "clarifai-core",
-        "vault-watcher",
-        "scheduler",
-        "clarifai-ui"
-    ]
+    expected_services = ["clarifai-core", "vault-watcher", "scheduler", "clarifai-ui"]
 
     for service_name in expected_services:
         service_dir = services_dir / service_name
@@ -39,16 +34,20 @@ def test_service_modules_exist():
         "clarifai-core": "clarifai_core",
         "vault-watcher": "clarifai_vault_watcher",
         "scheduler": "clarifai_scheduler",
-        "clarifai-ui": "clarifai_ui"
+        "clarifai-ui": "clarifai_ui",
     }
 
     for service_name, module_name in service_modules.items():
         service_package_dir = services_dir / service_name / module_name
-        assert service_package_dir.exists(), f"Module directory {module_name} not found in {service_name}"
+        assert service_package_dir.exists(), (
+            f"Module directory {module_name} not found in {service_name}"
+        )
 
         # Check for __init__.py
         init_file = service_package_dir / "__init__.py"
-        assert init_file.exists(), f"__init__.py not found in {service_name}/{module_name}"
+        assert init_file.exists(), (
+            f"__init__.py not found in {service_name}/{module_name}"
+        )
 
 
 def test_shared_package():
@@ -73,7 +72,7 @@ def test_project_structure():
         "README.md",
         "LICENSE",
         ".gitignore",
-        ".pre-commit-config.yaml"
+        ".pre-commit-config.yaml",
     ]
 
     for file_name in essential_files:
