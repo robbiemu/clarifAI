@@ -6,7 +6,9 @@ build-backend = "hatchling.build"
 name = "clarifai-scheduler"
 version = "0.1.0"
 description = "Service for running scheduled background tasks."
-dependencies = []
+dependencies = [
+    "clarifai-shared"
+]
 
 [tool.ruff]
 # Service-specific ruff config

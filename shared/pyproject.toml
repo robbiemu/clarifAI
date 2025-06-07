@@ -6,7 +6,9 @@ build-backend = "hatchling.build"
 name = "clarifai-shared"
 version = "0.1.0"
 description = "Shared utilities and modules for ClarifAI services."
-dependencies = []
+dependencies = [
+    "python-dotenv>=1.0.0"
+]
 
 [tool.ruff]
 # Service-specific ruff config
