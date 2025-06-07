@@ -1,12 +1,16 @@
 # ClarifAI UI
 
-This service provides the user interface for the ClarifAI project using **Gradio**. It allows users to import conversation data, manage configurations, review extracted information, and monitor the status of various automated processes.
+This service provides the user interface for the ClarifAI project using **Gradio**. It implements the complete import panel design following the specifications in `docs/arch/design_import_panel.md` and the UX overview in `docs/project/ux_overview.md`.
 
 ## Features
 
-- **Import Panel**: Upload and process conversation files with real-time feedback
-- **Plugin Simulation**: Demonstrates the import workflow with simulated plugin output
-- **Web-based Interface**: Built with Gradio for easy access and use
+- **Complete Import Panel**: Full implementation of the documented import panel design
+- **Live Import Queue**: Real-time status tracking with formatted table display
+- **Plugin Orchestrator Simulation**: Demonstrates the complete workflow with format detection
+- **Post-import Summary**: Comprehensive statistics and next steps
+- **Format Detection**: Automatic plugin selection based on file type and content
+- **Fallback Plugin Support**: Handles unsupported formats gracefully
+- **Duplicate Detection**: Identifies and skips duplicate imports
 
 ## Structure
 
@@ -57,30 +61,98 @@ The application will be available at `http://localhost:7860`
 
 ## Usage
 
-1. **Upload File**: Click on the file selector to upload a conversation file (supports .json, .txt, .csv, .md)
-2. **Import**: Click the "Import File" button or the upload will automatically trigger processing
-3. **View Logs**: Monitor the import process in the log area with real-time feedback
-4. **Review Results**: See simulated plugin output showing extraction results
+### Import Panel Components
+
+The import panel implements the complete design from `docs/arch/design_import_panel.md`:
+
+#### 1. File Picker
+- **Drag & Drop**: Drop files directly into the upload area
+- **File Browser**: Click to browse and select files
+- **Supported Formats**: `.json`, `.txt`, `.csv`, `.md`, `.zip`
+- **Auto-processing**: Files are processed immediately upon upload
+
+#### 2. Format Detection
+- **Automatic Detection**: System automatically applies pluggable format detectors
+- **No Manual Selection**: Users never choose formats manually
+- **Fallback Support**: Unsupported formats route to fallback plugin
+
+#### 3. Live Import Queue
+Real-time status table showing:
+
+| Column | Description |
+|--------|-------------|
+| Filename | Name of the uploaded file |
+| Status | Current processing status with icons |
+| Detector | Which plugin handled the file |
+| Time | When processing started |
+
+**Status Icons:**
+- ✅ **Imported**: Successfully processed
+- ❌ **Failed**: Processing failed
+- ⚠️ **Fallback**: Processed by fallback plugin
+- ⏸️ **Skipped**: Duplicate or skipped file
+- 🔄 **Processing**: Currently being processed
+
+#### 4. Post-import Summary
+Comprehensive statistics displayed after processing:
+- Total files processed
+- Files successfully imported
+- Files that used fallback plugin
+- Files that failed to import
+- Files skipped (duplicates)
+- Links to view imported files and logs
+
+### Workflow Example
+
+1. **Upload**: Drop a `conversation.json` file
+2. **Detection**: System detects ChatGPT format → uses `chatgpt_json` plugin
+3. **Processing**: File processes → Status shows "✅ Imported"
+4. **Summary**: Summary shows "1 file successfully imported"
+5. **Next Steps**: Links provided to view results in vault
 
 ## Import Panel Features
 
-The `/import` route (default page) provides:
+The `/import` route (default page) implements the complete design specification:
 
-- **File Selector** (`gr.File`): Supports common conversation file formats
-- **Import Button**: Triggers the import simulation
-- **Log Area** (`gr.Textbox`): Displays real-time processing status and results
-- **Plugin Simulation**: Demonstrates the complete import workflow
+### Core Components
+- **File Picker**: Drag-and-drop or click-to-browse file selection
+- **Live Import Queue**: Real-time table showing processing status
+- **Post-import Summary**: Statistics and next steps after processing
+- **Format Detection**: Automatic plugin selection (no user intervention)
 
-### Simulated Output
+### Supported Formats & Plugins
 
-The current implementation simulates:
-- File format detection
-- Plugin selection and initialization  
-- Conversation data processing
-- Tier 1 Markdown generation
-- Claims extraction
-- Participant identification
-- Processing metrics
+| Format | Extension | Plugin | Description |
+|--------|-----------|--------|-------------|
+| ChatGPT Export | `.json` | `chatgpt_json` | ChatGPT conversation exports |
+| Slack Export | `.csv` | `slack_csv` | Slack conversation logs |
+| Markdown | `.md` | `markdown` | Markdown conversation files |
+| Generic Text | `.txt` | `fallback_llm` | Plain text (uses fallback) |
+
+### Plugin Orchestrator Simulation
+
+The current implementation simulates the complete plugin orchestrator workflow:
+
+1. **File Upload**: User uploads conversation file
+2. **Format Detection**: System runs `can_accept()` methods on all plugins
+3. **Plugin Selection**: Appropriate plugin selected automatically
+4. **Processing**: File processed to generate Tier 1 Markdown
+5. **Status Update**: Real-time updates in Live Import Queue
+6. **Summary Generation**: Post-import statistics and links
+
+### Edge Cases Handled
+
+- **Duplicates**: Files with same name are skipped
+- **Unsupported Formats**: Route to fallback plugin
+- **Processing Failures**: Clear error indication
+- **Empty Uploads**: Graceful handling of no file selected
+
+### Real-time Feedback
+
+- **Processing Status**: Live updates during import
+- **Visual Indicators**: Icons and colors for different states
+- **Completion Summary**: Final statistics and next steps
+- **Error Handling**: Clear error messages and recovery options
 
 ## Development
 
@@ -92,22 +164,47 @@ The current implementation simulates:
 
 ### Integration Points
 
-This scaffolded frontend is designed to integrate with:
-- Import plugin orchestrator (future sprint)
-- Backend processing services
-- File storage and vault management
-- Real-time status updates
+This implementation is designed for seamless integration with:
+
+- **Plugin Orchestrator**: Ready to replace simulation with real plugin system
+- **Format Detectors**: Pluggable format detection via `can_accept()` methods
+- **Vault Storage**: File output paths configured for vault structure
+- **Neo4j Graph**: Claims and concepts ready for graph integration
+- **Scheduler Services**: Import jobs ready for background processing
+- **Configuration System**: Settings integration for thresholds and options
+
+### Architecture Alignment
+
+The implementation follows the documented architecture:
+
+- **UX Overview** (`docs/project/ux_overview.md`): Complete import workflow
+- **Import Panel Design** (`docs/arch/design_import_panel.md`): UI components and layout
+- **Sprint Requirements**: Both Sprint 1 scaffolding and Sprint 8 complete panel
+- **Plugin Architecture**: Ready for pluggable format conversion system
+- **Monorepo Structure**: Integrated within services architecture
 
 ### Testing
 
-Test the interface creation:
+Test the complete import interface:
 
 ```bash
 cd services/clarifai-ui
 python -c "
 from clarifai_ui.main import create_import_interface
 interface = create_import_interface()
-print('Interface created successfully!')
+print('✓ Complete import interface created successfully!')
+print('✓ Components: File picker, Live Queue, Summary')
+print('✓ Features: Format detection, plugin simulation, real-time status')
+"
+```
+
+Test the plugin orchestrator simulation:
+
+```bash
+python -c "
+from clarifai_ui.main import simulate_plugin_orchestrator
+queue, summary = simulate_plugin_orchestrator('/path/to/test.json')
+print('Plugin orchestrator simulation working!')
 "
 ```
 
@@ -122,17 +219,22 @@ These settings can be modified in `main.py` in the `main()` function.
 
 ## Future Development
 
-This scaffolded frontend provides the foundation for:
-- Real plugin integration
-- Configuration management panels
-- Advanced status monitoring
-- Multi-tab interface layouts
-- Authentication and user management
+This complete import panel implementation provides the foundation for:
+
+- **Real Plugin Integration**: Replace simulation with actual plugin orchestrator
+- **Backend Communication**: Connect to clarifai-core services
+- **Configuration Panels**: Add settings and automation control UI
+- **Advanced Status Monitoring**: Detailed processing logs and metrics
+- **Multi-tab Interface**: Review panel, config panel, status dashboard
+- **Authentication**: User management and access control
+- **Batch Processing**: Multiple file handling and queue management
 
 ## Technical Notes
 
-- Built entirely in Python using Gradio
-- Uses `gr.Blocks` for flexible layouts
-- State managed internally by Gradio components
-- Ready for integration with monorepo backend services
-- Follows project linting and formatting standards
+- **Design Compliance**: Fully implements `docs/arch/design_import_panel.md`
+- **UX Alignment**: Follows `docs/project/ux_overview.md` specifications
+- **Plugin Architecture**: Ready for pluggable format conversion system
+- **Gradio Framework**: Uses `gr.Blocks` for flexible, responsive layouts
+- **State Management**: Proper queue tracking and status updates
+- **Error Handling**: Graceful handling of edge cases and failures
+- **Monorepo Integration**: Follows project structure and standards
