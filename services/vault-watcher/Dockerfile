@@ -1,4 +1,4 @@
-# ClarifAI UI Service - Gradio Frontend
+# ClarifAI Vault Watcher Service - Monitors vault for file changes
 FROM python:3.11-slim
 
 # Set working directory
@@ -11,27 +11,22 @@ ENV PYTHONUNBUFFERED=1
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
+    inotify-tools \
     && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first for better layer caching
-COPY pyproject.toml /app/
-
-# Install Python dependencies
-RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir -e .
 
 # Copy the service code
 COPY . /app/
+
+# Install Python dependencies with trusted hosts for SSL issues
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir -e .
 
 # Create a non-root user for security
 RUN useradd -m -u 1000 clarifai && chown -R clarifai:clarifai /app
 USER clarifai
 
-# Expose the port that Gradio runs on (7860 is Gradio default)
-EXPOSE 7860
-
-# Health check (basic HTTP check on Gradio interface)
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:7860/ || exit 1
+  CMD python -c "import clarifai_vault_watcher; print('OK')" || exit 1
 
 # Run the application
-CMD ["python", "-m", "clarifai_ui.main"]
+CMD ["python", "-m", "clarifai_vault_watcher.main"]

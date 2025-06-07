@@ -1,0 +1,111 @@
+# ClarifAI Docker Compose Stack
+# no version: this is officially deprecated now
+
+services:
+  postgres:  # Vector DB backend for sentence embeddings and similarity checks
+    image: ankane/pgvector
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: clarifai
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - clarifai_net
+
+  neo4j:  # Knowledge graph for claims, summaries, and concepts
+    image: neo4j:5
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
+    volumes:
+      - neo4j_data:/data
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    networks:
+      - clarifai_net
+
+  rabbitmq: # Message broker for inter-service communication (e.g., vault-watcher -> clarifai-core)
+    image: rabbitmq:3-management # Includes management UI on port 15672
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: user # Replace with environment variables or Docker secrets
+      RABBITMQ_DEFAULT_PASS: password # Replace with environment variables or Docker secrets
+    ports:
+      - "5672:5672" # Standard AMQP port
+      - "15672:15672" # Management UI
+    networks:
+      - clarifai_net
+    healthcheck: # Basic health check
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  clarifai-core:  # Main processing pipeline: claim extraction, summarization, linking
+    build: ./services/clarifai-core
+    depends_on:
+      - postgres
+      - neo4j
+    volumes:
+      - ./vault:/vault
+    env_file:
+      - .env
+    networks:
+      - clarifai_net
+    environment:
+      - VAULT_PATH=/vault
+      - RABBITMQ_HOST=rabbitmq 
+
+  vault-watcher:  # Watches vault for Markdown edits and emits dirty blocks
+    build: ./services/vault-watcher
+    depends_on:
+      - clarifai-core
+    volumes:
+      - ./vault:/vault
+    env_file:
+      - .env
+    networks:
+      - clarifai_net
+    environment:
+      - VAULT_PATH=/vault
+      - RABBITMQ_HOST=rabbitmq 
+
+  scheduler:  # Runs periodic jobs: concept hygiene, vault sync, reprocessing
+    build: ./services/scheduler
+    depends_on:
+      - clarifai-core
+    volumes:
+      - ./vault:/vault
+    env_file:
+      - .env
+    networks:
+      - clarifai_net
+    environment:
+      - VAULT_PATH=/vault
+
+  clarifai-ui:  # Web interface for ClarifAI
+    build: ./services/clarifai-ui
+    depends_on:
+      - clarifai-core
+    volumes:
+      - ./vault:/vault
+    env_file:
+      - .env
+    ports:
+      - "7860:7860"
+    networks:
+      - clarifai_net
+    environment:
+      - VAULT_PATH=/vault
+
+volumes:
+  pg_data:
+  neo4j_data:
+
+networks:
+  clarifai_net:

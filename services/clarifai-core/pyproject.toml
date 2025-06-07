@@ -6,10 +6,7 @@ build-backend = "hatchling.build"
 name = "clarifai-core"
 version = "0.1.0"
 description = "Core processing engine for ClarifAI, including agentic capabilities."
-dependencies = [
-    "llama-index",
-    "llama-index-llms-ollama",
-]
+dependencies = []
 
 [tool.ruff]
 # Service-specific ruff config if needed, or inherits from root.
