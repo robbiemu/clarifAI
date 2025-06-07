@@ -12,15 +12,6 @@ This service provides the user interface for the ClarifAI project using **Gradio
 - **Fallback Plugin Support**: Handles unsupported formats gracefully
 - **Duplicate Detection**: Identifies and skips duplicate imports
 
-## Structure
-
-```
-clarifai_ui/
-├── __init__.py          # Package initialization
-├── main.py              # Main Gradio application
-└── README.md            # This file
-```
-
 ## Installation
 
 Install the service dependencies:
