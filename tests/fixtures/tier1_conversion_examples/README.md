@@ -1,19 +1,19 @@
-# Sprint 2 Conversion Examples
+# Tier 1 Conversion Examples
 
-This directory contains golden standard test data for Sprint 2 tasks, providing diverse raw conversation inputs and their corresponding expected Tier 1 Markdown output files.
+This directory contains golden standard test data for Tier 1 conversion tasks, providing diverse raw conversation inputs and their corresponding expected Tier 1 Markdown output files.
 
 ## Purpose
 
 These examples serve as consistent test data for verifying the correctness and robustness of:
 
-- **`sprint_2-Implement_default_plugin.md`**: Ensuring the LLM agent converts arbitrary input correctly
-- **`sprint_2-Create_Tier_1_Markdown.md`**: Ensuring it correctly writes and annotates Markdown files with proper `clarifai:id` and `^anchor` format
-- **`sprint_2-Embed_utterance_chunks.md`**: Ensuring it correctly segments and embeds the generated Tier 1 Markdown
+- **Default Plugin Implementation**: Ensuring the LLM agent converts arbitrary input correctly
+- **Tier 1 Markdown Creation**: Ensuring it correctly writes and annotates Markdown files with proper `clarifai:id` and `^anchor` format
+- **Utterance Embedding**: Ensuring it correctly segments and embeds the generated Tier 1 Markdown
 
 ## Directory Structure
 
 ```
-sprint2_conversion_examples/
+tier1_conversion_examples/
 ├── README.md                    # This file
 ├── inputs/                      # Raw conversation input files
 │   ├── chatgpt_export.json     # ChatGPT JSON export format

@@ -1,5 +1,5 @@
 """
-Test that Sprint 2 conversion examples are properly formatted and accessible.
+Test that Tier 1 conversion examples are properly formatted and accessible.
 """
 
 import json
@@ -8,12 +8,12 @@ from pathlib import Path
 from io import StringIO
 
 
-def test_sprint2_fixtures_exist():
-    """Test that all Sprint 2 fixture files exist and are readable."""
-    fixtures_dir = Path(__file__).parent / "fixtures" / "sprint2_conversion_examples"
+def test_tier1_fixtures_exist():
+    """Test that all Tier 1 conversion fixture files exist and are readable."""
+    fixtures_dir = Path(__file__).parent / "fixtures" / "tier1_conversion_examples"
     
     # Check that the main directory exists
-    assert fixtures_dir.exists(), "Sprint 2 fixtures directory should exist"
+    assert fixtures_dir.exists(), "Tier 1 conversion fixtures directory should exist"
     
     # Check inputs directory
     inputs_dir = fixtures_dir / "inputs"
@@ -30,7 +30,7 @@ def test_sprint2_fixtures_exist():
 
 def test_input_files_are_valid():
     """Test that input files are properly formatted and readable."""
-    fixtures_dir = Path(__file__).parent / "fixtures" / "sprint2_conversion_examples"
+    fixtures_dir = Path(__file__).parent / "fixtures" / "tier1_conversion_examples"
     inputs_dir = fixtures_dir / "inputs"
     
     # Test JSON file
@@ -71,7 +71,7 @@ def test_input_files_are_valid():
 
 def test_expected_output_format():
     """Test that expected output files follow the correct Tier 1 Markdown format."""
-    fixtures_dir = Path(__file__).parent / "fixtures" / "sprint2_conversion_examples"
+    fixtures_dir = Path(__file__).parent / "fixtures" / "tier1_conversion_examples"
     outputs_dir = fixtures_dir / "expected_outputs"
     
     output_files = [
@@ -114,7 +114,7 @@ def test_expected_output_format():
 
 def test_consistent_block_id_format():
     """Test that block IDs follow consistent format across all outputs."""
-    fixtures_dir = Path(__file__).parent / "fixtures" / "sprint2_conversion_examples"
+    fixtures_dir = Path(__file__).parent / "fixtures" / "tier1_conversion_examples"
     outputs_dir = fixtures_dir / "expected_outputs"
     
     import re
@@ -143,7 +143,7 @@ def test_consistent_block_id_format():
 
 def test_metadata_format_consistency():
     """Test that metadata format is consistent across all output files."""
-    fixtures_dir = Path(__file__).parent / "fixtures" / "sprint2_conversion_examples"
+    fixtures_dir = Path(__file__).parent / "fixtures" / "tier1_conversion_examples"
     outputs_dir = fixtures_dir / "expected_outputs"
     
     required_metadata_fields = [
