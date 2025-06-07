@@ -201,12 +201,22 @@ print('Plugin orchestrator simulation working!')
 
 ## Configuration
 
-The Gradio app runs on:
-- **Host**: `0.0.0.0` (all interfaces)
-- **Port**: `7860`
-- **Debug**: Disabled in production
+The service can be configured using environment variables. Copy `example.env` to `.env` and modify as needed:
 
-These settings can be modified in `main.py` in the `main()` function.
+```bash
+cp example.env .env
+# Edit .env with your preferred settings
+```
+
+### Available Configuration Options
+
+- **CLARIFAI_TIER1_PATH**: Directory for imported files (default: `vault/tier1`)
+- **CLARIFAI_SUMMARIES_PATH**: Summaries directory (default: `vault`)
+- **CLARIFAI_CONCEPTS_PATH**: Concepts directory (default: `vault`)
+- **CLARIFAI_LOGS_PATH**: Import logs directory (default: `.clarifai/import_logs`)
+- **CLARIFAI_UI_HOST**: Server host address (default: `0.0.0.0`)
+- **CLARIFAI_UI_PORT**: Server port (default: `7860`)
+- **CLARIFAI_UI_DEBUG**: Enable debug mode (default: `false`)
 
 ## Future Development
 
