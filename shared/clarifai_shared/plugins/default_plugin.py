@@ -31,7 +31,7 @@ from llama_index.llms.openai import OpenAI
 from ..plugin_interface import Plugin, MarkdownOutput
 from ..config import load_config
 from ..utils.block_id import generate_unique_block_id
-from ..prompts.conversation_extraction import CONVERSATION_EXTRACTION_PROMPT
+from ..utils.prompt_loader import load_prompt_template
 
 
 logger = logging.getLogger(__name__)
@@ -123,8 +123,19 @@ class ConversationExtractorAgent:
             return []
 
     def _build_extraction_prompt(self, raw_input: str) -> str:
-        """Build the prompt for conversation extraction using externalized template."""
-        return CONVERSATION_EXTRACTION_PROMPT.format(input_text=raw_input)
+        """Build the prompt for conversation extraction using externalized YAML template."""
+        try:
+            return load_prompt_template("conversation_extraction", input_text=raw_input)
+        except Exception as e:
+            logger.error(f"Failed to load conversation extraction template: {e}")
+            # Fallback to simple hardcoded prompt if template loading fails
+            return f"""
+You are an expert conversation analyst. Analyze the following text and extract conversations.
+If no conversation is found, respond with "NO_CONVERSATION".
+If conversations are found, extract them in JSON format with title, participants, and messages.
+
+INPUT TEXT:
+{raw_input}"""
 
     def _parse_llm_response(
         self, response: str, raw_input: str, path: Path
