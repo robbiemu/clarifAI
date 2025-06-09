@@ -161,9 +161,11 @@ def test_conversation_agent_fallback_extraction_json_format(conversation_agent):
 
     try:
         conversations = conversation_agent.extract_conversations(raw_input, temp_path)
-        
+
         # Should extract conversation from JSON structure
-        assert len(conversations) >= 0  # May find patterns or not, depending on LLM availability
+        assert (
+            len(conversations) >= 0
+        )  # May find patterns or not, depending on LLM availability
     finally:
         temp_path.unlink()
 
@@ -184,9 +186,11 @@ timestamp,speaker,message
 
     try:
         conversations = conversation_agent.extract_conversations(raw_input, temp_path)
-        
-        # Should extract conversation from CSV structure  
-        assert len(conversations) >= 0  # May find patterns or not, depending on LLM availability
+
+        # Should extract conversation from CSV structure
+        assert (
+            len(conversations) >= 0
+        )  # May find patterns or not, depending on LLM availability
     finally:
         temp_path.unlink()
 
@@ -205,14 +209,16 @@ alice: Perfect for a walk in the park!
 
     try:
         plugin = DefaultPlugin()
-        
+
         # Test that convert handles potential exceptions gracefully
         try:
             outputs = plugin.convert(raw_input, temp_path)
         except Exception as e:
             # If extract_conversations throws an exception, the plugin should handle it gracefully
             # and return an empty list rather than letting the exception propagate
-            pytest.fail(f"Plugin.convert() should handle exceptions gracefully, but got: {e}")
+            pytest.fail(
+                f"Plugin.convert() should handle exceptions gracefully, but got: {e}"
+            )
 
         assert len(outputs) == 1
         output = outputs[0]

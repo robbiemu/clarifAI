@@ -401,5 +401,3 @@ class DefaultPlugin(Plugin):
         # not by the default plugin during ingestion
 
         return "\n".join(lines)
-
-
