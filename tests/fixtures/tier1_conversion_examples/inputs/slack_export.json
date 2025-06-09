@@ -1,0 +1,77 @@
+[
+  {
+    "type": "message",
+    "user": "U123456",
+    "text": "Hey team, I just reviewed the ClarifAI architecture docs. The vault synchronization design looks solid.",
+    "ts": "1703261400.123456"
+  },
+  {
+    "type": "message",
+    "user": "U789012",
+    "text": "Thanks Alice! I'm particularly excited about the pluggable format conversion system. Should handle multiple input types nicely.",
+    "ts": "1703261475.234567",
+    "reactions": [
+      {
+        "name": "thumbsup",
+        "users": ["U123456", "U345678"],
+        "count": 2
+      }
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U345678",
+    "text": "Question about the clarifai:id format - are we using UUIDs or content hashes?",
+    "ts": "1703261550.345678"
+  },
+  {
+    "type": "message",
+    "user": "U123456",
+    "text": "Good question <@U345678>. According to the docs, IDs can be UUIDs or hashes. I think deterministic hashes would be better for consistency across re-imports.",
+    "ts": "1703261625.456789"
+  },
+  {
+    "type": "message",
+    "user": "U789012",
+    "text": "Makes sense. That way if we re-process the same conversation, we get the same IDs and can detect duplicates properly.",
+    "ts": "1703261700.567890"
+  },
+  {
+    "type": "message",
+    "user": "U345678",
+    "text": "Perfect! And the ^anchor format will work great with Obsidian. Users can link directly to specific utterances.",
+    "ts": "1703261780.678901",
+    "reactions": [
+      {
+        "name": "dart",
+        "users": ["U123456"],
+        "count": 1
+      }
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U901234",
+    "text": "Just catching up - are we also handling metadata like participant lists and timestamps?",
+    "ts": "1703261850.789012"
+  },
+  {
+    "type": "message",
+    "user": "U123456",
+    "text": "Yes <@U901234>! File-level metadata goes in HTML comments at the top. Things like title, created_at, participants, message_count, etc.",
+    "ts": "1703261925.890123"
+  },
+  {
+    "type": "message",
+    "user": "U789012",
+    "text": "And don't forget plugin_metadata for preserving source-specific info that might be useful later.",
+    "ts": "1703262000.901234",
+    "reactions": [
+      {
+        "name": "white_check_mark",
+        "users": ["U123456", "U345678", "U901234"],
+        "count": 3
+      }
+    ]
+  }
+]

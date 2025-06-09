@@ -114,10 +114,16 @@ class TestFormatDetection:
         assert detector == "chatgpt_json"
         assert status == "✅ Imported"
 
+    def test_detect_slack_json_format(self):
+        """Test detection of Slack JSON files."""
+        detector, status = detect_file_format("/path/to/file.json", "slack_export.json")
+        assert detector == "slack_json"
+        assert status == "✅ Imported"
+
     def test_detect_csv_format(self):
         """Test detection of CSV files."""
-        detector, status = detect_file_format("/path/to/file.csv", "slack_export.csv")
-        assert detector == "slack_csv"
+        detector, status = detect_file_format("/path/to/file.csv", "generic_tabular_export.csv")
+        assert detector == "generic_csv"
         assert status == "✅ Imported"
 
     def test_detect_txt_format(self):

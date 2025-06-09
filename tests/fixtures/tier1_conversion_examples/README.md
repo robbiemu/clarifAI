@@ -14,15 +14,17 @@ These examples serve as consistent test data for verifying the correctness and r
 
 ```
 tier1_conversion_examples/
-├── README.md                    # This file
-├── inputs/                      # Raw conversation input files
-│   ├── chatgpt_export.json     # Realistic ChatGPT export structure
-│   ├── slack_export.csv        # Simplified CSV for testing (not realistic Slack format)
-│   ├── plain_text_chat.txt     # Plain text conversation transcript
-│   └── unrecognized_format.xyz # Mock format for LLM fallback testing
-└── expected_outputs/            # Golden standard Tier 1 Markdown files
+├── README.md                         # This file
+├── inputs/                           # Raw conversation input files
+│   ├── chatgpt_export.json          # Realistic ChatGPT export structure
+│   ├── slack_export.json            # Realistic Slack export structure  
+│   ├── generic_tabular_export.csv   # Generic CSV for testing tabular data parsing
+│   ├── plain_text_chat.txt          # Plain text conversation transcript
+│   └── unrecognized_format.xyz      # Mock format for LLM fallback testing
+└── expected_outputs/                 # Golden standard Tier 1 Markdown files
     ├── chatgpt_export.md
     ├── slack_export.md
+    ├── generic_tabular_export.md
     ├── plain_text_chat.md
     └── unrecognized_format.md
 ```
@@ -53,9 +55,11 @@ Our test fixtures make deliberate format choices for comprehensive testing cover
 
 - **chatgpt_export.json**: Follows actual ChatGPT export structure with `title`, `mapping`, and message nodes containing `author.role`, `content.parts`, etc. This represents realistic ChatGPT data.
 
-- **slack_export.csv**: **Intentionally simplified CSV format for testing purposes**. While Slack doesn't export conversation content as CSV, we include this format to:
+- **slack_export.json**: Follows actual Slack export structure as an array of message objects with `type`, `user`, `text`, `ts`, and optional `reactions` fields. This represents realistic Slack conversation data from a daily message file.
+
+- **generic_tabular_export.csv**: **Generic CSV format for testing tabular data parsing**. While major platforms like Slack and ChatGPT use JSON exports, we include this format to:
   - Test CSV parsing capabilities in our conversion pipeline
-  - Provide a simple tabular format that other tools might export
+  - Provide a simple tabular format that third-party tools or scripts might generate
   - Validate handling of timestamp, user_name, message column structures
   - Cover edge cases like reactions, thread handling in columnar data
 
@@ -67,28 +71,17 @@ Our test fixtures make deliberate format choices for comprehensive testing cover
 
 **Why These Format Choices:**
 
-1. **Comprehensive Plugin Testing**: By including both realistic (ChatGPT JSON) and simplified (CSV) formats, we test both specific platform plugins and generic parsing capabilities.
+1. **Comprehensive Plugin Testing**: By including both realistic platform exports (ChatGPT JSON, Slack JSON) and generic formats (CSV), we test both specific platform plugins and generic parsing capabilities.
 
-2. **Edge Case Coverage**: The CSV format, while not realistic for Slack, allows us to test columnar data parsing that other tools or platforms might provide.
+2. **Platform Accuracy**: The ChatGPT and Slack JSON formats accurately represent how these platforms actually export conversation data, enabling realistic testing.
 
-3. **LLM Fallback Validation**: The unrecognized format ensures our LLM-based default plugin can handle arbitrary conversation data when no specific parser matches.
+3. **Tabular Data Coverage**: The generic CSV format allows us to test columnar data parsing that third-party tools, scripts, or alternative platforms might provide.
 
-4. **Progressive Complexity**: From simple text to complex JSON structures, the formats test different levels of parsing sophistication.
+4. **LLM Fallback Validation**: The unrecognized format ensures our LLM-based default plugin can handle arbitrary conversation data when no specific parser matches.
 
-**Realistic Alternative**: If more platform-accurate testing is needed, `slack_export.csv` could be replaced with `slack_export.json` using actual Slack export structure:
+5. **Progressive Complexity**: From simple text to complex JSON structures, the formats test different levels of parsing sophistication.
 
-```json
-[
-  {
-    "type": "message",
-    "user": "U0987654321",
-    "text": "Hello everyone!",
-    "ts": "1234567890.123456"
-  }
-]
-```
-
-However, the current CSV approach provides valuable tabular data parsing validation that complements the JSON-based formats.
+**Platform Export Accuracy**: Both `chatgpt_export.json` and `slack_export.json` now follow the actual export formats used by these platforms, providing realistic test data for plugin development.
 
 ### Expected Output Files
 All Tier 1 Markdown outputs follow the standardized format:

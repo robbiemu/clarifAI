@@ -43,14 +43,26 @@ def test_input_files_are_valid():
         assert len(data["mapping"]) > 0, "JSON should have conversation messages"
     
     # Test CSV file
-    csv_file = inputs_dir / "slack_export.csv"
-    assert csv_file.exists(), "Slack CSV file should exist"
+    csv_file = inputs_dir / "generic_tabular_export.csv"
+    assert csv_file.exists(), "Generic tabular CSV file should exist"
     with open(csv_file, 'r') as f:
         reader = csv.DictReader(f)
         rows = list(reader)
         assert len(rows) > 0, "CSV should have data rows"
         assert "user_name" in rows[0], "CSV should have user_name column"
         assert "message" in rows[0], "CSV should have message column"
+    
+    # Test Slack JSON file
+    slack_file = inputs_dir / "slack_export.json"
+    assert slack_file.exists(), "Slack JSON file should exist"
+    with open(slack_file, 'r') as f:
+        data = json.load(f)
+        assert isinstance(data, list), "Slack JSON should be a list of messages"
+        assert len(data) > 0, "Slack JSON should have messages"
+        assert "type" in data[0], "Slack messages should have type field"
+        assert "user" in data[0], "Slack messages should have user field"
+        assert "text" in data[0], "Slack messages should have text field"
+        assert "ts" in data[0], "Slack messages should have timestamp field"
     
     # Test plain text file
     txt_file = inputs_dir / "plain_text_chat.txt"
@@ -76,7 +88,8 @@ def test_expected_output_format():
     
     output_files = [
         "chatgpt_export.md",
-        "slack_export.md", 
+        "slack_export.md",
+        "generic_tabular_export.md", 
         "plain_text_chat.md",
         "unrecognized_format.md"
     ]
