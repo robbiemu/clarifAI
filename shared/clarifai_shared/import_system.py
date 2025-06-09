@@ -318,8 +318,10 @@ def generate_output_filename(md: MarkdownOutput, source_path: Path) -> str:
     # Remove chars that are problematic in filenames
     title = "".join(c for c in title if c.isalnum() or c in "._-")
     
-    # Add source info
+    # Clean up source name
     source_name = source_path.stem
+    # Replace problematic characters in source name
+    source_name = "".join(c if c.isalnum() or c in "._-" else "_" for c in source_name)
     
     return f"{date_part}_{source_name}_{title}.md"
 
