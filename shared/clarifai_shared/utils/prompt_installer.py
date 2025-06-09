@@ -39,17 +39,17 @@ def install_default_prompt(
         PermissionError: If unable to create the target directory or file
     """
     if prompts_dir is None:
-        # Default to prompts directory in vault (accessible to users in Docker)
+        # Default to prompts directory in settings (accessible to users in Docker)
         # Fallback to project root for local development
         try:
             # Try relative import first (when imported as part of package)
             from ..config import load_config
 
             config = load_config(validate=False)
-            vault_prompts_dir = Path(config.vault_path) / "prompts"
-            # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
-            if Path(config.vault_path).exists():
-                prompts_dir = vault_prompts_dir
+            settings_prompts_dir = Path(config.settings_path) / "prompts"
+            # Use settings/prompts if vault path exists, otherwise fallback to ./prompts
+            if Path(config.settings_path).exists():
+                prompts_dir = settings_prompts_dir
             else:
                 prompts_dir = Path.cwd() / "prompts"
         except (ImportError, ValueError):
@@ -66,10 +66,10 @@ def install_default_prompt(
                     spec.loader.exec_module(config_module)
 
                     config = config_module.load_config(validate=False)
-                    vault_prompts_dir = Path(config.vault_path) / "prompts"
-                    # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
-                    if Path(config.vault_path).exists():
-                        prompts_dir = vault_prompts_dir
+                    settings_prompts_dir = Path(config.settings_path) / "prompts"
+                    # Use settings/prompts if vault path exists, otherwise fallback to ./prompts
+                    if Path(config.settings_path).exists():
+                        prompts_dir = settings_prompts_dir
                     else:
                         prompts_dir = Path.cwd() / "prompts"
                 else:
@@ -120,17 +120,17 @@ def install_all_default_prompts(
         int: Number of prompt files installed/updated
     """
     if prompts_dir is None:
-        # Default to prompts directory in vault (accessible to users in Docker)
+        # Default to prompts directory in settings (accessible to users in Docker)
         # Fallback to project root for local development
         try:
             # Try relative import first (when imported as part of package)
             from ..config import load_config
 
             config = load_config(validate=False)
-            vault_prompts_dir = Path(config.vault_path) / "prompts"
-            # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
-            if Path(config.vault_path).exists():
-                prompts_dir = vault_prompts_dir
+            settings_prompts_dir = Path(config.settings_path) / "prompts"
+            # Use settings/prompts if vault path exists, otherwise fallback to ./prompts
+            if Path(config.settings_path).exists():
+                prompts_dir = settings_prompts_dir
             else:
                 prompts_dir = Path.cwd() / "prompts"
         except (ImportError, ValueError):
@@ -147,10 +147,10 @@ def install_all_default_prompts(
                     spec.loader.exec_module(config_module)
 
                     config = config_module.load_config(validate=False)
-                    vault_prompts_dir = Path(config.vault_path) / "prompts"
-                    # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
-                    if Path(config.vault_path).exists():
-                        prompts_dir = vault_prompts_dir
+                    settings_prompts_dir = Path(config.settings_path) / "prompts"
+                    # Use settings/prompts if vault path exists, otherwise fallback to ./prompts
+                    if Path(config.settings_path).exists():
+                        prompts_dir = settings_prompts_dir
                     else:
                         prompts_dir = Path.cwd() / "prompts"
                 else:
@@ -199,17 +199,17 @@ def ensure_prompt_exists(template_name: str = "conversation_extraction") -> Path
         FileNotFoundError: If the built-in template doesn't exist
         PermissionError: If unable to create the file
     """
-    # Default to prompts directory in vault (accessible to users in Docker)
+    # Default to prompts directory in settings (accessible to users in Docker)
     # Fallback to project root for local development
     try:
         # Try relative import first (when imported as part of package)
         from ..config import load_config
 
         config = load_config(validate=False)
-        vault_prompts_dir = Path(config.vault_path) / "prompts"
-        # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
-        if Path(config.vault_path).exists():
-            prompts_dir = vault_prompts_dir
+        settings_prompts_dir = Path(config.settings_path) / "prompts"
+        # Use settings/prompts if vault path exists, otherwise fallback to ./prompts
+        if Path(config.settings_path).exists():
+            prompts_dir = settings_prompts_dir
         else:
             prompts_dir = Path.cwd() / "prompts"
     except (ImportError, ValueError):
@@ -226,10 +226,10 @@ def ensure_prompt_exists(template_name: str = "conversation_extraction") -> Path
                 spec.loader.exec_module(config_module)
 
                 config = config_module.load_config(validate=False)
-                vault_prompts_dir = Path(config.vault_path) / "prompts"
-                # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
-                if Path(config.vault_path).exists():
-                    prompts_dir = vault_prompts_dir
+                settings_prompts_dir = Path(config.settings_path) / "prompts"
+                # Use settings/prompts if vault path exists, otherwise fallback to ./prompts
+                if Path(config.settings_path).exists():
+                    prompts_dir = settings_prompts_dir
                 else:
                     prompts_dir = Path.cwd() / "prompts"
             else:
