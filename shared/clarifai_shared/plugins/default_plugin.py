@@ -64,13 +64,19 @@ class ConversationExtractorAgent:
 
     def extract_conversations(self, raw_input: str, path: Path) -> List[Dict[str, Any]]:
         """
-        Extract conversations from raw input using LLM analysis.
+        Extract conversations from raw input using procedural approach first, then LLM if needed.
 
         This method implements the agent responsibilities from docs/arch/idea-default_plugin_task.md:
         - Determines if the input contains conversations
         - Returns empty list if none found
         - Splits multiple conversations if found
         - Formats as structured data for Markdown conversion
+
+        The extraction approach prioritizes procedural methods over LLM for efficiency:
+        1. Try procedural pattern matching first
+        2. If procedural succeeds, return results
+        3. If procedural fails and LLM is available, try LLM
+        4. If LLM also fails or unavailable, return empty list
 
         Args:
             raw_input: The raw text content
@@ -81,23 +87,39 @@ class ConversationExtractorAgent:
         """
         logger.debug(f"Extracting conversations from file: {path}")
 
-        if self.llm is None:
-            # Fallback mode for testing/development
-            logger.debug("Using fallback extraction (no LLM available)")
-            return self._fallback_extraction(raw_input, path)
+        # Always try procedural approach first (faster, more reliable, no cost)
+        logger.debug("Trying procedural extraction first")
+        conversations = self._fallback_extraction(raw_input, path)
 
+        if conversations:
+            # Procedural extraction succeeded
+            logger.info(
+                f"Procedural extraction found {len(conversations)} conversation(s)"
+            )
+            return conversations
+
+        # Procedural extraction found no conversations
+        if self.llm is None:
+            # No LLM available, return empty results
+            logger.debug(
+                "No conversations found via procedural extraction and no LLM available"
+            )
+            return []
+
+        # Try LLM as last resort
+        logger.debug("Procedural extraction found no conversations, trying LLM")
         prompt = self._build_extraction_prompt(raw_input)
 
         try:
             logger.debug("Calling LLM for conversation extraction")
             response = self.llm.complete(prompt)
-            conversations = self._parse_llm_response(response.text, raw_input, path)
-            logger.info(f"LLM extracted {len(conversations)} conversation(s)")
-            return conversations
+            llm_conversations = self._parse_llm_response(response.text, raw_input, path)
+            logger.info(f"LLM extracted {len(llm_conversations)} conversation(s)")
+            return llm_conversations
         except Exception as e:
-            # Graceful fallback if LLM fails, following error handling docs
-            logger.warning(f"LLM extraction failed, using fallback: {e}")
-            return self._fallback_extraction(raw_input, path)
+            # LLM failed, return empty results
+            logger.warning(f"LLM extraction failed: {e}")
+            return []
 
     def _build_extraction_prompt(self, raw_input: str) -> str:
         """Build the prompt for conversation extraction."""
