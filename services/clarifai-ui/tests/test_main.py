@@ -122,7 +122,9 @@ class TestFormatDetection:
 
     def test_detect_csv_format(self):
         """Test detection of CSV files."""
-        detector, status = detect_file_format("/path/to/file.csv", "generic_tabular_export.csv")
+        detector, status = detect_file_format(
+            "/path/to/file.csv", "generic_tabular_export.csv"
+        )
         assert detector == "generic_csv"
         assert status == "✅ Imported"
 
