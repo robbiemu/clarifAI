@@ -46,7 +46,7 @@ class DatabaseConfig:
 @dataclass
 class VaultPaths:
     """Vault directory structure configuration."""
-    
+
     tier1: str = "tier1"
     summaries: str = "."
     concepts: str = "."
@@ -78,7 +78,7 @@ class ClarifAIConfig:
     # AI/ML configuration
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
-    
+
     # Vault structure configuration
     paths: VaultPaths = field(default_factory=VaultPaths)
 

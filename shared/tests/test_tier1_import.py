@@ -2,7 +2,6 @@
 Test suite for the Tier 1 import system.
 """
 
-import json
 import tempfile
 from pathlib import Path
 
@@ -22,55 +21,55 @@ from clarifai_shared.plugin_interface import MarkdownOutput
 
 class TestTier1ImportSystem:
     """Test cases for the Tier 1 import system."""
-    
+
     def test_calculate_file_hash(self):
         """Test file hash calculation."""
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
             f.write("test content")
             temp_path = Path(f.name)
-        
+
         try:
             hash1 = calculate_file_hash(temp_path)
             hash2 = calculate_file_hash(temp_path)
-            
+
             # Same file should produce same hash
             assert hash1 == hash2
             assert len(hash1) == 64  # SHA-256 hex length
-            
+
         finally:
             temp_path.unlink()
-    
+
     def test_atomic_file_write(self):
         """Test atomic file writing."""
         with tempfile.TemporaryDirectory() as temp_dir:
             target_path = Path(temp_dir) / "test.md"
             content = "# Test Content\n\nThis is a test."
-            
+
             write_file_atomically(target_path, content)
-            
+
             # File should exist and have correct content
             assert target_path.exists()
             assert target_path.read_text() == content
-    
+
     def test_ensure_defaults(self):
         """Test metadata defaults are applied correctly."""
         with tempfile.NamedTemporaryFile() as f:
             source_path = Path(f.name)
-            
+
             # Test with minimal metadata
             md = MarkdownOutput(
                 title="Test Conversation",
                 markdown_text="alice: hello\nbob: hi",
-                metadata={"participants": ["alice", "bob"]}
+                metadata={"participants": ["alice", "bob"]},
             )
-            
+
             result = ensure_defaults(md, source_path)
-            
+
             assert result.title == "Test Conversation"
             assert result.metadata["participants"] == ["alice", "bob"]
             assert "created_at" in result.metadata
             assert result.metadata["message_count"] == 0  # Default value
-    
+
     def test_format_tier1_markdown(self):
         """Test Tier 1 Markdown formatting."""
         md = MarkdownOutput(
@@ -80,45 +79,43 @@ class TestTier1ImportSystem:
                 "created_at": "2024-01-01T10:00:00",
                 "participants": ["alice", "bob"],
                 "message_count": 1,
-                "plugin_metadata": {"source": "test"}
-            }
+                "plugin_metadata": {"source": "test"},
+            },
         )
-        
+
         result = format_tier1_markdown(md)
-        
+
         # Should have metadata comments at top
-        lines = result.split('\n')
+        lines = result.split("\n")
         assert lines[0].startswith("<!-- clarifai:title=")
         assert lines[1].startswith("<!-- clarifai:created_at=")
         assert lines[2].startswith("<!-- clarifai:participants=")
         assert lines[3].startswith("<!-- clarifai:message_count=")
         assert lines[4].startswith("<!-- clarifai:plugin_metadata=")
-        
+
         # Should have empty line after metadata
         assert lines[5] == ""
-        
+
         # Should have original content
         assert "alice: hello" in result
         assert "clarifai:id=blk_abc123" in result
-    
+
     def test_generate_output_filename(self):
         """Test output filename generation."""
         md = MarkdownOutput(
             title="Team Meeting Discussion",
             markdown_text="content",
-            metadata={
-                "created_at": "2024-01-15T10:30:00"
-            }
+            metadata={"created_at": "2024-01-15T10:30:00"},
         )
-        
+
         source_path = Path("/tmp/chat_export.txt")
         filename = generate_output_filename(md, source_path)
-        
+
         assert filename.startswith("2024-01-15_")
         assert "chat_export" in filename
         assert "Team_Meeting_Discussion" in filename
         assert filename.endswith(".md")
-    
+
     def test_duplicate_detection(self):
         """Test duplicate detection system."""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -126,25 +123,25 @@ class TestTier1ImportSystem:
             source_path = Path("/tmp/test.txt")
             hash_value = "abc123"
             output_files = [Path("/vault/test.md")]
-            
+
             # Initially should not be duplicate
             assert not is_duplicate_import(source_path, hash_value, import_log_dir)
-            
+
             # Record import
             record_import(source_path, hash_value, import_log_dir, output_files)
-            
+
             # Now should be detected as duplicate
             assert is_duplicate_import(source_path, hash_value, import_log_dir)
-    
+
     def test_import_system_initialization(self):
         """Test import system initialization."""
         config = ClarifAIConfig(
             vault_path="/test/vault",
-            paths=VaultPaths(tier1="conversations", logs="logs")
+            paths=VaultPaths(tier1="conversations", logs="logs"),
         )
-        
+
         system = Tier1ImportSystem(config)
-        
+
         assert system.vault_path == Path("/test/vault")
         assert system.import_log_dir == Path("/test/vault/logs")
         assert len(system.plugin_registry) >= 1  # At least default plugin
@@ -156,12 +153,11 @@ def test_integration_simple_conversation():
         # Setup
         vault_dir = Path(temp_dir) / "vault"
         config = ClarifAIConfig(
-            vault_path=str(vault_dir),
-            paths=VaultPaths(tier1="tier1", logs="logs")
+            vault_path=str(vault_dir), paths=VaultPaths(tier1="tier1", logs="logs")
         )
-        
+
         system = Tier1ImportSystem(config)
-        
+
         # Create test input file
         input_file = Path(temp_dir) / "test_chat.txt"
         input_file.write_text("""
@@ -169,39 +165,39 @@ alice: Hello, how are you doing today?
 bob: I'm doing great, thanks for asking!
 alice: That's wonderful to hear.
 """)
-        
+
         # Import the file
         try:
             output_files = system.import_file(input_file)
-            
+
             # Should create one output file
             assert len(output_files) == 1
-            
+
             output_file = output_files[0]
             assert output_file.exists()
-            
+
             # Check content format
             content = output_file.read_text()
-            
+
             # Should have metadata comments
             assert "<!-- clarifai:title=" in content
             assert "<!-- clarifai:participants=" in content
-            
+
             # Should have conversation content
             assert "alice: Hello, how are you doing today?" in content
             assert "bob: I'm doing great, thanks for asking!" in content
-            
+
             # Should have block annotations
             assert "<!-- clarifai:id=blk_" in content
             assert "^blk_" in content
-            
+
             # Test duplicate detection
             try:
                 system.import_file(input_file)
                 assert False, "Should have raised DuplicateDetectionError"
             except Exception as e:
                 assert "duplicate" in str(e).lower()
-            
+
         except Exception as e:
             # Print debugging info if test fails
             print(f"Import failed: {e}")
