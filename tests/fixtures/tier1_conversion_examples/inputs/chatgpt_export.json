@@ -1,0 +1,91 @@
+{
+  "title": "Project Planning Discussion",
+  "create_time": 1703261400.0,
+  "update_time": 1703264000.0,
+  "mapping": {
+    "msg_001": {
+      "id": "msg_001", 
+      "message": {
+        "id": "msg_001",
+        "author": {
+          "role": "user"
+        },
+        "create_time": 1703261400.0,
+        "content": {
+          "content_type": "text",
+          "parts": ["Let's discuss the Sprint 2 implementation. We need to focus on the ingestion pipeline and block generation."]
+        }
+      }
+    },
+    "msg_002": {
+      "id": "msg_002",
+      "message": {
+        "id": "msg_002", 
+        "author": {
+          "role": "assistant"
+        },
+        "create_time": 1703261460.0,
+        "content": {
+          "content_type": "text",
+          "parts": ["That sounds like a great plan! For Sprint 2, we should prioritize implementing the default plugin for the pluggable format conversion system. This will handle ChatGPT JSON exports initially."]
+        }
+      }
+    },
+    "msg_003": {
+      "id": "msg_003",
+      "message": {
+        "id": "msg_003",
+        "author": {
+          "role": "user"
+        },
+        "create_time": 1703261520.0,
+        "content": {
+          "content_type": "text",
+          "parts": ["Agreed. What about the Tier 1 Markdown generation? We need to ensure each utterance gets a unique clarifai:id and proper anchors."]
+        }
+      }
+    },
+    "msg_004": {
+      "id": "msg_004",
+      "message": {
+        "id": "msg_004",
+        "author": {
+          "role": "assistant"
+        },
+        "create_time": 1703261580.0,
+        "content": {
+          "content_type": "text",
+          "parts": ["Exactly. The format should be 'Speaker: text' followed by HTML comments with the clarifai:id and the ^anchor. We also need atomic file writing with .tmp → fsync → rename."]
+        }
+      }
+    },
+    "msg_005": {
+      "id": "msg_005",
+      "message": {
+        "id": "msg_005",
+        "author": {
+          "role": "user"
+        },
+        "create_time": 1703261640.0,
+        "content": {
+          "content_type": "text", 
+          "parts": ["Don't forget about the embedding pipeline. We need to use LlamaIndex's TextSplitter to segment the Tier 1 Markdown into chunks."]
+        }
+      }
+    },
+    "msg_006": {
+      "id": "msg_006",
+      "message": {
+        "id": "msg_006",
+        "author": {
+          "role": "assistant"
+        },
+        "create_time": 1703261700.0,
+        "content": {
+          "content_type": "text",
+          "parts": ["Right! And store the vectors in Postgres via pgvector, including metadata like the parent clarifai:id, chunk_index, and original text. This will support the RAG workflow later."]
+        }
+      }
+    }
+  }
+}
