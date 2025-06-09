@@ -240,6 +240,126 @@ if re.match(custom_pattern, line):
     pass
 ```
 
+### YAML Prompt Configuration
+
+The default plugin uses externalized YAML prompt templates that can be customized by users. This allows fine-tuning of the LLM behavior without modifying code.
+
+#### Default Installation
+
+During installation or Docker container startup, default prompt templates are automatically installed to the `prompts/` directory:
+
+```bash
+# Automatically creates prompts/conversation_extraction.yaml
+python install_prompts.py
+
+# Install all available prompts
+python install_prompts.py --all
+
+# Force overwrite existing prompts (restore defaults)
+python install_prompts.py --force
+```
+
+#### Customizing Prompts
+
+The main prompt template is located at `prompts/conversation_extraction.yaml`:
+
+```yaml
+role: "conversation_extraction_agent"
+description: "Analyzes unstructured text to extract conversations"
+system_prompt: "You are an expert conversation analyst..."
+template: |
+  Analyze the following text and extract conversations.
+  
+  Instructions:
+  - Look for dialogue patterns between participants
+  - Extract speaker names and their messages
+  - If no conversation found, respond with "NO_CONVERSATION"
+  
+  TEXT TO ANALYZE:
+  {input_text}
+  
+output_format: "JSON format with title, participants, and messages"
+variables:
+  input_text:
+    description: "Raw text content to analyze"
+    required: true
+rules:
+  - "Maintain speaker attribution accuracy"
+  - "Preserve message content and context"
+  - "Generate appropriate conversation titles"
+```
+
+#### Template Variables
+
+The conversation extraction template supports these variables:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `input_text` | Yes | The raw text content to analyze for conversations |
+
+#### Prompt Customization Examples
+
+**For Technical Discussions:**
+```yaml
+# Modify the template section to focus on technical content
+template: |
+  Analyze this technical discussion and extract conversations.
+  Focus on:
+  - Code review comments
+  - Technical questions and answers
+  - Bug reports and solutions
+  
+  Content: {input_text}
+```
+
+**For Meeting Transcripts:**
+```yaml
+# Customize for formal meeting formats
+template: |
+  Extract conversations from this meeting transcript.
+  Preserve:
+  - Action items and decisions
+  - Participant roles and context
+  - Time-sensitive discussions
+  
+  Transcript: {input_text}
+```
+
+#### Docker Configuration
+
+In Docker environments, prompt files are automatically installed and mounted as volumes for persistence:
+
+```dockerfile
+# Automatically installs prompts during build
+RUN python install_prompts.py --all
+
+# Mount prompts directory for user customization
+VOLUME ["/app/prompts"]
+```
+
+Users can then:
+1. Copy prompt files from the container: `docker cp container:/app/prompts ./prompts`
+2. Edit the YAML files locally
+3. Mount the directory back: `docker run -v ./prompts:/app/prompts clarifai`
+
+#### Troubleshooting
+
+**Restore Default Prompts:**
+```bash
+# Delete customized file and restart service
+rm prompts/conversation_extraction.yaml
+# Service will auto-install default on next run
+
+# Or force reinstall
+python install_prompts.py --force
+```
+
+**Validate YAML Syntax:**
+```bash
+# Check if your YAML is valid
+python -c "import yaml; yaml.safe_load(open('prompts/conversation_extraction.yaml'))"
+```
+
 ### LLM Configuration
 
 The plugin supports transparent LLM configuration through the ClarifAI configuration system:

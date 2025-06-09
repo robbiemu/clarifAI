@@ -30,6 +30,7 @@ from ..plugin_interface import Plugin, MarkdownOutput
 from ..config import load_config
 from ..utils.block_id import generate_unique_block_id
 from ..utils.prompt_loader import load_prompt_template
+from ..utils.prompt_installer import ensure_prompt_exists
 
 
 logger = logging.getLogger(__name__)
@@ -123,6 +124,8 @@ class ConversationExtractorAgent:
     def _build_extraction_prompt(self, raw_input: str) -> str:
         """Build the prompt for conversation extraction using externalized YAML template."""
         try:
+            # Ensure the prompt file exists in user's prompts directory
+            ensure_prompt_exists("conversation_extraction")
             return load_prompt_template("conversation_extraction", input_text=raw_input)
         except Exception as e:
             logger.error(f"Failed to load conversation extraction template: {e}")
