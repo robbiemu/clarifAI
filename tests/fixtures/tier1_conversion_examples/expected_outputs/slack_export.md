@@ -2,7 +2,7 @@
 <!-- clarifai:created_at=2023-12-22T14:30:00Z -->
 <!-- clarifai:participants=["alice", "bob", "carol", "dave"] -->
 <!-- clarifai:message_count=9 -->
-<!-- clarifai:plugin_metadata={"source_format": "slack_csv", "channel": "general", "has_reactions": true, "has_threads": false} -->
+<!-- clarifai:plugin_metadata={"source_format": "csv_test", "original_platform": "simulated_slack", "note": "simplified_csv_for_testing", "has_reactions": true, "has_threads": false} -->
 
 alice: Hey team, I just reviewed the ClarifAI architecture docs. The vault synchronization design looks solid.
 <!-- clarifai:id=blk_s1t2u3 ver=1 -->
