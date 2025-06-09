@@ -30,7 +30,7 @@ You're also absolutely right that all the Sprint 5 UI tasks can be implemented w
 ```bash
 clarifai-monorepo/
 ├── settings/
-│   ├── ./settings/clarifai.config.yaml   # Central configuration file
+│   ├── clarifai.config.yaml   # Central configuration file
 │   └── prompts/               # User-editable prompts
 ├── services/
 │   └── clarifai-ui/
