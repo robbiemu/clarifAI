@@ -44,6 +44,7 @@ def install_default_prompt(
         try:
             # Try relative import first (when imported as part of package)
             from ..config import load_config
+
             config = load_config(validate=False)
             vault_prompts_dir = Path(config.vault_path) / "prompts"
             # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
@@ -55,7 +56,7 @@ def install_default_prompt(
             # Try absolute import (when imported directly)
             try:
                 import importlib.util
-                
+
                 # Find the config module
                 current_file = Path(__file__)
                 config_path = current_file.parent.parent / "config.py"
@@ -63,7 +64,7 @@ def install_default_prompt(
                     spec = importlib.util.spec_from_file_location("config", config_path)
                     config_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(config_module)
-                    
+
                     config = config_module.load_config(validate=False)
                     vault_prompts_dir = Path(config.vault_path) / "prompts"
                     # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
@@ -124,6 +125,7 @@ def install_all_default_prompts(
         try:
             # Try relative import first (when imported as part of package)
             from ..config import load_config
+
             config = load_config(validate=False)
             vault_prompts_dir = Path(config.vault_path) / "prompts"
             # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
@@ -135,7 +137,7 @@ def install_all_default_prompts(
             # Try absolute import (when imported directly)
             try:
                 import importlib.util
-                
+
                 # Find the config module
                 current_file = Path(__file__)
                 config_path = current_file.parent.parent / "config.py"
@@ -143,7 +145,7 @@ def install_all_default_prompts(
                     spec = importlib.util.spec_from_file_location("config", config_path)
                     config_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(config_module)
-                    
+
                     config = config_module.load_config(validate=False)
                     vault_prompts_dir = Path(config.vault_path) / "prompts"
                     # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
@@ -202,6 +204,7 @@ def ensure_prompt_exists(template_name: str = "conversation_extraction") -> Path
     try:
         # Try relative import first (when imported as part of package)
         from ..config import load_config
+
         config = load_config(validate=False)
         vault_prompts_dir = Path(config.vault_path) / "prompts"
         # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
@@ -213,7 +216,7 @@ def ensure_prompt_exists(template_name: str = "conversation_extraction") -> Path
         # Try absolute import (when imported directly)
         try:
             import importlib.util
-            
+
             # Find the config module
             current_file = Path(__file__)
             config_path = current_file.parent.parent / "config.py"
@@ -221,7 +224,7 @@ def ensure_prompt_exists(template_name: str = "conversation_extraction") -> Path
                 spec = importlib.util.spec_from_file_location("config", config_path)
                 config_module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(config_module)
-                
+
                 config = config_module.load_config(validate=False)
                 vault_prompts_dir = Path(config.vault_path) / "prompts"
                 # Use vault/prompts if vault path exists, otherwise fallback to ./prompts

@@ -58,6 +58,7 @@ class PromptLoader:
             try:
                 # Try relative import first (when imported as part of package)
                 from ..config import load_config
+
                 config = load_config(validate=False)
                 vault_prompts_dir = Path(config.vault_path) / "prompts"
                 # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
@@ -69,15 +70,17 @@ class PromptLoader:
                 # Try absolute import (when imported directly)
                 try:
                     import importlib.util
-                    
+
                     # Find the config module
                     current_file = Path(__file__)
                     config_path = current_file.parent.parent / "config.py"
                     if config_path.exists():
-                        spec = importlib.util.spec_from_file_location("config", config_path)
+                        spec = importlib.util.spec_from_file_location(
+                            "config", config_path
+                        )
                         config_module = importlib.util.module_from_spec(spec)
                         spec.loader.exec_module(config_module)
-                        
+
                         config = config_module.load_config(validate=False)
                         vault_prompts_dir = Path(config.vault_path) / "prompts"
                         # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
