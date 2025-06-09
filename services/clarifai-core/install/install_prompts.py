@@ -11,13 +11,21 @@ import sys
 from pathlib import Path
 
 # Add the shared package to the path
-shared_dir = Path(__file__).parent / "shared"
+shared_dir = Path(__file__).parent.parent.parent.parent / "shared"
 sys.path.insert(0, str(shared_dir))
 
-from clarifai_shared.utils import (  # noqa: E402
-    install_all_default_prompts,
-    install_default_prompt,
-)
+# Import only the utilities we need, not the full plugin system
+try:
+    from clarifai_shared.utils.prompt_installer import (  # noqa: E402
+        install_all_default_prompts,
+        install_default_prompt,
+    )
+except ImportError as e:
+    print(f"Error importing prompt utilities: {e}", file=sys.stderr)
+    # Let's check if the issue is dependencies we don't need
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
 
 
 def main():
