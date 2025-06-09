@@ -71,4 +71,4 @@ Each path is **where ClarifAI prefers to write**, but detection is **metadata-ba
 
 The ClarifAI vault is intended exclusively for user-facing knowledge content: Tier 1, 2, and 3 Markdown files.
 
-System-level configuration files, such as LLM prompt templates, are stored separately in the `./settings` directory. This separation ensures that your vault remains a clean, portable collection of your knowledge, while system configurations can be managed and versioned independently.
+System-level configuration files, such as the main `./settings/clarifai.config.yaml` and LLM prompt templates, are stored separately in the `./settings` directory. This separation ensures that your vault remains a clean, portable collection of your knowledge, while system configurations can be managed and versioned independently.
