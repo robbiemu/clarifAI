@@ -20,8 +20,9 @@ COPY . /app/
 # Install Python dependencies with trusted hosts for SSL issues
 RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir -e .
 
-# Install default prompt templates (make them available for user customization)
-RUN python install_prompts.py --all
+# Install default prompt templates to /vault/prompts (make them available for user customization)
+# /vault is mounted to the host, so users can access and modify these prompts
+RUN mkdir -p /vault/prompts && python install/install_prompts.py --all --prompts-dir /vault/prompts
 
 # Create a non-root user for security
 RUN useradd -m -u 1000 clarifai && chown -R clarifai:clarifai /app

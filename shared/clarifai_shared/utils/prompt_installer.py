@@ -39,7 +39,43 @@ def install_default_prompt(
         PermissionError: If unable to create the target directory or file
     """
     if prompts_dir is None:
-        prompts_dir = Path.cwd() / "prompts"
+        # Default to prompts directory in vault (accessible to users in Docker)
+        # Fallback to project root for local development
+        try:
+            # Try relative import first (when imported as part of package)
+            from ..config import load_config
+            config = load_config(validate=False)
+            vault_prompts_dir = Path(config.vault_path) / "prompts"
+            # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
+            if Path(config.vault_path).exists():
+                prompts_dir = vault_prompts_dir
+            else:
+                prompts_dir = Path.cwd() / "prompts"
+        except (ImportError, ValueError):
+            # Try absolute import (when imported directly)
+            try:
+                import importlib.util
+                
+                # Find the config module
+                current_file = Path(__file__)
+                config_path = current_file.parent.parent / "config.py"
+                if config_path.exists():
+                    spec = importlib.util.spec_from_file_location("config", config_path)
+                    config_module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(config_module)
+                    
+                    config = config_module.load_config(validate=False)
+                    vault_prompts_dir = Path(config.vault_path) / "prompts"
+                    # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
+                    if Path(config.vault_path).exists():
+                        prompts_dir = vault_prompts_dir
+                    else:
+                        prompts_dir = Path.cwd() / "prompts"
+                else:
+                    raise ImportError("Config module not found")
+            except Exception:
+                # Fallback to original behavior if config loading fails
+                prompts_dir = Path.cwd() / "prompts"
 
     # Ensure prompts directory exists
     prompts_dir.mkdir(exist_ok=True)
@@ -83,7 +119,43 @@ def install_all_default_prompts(
         int: Number of prompt files installed/updated
     """
     if prompts_dir is None:
-        prompts_dir = Path.cwd() / "prompts"
+        # Default to prompts directory in vault (accessible to users in Docker)
+        # Fallback to project root for local development
+        try:
+            # Try relative import first (when imported as part of package)
+            from ..config import load_config
+            config = load_config(validate=False)
+            vault_prompts_dir = Path(config.vault_path) / "prompts"
+            # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
+            if Path(config.vault_path).exists():
+                prompts_dir = vault_prompts_dir
+            else:
+                prompts_dir = Path.cwd() / "prompts"
+        except (ImportError, ValueError):
+            # Try absolute import (when imported directly)
+            try:
+                import importlib.util
+                
+                # Find the config module
+                current_file = Path(__file__)
+                config_path = current_file.parent.parent / "config.py"
+                if config_path.exists():
+                    spec = importlib.util.spec_from_file_location("config", config_path)
+                    config_module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(config_module)
+                    
+                    config = config_module.load_config(validate=False)
+                    vault_prompts_dir = Path(config.vault_path) / "prompts"
+                    # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
+                    if Path(config.vault_path).exists():
+                        prompts_dir = vault_prompts_dir
+                    else:
+                        prompts_dir = Path.cwd() / "prompts"
+                else:
+                    raise ImportError("Config module not found")
+            except Exception:
+                # Fallback to original behavior if config loading fails
+                prompts_dir = Path.cwd() / "prompts"
 
     # Find all built-in templates
     current_file = Path(__file__)
@@ -125,7 +197,44 @@ def ensure_prompt_exists(template_name: str = "conversation_extraction") -> Path
         FileNotFoundError: If the built-in template doesn't exist
         PermissionError: If unable to create the file
     """
-    prompts_dir = Path.cwd() / "prompts"
+    # Default to prompts directory in vault (accessible to users in Docker)
+    # Fallback to project root for local development
+    try:
+        # Try relative import first (when imported as part of package)
+        from ..config import load_config
+        config = load_config(validate=False)
+        vault_prompts_dir = Path(config.vault_path) / "prompts"
+        # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
+        if Path(config.vault_path).exists():
+            prompts_dir = vault_prompts_dir
+        else:
+            prompts_dir = Path.cwd() / "prompts"
+    except (ImportError, ValueError):
+        # Try absolute import (when imported directly)
+        try:
+            import importlib.util
+            
+            # Find the config module
+            current_file = Path(__file__)
+            config_path = current_file.parent.parent / "config.py"
+            if config_path.exists():
+                spec = importlib.util.spec_from_file_location("config", config_path)
+                config_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(config_module)
+                
+                config = config_module.load_config(validate=False)
+                vault_prompts_dir = Path(config.vault_path) / "prompts"
+                # Use vault/prompts if vault path exists, otherwise fallback to ./prompts
+                if Path(config.vault_path).exists():
+                    prompts_dir = vault_prompts_dir
+                else:
+                    prompts_dir = Path.cwd() / "prompts"
+            else:
+                raise ImportError("Config module not found")
+        except Exception:
+            # Fallback to original behavior if config loading fails
+            prompts_dir = Path.cwd() / "prompts"
+
     prompt_file = prompts_dir / f"{template_name}.yaml"
 
     if not prompt_file.exists():
