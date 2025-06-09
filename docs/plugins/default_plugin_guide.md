@@ -110,21 +110,48 @@ alice: First message content
 bob: Second message content
 <!-- clarifai:id=blk_def456 ver=1 -->
 ^blk_def456
-
-<!-- clarifai:entailed_score=0.86 -->
-<!-- clarifai:coverage_score=0.79 -->
-<!-- clarifai:decontextualization_score=0.83 -->
 ```
 
 ### Metadata Fields
 
-| Field | Description | Default |
-|-------|-------------|---------|
-| `title` | Conversation title | Auto-generated from timestamp |
-| `created_at` | ISO timestamp | File modification time |
-| `participants` | List of speakers | Extracted from content |
-| `message_count` | Number of messages | Count of extracted messages |
-| `plugin_metadata` | Plugin-specific data | Includes source format info |
+| Field | Description | Default | Consumer |
+|-------|-------------|---------|----------|
+| `title` | Conversation title | Auto-generated from timestamp | UI display, file naming |
+| `created_at` | ISO timestamp | File modification time | Chronological sorting |
+| `participants` | List of speakers | Extracted from content | Participant analysis |
+| `message_count` | Number of messages | Count of extracted messages | Content filtering |
+| `plugin_metadata` | Plugin-specific data | See below | Plugin orchestrator, debugging |
+
+### Plugin Metadata Structure
+
+The `plugin_metadata` field contains information about how the conversation was processed:
+
+```json
+{
+  "source_format": "fallback_llm",          // Processing method used
+  "extraction_method": "procedural",        // "procedural" or "llm"
+  "original_format": "Custom_LOG_v2.1",     // Detected original format
+  "session_id": "sess_123abc",              // Extracted session ID
+  "duration": "5m0s",                       // Conversation duration
+  "block_count": 3,                         // Number of blocks generated
+  "processing_notes": "Used ENTRY pattern"  // Additional processing info
+}
+```
+
+**Default Plugin Fields:**
+- `source_format`: Always "fallback_llm" to indicate default plugin processing
+- `extraction_method`: "procedural" (pattern matching) or "llm" (AI processing)
+- `original_format`: Original format identifier if detected from metadata
+- `session_id`: Session identifier extracted from log headers
+- `duration`: Conversation duration from metadata
+- `block_count`: Number of message blocks generated
+- `processing_notes`: Additional context about extraction process
+
+**Downstream Consumption:**
+- **Plugin Orchestrator**: Uses `source_format` to track which plugin processed the file
+- **UI Components**: Display `extraction_method` to show processing approach (⚠️ Fallback indicator)
+- **Quality Analysis**: Uses extraction metadata for processing quality assessment
+- **Debugging**: `processing_notes` help troubleshoot conversion issues
 
 ### Block IDs
 
@@ -144,12 +171,12 @@ Set environment variables for LLM access:
 export OPENAI_API_KEY="your-api-key-here"
 ```
 
-### Fallback Behavior
+### Processing Flow
 
-When LLM is unavailable or fails:
-1. Plugin falls back to pattern-matching extraction
-2. Uses regex patterns for common conversation formats
-3. Gracefully handles extraction failures
+The plugin uses an optimized extraction strategy:
+1. **Procedural extraction first**: Attempts pattern matching for common formats (fast, reliable, no cost)
+2. **LLM fallback**: Only uses LLM processing when procedural extraction finds no conversations
+3. **Graceful degradation**: Returns empty list if both approaches fail
 
 ## Testing
 
@@ -213,31 +240,47 @@ if re.match(custom_pattern, line):
     pass
 ```
 
-### LLM Models
+### LLM Configuration
 
-Support different LLM providers by extending `ConversationExtractorAgent`:
-
-```python
-from llama_index.llms.anthropic import Anthropic
-
-agent = ConversationExtractorAgent(
-    llm=Anthropic(api_key="your-key")
-)
-```
-
-### Metadata Extraction
-
-Add custom metadata extraction in `_extract_metadata()`:
+The plugin supports transparent LLM configuration through the ClarifAI configuration system:
 
 ```python
-# Extract custom fields
-if 'CUSTOM_FIELD:' in line:
-    metadata["custom_field"] = line.split('CUSTOM_FIELD:')[1].strip()
+# LLM configuration is handled automatically through the config system
+# The plugin will use the configured model for model.fallback_plugin role
+plugin = DefaultPlugin()
+
+# For custom configurations, you can create an agent with specific LLM
+from clarifai_shared.plugins.default_plugin import ConversationExtractorAgent
+
+# The agent will automatically use the configured LLM
+agent = ConversationExtractorAgent()
 ```
 
-## Integration with Sprint 8
+**Configuration Notes:**
+- LLM selection is managed through `clarifai.config.yaml` 
+- The `model.fallback_plugin` configuration determines which LLM to use
+- Supports multiple providers: OpenAI, Anthropic, Ollama, OpenRouter
+- No hardcoded model dependencies in plugin code
 
-The default plugin is designed to integrate seamlessly with the plugin manager and orchestrator from Sprint 8:
+## Usage as Fallback Plugin
+
+The default plugin is designed to be used as the last plugin in the orchestrator's plugin registry, providing fallback processing for unrecognized formats:
+
+```python
+# Proper orchestrator integration
+registry = [
+    ChatGPTPlugin(),      # Format-specific plugins first
+    SlackPlugin(),
+    WhatsAppPlugin(),
+    DefaultPlugin()       # Fallback plugin last
+]
+```
+
+The plugin should **not** be used as a template for custom plugin development. Instead, refer to the plugin interface documentation and use the shared utilities provided in the `clarifai_shared.utils` module.
+
+## Integration with Plugin System
+
+The default plugin is designed to integrate seamlessly with the plugin manager and orchestrator:
 
 1. **Plugin Discovery**: Implements the standard `Plugin` interface
 2. **Registry Integration**: Can be added to any plugin registry
