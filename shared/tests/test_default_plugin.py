@@ -482,20 +482,20 @@ def test_default_plugin_uses_customized_prompt():
     import shutil
     import tempfile
     from pathlib import Path
-    
+
     # Create a temporary prompts directory
     original_cwd = Path.cwd()
     temp_dir = tempfile.mkdtemp()
     temp_path = Path(temp_dir)
-    
+
     try:
         # Change to temp directory to control where prompts are loaded from
         os.chdir(temp_path)
-        
+
         # Create prompts directory with custom prompt template
         prompts_dir = temp_path / "prompts"
         prompts_dir.mkdir()
-        
+
         # Create a custom prompt YAML file with distinctive content
         custom_prompt_content = """
 role: "conversation_extractor"
@@ -515,40 +515,42 @@ rules:
   - "This is a custom test prompt"
   - "Should be used instead of built-in prompt"
 """
-        
+
         custom_prompt_file = prompts_dir / "conversation_extraction.yaml"
         custom_prompt_file.write_text(custom_prompt_content.strip())
-        
+
         # Test that the prompt loader would find our custom prompt
         try:
             from clarifai_shared.utils.prompt_loader import PromptLoader
-            
+
             # Create prompt loader and verify it finds our custom prompt
             loader = PromptLoader()
             template_path = loader._find_template_file("conversation_extraction")
-            
+
             # Verify we're using the custom prompt
             assert template_path == custom_prompt_file
-            
+
             # Verify the template loads correctly
             template = loader.load_template("conversation_extraction")
             assert "CUSTOM PROMPT TEST" in template.template
             assert "custom test prompt" in template.description.lower()
-            assert "custom conversation extraction agent for testing" in template.system_prompt.lower()
+            assert (
+                "custom conversation extraction agent for testing"
+                in template.system_prompt.lower()
+            )
             assert "custom test fields" in template.output_format.lower()
-            
+
             # Verify the template can be formatted
             formatted_prompt = loader.load_and_format(
-                "conversation_extraction", 
-                input_text="test input text"
+                "conversation_extraction", input_text="test input text"
             )
             assert "CUSTOM PROMPT TEST" in formatted_prompt
             assert "test input text" in formatted_prompt
-            
+
             print("✓ Custom prompt loading functionality verified")
-            
+
         except ImportError:
-            # If we can't import due to missing dependencies, 
+            # If we can't import due to missing dependencies,
             # just verify the file structure is correct for the plugin to use
             assert custom_prompt_file.exists()
             content = custom_prompt_file.read_text()
@@ -556,8 +558,10 @@ rules:
             assert "role:" in content
             assert "template:" in content
             assert "variables:" in content
-            print("✓ Custom prompt file structure verified (dependencies not available for full test)")
-            
+            print(
+                "✓ Custom prompt file structure verified (dependencies not available for full test)"
+            )
+
     finally:
         # Cleanup
         os.chdir(original_cwd)

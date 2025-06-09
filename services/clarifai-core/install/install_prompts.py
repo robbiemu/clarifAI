@@ -24,6 +24,7 @@ except ImportError as e:
     print(f"Error importing prompt utilities: {e}", file=sys.stderr)
     # Let's check if the issue is dependencies we don't need
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
 
