@@ -149,7 +149,93 @@ timestamp,speaker,message
 """
 ```
 
-## Step 6: Understanding Plugin Behavior
+## Step 7: Customizing LLM Prompts (Optional)
+
+The default plugin uses externalized YAML prompt templates that you can customize to improve conversation extraction for your specific use cases.
+
+### Understanding Prompt Templates
+
+The default plugin uses a YAML template located at `prompts/conversation_extraction.yaml.example` for LLM-based conversation extraction. This template defines:
+
+- **System prompt**: The agent's role and behavior
+- **Instructions**: Step-by-step extraction guidelines  
+- **Output format**: Expected JSON structure
+- **Rules**: Specific extraction rules
+- **Template**: The actual prompt sent to the LLM
+
+### Customizing the Prompt
+
+1. **Copy the template**:
+   ```bash
+   cp prompts/conversation_extraction.yaml.example prompts/conversation_extraction.yaml
+   ```
+
+2. **Edit the template** to suit your needs:
+   ```yaml
+   # Example customization: Focus on technical conversations
+   system_prompt: |
+     You are an expert technical conversation analyst specializing in software development discussions.
+   
+   rules:
+     - "Extract technical terms and preserve exact terminology"
+     - "Identify code snippets and technical references"
+     - "Preserve URLs, file paths, and technical identifiers"
+     - "Detect technical roles (developer, architect, QA, etc.)"
+   ```
+
+3. **Test your customization**:
+   ```python
+   # The plugin will automatically use your custom prompt
+   plugin = DefaultPlugin()
+   outputs = plugin.convert(technical_conversation_text, file_path)
+   ```
+
+### Common Customizations
+
+**For Meeting Transcripts**:
+```yaml
+rules:
+  - "Identify action items and decisions"
+  - "Preserve timestamps and agenda items"
+  - "Extract meeting metadata (attendees, duration)"
+```
+
+**For Customer Support Conversations**:
+```yaml
+rules:
+  - "Identify customer issues and resolutions"
+  - "Preserve ticket numbers and reference IDs"
+  - "Extract sentiment and urgency indicators"
+```
+
+**For Educational Content**:
+```yaml
+rules:
+  - "Identify questions and answers clearly"
+  - "Preserve instructional context and examples"
+  - "Extract learning objectives and key concepts"
+```
+
+### Fallback Behavior
+
+- If `prompts/conversation_extraction.yaml` exists, the plugin uses your custom template
+- If not found, it falls back to the built-in template
+- This ensures the plugin works out-of-the-box while allowing customization
+
+### Template Variables
+
+The template must include the `{input_text}` placeholder:
+```yaml
+template: |
+  Your custom instructions here...
+  
+  INPUT TEXT:
+  {input_text}
+  
+  Extract conversations following the format above.
+```
+
+## Step 8: Understanding Plugin Behavior
 
 The default plugin demonstrates key plugin interface behaviors:
 
@@ -172,7 +258,7 @@ for i, test_input in enumerate(test_inputs, 1):
 # Output: All return True (fallback behavior)
 ```
 
-## Step 7: Integration with Plugin System
+## Step 9: Integration with Plugin System
 
 In a real system, the default plugin works as part of a plugin registry:
 

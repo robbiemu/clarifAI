@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PromptTemplate:
     """Container for a loaded prompt template with metadata."""
-    
+
     role: str
     description: str
     template: str
@@ -30,14 +30,20 @@ class PromptTemplate:
 
 class PromptLoader:
     """Utility class for loading externalized prompt templates from YAML files."""
-    
-    def __init__(self, prompts_dir: Optional[Path] = None):
+
+    def __init__(
+        self,
+        prompts_dir: Optional[Path] = None,
+        user_prompts_dir: Optional[Path] = None,
+    ):
         """
         Initialize the prompt loader.
-        
+
         Args:
-            prompts_dir: Directory containing prompt YAML files. 
+            prompts_dir: Directory containing built-in prompt YAML files.
                         Defaults to shared/clarifai_shared/prompts/
+            user_prompts_dir: Directory containing user-customized prompt files.
+                             Defaults to ./prompts/ relative to current working directory
         """
         if prompts_dir is None:
             # Default to the prompts directory in clarifai_shared
@@ -45,91 +51,136 @@ class PromptLoader:
             self.prompts_dir = current_file.parent.parent / "prompts"
         else:
             self.prompts_dir = Path(prompts_dir)
-            
+
+        if user_prompts_dir is None:
+            # Default to prompts directory in project root
+            self.user_prompts_dir = Path.cwd() / "prompts"
+        else:
+            self.user_prompts_dir = Path(user_prompts_dir)
+
         if not self.prompts_dir.exists():
-            logger.warning(f"Prompts directory does not exist: {self.prompts_dir}")
-    
+            logger.warning(
+                f"Built-in prompts directory does not exist: {self.prompts_dir}"
+            )
+
+        # User prompts directory is optional
+        if self.user_prompts_dir.exists():
+            logger.debug(f"User prompts directory found: {self.user_prompts_dir}")
+
+    def _find_template_file(self, template_name: str) -> Path:
+        """
+        Find the template file, checking user directory first, then built-in directory.
+
+        Args:
+            template_name: Name of the template file (without .yaml extension)
+
+        Returns:
+            Path to the template file
+
+        Raises:
+            FileNotFoundError: If template file doesn't exist in either location
+        """
+        # Check user prompts directory first
+        user_template_path = self.user_prompts_dir / f"{template_name}.yaml"
+        if user_template_path.exists():
+            logger.debug(f"Using user-customized prompt: {user_template_path}")
+            return user_template_path
+
+        # Fall back to built-in prompts directory
+        builtin_template_path = self.prompts_dir / f"{template_name}.yaml"
+        if builtin_template_path.exists():
+            logger.debug(f"Using built-in prompt: {builtin_template_path}")
+            return builtin_template_path
+
+        # Neither location has the template
+        raise FileNotFoundError(
+            f"Prompt template '{template_name}' not found in user prompts ({user_template_path}) "
+            f"or built-in prompts ({builtin_template_path})"
+        )
+
     def load_template(self, template_name: str) -> PromptTemplate:
         """
         Load a prompt template from a YAML file.
-        
+
+        Checks user-customized prompts directory first, then falls back to built-in prompts.
+
         Args:
             template_name: Name of the template file (without .yaml extension)
-            
+
         Returns:
             PromptTemplate instance with loaded data
-            
+
         Raises:
             FileNotFoundError: If template file doesn't exist
             ValueError: If template is malformed or missing required fields
         """
-        template_path = self.prompts_dir / f"{template_name}.yaml"
-        
-        if not template_path.exists():
-            raise FileNotFoundError(f"Prompt template not found: {template_path}")
-        
+        template_path = self._find_template_file(template_name)
+
         try:
-            with open(template_path, 'r', encoding='utf-8') as f:
+            with open(template_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
         except yaml.YAMLError as e:
             raise ValueError(f"Invalid YAML in template {template_name}: {e}")
-        
+
         # Validate required fields
-        required_fields = ['role', 'description', 'template', 'variables']
+        required_fields = ["role", "description", "template", "variables"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
-            raise ValueError(f"Template {template_name} missing required fields: {missing_fields}")
-        
-        logger.debug(f"Loaded prompt template: {template_name}")
-        
+            raise ValueError(
+                f"Template {template_name} missing required fields: {missing_fields}"
+            )
+
+        logger.debug(f"Loaded prompt template: {template_name} from {template_path}")
+
         return PromptTemplate(
-            role=data['role'],
-            description=data['description'],
-            template=data['template'],
-            variables=data['variables'],
-            system_prompt=data.get('system_prompt'),
-            instructions=data.get('instructions'),
-            output_format=data.get('output_format'),
-            rules=data.get('rules')
+            role=data["role"],
+            description=data["description"],
+            template=data["template"],
+            variables=data["variables"],
+            system_prompt=data.get("system_prompt"),
+            instructions=data.get("instructions"),
+            output_format=data.get("output_format"),
+            rules=data.get("rules"),
         )
-    
+
     def format_template(self, template: PromptTemplate, **kwargs) -> str:
         """
         Format a template with provided variables.
-        
+
         Args:
             template: The loaded template
             **kwargs: Variable values to inject into the template
-            
+
         Returns:
             Formatted prompt string
-            
+
         Raises:
             ValueError: If required variables are missing
         """
         # Check for required variables
         required_vars = [
-            var_name for var_name, var_config in template.variables.items()
-            if var_config.get('required', False)
+            var_name
+            for var_name, var_config in template.variables.items()
+            if var_config.get("required", False)
         ]
-        
+
         missing_vars = [var for var in required_vars if var not in kwargs]
         if missing_vars:
             raise ValueError(f"Missing required template variables: {missing_vars}")
-        
+
         try:
             return template.template.format(**kwargs)
         except KeyError as e:
             raise ValueError(f"Template formatting error - missing variable: {e}")
-    
+
     def load_and_format(self, template_name: str, **kwargs) -> str:
         """
         Convenience method to load a template and format it in one call.
-        
+
         Args:
             template_name: Name of the template file (without .yaml extension)
             **kwargs: Variable values to inject into the template
-            
+
         Returns:
             Formatted prompt string
         """
@@ -152,11 +203,11 @@ def get_prompt_loader() -> PromptLoader:
 def load_prompt_template(template_name: str, **kwargs) -> str:
     """
     Convenience function to load and format a prompt template.
-    
+
     Args:
         template_name: Name of the template file (without .yaml extension)
         **kwargs: Variable values to inject into the template
-        
+
     Returns:
         Formatted prompt string
     """
