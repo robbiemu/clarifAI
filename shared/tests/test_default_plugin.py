@@ -8,7 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from clarifai_shared.plugins.default_plugin import DefaultPlugin, ConversationExtractorAgent
+from clarifai_shared.plugins.default_plugin import (
+    DefaultPlugin,
+    ConversationExtractorAgent,
+)
 
 
 @pytest.fixture
@@ -38,22 +41,31 @@ alice: Hello, how are you?
 bob: I'm doing well, thanks for asking!
 alice: That's great to hear.
     """
-    
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
         f.write(raw_input)
         temp_path = Path(f.name)
-    
+
     try:
         conversations = conversation_agent.extract_conversations(raw_input, temp_path)
-        
+
         assert len(conversations) == 1
         conv = conversations[0]
-        
+
         assert len(conv["messages"]) == 3
         assert conv["participants"] == ["alice", "bob"]
-        assert conv["messages"][0] == {"speaker": "alice", "text": "Hello, how are you?"}
-        assert conv["messages"][1] == {"speaker": "bob", "text": "I'm doing well, thanks for asking!"}
-        assert conv["messages"][2] == {"speaker": "alice", "text": "That's great to hear."}
+        assert conv["messages"][0] == {
+            "speaker": "alice",
+            "text": "Hello, how are you?",
+        }
+        assert conv["messages"][1] == {
+            "speaker": "bob",
+            "text": "I'm doing well, thanks for asking!",
+        }
+        assert conv["messages"][2] == {
+            "speaker": "alice",
+            "text": "That's great to hear.",
+        }
     finally:
         temp_path.unlink()
 
@@ -76,27 +88,27 @@ SESSION_END: 2023-12-22T10:05:00Z
 DURATION: 5m0s
 EXPORT_FORMAT: Custom_LOG_v2.1
     """
-    
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
         f.write(raw_input)
         temp_path = Path(f.name)
-    
+
     try:
         conversations = conversation_agent.extract_conversations(raw_input, temp_path)
-        
+
         assert len(conversations) == 1
         conv = conversations[0]
-        
+
         assert conv["title"] == "Project Discussion"
         assert set(conv["participants"]) == {"alice", "bob"}
         assert len(conv["messages"]) == 3
-        
+
         # Check first message has timestamp
         first_msg = conv["messages"][0]
         assert first_msg["speaker"] == "alice"
         assert first_msg["text"] == "Let's discuss the project timeline."
         assert first_msg["timestamp"] == "10:00:00"
-        
+
         # Check metadata extraction
         metadata = conv["metadata"]
         assert metadata["session_id"] == "sess_123abc"
@@ -114,11 +126,11 @@ It has multiple lines.
 But no conversation format.
 No speakers or messages.
     """
-    
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
         f.write(raw_input)
         temp_path = Path(f.name)
-    
+
     try:
         conversations = conversation_agent.extract_conversations(raw_input, temp_path)
         assert len(conversations) == 0
@@ -133,52 +145,52 @@ alice: How's the weather today?
 bob: It's quite nice, sunny and warm.
 alice: Perfect for a walk in the park!
     """
-    
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
         f.write(raw_input)
         temp_path = Path(f.name)
-    
+
     try:
         plugin = DefaultPlugin()
         outputs = plugin.convert(raw_input, temp_path)
-        
+
         assert len(outputs) == 1
         output = outputs[0]
-        
+
         # Check basic structure
         assert output.title
         assert output.markdown_text
         assert output.metadata
-        
+
         # Check metadata
         assert output.metadata["participants"] == ["alice", "bob"]
         assert output.metadata["message_count"] == 3
         assert output.metadata["plugin_metadata"]["source_format"] == "fallback_llm"
-        
+
         # Check markdown format
         markdown = output.markdown_text
-        
+
         # Should have metadata comments at top
         assert "<!-- clarifai:title=" in markdown
         assert "<!-- clarifai:participants=" in markdown
         assert "<!-- clarifai:message_count=3 -->" in markdown
         assert "<!-- clarifai:plugin_metadata=" in markdown
-        
+
         # Should have conversation content
         assert "alice: How's the weather today?" in markdown
         assert "bob: It's quite nice, sunny and warm." in markdown
         assert "alice: Perfect for a walk in the park!" in markdown
-        
+
         # Should have block IDs
         assert "<!-- clarifai:id=blk_" in markdown
         assert "^blk_" in markdown
         assert " ver=1 -->" in markdown
-        
+
         # Should have evaluation scores for substantial conversation
         assert "<!-- clarifai:entailed_score=0.86 -->" in markdown
         assert "<!-- clarifai:coverage_score=0.79 -->" in markdown
         assert "<!-- clarifai:decontextualization_score=0.83 -->" in markdown
-        
+
     finally:
         temp_path.unlink()
 
@@ -189,15 +201,15 @@ def test_default_plugin_convert_no_conversation():
 This is just a regular document.
 No conversation patterns here.
     """
-    
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
         f.write(raw_input)
         temp_path = Path(f.name)
-    
+
     try:
         plugin = DefaultPlugin()
         outputs = plugin.convert(raw_input, temp_path)
-        
+
         assert len(outputs) == 0
     finally:
         temp_path.unlink()
@@ -237,40 +249,47 @@ SESSION_END: 2023-12-22T16:50:30Z
 DURATION: 5m30s
 EXPORT_FORMAT: Custom_XYZ_v2.1
     """
-    
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
         f.write(raw_input)
         temp_path = Path(f.name)
-    
+
     try:
         plugin = DefaultPlugin()
         outputs = plugin.convert(raw_input, temp_path)
-        
+
         assert len(outputs) == 1
         output = outputs[0]
-        
+
         # Check extracted conversation details
         assert output.title == "API Design Review"
-        assert set(output.metadata["participants"]) == {"tech_lead", "junior_dev", "product_manager"}
+        assert set(output.metadata["participants"]) == {
+            "tech_lead",
+            "junior_dev",
+            "product_manager",
+        }
         assert output.metadata["message_count"] == 10
-        
+
         # Check plugin metadata
         plugin_meta = output.metadata["plugin_metadata"]
         assert plugin_meta["session_id"] == "sess_789xyz"
         assert plugin_meta["duration"] == "5m30s"
         assert plugin_meta["original_format"] == "Custom_XYZ_v2.1"
-        
+
         # Check markdown content
         markdown = output.markdown_text
         assert "tech_lead: Let's review the REST API endpoints" in markdown
-        assert "junior_dev: I noticed we have different authentication patterns" in markdown
+        assert (
+            "junior_dev: I noticed we have different authentication patterns"
+            in markdown
+        )
         assert "product_manager: From a product perspective" in markdown
-        
+
         # Check that all messages are included
         assert markdown.count("tech_lead:") == 5  # tech_lead speaks 5 times
         assert markdown.count("junior_dev:") == 3  # junior_dev speaks 3 times
         assert markdown.count("product_manager:") == 2  # product_manager speaks 2 times
-        
+
     finally:
         temp_path.unlink()
 
@@ -278,38 +297,49 @@ EXPORT_FORMAT: Custom_XYZ_v2.1
 def test_default_plugin_markdown_format_compliance():
     """Test that the plugin output complies with expected markdown format."""
     raw_input = "speaker1: Hello\nspeaker2: Hi there"
-    
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
         f.write(raw_input)
         temp_path = Path(f.name)
-    
+
     try:
         plugin = DefaultPlugin()
         outputs = plugin.convert(raw_input, temp_path)
-        
+
         assert len(outputs) == 1
         markdown = outputs[0].markdown_text
-        
-        lines = markdown.split('\n')
-        
+
+        lines = markdown.split("\n")
+
         # First few lines should be metadata comments
-        metadata_lines = [line for line in lines if line.startswith('<!-- clarifai:')]
-        assert len(metadata_lines) >= 4  # title, created_at, participants, message_count, plugin_metadata
-        
+        metadata_lines = [line for line in lines if line.startswith("<!-- clarifai:")]
+        assert (
+            len(metadata_lines) >= 4
+        )  # title, created_at, participants, message_count, plugin_metadata
+
         # Should have proper block ID format
         import re
-        block_ids = re.findall(r'<!-- clarifai:id=(blk_[a-z0-9]{6}) ver=1 -->', markdown)
-        anchors = re.findall(r'\^(blk_[a-z0-9]{6})', markdown)
-        
-        assert len(block_ids) == len(anchors)  # Each block ID should have corresponding anchor
+
+        block_ids = re.findall(
+            r"<!-- clarifai:id=(blk_[a-z0-9]{6}) ver=1 -->", markdown
+        )
+        anchors = re.findall(r"\^(blk_[a-z0-9]{6})", markdown)
+
+        assert len(block_ids) == len(
+            anchors
+        )  # Each block ID should have corresponding anchor
         assert set(block_ids) == set(anchors)  # IDs and anchors should match
-        
+
         # Check JSON in metadata is valid
-        participants_line = next(line for line in lines if 'clarifai:participants=' in line)
-        participants_json = participants_line.split('clarifai:participants=')[1].split(' -->')[0]
+        participants_line = next(
+            line for line in lines if "clarifai:participants=" in line
+        )
+        participants_json = participants_line.split("clarifai:participants=")[1].split(
+            " -->"
+        )[0]
         participants = json.loads(participants_json)
         assert isinstance(participants, list)
-        
+
     finally:
         temp_path.unlink()
 
@@ -323,32 +353,35 @@ speaker1: Message 3
 speaker2: Message 4
 speaker1: Message 5
     """
-    
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
         f.write(raw_input)
         temp_path = Path(f.name)
-    
+
     try:
         plugin = DefaultPlugin()
         outputs = plugin.convert(raw_input, temp_path)
-        
+
         assert len(outputs) == 1
         markdown = outputs[0].markdown_text
-        
+
         import re
+
         # Extract block IDs from comments and anchors separately
-        comment_ids = re.findall(r'<!-- clarifai:id=(blk_[a-z0-9]{6}) ver=1 -->', markdown)
-        anchor_ids = re.findall(r'\^(blk_[a-z0-9]{6})', markdown)
-        
+        comment_ids = re.findall(
+            r"<!-- clarifai:id=(blk_[a-z0-9]{6}) ver=1 -->", markdown
+        )
+        anchor_ids = re.findall(r"\^(blk_[a-z0-9]{6})", markdown)
+
         # Each message should have exactly one ID in comment and one matching anchor
         assert len(comment_ids) == 5  # 5 messages
-        assert len(anchor_ids) == 5   # 5 corresponding anchors
+        assert len(anchor_ids) == 5  # 5 corresponding anchors
         assert comment_ids == anchor_ids  # IDs should match exactly
-        
+
         # All IDs should be unique (no duplicates within comments or within anchors)
         assert len(comment_ids) == len(set(comment_ids))
         assert len(anchor_ids) == len(set(anchor_ids))
-        
+
     finally:
         temp_path.unlink()
 
@@ -356,22 +389,22 @@ speaker1: Message 5
 def test_default_plugin_short_conversation_no_scores():
     """Test that short conversations don't get evaluation scores."""
     raw_input = "speaker1: Hello\nspeaker2: Hi"
-    
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
         f.write(raw_input)
         temp_path = Path(f.name)
-    
+
     try:
         plugin = DefaultPlugin()
         outputs = plugin.convert(raw_input, temp_path)
-        
+
         assert len(outputs) == 1
         markdown = outputs[0].markdown_text
-        
+
         # Short conversation (< 3 messages) should not have evaluation scores
         assert "clarifai:entailed_score" not in markdown
         assert "clarifai:coverage_score" not in markdown
         assert "clarifai:decontextualization_score" not in markdown
-        
+
     finally:
         temp_path.unlink()

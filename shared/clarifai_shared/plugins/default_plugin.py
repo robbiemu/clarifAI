@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 class ConversationExtractorAgent:
     """LLM-powered agent for extracting conversations from unstructured text."""
-    
+
     def __init__(self, llm: Optional[LLM] = None):
         """Initialize the agent with an LLM instance."""
         if llm is None:
@@ -46,44 +46,48 @@ class ConversationExtractorAgent:
             # Note: Future versions will support model.fallback_plugin configuration
             # as specified in docs/arch/design_config_panel.md
             config = load_config(validate=False)
-            api_key = getattr(config, 'openai_api_key', None)
+            api_key = getattr(config, "openai_api_key", None)
             if api_key:
                 self.llm = OpenAI(api_key=api_key, model="gpt-3.5-turbo")
                 logger.info("Initialized ConversationExtractorAgent with OpenAI LLM")
             else:
                 # Graceful fallback for testing/development when no LLM is available
                 self.llm = None
-                logger.info("ConversationExtractorAgent initialized without LLM (fallback mode)")
+                logger.info(
+                    "ConversationExtractorAgent initialized without LLM (fallback mode)"
+                )
         else:
             self.llm = llm
-            logger.info(f"ConversationExtractorAgent initialized with provided LLM: {type(llm).__name__}")
-    
+            logger.info(
+                f"ConversationExtractorAgent initialized with provided LLM: {type(llm).__name__}"
+            )
+
     def extract_conversations(self, raw_input: str, path: Path) -> List[Dict[str, Any]]:
         """
         Extract conversations from raw input using LLM analysis.
-        
+
         This method implements the agent responsibilities from docs/arch/idea-default_plugin_task.md:
         - Determines if the input contains conversations
         - Returns empty list if none found
         - Splits multiple conversations if found
         - Formats as structured data for Markdown conversion
-        
+
         Args:
             raw_input: The raw text content
             path: Path to the original file
-            
+
         Returns:
             List of conversation dictionaries with metadata
         """
         logger.debug(f"Extracting conversations from file: {path}")
-        
+
         if self.llm is None:
             # Fallback mode for testing/development
             logger.debug("Using fallback extraction (no LLM available)")
             return self._fallback_extraction(raw_input, path)
-        
+
         prompt = self._build_extraction_prompt(raw_input)
-        
+
         try:
             logger.debug("Calling LLM for conversation extraction")
             response = self.llm.complete(prompt)
@@ -94,7 +98,7 @@ class ConversationExtractorAgent:
             # Graceful fallback if LLM fails, following error handling docs
             logger.warning(f"LLM extraction failed, using fallback: {e}")
             return self._fallback_extraction(raw_input, path)
-    
+
     def _build_extraction_prompt(self, raw_input: str) -> str:
         """Build the prompt for conversation extraction."""
         return f"""
@@ -135,130 +139,141 @@ INPUT TEXT:
 
 RESPONSE:"""
 
-    def _parse_llm_response(self, response: str, raw_input: str, path: Path) -> List[Dict[str, Any]]:
+    def _parse_llm_response(
+        self, response: str, raw_input: str, path: Path
+    ) -> List[Dict[str, Any]]:
         """Parse the LLM response into conversation data."""
         if "NO_CONVERSATION" in response:
             return []
-        
+
         try:
             # Try to extract JSON from the response
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if json_match:
                 data = json.loads(json_match.group())
                 return data.get("conversations", [])
         except json.JSONDecodeError:
             pass
-        
+
         # Fallback to simple extraction if JSON parsing fails
         return self._fallback_extraction(raw_input, path)
-    
+
     def _fallback_extraction(self, raw_input: str, path: Path) -> List[Dict[str, Any]]:
         """
         Simple fallback extraction using pattern matching.
-        
+
         This method handles basic conversation formats when LLM is unavailable,
         following the graceful degradation pattern from docs/arch/on-error-handling-and-resilience.md
         """
         logger.debug("Using pattern-based fallback extraction")
         conversations = []
-        
+
         # Look for common conversation patterns
-        lines = raw_input.strip().split('\n')
+        lines = raw_input.strip().split("\n")
         messages = []
         participants = set()
-        
+
         # Pattern 1: Custom format like "ENTRY [timestamp] speaker >> message" (check first)
-        entry_pattern = r'^ENTRY\s*\[([^\]]+)\]\s*([^>]+)\s*>>\s*(.+)$'
-        
+        entry_pattern = r"^ENTRY\s*\[([^\]]+)\]\s*([^>]+)\s*>>\s*(.+)$"
+
         # Pattern 2: "speaker: message" format (but exclude metadata lines)
-        speaker_pattern = r'^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.+)$'
-        
+        speaker_pattern = r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.+)$"
+
         # Metadata fields to exclude from speaker detection
         metadata_fields = {
-            'SESSION_ID', 'START_TIME', 'PARTICIPANTS', 'TOPIC', 'SESSION_END', 
-            'DURATION', 'EXPORT_FORMAT', 'CONVERSATION_LOG'
+            "SESSION_ID",
+            "START_TIME",
+            "PARTICIPANTS",
+            "TOPIC",
+            "SESSION_END",
+            "DURATION",
+            "EXPORT_FORMAT",
+            "CONVERSATION_LOG",
         }
-        
+
         for line in lines:
             line = line.strip()
-            if not line or line.startswith('<!--') or line.startswith('='):
+            if not line or line.startswith("<!--") or line.startswith("="):
                 continue
-            
+
             # Try ENTRY format first (more specific)
             match = re.match(entry_pattern, line)
             if match:
                 timestamp = match.group(1).strip()
                 speaker = match.group(2).strip()
                 text = match.group(3).strip()
-                messages.append({"speaker": speaker, "text": text, "timestamp": timestamp})
+                messages.append(
+                    {"speaker": speaker, "text": text, "timestamp": timestamp}
+                )
                 participants.add(speaker)
                 continue
-                
+
             # Try speaker: message format (but exclude metadata)
             match = re.match(speaker_pattern, line)
             if match:
                 speaker = match.group(1).strip()
                 text = match.group(2).strip()
-                
+
                 # Skip if this looks like metadata
                 if speaker.upper() in metadata_fields:
                     continue
-                    
+
                 messages.append({"speaker": speaker, "text": text})
                 participants.add(speaker)
                 continue
-        
+
         if messages:
             # Extract metadata from the raw input
             metadata = self._extract_metadata(raw_input, path)
-            
+
             conversation = {
                 "title": self._generate_title(raw_input, list(participants)),
-                "participants": sorted(list(participants)),  # Sort for deterministic order
+                "participants": sorted(
+                    list(participants)
+                ),  # Sort for deterministic order
                 "messages": messages,
-                "metadata": metadata
+                "metadata": metadata,
             }
             conversations.append(conversation)
-            logger.info(f"Fallback extraction found conversation with {len(messages)} messages and {len(participants)} participants")
+            logger.info(
+                f"Fallback extraction found conversation with {len(messages)} messages and {len(participants)} participants"
+            )
         else:
             logger.info("No conversation patterns detected in fallback extraction")
-        
+
         return conversations
-    
+
     def _extract_metadata(self, raw_input: str, path: Path) -> Dict[str, Any]:
         """Extract metadata from the raw input."""
-        metadata = {
-            "source_format": "fallback_llm",
-            "original_format": "unknown"
-        }
-        
+        metadata = {"source_format": "fallback_llm", "original_format": "unknown"}
+
         # Look for common metadata patterns
-        lines = raw_input.split('\n')
+        lines = raw_input.split("\n")
         for line in lines:
             line = line.strip()
-            
+
             # Session ID
-            if 'SESSION_ID:' in line:
-                metadata["session_id"] = line.split('SESSION_ID:')[1].strip()
-            
+            if "SESSION_ID:" in line:
+                metadata["session_id"] = line.split("SESSION_ID:")[1].strip()
+
             # Duration
-            if 'DURATION:' in line:
-                metadata["duration"] = line.split('DURATION:')[1].strip()
-            
+            if "DURATION:" in line:
+                metadata["duration"] = line.split("DURATION:")[1].strip()
+
             # Format info
-            if 'EXPORT_FORMAT:' in line:
-                metadata["original_format"] = line.split('EXPORT_FORMAT:')[1].strip()
-        
+            if "EXPORT_FORMAT:" in line:
+                metadata["original_format"] = line.split("EXPORT_FORMAT:")[1].strip()
+
         return metadata
-    
+
     def _generate_title(self, raw_input: str, participants: List[str]) -> str:
         """Generate a title for the conversation."""
         # Look for topic or title in the input
-        lines = raw_input.split('\n')
+        lines = raw_input.split("\n")
         for line in lines:
-            if 'TOPIC:' in line:
-                return line.split('TOPIC:')[1].strip()
-        
+            if "TOPIC:" in line:
+                return line.split("TOPIC:")[1].strip()
+
         # Fallback to generic title
         if len(participants) > 1:
             return f"Conversation between {', '.join(participants)}"
@@ -271,137 +286,147 @@ RESPONSE:"""
 class DefaultPlugin(Plugin):
     """
     Default/fallback plugin that always accepts input and uses LLM-based conversion.
-    
+
     This plugin implements the requirements from docs/arch/idea-default_plugin_task.md:
     - Always returns True from can_accept()
     - Uses an LLM agent to interpret and format unstructured text
     - Extracts conversations and outputs standard ClarifAI Markdown
     - Includes appropriate metadata with plugin_metadata field
     """
-    
+
     def __init__(self, llm: Optional[LLM] = None):
         """Initialize the plugin with an optional LLM instance."""
         self.agent = ConversationExtractorAgent(llm)
-    
+
     def can_accept(self, raw_input: str) -> bool:
         """Always accept input - this is the fallback plugin."""
         return True
-    
+
     def convert(self, raw_input: str, path: Path) -> List[MarkdownOutput]:
         """
         Convert raw input to ClarifAI Markdown format using LLM analysis.
-        
+
         This method implements the plugin behavior from docs/arch/idea-default_plugin_task.md:
         - Calls the agent for conversation extraction
         - Wraps results as MarkdownOutput objects
         - Returns empty list if no conversations found (plugin skips file)
-        
+
         Args:
             raw_input: The raw text content
             path: Path to the input file
-            
+
         Returns:
             List of MarkdownOutput objects (may be empty if no conversations found)
         """
         logger.debug(f"Converting file: {path}")
-        
+
         conversations = self.agent.extract_conversations(raw_input, path)
-        
+
         if not conversations:
             # No conversations found - return empty list (plugin skips file)
             logger.info(f"No conversations found in {path}, skipping file")
             return []
-        
+
         logger.info(f"Converting {len(conversations)} conversation(s) to Markdown")
         outputs = []
         for i, conv in enumerate(conversations):
             markdown_text = self._format_conversation_as_markdown(conv)
-            
+
             metadata = {
                 "created_at": None,  # Will be filled by ensure_defaults
                 "participants": conv["participants"],
                 "message_count": len(conv["messages"]),
-                "plugin_metadata": conv.get("metadata", {})
+                "plugin_metadata": conv.get("metadata", {}),
             }
-            
-            outputs.append(MarkdownOutput(
-                title=conv["title"],
-                markdown_text=markdown_text,
-                metadata=metadata
-            ))
-            logger.debug(f"Converted conversation {i+1}/{len(conversations)}: '{conv['title']}'")
-        
+
+            outputs.append(
+                MarkdownOutput(
+                    title=conv["title"], markdown_text=markdown_text, metadata=metadata
+                )
+            )
+            logger.debug(
+                f"Converted conversation {i + 1}/{len(conversations)}: '{conv['title']}'"
+            )
+
         return outputs
-    
+
     def _format_conversation_as_markdown(self, conversation: Dict[str, Any]) -> str:
         """
         Format a conversation as ClarifAI Tier 1 Markdown.
-        
+
         This follows the format specified in docs/arch/idea-creating_tier1_documents.md:
         - Metadata comments at the top
-        - speaker: text blocks  
+        - speaker: text blocks
         - <!-- clarifai:id=blk_xyz ver=1 --> comments
         - ^blk_xyz anchors
         - Evaluation scores for substantial conversations
         """
         lines = []
-        
+
         # Add metadata comments at the top
         participants_json = json.dumps(conversation["participants"])
         message_count = len(conversation["messages"])
         plugin_metadata = json.dumps(conversation.get("metadata", {}))
-        
-        lines.extend([
-            f'<!-- clarifai:title={conversation["title"]} -->',
-            f'<!-- clarifai:created_at=PLACEHOLDER -->',  # Will be replaced by ensure_defaults
-            f'<!-- clarifai:participants={participants_json} -->',
-            f'<!-- clarifai:message_count={message_count} -->',
-            f'<!-- clarifai:plugin_metadata={plugin_metadata} -->',
-            ''  # Empty line after metadata
-        ])
-        
+
+        lines.extend(
+            [
+                f"<!-- clarifai:title={conversation['title']} -->",
+                "<!-- clarifai:created_at=PLACEHOLDER -->",  # Will be replaced by ensure_defaults
+                f"<!-- clarifai:participants={participants_json} -->",
+                f"<!-- clarifai:message_count={message_count} -->",
+                f"<!-- clarifai:plugin_metadata={plugin_metadata} -->",
+                "",  # Empty line after metadata
+            ]
+        )
+
         # Track used block IDs to ensure uniqueness
         used_block_ids = set()
-        
+
         # Add conversation messages with block IDs
         for i, message in enumerate(conversation["messages"]):
             speaker = message["speaker"]
             text = message["text"]
-            
+
             # Generate unique block ID
             block_id = self._generate_unique_block_id(used_block_ids)
             used_block_ids.add(block_id)
-            
-            lines.extend([
-                f'{speaker}: {text}',
-                f'<!-- clarifai:id={block_id} ver=1 -->',
-                f'^{block_id}',
-                ''  # Empty line between messages
-            ])
-        
+
+            lines.extend(
+                [
+                    f"{speaker}: {text}",
+                    f"<!-- clarifai:id={block_id} ver=1 -->",
+                    f"^{block_id}",
+                    "",  # Empty line between messages
+                ]
+            )
+
         # Add evaluation scores if this is a substantive conversation
         # This follows the pattern from test fixtures and evaluation agent requirements
         if message_count >= 3:
-            lines.extend([
-                '<!-- clarifai:entailed_score=0.86 -->',
-                '<!-- clarifai:coverage_score=0.79 -->',
-                '<!-- clarifai:decontextualization_score=0.83 -->'
-            ])
-        
-        return '\n'.join(lines)
-    
+            lines.extend(
+                [
+                    "<!-- clarifai:entailed_score=0.86 -->",
+                    "<!-- clarifai:coverage_score=0.79 -->",
+                    "<!-- clarifai:decontextualization_score=0.83 -->",
+                ]
+            )
+
+        return "\n".join(lines)
+
     def _generate_unique_block_id(self, used_ids: set) -> str:
         """Generate a unique block ID that hasn't been used."""
         chars = string.ascii_lowercase + string.digits
         max_attempts = 100  # Prevent infinite loop
-        
+
         for _ in range(max_attempts):
-            suffix = ''.join(random.choices(chars, k=6))
-            block_id = f'blk_{suffix}'
+            # Using random for non-cryptographic block ID generation
+            suffix = "".join(random.choices(chars, k=6))  # nosec B311
+            block_id = f"blk_{suffix}"
             if block_id not in used_ids:
                 return block_id
-        
+
         # Fallback - this should be extremely rare
         import time
+
         suffix = f"{int(time.time() * 1000000) % 1000000:06d}"
-        return f'blk_{suffix}'
+        return f"blk_{suffix}"

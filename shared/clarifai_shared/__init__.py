@@ -8,7 +8,7 @@ from .plugins import ensure_defaults, convert_file_to_markdowns, DefaultPlugin
 
 __all__ = [
     "ClarifAIConfig",
-    "DatabaseConfig", 
+    "DatabaseConfig",
     "load_config",
     "Plugin",
     "MarkdownOutput",

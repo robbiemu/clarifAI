@@ -2,30 +2,36 @@
 Utility functions for the plugin system.
 """
 
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import List
 
 from ..plugin_interface import Plugin, MarkdownOutput, UnknownFormatError
 
+logger = logging.getLogger(__name__)
+
 
 def ensure_defaults(md: MarkdownOutput, path: Path) -> MarkdownOutput:
     """
     Fill in any missing default metadata fields in a MarkdownOutput.
-    
+
     This function ensures all required metadata fields are present
     with sensible defaults, as specified in docs/arch/on-pluggable_formats.md
-    
+
     Args:
         md: The MarkdownOutput to process
         path: Path to the original file (for fallback metadata)
-        
+
     Returns:
         A new MarkdownOutput with all required metadata fields filled
     """
     meta = md.metadata or {}
-    created = meta.get("created_at") or datetime.fromtimestamp(path.stat().st_mtime).isoformat()
-    
+    created = (
+        meta.get("created_at")
+        or datetime.fromtimestamp(path.stat().st_mtime).isoformat()
+    )
+
     # Only generate title if the original title is empty or None
     title = md.title
     if not title:
@@ -39,25 +45,27 @@ def ensure_defaults(md: MarkdownOutput, path: Path) -> MarkdownOutput:
             "participants": meta.get("participants", ["user", "assistant"]),
             "message_count": meta.get("message_count", 0),
             "duration_sec": meta.get("duration_sec"),
-            "plugin_metadata": meta.get("plugin_metadata", {})
-        }
+            "plugin_metadata": meta.get("plugin_metadata", {}),
+        },
     )
 
 
-def convert_file_to_markdowns(input_path: Path, registry: List[Plugin]) -> List[MarkdownOutput]:
+def convert_file_to_markdowns(
+    input_path: Path, registry: List[Plugin]
+) -> List[MarkdownOutput]:
     """
     Main conversion function that tries plugins in order until one succeeds.
-    
+
     This function implements the main execution flow as defined in
     docs/arch/on-pluggable_formats.md
-    
+
     Args:
         input_path: Path to the input file
         registry: List of Plugin instances to try in order
-        
+
     Returns:
         List of MarkdownOutput objects with defaults applied
-        
+
     Raises:
         UnknownFormatError: If no plugin can handle the file
     """
@@ -68,7 +76,14 @@ def convert_file_to_markdowns(input_path: Path, registry: List[Plugin]) -> List[
             try:
                 raw_outputs = plugin.convert(raw_input, input_path)
                 return [ensure_defaults(md, input_path) for md in raw_outputs]
-            except Exception:
-                continue
+            except Exception as e:
+                # Log the specific plugin failure and continue to next plugin
+                logger.warning(
+                    "Plugin %s failed to convert %s: %s",
+                    plugin.__class__.__name__,
+                    input_path.name,
+                    str(e),
+                )
+                # Continue to next plugin that accepts the input  # nosec B112
 
     raise UnknownFormatError(f"No plugin could handle file: {input_path}")
