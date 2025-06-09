@@ -1,17 +1,28 @@
 """
 Default fallback plugin for ClarifAI format conversion.
 
-This plugin implements the fallback/default plugin as specified in
-docs/arch/idea-default_plugin_task.md and docs/project/epic_1/sprint_2-Implement_default_plugin.md
+This plugin implements the fallback/default plugin as specified in:
+- docs/arch/idea-default_plugin_task.md
+- docs/project/epic_1/sprint_2-Implement_default_plugin.md
+- docs/arch/on-pluggable_formats.md
 
 The plugin always accepts input and uses an LLM agent to interpret and format
-unstructured text, extracting conversations and outputting standard ClarifAI Markdown.
+unstructured text, extracting conversations and outputting standard ClarifAI Tier 1 Markdown.
+
+Key Features:
+- Always returns True from can_accept() (fallback behavior)
+- Uses LLM agent for conversation extraction from unstructured text
+- Supports multiple conversation formats via pattern matching
+- Generates ClarifAI-compliant Markdown with block IDs and metadata
+- Graceful fallback when LLM is unavailable
+- Structured logging for debugging and monitoring
 """
 
 import re
 import json
 import random
 import string
+import logging
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
@@ -22,6 +33,9 @@ from ..plugin_interface import Plugin, MarkdownOutput
 from ..config import load_config
 
 
+logger = logging.getLogger(__name__)
+
+
 class ConversationExtractorAgent:
     """LLM-powered agent for extracting conversations from unstructured text."""
     
@@ -29,19 +43,30 @@ class ConversationExtractorAgent:
         """Initialize the agent with an LLM instance."""
         if llm is None:
             # Use OpenAI as default, following the architecture docs
+            # Note: Future versions will support model.fallback_plugin configuration
+            # as specified in docs/arch/design_config_panel.md
             config = load_config(validate=False)
             api_key = getattr(config, 'openai_api_key', None)
             if api_key:
                 self.llm = OpenAI(api_key=api_key, model="gpt-3.5-turbo")
+                logger.info("Initialized ConversationExtractorAgent with OpenAI LLM")
             else:
-                # Fallback for testing - use mock responses
+                # Graceful fallback for testing/development when no LLM is available
                 self.llm = None
+                logger.info("ConversationExtractorAgent initialized without LLM (fallback mode)")
         else:
             self.llm = llm
+            logger.info(f"ConversationExtractorAgent initialized with provided LLM: {type(llm).__name__}")
     
     def extract_conversations(self, raw_input: str, path: Path) -> List[Dict[str, Any]]:
         """
         Extract conversations from raw input using LLM analysis.
+        
+        This method implements the agent responsibilities from docs/arch/idea-default_plugin_task.md:
+        - Determines if the input contains conversations
+        - Returns empty list if none found
+        - Splits multiple conversations if found
+        - Formats as structured data for Markdown conversion
         
         Args:
             raw_input: The raw text content
@@ -50,17 +75,24 @@ class ConversationExtractorAgent:
         Returns:
             List of conversation dictionaries with metadata
         """
+        logger.debug(f"Extracting conversations from file: {path}")
+        
         if self.llm is None:
             # Fallback mode for testing/development
+            logger.debug("Using fallback extraction (no LLM available)")
             return self._fallback_extraction(raw_input, path)
         
         prompt = self._build_extraction_prompt(raw_input)
         
         try:
+            logger.debug("Calling LLM for conversation extraction")
             response = self.llm.complete(prompt)
-            return self._parse_llm_response(response.text, raw_input, path)
-        except Exception:
-            # Graceful fallback if LLM fails
+            conversations = self._parse_llm_response(response.text, raw_input, path)
+            logger.info(f"LLM extracted {len(conversations)} conversation(s)")
+            return conversations
+        except Exception as e:
+            # Graceful fallback if LLM fails, following error handling docs
+            logger.warning(f"LLM extraction failed, using fallback: {e}")
             return self._fallback_extraction(raw_input, path)
     
     def _build_extraction_prompt(self, raw_input: str) -> str:
@@ -123,8 +155,11 @@ RESPONSE:"""
     def _fallback_extraction(self, raw_input: str, path: Path) -> List[Dict[str, Any]]:
         """
         Simple fallback extraction using pattern matching.
-        This handles basic conversation formats when LLM is unavailable.
+        
+        This method handles basic conversation formats when LLM is unavailable,
+        following the graceful degradation pattern from docs/arch/on-error-handling-and-resilience.md
         """
+        logger.debug("Using pattern-based fallback extraction")
         conversations = []
         
         # Look for common conversation patterns
@@ -177,12 +212,16 @@ RESPONSE:"""
             # Extract metadata from the raw input
             metadata = self._extract_metadata(raw_input, path)
             
-            conversations.append({
+            conversation = {
                 "title": self._generate_title(raw_input, list(participants)),
                 "participants": sorted(list(participants)),  # Sort for deterministic order
                 "messages": messages,
                 "metadata": metadata
-            })
+            }
+            conversations.append(conversation)
+            logger.info(f"Fallback extraction found conversation with {len(messages)} messages and {len(participants)} participants")
+        else:
+            logger.info("No conversation patterns detected in fallback extraction")
         
         return conversations
     
@@ -252,6 +291,11 @@ class DefaultPlugin(Plugin):
         """
         Convert raw input to ClarifAI Markdown format using LLM analysis.
         
+        This method implements the plugin behavior from docs/arch/idea-default_plugin_task.md:
+        - Calls the agent for conversation extraction
+        - Wraps results as MarkdownOutput objects
+        - Returns empty list if no conversations found (plugin skips file)
+        
         Args:
             raw_input: The raw text content
             path: Path to the input file
@@ -259,14 +303,18 @@ class DefaultPlugin(Plugin):
         Returns:
             List of MarkdownOutput objects (may be empty if no conversations found)
         """
+        logger.debug(f"Converting file: {path}")
+        
         conversations = self.agent.extract_conversations(raw_input, path)
         
         if not conversations:
             # No conversations found - return empty list (plugin skips file)
+            logger.info(f"No conversations found in {path}, skipping file")
             return []
         
+        logger.info(f"Converting {len(conversations)} conversation(s) to Markdown")
         outputs = []
-        for conv in conversations:
+        for i, conv in enumerate(conversations):
             markdown_text = self._format_conversation_as_markdown(conv)
             
             metadata = {
@@ -281,6 +329,7 @@ class DefaultPlugin(Plugin):
                 markdown_text=markdown_text,
                 metadata=metadata
             ))
+            logger.debug(f"Converted conversation {i+1}/{len(conversations)}: '{conv['title']}'")
         
         return outputs
     
@@ -288,7 +337,12 @@ class DefaultPlugin(Plugin):
         """
         Format a conversation as ClarifAI Tier 1 Markdown.
         
-        This follows the format specified in the test fixtures and documentation.
+        This follows the format specified in docs/arch/idea-creating_tier1_documents.md:
+        - Metadata comments at the top
+        - speaker: text blocks  
+        - <!-- clarifai:id=blk_xyz ver=1 --> comments
+        - ^blk_xyz anchors
+        - Evaluation scores for substantial conversations
         """
         lines = []
         
@@ -326,6 +380,7 @@ class DefaultPlugin(Plugin):
             ])
         
         # Add evaluation scores if this is a substantive conversation
+        # This follows the pattern from test fixtures and evaluation agent requirements
         if message_count >= 3:
             lines.extend([
                 '<!-- clarifai:entailed_score=0.86 -->',
