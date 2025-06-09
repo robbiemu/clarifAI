@@ -44,6 +44,16 @@ class DatabaseConfig:
 
 
 @dataclass
+class VaultPaths:
+    """Vault directory structure configuration."""
+    
+    tier1: str = "tier1"
+    summaries: str = "."
+    concepts: str = "."
+    logs: str = ".clarifai/import_logs"
+
+
+@dataclass
 class ClarifAIConfig:
     """Main configuration class for ClarifAI services."""
 
@@ -68,6 +78,9 @@ class ClarifAIConfig:
     # AI/ML configuration
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
+    
+    # Vault structure configuration
+    paths: VaultPaths = field(default_factory=VaultPaths)
 
     @classmethod
     def from_env(cls, env_file: Optional[str] = None) -> "ClarifAIConfig":
@@ -113,6 +126,14 @@ class ClarifAIConfig:
             password=os.getenv("NEO4J_PASSWORD", ""),
         )
 
+        # Vault paths configuration
+        paths = VaultPaths(
+            tier1=os.getenv("VAULT_TIER1_PATH", "tier1"),
+            summaries=os.getenv("VAULT_SUMMARIES_PATH", "."),
+            concepts=os.getenv("VAULT_CONCEPTS_PATH", "."),
+            logs=os.getenv("VAULT_LOGS_PATH", ".clarifai/import_logs"),
+        )
+
         return cls(
             postgres=postgres,
             neo4j=neo4j,
@@ -126,6 +147,7 @@ class ClarifAIConfig:
             debug=os.getenv("DEBUG", "false").lower() == "true",
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+            paths=paths,
         )
 
     @staticmethod
