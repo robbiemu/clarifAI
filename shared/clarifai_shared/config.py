@@ -61,6 +61,7 @@ class ClarifAIConfig:
 
     # Service configuration
     vault_path: str = "/vault"
+    settings_path: str = "/settings"
     log_level: str = "INFO"
     debug: bool = False
 
@@ -120,6 +121,7 @@ class ClarifAIConfig:
             rabbitmq_user=os.getenv("RABBITMQ_USER", "user"),
             rabbitmq_password=os.getenv("RABBITMQ_PASSWORD", ""),
             vault_path=os.getenv("VAULT_PATH", "/vault"),
+            settings_path=os.getenv("SETTINGS_PATH", "/settings"),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             debug=os.getenv("DEBUG", "false").lower() == "true",
             openai_api_key=os.getenv("OPENAI_API_KEY"),

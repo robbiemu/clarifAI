@@ -53,8 +53,46 @@ class PromptLoader:
             self.prompts_dir = Path(prompts_dir)
 
         if user_prompts_dir is None:
-            # Default to prompts directory in project root
-            self.user_prompts_dir = Path.cwd() / "prompts"
+            # Default to prompts directory in settings (accessible to users in Docker)
+            # Fallback to project root for local development
+            try:
+                # Try relative import first (when imported as part of package)
+                from ..config import load_config
+
+                config = load_config(validate=False)
+                settings_prompts_dir = Path(config.settings_path) / "prompts"
+                # Use settings/prompts if vault path exists, otherwise fallback to ./prompts
+                if Path(config.settings_path).exists():
+                    self.user_prompts_dir = settings_prompts_dir
+                else:
+                    self.user_prompts_dir = Path.cwd() / "prompts"
+            except (ImportError, ValueError):
+                # Try absolute import (when imported directly)
+                try:
+                    import importlib.util
+
+                    # Find the config module
+                    current_file = Path(__file__)
+                    config_path = current_file.parent.parent / "config.py"
+                    if config_path.exists():
+                        spec = importlib.util.spec_from_file_location(
+                            "config", config_path
+                        )
+                        config_module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(config_module)
+
+                        config = config_module.load_config(validate=False)
+                        settings_prompts_dir = Path(config.settings_path) / "prompts"
+                        # Use settings/prompts if vault path exists, otherwise fallback to ./prompts
+                        if Path(config.settings_path).exists():
+                            self.user_prompts_dir = settings_prompts_dir
+                        else:
+                            self.user_prompts_dir = Path.cwd() / "prompts"
+                    else:
+                        raise ImportError("Config module not found")
+                except Exception:
+                    # Fallback to original behavior if config loading fails
+                    self.user_prompts_dir = Path.cwd() / "prompts"
         else:
             self.user_prompts_dir = Path(user_prompts_dir)
 

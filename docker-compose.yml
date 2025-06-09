@@ -53,12 +53,14 @@ services:
       - neo4j
     volumes:
       - ./vault:/vault
+      - ./settings:/settings
     env_file:
       - .env
     networks:
       - clarifai_net
     environment:
       - VAULT_PATH=/vault
+      - SETTINGS_PATH=/settings
       - RABBITMQ_HOST=rabbitmq 
 
   vault-watcher:  # Watches vault for Markdown edits and emits dirty blocks
@@ -67,12 +69,14 @@ services:
       - clarifai-core
     volumes:
       - ./vault:/vault
+      - ./settings:/settings
     env_file:
       - .env
     networks:
       - clarifai_net
     environment:
       - VAULT_PATH=/vault
+      - SETTINGS_PATH=/settings
       - RABBITMQ_HOST=rabbitmq 
 
   scheduler:  # Runs periodic jobs: concept hygiene, vault sync, reprocessing
@@ -81,12 +85,14 @@ services:
       - clarifai-core
     volumes:
       - ./vault:/vault
+      - ./settings:/settings
     env_file:
       - .env
     networks:
       - clarifai_net
     environment:
       - VAULT_PATH=/vault
+      - SETTINGS_PATH=/settings
 
   clarifai-ui:  # Web interface for ClarifAI
     build: ./services/clarifai-ui
@@ -94,6 +100,7 @@ services:
       - clarifai-core
     volumes:
       - ./vault:/vault
+      - ./settings:/settings
     env_file:
       - .env
     ports:
@@ -102,6 +109,7 @@ services:
       - clarifai_net
     environment:
       - VAULT_PATH=/vault
+      - SETTINGS_PATH=/settings
 
 volumes:
   pg_data:

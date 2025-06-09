@@ -73,31 +73,37 @@ services:
   clarifai-core:  # Main processing pipeline: claim extraction, summarization, linking
     build: ./clarifai-core
     depends_on:
+      - rabbitmq
       - postgres
       - neo4j
     volumes:
       - ../vault:/vault
+      - ./settings:/settings
     env_file:
       - .env
     networks:
       - clarifai_net
     environment:
       - VAULT_PATH=/vault
-      - RABBITMQ_HOST=rabbitmq 
+      - SETTINGS_PATH=/settings
+      - RABBITMQ_HOST=rabbitmq
 
   vault-watcher:  # Watches vault for Markdown edits and emits dirty blocks
     build: ./vault-watcher
     depends_on:
+      - rabbitmq
       - clarifai-core
     volumes:
       - ../vault:/vault
+      - ./settings:/settings
     env_file:
       - .env
     networks:
       - clarifai_net
     environment:
       - VAULT_PATH=/vault
-      - RABBITMQ_HOST=rabbitmq 
+      - SETTINGS_PATH=/settings
+      - RABBITMQ_HOST=rabbitmq
 
   scheduler:  # Runs periodic jobs: concept hygiene, vault sync, reprocessing
     build: ./scheduler
@@ -105,12 +111,14 @@ services:
       - clarifai-core
     volumes:
       - ../vault:/vault
+      - ./settings:/settings
     env_file:
       - .env
     networks:
       - clarifai_net
     environment:
       - VAULT_PATH=/vault
+      - SETTINGS_PATH=/settings
 
 volumes:
   pg_data:
@@ -161,6 +169,7 @@ Concept creation and drift merging (from \[on\_concepts.md]) runs in two modes:
 
 * Each service has its own `Dockerfile`.
 * Models (e.g. LLMs, embedders) can be configured via `.env` or mounted config files.
+* User-editable configurations, such as LLM prompt templates, are located in the `./settings` directory, which is mounted into each service. This allows for direct modification of prompts without rebuilding containers.
 * Plugins for new file formats or additional graph analyses can mount as volumes or live in their own containers.
 
 ---

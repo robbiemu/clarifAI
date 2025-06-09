@@ -23,7 +23,7 @@ ClarifAI's agents are designed to dynamically select which LLM to use based on c
 
 All LLM prompts, including system instructions, few-shot examples, and output formatting guidelines, are managed as external configuration templates rather than being hardcoded.
 
-*   **How it works:** Agents load prompt templates from external files (e.g., YAML or dedicated template files) at runtime. These templates define the LLM's role, instructions, and placeholder variables for injecting dynamic context.
+*   **How it works:** Agents load prompt templates from external files (e.g., YAML or dedicated template files) at runtime. These templates are stored in the user-accessible `./settings/prompts` directory, which is mounted into the service containers. This allows users to directly inspect and modify prompts. The templates define the LLM's role, instructions, and placeholder variables for injecting dynamic context.
 *   **Benefit:** This separates prompt engineering from core development, allowing iterative refinement of agent behavior without code changes and simplifying version control of prompts.
 
 ---
