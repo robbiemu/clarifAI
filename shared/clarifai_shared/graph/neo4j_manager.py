@@ -7,11 +7,12 @@ from docs/arch/idea-neo4J-ineteraction.md.
 """
 
 import logging
+import time
 from typing import List, Dict, Any, Optional
 from contextlib import contextmanager
 
-from neo4j import GraphDatabase, Driver, Session
-from neo4j.exceptions import ServiceUnavailable, AuthError
+from neo4j import GraphDatabase, Driver
+from neo4j.exceptions import ServiceUnavailable, AuthError, TransientError
 
 from ..config import ClarifAIConfig
 from .models import Claim, Sentence, ClaimInput, SentenceInput
@@ -45,7 +46,10 @@ class Neo4jGraphManager:
         self.uri = config.neo4j.get_neo4j_bolt_url()
         self.auth = (config.neo4j.user, config.neo4j.password)
         
-        logger.info(f"Initialized Neo4jGraphManager for {self.uri}")
+        logger.info(
+            f"neo4j_manager.__init__: Initialized Neo4jGraphManager for {self.uri}",
+            extra={'service': 'clarifai-core', 'filename.function_name': 'neo4j_manager.__init__'}
+        )
     
     @property
     def driver(self) -> Driver:
@@ -54,9 +58,15 @@ class Neo4jGraphManager:
             try:
                 self._driver = GraphDatabase.driver(self.uri, auth=self.auth)
                 self._driver.verify_connectivity()
-                logger.info("Neo4j driver connected successfully")
+                logger.info(
+                    "neo4j_manager.driver: Neo4j driver connected successfully",
+                    extra={'service': 'clarifai-core', 'filename.function_name': 'neo4j_manager.driver'}
+                )
             except (ServiceUnavailable, AuthError) as e:
-                logger.error(f"Failed to connect to Neo4j: {e}")
+                logger.error(
+                    f"neo4j_manager.driver: Failed to connect to Neo4j: {e}",
+                    extra={'service': 'clarifai-core', 'filename.function_name': 'neo4j_manager.driver'}
+                )
                 raise
         return self._driver
     
@@ -65,7 +75,10 @@ class Neo4jGraphManager:
         if self._driver is not None:
             self._driver.close()
             self._driver = None
-            logger.info("Neo4j driver connection closed")
+            logger.info(
+                "neo4j_manager.close: Neo4j driver connection closed",
+                extra={'service': 'clarifai-core', 'filename.function_name': 'neo4j_manager.close'}
+            )
     
     @contextmanager
     def session(self):
@@ -75,6 +88,47 @@ class Neo4jGraphManager:
             yield session
         finally:
             session.close()
+    
+    def _retry_with_backoff(self, func, *args, **kwargs):
+        """
+        Execute function with retry logic and exponential backoff.
+        
+        Following guidelines from docs/arch/on-error-handling-and-resilience.md
+        for handling transient Neo4j errors.
+        """
+        max_attempts = getattr(self.config, 'processing', {}).get('retries', {}).get('max_attempts', 3)
+        backoff_factor = getattr(self.config, 'processing', {}).get('retries', {}).get('backoff_factor', 2)
+        max_wait_time = getattr(self.config, 'processing', {}).get('retries', {}).get('max_wait_time', 60)
+        
+        for attempt in range(max_attempts):
+            try:
+                logger.debug(
+                    f"neo4j_manager._retry_with_backoff: Attempt {attempt + 1}/{max_attempts}",
+                    extra={'service': 'clarifai-core', 'filename.function_name': f'neo4j_manager.{func.__name__}'}
+                )
+                return func(*args, **kwargs)
+            except (ServiceUnavailable, TransientError) as e:
+                if attempt == max_attempts - 1:
+                    logger.error(
+                        f"neo4j_manager._retry_with_backoff: Final attempt failed: {e}",
+                        extra={'service': 'clarifai-core', 'filename.function_name': f'neo4j_manager.{func.__name__}'}
+                    )
+                    raise
+                
+                wait_time = min(backoff_factor ** attempt, max_wait_time)
+                logger.warning(
+                    f"neo4j_manager._retry_with_backoff: Transient error on attempt {attempt + 1}, "
+                    f"retrying in {wait_time}s: {e}",
+                    extra={'service': 'clarifai-core', 'filename.function_name': f'neo4j_manager.{func.__name__}'}
+                )
+                time.sleep(wait_time)
+            except Exception as e:
+                # Non-transient error, fail immediately
+                logger.error(
+                    f"neo4j_manager._retry_with_backoff: Non-transient error: {e}",
+                    extra={'service': 'clarifai-core', 'filename.function_name': f'neo4j_manager.{func.__name__}'}
+                )
+                raise
     
     def setup_schema(self):
         """
@@ -98,15 +152,26 @@ class Neo4jGraphManager:
             "CREATE INDEX claim_decontextualization_score_index IF NOT EXISTS FOR (c:Claim) ON (c.decontextualization_score)",
         ]
         
-        with self.session() as session:
-            for query in schema_queries:
-                try:
-                    session.run(query)
-                    logger.debug(f"Executed schema query: {query}")
-                except Exception as e:
-                    logger.warning(f"Schema query failed (may already exist): {query}, error: {e}")
+        def _execute_schema():
+            with self.session() as session:
+                for query in schema_queries:
+                    try:
+                        session.run(query)
+                        logger.debug(
+                            f"neo4j_manager.setup_schema: Executed schema query: {query}",
+                            extra={'service': 'clarifai-core', 'filename.function_name': 'neo4j_manager.setup_schema'}
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            f"neo4j_manager.setup_schema: Schema query failed (may already exist): {query}, error: {e}",
+                            extra={'service': 'clarifai-core', 'filename.function_name': 'neo4j_manager.setup_schema'}
+                        )
         
-        logger.info("Neo4j schema setup completed")
+        self._retry_with_backoff(_execute_schema)
+        logger.info(
+            "neo4j_manager.setup_schema: Neo4j schema setup completed",
+            extra={'service': 'clarifai-core', 'filename.function_name': 'neo4j_manager.setup_schema'}
+        )
     
     def create_claims(self, claim_inputs: List[ClaimInput]) -> List[Claim]:
         """
@@ -119,7 +184,10 @@ class Neo4jGraphManager:
             List of created Claim objects
         """
         if not claim_inputs:
-            logger.warning("No claims provided for creation")
+            logger.warning(
+                "neo4j_manager.create_claims: No claims provided for creation",
+                extra={'service': 'clarifai-core', 'filename.function_name': 'neo4j_manager.create_claims'}
+            )
             return []
         
         # Convert inputs to Claim objects
@@ -131,6 +199,15 @@ class Neo4jGraphManager:
             claim_dict = claim.to_dict()
             claim_dict["block_id"] = claim_input.block_id
             claims_data.append(claim_dict)
+        
+        logger.info(
+            f"neo4j_manager.create_claims: Preparing to create {len(claims_data)} claims",
+            extra={
+                'service': 'clarifai-core', 
+                'filename.function_name': 'neo4j_manager.create_claims',
+                'claims_count': len(claims_data)
+            }
+        )
         
         # Batch create using UNWIND (following architecture guidelines)
         cypher_query = """
@@ -148,16 +225,34 @@ class Neo4jGraphManager:
         RETURN c.id as claim_id
         """
         
-        try:
+        def _execute_claim_creation():
             with self.session() as session:
                 result = session.run(cypher_query, claims_data=claims_data)
                 created_ids = [record["claim_id"] for record in result]
-                
-            logger.info(f"Successfully created {len(created_ids)} Claim nodes")
+                return created_ids
+        
+        try:
+            created_ids = self._retry_with_backoff(_execute_claim_creation)
+            logger.info(
+                f"neo4j_manager.create_claims: Successfully created {len(created_ids)} Claim nodes",
+                extra={
+                    'service': 'clarifai-core', 
+                    'filename.function_name': 'neo4j_manager.create_claims',
+                    'created_count': len(created_ids)
+                }
+            )
             return claims
             
         except Exception as e:
-            logger.error(f"Failed to create Claims: {e}")
+            logger.error(
+                f"neo4j_manager.create_claims: Failed to create Claims: {e}",
+                extra={
+                    'service': 'clarifai-core', 
+                    'filename.function_name': 'neo4j_manager.create_claims',
+                    'claims_count': len(claims_data),
+                    'error': str(e)
+                }
+            )
             raise
     
     def create_sentences(self, sentence_inputs: List[SentenceInput]) -> List[Sentence]:
@@ -171,7 +266,10 @@ class Neo4jGraphManager:
             List of created Sentence objects
         """
         if not sentence_inputs:
-            logger.warning("No sentences provided for creation")
+            logger.warning(
+                "neo4j_manager.create_sentences: No sentences provided for creation",
+                extra={'service': 'clarifai-core', 'filename.function_name': 'neo4j_manager.create_sentences'}
+            )
             return []
         
         # Convert inputs to Sentence objects
@@ -183,6 +281,15 @@ class Neo4jGraphManager:
             sentence_dict = sentence.to_dict()
             sentence_dict["block_id"] = sentence_input.block_id
             sentences_data.append(sentence_dict)
+        
+        logger.info(
+            f"neo4j_manager.create_sentences: Preparing to create {len(sentences_data)} sentences",
+            extra={
+                'service': 'clarifai-core', 
+                'filename.function_name': 'neo4j_manager.create_sentences',
+                'sentences_count': len(sentences_data)
+            }
+        )
         
         # Batch create using UNWIND
         cypher_query = """
@@ -199,16 +306,34 @@ class Neo4jGraphManager:
         RETURN s.id as sentence_id
         """
         
-        try:
+        def _execute_sentence_creation():
             with self.session() as session:
                 result = session.run(cypher_query, sentences_data=sentences_data)
                 created_ids = [record["sentence_id"] for record in result]
-                
-            logger.info(f"Successfully created {len(created_ids)} Sentence nodes")
+                return created_ids
+        
+        try:
+            created_ids = self._retry_with_backoff(_execute_sentence_creation)
+            logger.info(
+                f"neo4j_manager.create_sentences: Successfully created {len(created_ids)} Sentence nodes",
+                extra={
+                    'service': 'clarifai-core', 
+                    'filename.function_name': 'neo4j_manager.create_sentences',
+                    'created_count': len(created_ids)
+                }
+            )
             return sentences
             
         except Exception as e:
-            logger.error(f"Failed to create Sentences: {e}")
+            logger.error(
+                f"neo4j_manager.create_sentences: Failed to create Sentences: {e}",
+                extra={
+                    'service': 'clarifai-core', 
+                    'filename.function_name': 'neo4j_manager.create_sentences',
+                    'sentences_count': len(sentences_data),
+                    'error': str(e)
+                }
+            )
             raise
     
     def get_claim_by_id(self, claim_id: str) -> Optional[Dict[str, Any]]:
@@ -228,14 +353,44 @@ class Neo4jGraphManager:
                c.version as version, c.timestamp as timestamp
         """
         
-        try:
+        def _execute_get_claim():
             with self.session() as session:
                 result = session.run(cypher_query, claim_id=claim_id)
                 record = result.single()
                 return dict(record) if record else None
+        
+        try:
+            result = self._retry_with_backoff(_execute_get_claim)
+            if result:
+                logger.debug(
+                    f"neo4j_manager.get_claim_by_id: Found claim {claim_id}",
+                    extra={
+                        'service': 'clarifai-core', 
+                        'filename.function_name': 'neo4j_manager.get_claim_by_id',
+                        'clarifai_id': claim_id
+                    }
+                )
+            else:
+                logger.debug(
+                    f"neo4j_manager.get_claim_by_id: Claim {claim_id} not found",
+                    extra={
+                        'service': 'clarifai-core', 
+                        'filename.function_name': 'neo4j_manager.get_claim_by_id',
+                        'clarifai_id': claim_id
+                    }
+                )
+            return result
                 
         except Exception as e:
-            logger.error(f"Failed to get Claim {claim_id}: {e}")
+            logger.error(
+                f"neo4j_manager.get_claim_by_id: Failed to get Claim {claim_id}: {e}",
+                extra={
+                    'service': 'clarifai-core', 
+                    'filename.function_name': 'neo4j_manager.get_claim_by_id',
+                    'clarifai_id': claim_id,
+                    'error': str(e)
+                }
+            )
             raise
     
     def get_sentence_by_id(self, sentence_id: str) -> Optional[Dict[str, Any]]:
@@ -254,14 +409,44 @@ class Neo4jGraphManager:
                s.verifiable as verifiable, s.version as version, s.timestamp as timestamp
         """
         
-        try:
+        def _execute_get_sentence():
             with self.session() as session:
                 result = session.run(cypher_query, sentence_id=sentence_id)
                 record = result.single()
                 return dict(record) if record else None
+        
+        try:
+            result = self._retry_with_backoff(_execute_get_sentence)
+            if result:
+                logger.debug(
+                    f"neo4j_manager.get_sentence_by_id: Found sentence {sentence_id}",
+                    extra={
+                        'service': 'clarifai-core', 
+                        'filename.function_name': 'neo4j_manager.get_sentence_by_id',
+                        'clarifai_id': sentence_id
+                    }
+                )
+            else:
+                logger.debug(
+                    f"neo4j_manager.get_sentence_by_id: Sentence {sentence_id} not found",
+                    extra={
+                        'service': 'clarifai-core', 
+                        'filename.function_name': 'neo4j_manager.get_sentence_by_id',
+                        'clarifai_id': sentence_id
+                    }
+                )
+            return result
                 
         except Exception as e:
-            logger.error(f"Failed to get Sentence {sentence_id}: {e}")
+            logger.error(
+                f"neo4j_manager.get_sentence_by_id: Failed to get Sentence {sentence_id}: {e}",
+                extra={
+                    'service': 'clarifai-core', 
+                    'filename.function_name': 'neo4j_manager.get_sentence_by_id',
+                    'clarifai_id': sentence_id,
+                    'error': str(e)
+                }
+            )
             raise
     
     def count_nodes(self) -> Dict[str, int]:
@@ -278,7 +463,7 @@ class Neo4jGraphManager:
         RETURN claim_count, sentence_count, block_count
         """
         
-        try:
+        def _execute_count_nodes():
             with self.session() as session:
                 result = session.run(cypher_query)
                 record = result.single()
@@ -289,9 +474,31 @@ class Neo4jGraphManager:
                         "blocks": record["block_count"]
                     }
                 return {"claims": 0, "sentences": 0, "blocks": 0}
+        
+        try:
+            result = self._retry_with_backoff(_execute_count_nodes)
+            logger.debug(
+                f"neo4j_manager.count_nodes: Node counts - Claims: {result['claims']}, "
+                f"Sentences: {result['sentences']}, Blocks: {result['blocks']}",
+                extra={
+                    'service': 'clarifai-core', 
+                    'filename.function_name': 'neo4j_manager.count_nodes',
+                    'claims_count': result['claims'],
+                    'sentences_count': result['sentences'],
+                    'blocks_count': result['blocks']
+                }
+            )
+            return result
                 
         except Exception as e:
-            logger.error(f"Failed to count nodes: {e}")
+            logger.error(
+                f"neo4j_manager.count_nodes: Failed to count nodes: {e}",
+                extra={
+                    'service': 'clarifai-core', 
+                    'filename.function_name': 'neo4j_manager.count_nodes',
+                    'error': str(e)
+                }
+            )
             raise
     
     def __enter__(self):

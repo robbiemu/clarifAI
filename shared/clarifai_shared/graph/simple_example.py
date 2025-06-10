@@ -8,9 +8,6 @@ This demonstrates the core data models without complex imports.
 import sys
 import logging
 from pathlib import Path
-from datetime import datetime
-from typing import List, Optional
-import uuid
 
 # Configure logging
 logging.basicConfig(
@@ -136,8 +133,8 @@ def demonstrate_data_models():
     
     print("6. Summary:")
     print(f"   Created {len(claims)} Claims and {len(sentences)} Sentences")
-    print(f"   All objects have unique IDs and proper metadata")
-    print(f"   Ready for batch insertion into Neo4j database")
+    print("   All objects have unique IDs and proper metadata")
+    print("   Ready for batch insertion into Neo4j database")
     print()
 
 
@@ -248,7 +245,7 @@ def simulate_claimify_integration():
     print("3. Ready for database insertion:")
     print(f"   Would create {len(claim_inputs)} Claim nodes in Neo4j")
     print(f"   Would create {len(sentence_inputs)} Sentence nodes in Neo4j")
-    print(f"   All nodes would have ORIGINATES_FROM relationships to their Block nodes")
+    print("   All nodes would have ORIGINATES_FROM relationships to their Block nodes")
     print()
     
     return claim_inputs, sentence_inputs

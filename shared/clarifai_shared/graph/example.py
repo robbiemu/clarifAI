@@ -9,7 +9,7 @@ as would be done by the Claimify pipeline integration.
 import sys
 import logging
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List
 
 # Setup path for imports  
 current_dir = Path(__file__).parent
@@ -168,7 +168,7 @@ def demonstrate_graph_operations():
             
             # Get overall statistics
             counts = graph.count_nodes()
-            logger.info(f"\nGraph statistics:")
+            logger.info("\nGraph statistics:")
             logger.info(f"  Claims: {counts['claims']}")
             logger.info(f"  Sentences: {counts['sentences']}")
             logger.info(f"  Blocks: {counts['blocks']}")
