@@ -1,5 +1,4 @@
 [bandit]
-# Bandit configuration for ClarifAI monorepo
 skips = B101,B104
 exclude_dirs = tests,*/tests
 severity = medium
