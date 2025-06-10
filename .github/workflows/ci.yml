@@ -77,7 +77,7 @@ jobs:
     - name: Run Bandit security check
       run: |
         echo "Running Bandit security scan..."
-        bandit -r . -c .bandit
+        bandit -r . -c pyproject.toml
         echo "✅ Security scan completed successfully"
 
   test:
