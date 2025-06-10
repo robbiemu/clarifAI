@@ -47,6 +47,7 @@ This project uses `uv` for package and virtual environment management.
 5.  **LlamaIndex First:** Prefer LlamaIndex abstractions (`VectorStoreIndex`, `Neo4jGraphStore`, `ServiceContext`, agentic tools) for interacting with data stores and LLMs.
 6.  **Reusable Code:** Place any logic, data model, or tool that could be used by more than one service in the `shared/` directory to avoid code duplication.
 7. **Documentation and comments:** When adding new documentation or comments to code, never reference the documents in the doc/project/epic_M/ folders.
+8. More on new **Documentation:**  If something is explained in docs/project and docs/arch directories, it's fine to include in implementation documentation. BUT if something is explained in OTHER implementation documents (like plugins documentation, tutorials, etc.) that could be considered authoritative, then I should reference those instead of rewriting the content
 
 ---
 
