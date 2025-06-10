@@ -141,27 +141,51 @@ jobs:
           fi
         done
         
-        # Run tests with verbose output and continue on failure
+        # Run tests with verbose output - fail on any test failure
         echo "Running tests with PYTHONPATH: $PYTHONPATH"
+        
+        # Track overall test result
+        OVERALL_EXIT_CODE=0
         
         # Run tests from different sections
         echo "=== Running repository structure tests ==="
-        python -m pytest tests/ -v --tb=short || echo "Repository tests had issues, continuing..."
+        if ! python -m pytest tests/ -v --tb=short; then
+          echo "❌ Repository tests failed"
+          OVERALL_EXIT_CODE=1
+        else
+          echo "✅ Repository tests passed"
+        fi
         
         echo "=== Running shared module tests ==="
-        python -m pytest shared/tests/ -v --tb=short || echo "Shared module tests had issues, continuing..."
+        if ! python -m pytest shared/tests/ -v --tb=short; then
+          echo "❌ Shared module tests failed"
+          OVERALL_EXIT_CODE=1
+        else
+          echo "✅ Shared module tests passed"
+        fi
         
         echo "=== Testing individual service tests (if available) ==="
         for service_dir in services/*/; do
           if [ -d "$service_dir/tests" ]; then
             echo "Testing $service_dir"
             cd "$service_dir"
-            python -m pytest tests/ -v --tb=short || echo "Service $service_dir tests had issues, continuing..."
+            if ! python -m pytest tests/ -v --tb=short; then
+              echo "❌ Service $service_dir tests failed"
+              OVERALL_EXIT_CODE=1
+            else
+              echo "✅ Service $service_dir tests passed"
+            fi
             cd - > /dev/null
           fi
         done
         
         echo "=== Test execution completed ==="
+        if [ $OVERALL_EXIT_CODE -ne 0 ]; then
+          echo "❌ Some tests failed - failing the CI job"
+          exit $OVERALL_EXIT_CODE
+        else
+          echo "✅ All tests passed"
+        fi
 
   docker-build:
     name: Docker Build Validation

@@ -118,8 +118,12 @@ def test_install_script_path_resolution(install_script_path):
     assert "parent.parent.parent.parent" in content  # Should go up 4 levels
     assert "sys.path.insert" in content
 
-    # Verify it tries to import from the correct module
-    assert "clarifai_shared.utils.prompt_installer" in content
+    # Verify it uses importlib.util to load the prompt_installer module
+    assert "importlib.util" in content
+    assert "prompt_installer.py" in content
+    assert "spec_from_file_location" in content
+    assert "install_all_default_prompts" in content
+    assert "install_default_prompt" in content
 
 
 def test_docker_file_location_structure():

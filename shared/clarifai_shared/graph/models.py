@@ -2,7 +2,7 @@
 Data models for ClarifAI knowledge graph nodes.
 
 This module defines the data structures for Claims, Sentences, and other
-graph entities, following the schema from technical_overview.md and 
+graph entities, following the schema from technical_overview.md and
 graph_schema.cypher.
 """
 
@@ -15,14 +15,14 @@ import uuid
 @dataclass
 class ClaimInput:
     """Input data for creating a Claim node."""
-    
+
     text: str
     block_id: str  # ID of the originating Block node
     entailed_score: Optional[float] = None
     coverage_score: Optional[float] = None
     decontextualization_score: Optional[float] = None
     claim_id: Optional[str] = None  # Will generate if not provided
-    
+
     def __post_init__(self):
         """Generate claim_id if not provided."""
         if self.claim_id is None:
@@ -32,13 +32,13 @@ class ClaimInput:
 @dataclass
 class SentenceInput:
     """Input data for creating a Sentence node."""
-    
+
     text: str
     block_id: str  # ID of the originating Block node
     ambiguous: Optional[bool] = None
     verifiable: Optional[bool] = None
     sentence_id: Optional[str] = None  # Will generate if not provided
-    
+
     def __post_init__(self):
         """Generate sentence_id if not provided."""
         if self.sentence_id is None:
@@ -48,15 +48,15 @@ class SentenceInput:
 @dataclass
 class Claim:
     """Represents a Claim node in the knowledge graph."""
-    
+
     claim_id: str
     text: str
     entailed_score: Optional[float]
-    coverage_score: Optional[float] 
+    coverage_score: Optional[float]
     decontextualization_score: Optional[float]
     version: int
     timestamp: datetime
-    
+
     @classmethod
     def from_input(cls, claim_input: ClaimInput, version: int = 1) -> "Claim":
         """Create a Claim from ClaimInput."""
@@ -67,9 +67,9 @@ class Claim:
             coverage_score=claim_input.coverage_score,
             decontextualization_score=claim_input.decontextualization_score,
             version=version,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for Neo4j storage."""
         return {
@@ -79,21 +79,21 @@ class Claim:
             "coverage_score": self.coverage_score,
             "decontextualization_score": self.decontextualization_score,
             "version": self.version,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
         }
 
 
 @dataclass
 class Sentence:
     """Represents a Sentence node in the knowledge graph."""
-    
+
     sentence_id: str
     text: str
     ambiguous: Optional[bool]
     verifiable: Optional[bool]
     version: int
     timestamp: datetime
-    
+
     @classmethod
     def from_input(cls, sentence_input: SentenceInput, version: int = 1) -> "Sentence":
         """Create a Sentence from SentenceInput."""
@@ -103,9 +103,9 @@ class Sentence:
             ambiguous=sentence_input.ambiguous,
             verifiable=sentence_input.verifiable,
             version=version,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for Neo4j storage."""
         return {
@@ -114,5 +114,5 @@ class Sentence:
             "ambiguous": self.ambiguous,
             "verifiable": self.verifiable,
             "version": self.version,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
         }

@@ -21,8 +21,11 @@ def load_module_from_path(name: str, path: Path):
     spec.loader.exec_module(module)
     return module
 
+
 # Load the models module
-models_path = Path(__file__).parent.parent / "shared" / "clarifai_shared" / "graph" / "models.py"
+models_path = (
+    Path(__file__).parent.parent / "shared" / "clarifai_shared" / "graph" / "models.py"
+)
 models = load_module_from_path("models", models_path)
 
 # Import the classes we need for testing
@@ -44,7 +47,9 @@ class TestGraphModels:
     def test_claim_input_uses_provided_id(self):
         """Test that ClaimInput uses provided claim_id."""
         custom_id = "custom_claim_123"
-        claim_input = ClaimInput(text="Test claim", block_id="block123", claim_id=custom_id)
+        claim_input = ClaimInput(
+            text="Test claim", block_id="block123", claim_id=custom_id
+        )
         assert claim_input.claim_id == custom_id
 
     def test_sentence_input_generates_id(self):
@@ -56,7 +61,9 @@ class TestGraphModels:
     def test_sentence_input_uses_provided_id(self):
         """Test that SentenceInput uses provided sentence_id."""
         custom_id = "custom_sentence_123"
-        sentence_input = SentenceInput(text="Test sentence", block_id="block123", sentence_id=custom_id)
+        sentence_input = SentenceInput(
+            text="Test sentence", block_id="block123", sentence_id=custom_id
+        )
         assert sentence_input.sentence_id == custom_id
 
     def test_claim_from_input(self):
@@ -66,7 +73,7 @@ class TestGraphModels:
             block_id="block123",
             entailed_score=0.9,
             coverage_score=0.8,
-            decontextualization_score=0.7
+            decontextualization_score=0.7,
         )
 
         claim = Claim.from_input(claim_input)
@@ -94,10 +101,7 @@ class TestGraphModels:
     def test_sentence_from_input(self):
         """Test creating Sentence from SentenceInput."""
         sentence_input = SentenceInput(
-            text="Test sentence",
-            block_id="block123",
-            ambiguous=True,
-            verifiable=False
+            text="Test sentence", block_id="block123", ambiguous=True, verifiable=False
         )
 
         sentence = Sentence.from_input(sentence_input)
@@ -136,6 +140,7 @@ class TestNeo4jManagerWithMockedDriver:
 
     def test_manager_can_be_created_with_proper_config(self):
         """Test that Neo4jGraphManager can be instantiated with proper configuration."""
+
         # Create a simple mock that mimics the manager interface
         class MockNeo4jGraphManager:
             def __init__(self, config):
@@ -172,6 +177,7 @@ class TestNeo4jManagerWithMockedDriver:
                 uri = "bolt://localhost:7687"
                 username = "neo4j"
                 password = "password"
+
             neo4j = Neo4j()
 
         manager = MockNeo4jGraphManager(MockConfig())
@@ -179,6 +185,7 @@ class TestNeo4jManagerWithMockedDriver:
 
     def test_create_claims_functionality(self):
         """Test creating claims with mocked manager."""
+
         # Mock manager that simulates real behavior
         class MockNeo4jGraphManager:
             def create_claims(self, claim_inputs):
@@ -191,7 +198,7 @@ class TestNeo4jManagerWithMockedDriver:
         manager = MockNeo4jGraphManager()
         claim_inputs = [
             ClaimInput(text="Test claim 1", block_id="block1"),
-            ClaimInput(text="Test claim 2", block_id="block2")
+            ClaimInput(text="Test claim 2", block_id="block2"),
         ]
 
         claims = manager.create_claims(claim_inputs)
@@ -204,6 +211,7 @@ class TestNeo4jManagerWithMockedDriver:
 
     def test_create_sentences_functionality(self):
         """Test creating sentences with mocked manager."""
+
         class MockNeo4jGraphManager:
             def create_sentences(self, sentence_inputs):
                 sentences = []
@@ -215,7 +223,7 @@ class TestNeo4jManagerWithMockedDriver:
         manager = MockNeo4jGraphManager()
         sentence_inputs = [
             SentenceInput(text="Test sentence 1", block_id="block1", ambiguous=True),
-            SentenceInput(text="Test sentence 2", block_id="block2", ambiguous=False)
+            SentenceInput(text="Test sentence 2", block_id="block2", ambiguous=False),
         ]
 
         sentences = manager.create_sentences(sentence_inputs)
@@ -228,6 +236,7 @@ class TestNeo4jManagerWithMockedDriver:
 
     def test_schema_setup_functionality(self):
         """Test schema setup with mocked manager."""
+
         class MockNeo4jGraphManager:
             def setup_schema(self):
                 # Simulate successful schema setup
@@ -239,6 +248,7 @@ class TestNeo4jManagerWithMockedDriver:
 
     def test_empty_input_lists_handling(self):
         """Test handling of empty input lists."""
+
         class MockNeo4jGraphManager:
             def create_claims(self, claim_inputs):
                 if not claim_inputs:
@@ -262,6 +272,7 @@ class TestNeo4jManagerWithMockedDriver:
 
     def test_context_manager_protocol(self):
         """Test that managers can work as context managers."""
+
         class MockNeo4jGraphManager:
             def __init__(self):
                 self._driver = MagicMock()
@@ -313,7 +324,7 @@ class TestFailurePaths:
             block_id="block123",
             entailed_score=None,
             coverage_score=None,
-            decontextualization_score=None
+            decontextualization_score=None,
         )
 
         claim = Claim.from_input(claim_input)
@@ -326,11 +337,14 @@ class TestFailurePaths:
 
     def test_database_connection_failure_handling(self):
         """Test handling of database connection failures."""
+
         # Test that connection errors are properly handled
         class FailingNeo4jGraphManager:
             def __init__(self):
                 # Simulate connection failure during initialization
-                raise Exception("Connection failed: Could not connect to Neo4j database")
+                raise Exception(
+                    "Connection failed: Could not connect to Neo4j database"
+                )
 
         # Verify that connection failures raise appropriate exceptions
         with pytest.raises(Exception, match="Connection failed"):
@@ -344,30 +358,37 @@ class TestFailurePaths:
             block_id="block123",
             entailed_score=0.9,
             coverage_score=0.8,
-            decontextualization_score=0.7
+            decontextualization_score=0.7,
         )
         claim = Claim.from_input(claim_input)
         claim_dict = claim.to_dict()
 
         # Verify all required properties are present
         required_claim_fields = {
-            'id', 'text', 'entailed_score', 'coverage_score',
-            'decontextualization_score', 'version', 'timestamp'
+            "id",
+            "text",
+            "entailed_score",
+            "coverage_score",
+            "decontextualization_score",
+            "version",
+            "timestamp",
         }
         assert required_claim_fields.issubset(claim_dict.keys())
 
         # Test Sentence model completeness
         sentence_input = SentenceInput(
-            text="Test sentence",
-            block_id="block123",
-            ambiguous=True,
-            verifiable=False
+            text="Test sentence", block_id="block123", ambiguous=True, verifiable=False
         )
         sentence = Sentence.from_input(sentence_input)
         sentence_dict = sentence.to_dict()
 
         required_sentence_fields = {
-            'id', 'text', 'ambiguous', 'verifiable', 'version', 'timestamp'
+            "id",
+            "text",
+            "ambiguous",
+            "verifiable",
+            "version",
+            "timestamp",
         }
         assert required_sentence_fields.issubset(sentence_dict.keys())
 

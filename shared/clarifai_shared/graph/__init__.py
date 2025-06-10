@@ -10,7 +10,7 @@ from .neo4j_manager import Neo4jGraphManager
 
 __all__ = [
     "Claim",
-    "Sentence", 
+    "Sentence",
     "ClaimInput",
     "SentenceInput",
     "Neo4jGraphManager",
