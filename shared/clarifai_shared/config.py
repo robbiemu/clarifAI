@@ -19,10 +19,7 @@ except ImportError:
         pass
 
 
-try:
-    import yaml
-except ImportError:
-    yaml = None
+import yaml
 
 
 logger = logging.getLogger(__name__)
@@ -291,15 +288,15 @@ class ClarifAIConfig:
             # Look for clarifai.config.yaml in settings directory first, then current directory or parent directories
             current_path = Path.cwd()
             search_paths = []
-            
+
             # Priority 1: settings directory in current and parent directories
             for path in [current_path] + list(current_path.parents):
                 search_paths.append(path / "settings" / "clarifai.config.yaml")
-            
+
             # Priority 2: root level in current and parent directories (legacy)
             for path in [current_path] + list(current_path.parents):
                 search_paths.append(path / "clarifai.config.yaml")
-            
+
             for config_path in search_paths:
                 if config_path.exists():
                     config_file = str(config_path)
