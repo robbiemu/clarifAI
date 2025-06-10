@@ -7,7 +7,7 @@ graph_schema.cypher.
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 import uuid
 
@@ -67,7 +67,7 @@ class Claim:
             coverage_score=claim_input.coverage_score,
             decontextualization_score=claim_input.decontextualization_score,
             version=version,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -103,7 +103,7 @@ class Sentence:
             ambiguous=sentence_input.ambiguous,
             verifiable=sentence_input.verifiable,
             version=version,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
         )
 
     def to_dict(self) -> Dict[str, Any]:
