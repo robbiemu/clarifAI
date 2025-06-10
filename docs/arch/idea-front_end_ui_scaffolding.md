@@ -41,6 +41,6 @@ clarifai-monorepo/
 ```
 
 * You can expose all 3 panels as **tabs** in the Gradio app
-* Config reads/writes from `./settings/clarifai.config.yaml`
+* Config reads/writes from `settings/clarifai.config.yaml`
 * Pause toggles `.clarifai_pause` file
 * Scheduler reads job statuses from your shared state file or endpoint

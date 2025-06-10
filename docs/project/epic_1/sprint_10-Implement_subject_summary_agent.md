@@ -15,7 +15,7 @@ Desenvolver e implementar um agente inteligente para gerar arquivos Markdown `[[
   - Resumo em seções de temas ou questões-chave
   - Inclusão dos marcadores `<!-- clarifai:id=subject_<slug> ver=N -->` e `^subject_<slug>` para compatibilidade com o sistema de sincronização do vault (`docs/arch/on-graph_vault_synchronization.md`).
   (Esta estrutura segue `docs/arch/on-writing_vault_documents.md`).
-- O comportamento do agente será configurável via `./settings/clarifai.config.yaml` (gerenciado pela UI de Sprint 10), incluindo:
+- O comportamento do agente será configurável via `settings/clarifai.config.yaml` (gerenciado pela UI de Sprint 10), incluindo:
   - `model.subject_summary` (modelo LLM a ser utilizado, conforme `docs/arch/design_config_panel.md`).
   - `similarity_threshold` para formação de clusters (embora a formação do cluster seja em outra tarefa, o agente pode usar para coerência, conforme `docs/arch/design_config_panel.md`).
   - `min_concepts` e `max_concepts` para o tamanho do cluster.

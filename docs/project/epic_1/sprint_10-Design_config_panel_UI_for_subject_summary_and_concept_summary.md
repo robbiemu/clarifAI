@@ -1,7 +1,7 @@
 # Tarefa: Projetar UI do Painel de Configuração para Subject Summary & Concept Summary Agents
 
 ## Descrição
-Desenvolver a interface de usuário (UI) do painel de configuração para os agentes Subject Summary e Concept Summary, utilizando Gradio. A UI permitirá que os usuários configurem e personalizem a geração de páginas de assunto e conceito, e deverá ler e persistir todas as configurações no arquivo `./settings/clarifai.config.yaml`, conforme as especificações em `docs/arch/design_config_panel.md`.
+Desenvolver a interface de usuário (UI) do painel de configuração para os agentes Subject Summary e Concept Summary, utilizando Gradio. A UI permitirá que os usuários configurem e personalizem a geração de páginas de assunto e conceito, e deverá ler e persistir todas as configurações no arquivo `settings/clarifai.config.yaml`, conforme as especificações em `docs/arch/design_config_panel.md`.
 
 ## Escopo
 
@@ -14,7 +14,7 @@ Desenvolver a interface de usuário (UI) do painel de configuração para os age
 - Implementação de controles para o **Concept Summary Agent**, conforme definido em `docs/arch/design_config_panel.md` (Seção 4):
     - Input numérico para `max_examples`.
     - Switches de toggle para `skip_if_no_claims` e `include_see_also`.
-- **Sincronização com `./settings/clarifai.config.yaml`:** Garantir que a UI sempre leia o estado atual do arquivo de configuração e que qualquer alteração seja persistida imediatamente no arquivo, conforme o comportamento especificado em `docs/arch/design_config_panel.md` (Seção "UI Behavior Notes").
+- **Sincronização com `settings/clarifai.config.yaml`:** Garantir que a UI sempre leia o estado atual do arquivo de configuração e que qualquer alteração seja persistida imediatamente no arquivo, conforme o comportamento especificado em `docs/arch/design_config_panel.md` (Seção "UI Behavior Notes").
 - Implementação de validação de entrada (e.g., para valores numéricos) com feedback visual ao usuário, rejeitando configurações inválidas, conforme `design_config_panel.md`.
 - Documentação clara da interface e da correspondência de cada controle com os parâmetros no arquivo `clarifai.config.yaml`.
 

@@ -57,7 +57,7 @@ This document describes the user-facing structure of ClarifAI, with updated assu
 * **Configuration Options:**
   ClarifAI supports configuration through either:
 
-  * a YAML file (`./settings/clarifai.config.yaml`), or
+  * a YAML file (`settings/clarifai.config.yaml`), or
   * a lightweight UI panel (future)
 
 * **Configurable Parameters Include:**

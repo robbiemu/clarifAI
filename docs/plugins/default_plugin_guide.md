@@ -377,7 +377,7 @@ agent = ConversationExtractorAgent()
 ```
 
 **Configuration Notes:**
-- LLM selection is managed through `./settings/clarifai.config.yaml` 
+- LLM selection is managed through `settings/clarifai.config.yaml` 
 - The `model.fallback_plugin` configuration determines which LLM to use
 - Supports multiple providers: OpenAI, Anthropic, Ollama, OpenRouter
 - No hardcoded model dependencies in plugin code
