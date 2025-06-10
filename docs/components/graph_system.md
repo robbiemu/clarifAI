@@ -1,6 +1,6 @@
-# Neo4j Graph Management Documentation
+# Neo4j Graph System
 
-This document describes the Neo4j graph management functionality for creating and managing (:Claim) and (:Sentence) nodes in the ClarifAI knowledge graph.
+The graph system provides functionality for creating and managing (:Claim) and (:Sentence) nodes in the ClarifAI Neo4j knowledge graph.
 
 ## Overview
 
@@ -69,9 +69,9 @@ Properties:
 - `verifiable`: Optional boolean - Whether the sentence is verifiable
 - `sentence_id`: Optional string - Auto-generated if not provided
 
-## Usage Examples
+## Basic Usage
 
-### Basic Setup
+### Setup
 
 ```python
 from clarifai_shared.graph import Neo4jGraphManager, ClaimInput, SentenceInput
@@ -251,3 +251,13 @@ Environment variables:
 - `NEO4J_BOLT_PORT`: Neo4j bolt port (default: 7687)
 - `NEO4J_USER`: Neo4j username
 - `NEO4J_PASSWORD`: Neo4j password
+
+## Implementation Details
+
+The graph system is implemented in `shared/clarifai_shared/graph/`:
+
+- `models.py`: Data models for Claims and Sentences
+- `neo4j_manager.py`: Neo4j operations manager
+- `__init__.py`: Module initialization and exports
+
+For detailed usage examples, see the [Neo4j Graph Tutorial](../tutorials/neo4j_graph_tutorial.md).
