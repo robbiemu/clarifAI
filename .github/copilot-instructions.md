@@ -20,7 +20,7 @@ This is a monorepo containing multiple services and shared libraries.
     -   `clarifai-ui/`: The Gradio-based user interface.
 -   **`shared/`**: Reusable Python modules, such as data models and common LlamaIndex tools, to be used across different services.
 -   **`.github/workflows/`**: CI/CD pipeline configurations.
--   **`clarifai.config.yaml`**: The central configuration file for the entire application. All configurable parameters must be read from here.
+-   **`settings/clarifai.config.yaml`**: The central configuration file for the entire application. All configurable parameters must be read from here.
 -   **`.env`**: For storing secrets and environment-specific variables (e.g., API keys, database URLs).
 
 ---
@@ -42,7 +42,7 @@ This project uses `uv` for package and virtual environment management.
 
 1.  **Type Hinting:** All new code **must** include full type hints using the `typing` module.
 2.  **Structured Logging:** Adhere strictly to `docs/arch/idea-logging.md`. Logs must go to `stdout`/`stderr` and include `service`, `filename.function_name`, and relevant contextual IDs (`clarifai_id`, `job_id`).
-3.  **Configuration Management:** **Never hardcode values.** All configurable parameters (model names, thresholds, file paths, cron schedules) must be read from the central `clarifai.config.yaml` file.
+3.  **Configuration Management:** **Never hardcode values.** All configurable parameters (model names, thresholds, file paths, cron schedules) must be read from the central `settings/clarifai.config.yaml` file.
 4.  **Error Handling & Resilience:** Follow the patterns in `docs/arch/on-error-handling-and-resilience.md`. Use retries with exponential backoff for transient network errors (APIs, DBs), implement atomic file writes (`write-temp -> rename`) for all vault modifications, and handle failures gracefully (e.g., returning `null` scores from evaluation agents).
 5.  **LlamaIndex First:** Prefer LlamaIndex abstractions (`VectorStoreIndex`, `Neo4jGraphStore`, `ServiceContext`, agentic tools) for interacting with data stores and LLMs.
 6.  **Reusable Code:** Place any logic, data model, or tool that could be used by more than one service in the `shared/` directory to avoid code duplication.
