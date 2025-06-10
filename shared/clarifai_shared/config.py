@@ -18,6 +18,7 @@ except ImportError:
     def load_dotenv(*args, **kwargs):
         pass
 
+
 try:
     import yaml
 except ImportError:
@@ -30,18 +31,18 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EmbeddingConfig:
     """Configuration for embedding models and vector storage."""
-    
+
     # Model settings
     default_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     device: str = "auto"
     batch_size: int = 32
-    
+
     # PGVector settings
     collection_name: str = "utterances"
     embed_dim: int = 384
     index_type: str = "ivfflat"
     index_lists: int = 100
-    
+
     # Chunking settings
     chunk_size: int = 300
     chunk_overlap: int = 30
@@ -54,11 +55,11 @@ class EmbeddingConfig:
 @dataclass
 class ConceptsConfig:
     """Configuration for concept detection and management."""
-    
+
     # Concept candidates settings
     candidates_collection: str = "concept_candidates"
     similarity_threshold: float = 0.9
-    
+
     # Canonical concepts settings
     canonical_collection: str = "concepts"
     merge_threshold: float = 0.95
@@ -67,10 +68,10 @@ class ConceptsConfig:
 @dataclass
 class PathsConfig:
     """Configuration for vault and file paths."""
-    
+
     vault: str = "/vault"
     tier1: str = "conversations"
-    tier2: str = "summaries" 
+    tier2: str = "summaries"
     tier3: str = "concepts"
     settings: str = "/settings"
 
@@ -140,7 +141,9 @@ class ClarifAIConfig:
     paths: VaultPaths = field(default_factory=VaultPaths)
 
     @classmethod
-    def from_env(cls, env_file: Optional[str] = None, config_file: Optional[str] = None) -> "ClarifAIConfig":
+    def from_env(
+        cls, env_file: Optional[str] = None, config_file: Optional[str] = None
+    ) -> "ClarifAIConfig":
         """
         Create configuration from environment variables and YAML config file.
 
@@ -150,7 +153,7 @@ class ClarifAIConfig:
         """
         # Load YAML configuration first
         yaml_config = cls._load_yaml_config(config_file)
-        
+
         # Load .env file if specified or found
         if env_file:
             load_dotenv(env_file)
@@ -166,7 +169,9 @@ class ClarifAIConfig:
 
         # PostgreSQL configuration with fallback
         postgres_config = yaml_config.get("databases", {}).get("postgres", {})
-        postgres_host = os.getenv("POSTGRES_HOST", postgres_config.get("host", "postgres"))
+        postgres_host = os.getenv(
+            "POSTGRES_HOST", postgres_config.get("host", "postgres")
+        )
         postgres_host = cls._apply_host_fallback(postgres_host)
 
         postgres = DatabaseConfig(
@@ -174,7 +179,9 @@ class ClarifAIConfig:
             port=int(os.getenv("POSTGRES_PORT", postgres_config.get("port", "5432"))),
             user=os.getenv("POSTGRES_USER", "clarifai"),
             password=os.getenv("POSTGRES_PASSWORD", ""),
-            database=os.getenv("POSTGRES_DB", postgres_config.get("database", "clarifai")),
+            database=os.getenv(
+                "POSTGRES_DB", postgres_config.get("database", "clarifai")
+            ),
         )
 
         # Neo4j configuration with fallback
@@ -192,34 +199,58 @@ class ClarifAIConfig:
         # Load embedding configuration from YAML
         embedding_config = yaml_config.get("embedding", {})
         embedding = EmbeddingConfig(
-            default_model=embedding_config.get("models", {}).get("default", "sentence-transformers/all-MiniLM-L6-v2"),
+            default_model=embedding_config.get("models", {}).get(
+                "default", "sentence-transformers/all-MiniLM-L6-v2"
+            ),
             device=embedding_config.get("device", "auto"),
             batch_size=embedding_config.get("batch_size", 32),
-            collection_name=embedding_config.get("pgvector", {}).get("collection_name", "utterances"),
+            collection_name=embedding_config.get("pgvector", {}).get(
+                "collection_name", "utterances"
+            ),
             embed_dim=embedding_config.get("pgvector", {}).get("embed_dim", 384),
-            index_type=embedding_config.get("pgvector", {}).get("index_type", "ivfflat"),
+            index_type=embedding_config.get("pgvector", {}).get(
+                "index_type", "ivfflat"
+            ),
             index_lists=embedding_config.get("pgvector", {}).get("index_lists", 100),
             chunk_size=embedding_config.get("chunking", {}).get("chunk_size", 300),
             chunk_overlap=embedding_config.get("chunking", {}).get("chunk_overlap", 30),
-            keep_separator=embedding_config.get("chunking", {}).get("keep_separator", True),
-            merge_colon_endings=embedding_config.get("chunking", {}).get("merge_colon_endings", True),
-            merge_short_prefixes=embedding_config.get("chunking", {}).get("merge_short_prefixes", True),
-            min_chunk_tokens=embedding_config.get("chunking", {}).get("min_chunk_tokens", 5),
+            keep_separator=embedding_config.get("chunking", {}).get(
+                "keep_separator", True
+            ),
+            merge_colon_endings=embedding_config.get("chunking", {}).get(
+                "merge_colon_endings", True
+            ),
+            merge_short_prefixes=embedding_config.get("chunking", {}).get(
+                "merge_short_prefixes", True
+            ),
+            min_chunk_tokens=embedding_config.get("chunking", {}).get(
+                "min_chunk_tokens", 5
+            ),
         )
 
-        # Load concepts configuration from YAML  
+        # Load concepts configuration from YAML
         concepts_config = yaml_config.get("concepts", {})
         concepts = ConceptsConfig(
-            candidates_collection=concepts_config.get("candidates", {}).get("collection_name", "concept_candidates"),
-            similarity_threshold=concepts_config.get("candidates", {}).get("similarity_threshold", 0.9),
-            canonical_collection=concepts_config.get("canonical", {}).get("collection_name", "concepts"),
-            merge_threshold=concepts_config.get("canonical", {}).get("similarity_threshold", 0.95),
+            candidates_collection=concepts_config.get("candidates", {}).get(
+                "collection_name", "concept_candidates"
+            ),
+            similarity_threshold=concepts_config.get("candidates", {}).get(
+                "similarity_threshold", 0.9
+            ),
+            canonical_collection=concepts_config.get("canonical", {}).get(
+                "collection_name", "concepts"
+            ),
+            merge_threshold=concepts_config.get("canonical", {}).get(
+                "similarity_threshold", 0.95
+            ),
         )
 
         # Load paths configuration from YAML
         paths_config = yaml_config.get("paths", {})
         vault_path = os.getenv("VAULT_PATH", paths_config.get("vault", "/vault"))
-        settings_path = os.getenv("SETTINGS_PATH", paths_config.get("settings", "/settings"))
+        settings_path = os.getenv(
+            "SETTINGS_PATH", paths_config.get("settings", "/settings")
+        )
 
         # Vault paths configuration (from main branch)
         paths = VaultPaths(
@@ -240,7 +271,9 @@ class ClarifAIConfig:
             rabbitmq_password=os.getenv("RABBITMQ_PASSWORD", ""),
             vault_path=vault_path,  # For backward compatibility
             settings_path=settings_path,  # For backward compatibility
-            log_level=os.getenv("LOG_LEVEL", yaml_config.get("logging", {}).get("level", "INFO")),
+            log_level=os.getenv(
+                "LOG_LEVEL", yaml_config.get("logging", {}).get("level", "INFO")
+            ),
             debug=os.getenv("DEBUG", "false").lower() == "true",
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
@@ -266,7 +299,7 @@ class ClarifAIConfig:
         if config_file and Path(config_file).exists():
             logger.info(f"Loading YAML configuration from {config_file}")
             try:
-                with open(config_file, 'r') as f:
+                with open(config_file, "r") as f:
                     return yaml.safe_load(f) or {}
             except Exception as e:
                 logger.error(f"Failed to load YAML config from {config_file}: {e}")
