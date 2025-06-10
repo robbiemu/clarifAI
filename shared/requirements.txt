@@ -1,0 +1,24 @@
+# ClarifAI Shared Library Requirements
+# Install with: uv pip install -r shared/requirements.txt
+
+# Core LlamaIndex dependencies
+llama-index-core>=0.12.0
+llama-index-llms-openai>=0.2.0
+llama-index-embeddings-huggingface>=0.3.0
+llama-index-vector-stores-postgres>=0.2.0
+
+# Configuration and utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0
+
+# Embedding and NLP models
+sentence-transformers>=3.0.0
+
+# Database dependencies
+psycopg2-binary>=2.9.0
+sqlalchemy>=2.0.0
+pgvector>=0.3.0
+
+# Testing (optional)
+pytest>=8.0.0
+pytest-mock>=3.12.0
