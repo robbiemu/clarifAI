@@ -360,6 +360,73 @@ metrics = vector_store.store_embeddings(embedded_chunks)
 print(f"Storage metrics: {metrics}")
 ```
 
+### Advanced Error Handling
+
+The embedding system implements comprehensive error handling patterns:
+
+```python
+# Graceful fallback handling
+try:
+    result = pipeline.process_utterance(content, clarifai_id)
+    if not result.success:
+        # Check specific error types
+        for error in result.errors:
+            if "connection" in str(error).lower():
+                print("Database connection issue - will retry later")
+            elif "model" in str(error).lower():
+                print("Model loading issue - check configuration")
+            else:
+                print(f"Processing error: {error}")
+except Exception as e:
+    # Unexpected errors are caught and logged
+    logger.error(f"Unexpected error processing {clarifai_id}: {e}")
+```
+
+### Performance Optimization Techniques
+
+**Batch Processing for Large Datasets**
+
+```python
+# Process multiple utterances efficiently
+from pathlib import Path
+
+def batch_process_vault(vault_path: str, batch_size: int = 10):
+    """Process vault files in batches for better performance."""
+    files = list(Path(vault_path).glob("**/*_tier1.md"))
+    
+    for i in range(0, len(files), batch_size):
+        batch = files[i:i + batch_size]
+        
+        # Process batch concurrently
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = []
+            for file_path in batch:
+                future = executor.submit(process_single_file, file_path)
+                futures.append(future)
+            
+            # Collect results
+            for future in futures:
+                try:
+                    result = future.result(timeout=30)
+                    print(f"Processed: {result}")
+                except Exception as e:
+                    print(f"Batch processing error: {e}")
+```
+
+**Device Selection and Memory Management**
+
+```python
+# Configure for optimal performance
+config_updates = {
+    "embedding": {
+        "device": "cuda" if torch.cuda.is_available() else "cpu",
+        "batch_size": 16 if torch.cuda.is_available() else 4,
+    }
+}
+
+pipeline = EmbeddingPipeline(config_override=config_updates)
+```
+
 ## Complete Configuration Reference
 
 ### Full Configuration Example
@@ -419,6 +486,146 @@ POSTGRES_DB=clarifai
 
 # API keys (if using external embedding providers)
 OPENAI_API_KEY=your_openai_key
+```
+
+### Performance Configuration Options
+
+**Batch Processing Settings**
+
+```yaml
+embedding:
+  batch_size: 32              # Chunks to process at once
+  device: "auto"              # "auto", "cpu", "cuda", "mps"
+```
+
+**Vector Index Optimization**
+
+```yaml
+embedding:
+  pgvector:
+    index_type: "ivfflat"     # Vector index type for query performance
+    index_lists: 100          # Number of index lists (adjust based on data size)
+```
+
+**Memory and Device Management**
+
+```yaml
+embedding:
+  device: "auto"              # Automatically selects best available device
+  # Options: "cpu", "cuda", "mps", "auto"
+```
+
+## Metadata Schema Reference
+
+Each embedded chunk stores comprehensive metadata for tracking and analysis:
+
+```python
+# Complete metadata structure for each stored chunk
+metadata_schema = {
+    # Core identifiers
+    "clarifai_id": "conv_001",                    # Original utterance ID
+    "chunk_index": 0,                             # Position in original content
+    
+    # Content information
+    "original_length": 1250,                      # Length of source content in characters
+    "chunk_tokens": 128,                          # Estimated tokens in this chunk
+    "original_text": "Full original text...",    # Complete source text for reference
+    
+    # Processing metadata
+    "processing_timestamp": "2024-01-15T10:30:00Z",
+    "model_name": "all-MiniLM-L6-v2",           # Embedding model used
+    "embedding_dim": 384,                        # Vector dimension
+    
+    # Custom metadata (user-provided)
+    "source": "demo",
+    "type": "conversation",
+    "tags": ["machine-learning", "tutorial"]
+}
+```
+
+## Error Handling and Resilience Patterns
+
+### Comprehensive Error Detection
+
+```python
+# The system provides detailed error information
+try:
+    result = pipeline.process_utterance(content, clarifai_id)
+    
+    # Check processing results
+    if result.success:
+        print(f"Successfully processed {result.stored_chunks} chunks")
+        print(f"Processing metrics: {result.metrics}")
+    else:
+        # Handle different error types
+        for error in result.errors:
+            error_type = type(error).__name__
+            
+            if "ConnectionError" in error_type:
+                print(f"Database connection issue: {error}")
+                # Implement retry logic or fallback
+                
+            elif "ModelError" in error_type:
+                print(f"Embedding model issue: {error}")
+                # Check configuration or try different model
+                
+            elif "ValidationError" in error_type:
+                print(f"Data validation issue: {error}")
+                # Check input format or content
+                
+            else:
+                print(f"General processing error: {error}")
+                
+except Exception as e:
+    # Unexpected errors
+    logger.error(f"Unexpected error: {e}", exc_info=True)
+```
+
+### Retry Logic and Graceful Fallbacks
+
+```python
+import time
+from typing import Optional
+
+def process_with_retry(
+    pipeline: EmbeddingPipeline, 
+    content: str, 
+    clarifai_id: str,
+    max_retries: int = 3,
+    backoff_factor: float = 2.0
+) -> Optional[ProcessingResult]:
+    """Process content with exponential backoff retry."""
+    
+    for attempt in range(max_retries):
+        try:
+            result = pipeline.process_utterance(content, clarifai_id)
+            
+            if result.success:
+                return result
+            else:
+                # Check if errors are retryable
+                retryable_errors = ["ConnectionError", "TimeoutError", "TemporaryError"]
+                if any(error_type in str(result.errors) for error_type in retryable_errors):
+                    if attempt < max_retries - 1:
+                        wait_time = backoff_factor ** attempt
+                        print(f"Retryable error, waiting {wait_time}s before retry {attempt + 1}")
+                        time.sleep(wait_time)
+                        continue
+                
+                # Non-retryable errors or max retries reached
+                print(f"Processing failed permanently: {result.errors}")
+                return result
+                
+        except Exception as e:
+            if attempt < max_retries - 1:
+                wait_time = backoff_factor ** attempt
+                print(f"Exception occurred, retrying in {wait_time}s: {e}")
+                time.sleep(wait_time)
+            else:
+                print(f"Max retries exceeded: {e}")
+                return None
+    
+    return None
 ```
 
 ## Next Steps
