@@ -37,16 +37,16 @@ results = system.import_directory("exports/", recursive=True)
 
 ```bash
 # Import a single file
-python -m clarifai_shared.import_cli --file chat_export.txt
+python shared/clarifai_shared/scripts/import_cli.py --file chat_export.txt
 
 # Import all files from a directory
-python -m clarifai_shared.import_cli --directory exports/
+python shared/clarifai_shared/scripts/import_cli.py --directory exports/
 
 # Import with custom vault path
-python -m clarifai_shared.import_cli --file chat.txt --vault-path /custom/vault
+python shared/clarifai_shared/scripts/import_cli.py --file chat.txt --vault-path /custom/vault
 
 # Verbose logging
-python -m clarifai_shared.import_cli --file chat.txt --verbose
+python shared/clarifai_shared/scripts/import_cli.py --file chat.txt --verbose
 ```
 
 ## Configuration
@@ -100,50 +100,11 @@ alice: I'm doing great, thanks for asking!
 
 ## Supported Input Formats
 
-The system supports various conversation formats through the plugin system:
-
-### Simple Speaker Format
-```
-alice: Hello, how are you?
-bob: I'm doing well, thanks!
-```
-
-### ENTRY Format (Custom Logs)
-```
-ENTRY [10:00:00] alice >> Let's start the meeting.
-ENTRY [10:00:30] bob >> I've prepared the agenda.
-```
-
-### With Metadata
-```
-SESSION_ID: abc123
-TOPIC: Daily standup
-alice: How's the project going?
-bob: Making good progress!
-```
+The system supports various conversation formats through the pluggable format conversion system. See `docs/arch/on-pluggable_formats.md` for details on the plugin architecture and `MarkdownOutput` structure.
 
 ## Duplicate Detection
 
-The system calculates SHA-256 hashes of input file content and maintains an import log:
-
-```json
-{
-  "hashes": {
-    "c50b2a66e1760a8f...": {
-      "source_file": "/path/to/chat.txt",
-      "imported_at": "2025-06-09T23:24:03.172263",
-      "output_files": ["/vault/tier1/2025-06-09_chat_Conversation.md"]
-    }
-  },
-  "files": {
-    "/path/to/chat.txt": {
-      "hash": "c50b2a66e1760a8f...",
-      "imported_at": "2025-06-09T23:24:03.172263", 
-      "output_files": ["/vault/tier1/2025-06-09_chat_Conversation.md"]
-    }
-  }
-}
-```
+The system uses SHA-256 hashing for content-based duplicate detection and maintains an import log for tracking. See the system implementation for details on the JSON log structure.
 
 ## File Naming
 
@@ -161,16 +122,7 @@ The system implements robust error handling:
 - **UnknownFormatError**: When no plugin can handle the input format
 - **Graceful fallback**: LLM failures fall back to pattern matching
 
-## Atomic Writes
-
-All file operations use atomic writes to prevent corruption:
-
-1. Write content to `.tmp` file in same directory  
-2. Call `fsync()` to ensure data is written to disk
-3. Atomically rename `.tmp` file to final name
-4. Clean up temporary files on any failure
-
-This ensures other processes (like Obsidian) never see partially written files.
+For details on atomic write safety, see `docs/arch/on-filehandle_conflicts.md`.
 
 ## Testing
 
