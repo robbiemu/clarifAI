@@ -97,6 +97,16 @@ class DatabaseConfig:
 
 
 @dataclass
+class VaultPaths:
+    """Vault directory structure configuration."""
+
+    tier1: str = "tier1"
+    summaries: str = "."
+    concepts: str = "."
+    logs: str = ".clarifai/import_logs"
+
+
+@dataclass
 class ClarifAIConfig:
     """Main configuration class for ClarifAI services."""
 
@@ -109,7 +119,6 @@ class ClarifAIConfig:
     # New configuration sections
     embedding: EmbeddingConfig = field(default_factory=EmbeddingConfig)
     concepts: ConceptsConfig = field(default_factory=ConceptsConfig)
-    paths: PathsConfig = field(default_factory=PathsConfig)
 
     # Message broker configuration
     rabbitmq_host: str = "rabbitmq"
@@ -126,6 +135,9 @@ class ClarifAIConfig:
     # AI/ML configuration
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
+
+    # Vault structure configuration
+    paths: VaultPaths = field(default_factory=VaultPaths)
 
     @classmethod
     def from_env(cls, env_file: Optional[str] = None, config_file: Optional[str] = None) -> "ClarifAIConfig":
@@ -206,12 +218,15 @@ class ClarifAIConfig:
 
         # Load paths configuration from YAML
         paths_config = yaml_config.get("paths", {})
-        paths = PathsConfig(
-            vault=os.getenv("VAULT_PATH", paths_config.get("vault", "/vault")),
-            tier1=paths_config.get("tier1", "conversations"),
-            tier2=paths_config.get("tier2", "summaries"),
-            tier3=paths_config.get("tier3", "concepts"),
-            settings=os.getenv("SETTINGS_PATH", paths_config.get("settings", "/settings")),
+        vault_path = os.getenv("VAULT_PATH", paths_config.get("vault", "/vault"))
+        settings_path = os.getenv("SETTINGS_PATH", paths_config.get("settings", "/settings"))
+
+        # Vault paths configuration (from main branch)
+        paths = VaultPaths(
+            tier1=os.getenv("VAULT_TIER1_PATH", "tier1"),
+            summaries=os.getenv("VAULT_SUMMARIES_PATH", "."),
+            concepts=os.getenv("VAULT_CONCEPTS_PATH", "."),
+            logs=os.getenv("VAULT_LOGS_PATH", ".clarifai/import_logs"),
         )
 
         return cls(
@@ -219,17 +234,17 @@ class ClarifAIConfig:
             neo4j=neo4j,
             embedding=embedding,
             concepts=concepts,
-            paths=paths,
             rabbitmq_host=os.getenv("RABBITMQ_HOST", "rabbitmq"),
             rabbitmq_port=int(os.getenv("RABBITMQ_PORT", "5672")),
             rabbitmq_user=os.getenv("RABBITMQ_USER", "user"),
             rabbitmq_password=os.getenv("RABBITMQ_PASSWORD", ""),
-            vault_path=paths.vault,  # For backward compatibility
-            settings_path=paths.settings,  # For backward compatibility
+            vault_path=vault_path,  # For backward compatibility
+            settings_path=settings_path,  # For backward compatibility
             log_level=os.getenv("LOG_LEVEL", yaml_config.get("logging", {}).get("level", "INFO")),
             debug=os.getenv("DEBUG", "false").lower() == "true",
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+            paths=paths,
         )
 
     @classmethod

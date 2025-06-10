@@ -6,7 +6,7 @@ This panel allows the user to configure key system behaviors and agent parameter
 
 ClarifAI may expose this configuration via:
 
-* a YAML file (`clarifai.config.yaml`)
+* a YAML file (`settings/clarifai.config.yaml`)
 * a lightweight UI panel
 * both, with UI always reflecting current YAML state
 
@@ -270,7 +270,7 @@ ClarifAI will always create missing folders when writing files, but never requir
 ## 🧪 UI Behavior Notes
 
 * Any change in the UI should write back to the YAML config file immediately (or on save)
-* Invalid configs (e.g., non-numeric thresholds) must be rejected inline
+* Invalid configs (e.g., non-numeric thresholds) must be rejected by the UI inline
 * Pausing automation should be reflected in both:
 
   * this panel (`automation.pause`)

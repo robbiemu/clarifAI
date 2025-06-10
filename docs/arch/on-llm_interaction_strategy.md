@@ -14,7 +14,7 @@ To provide clear guidelines for prompt management, response handling, and resour
 
 ClarifAI's agents are designed to dynamically select which LLM to use based on centralized configuration, decoupling model choice from agent code.
 
-*   **How it works:** Each agent specifies a model "role" (e.g., `claimify.selection`, `concept_linker`, `trending_concepts_agent`). The `clarifai.config.yaml` (`docs/arch/design_config_panel.md`) maps these roles to specific LLM providers and models (e.g., `gpt-4`, `claude-3-opus`, `openrouter:gemma-2b`, `ollama:mistral`). Agents then instantiate their assigned LLM using LlamaIndex's `llm` abstractions.
+*   **How it works:** Each agent specifies a model "role" (e.g., `claimify.selection`, `concept_linker`, `trending_concepts_agent`). The `settings/clarifai.config.yaml` (`docs/arch/design_config_panel.md`) maps these roles to specific LLM providers and models (e.g., `gpt-4`, `claude-3-opus`, `openrouter:gemma-2b`, `ollama:mistral`). Agents then instantiate their assigned LLM using LlamaIndex's `llm` abstractions.
 *   **Benefit:** This approach provides flexibility to tune processing quality and cost globally without modifying individual agent code.
 
 ---
@@ -111,7 +111,7 @@ Agents manage LLM context by constructing relevant and concise inputs, building 
 For agents processing sequential data, such as the Claimify pipeline's steps (Selection, Disambiguation, Decomposition), ClarifAI employs a configurable "sliding window" to provide local context.
 
 *   **How it works:** When processing a focal sentence (`sentence_i`), the agent dynamically extracts `p` previous sentences and `f` following sentences from the ordered sequence of a Tier 1 document. This precisely constructed `window_context_string` is then injected into the LLM prompt template.
-*   **Benefit:** This custom context construction, defined by `window.claimify.p` and `window.claimify.f` in `clarifai.config.yaml` (`docs/arch/design_config_panel.md`), ensures that LLM agents receive the optimal semantic window for their specific analytical tasks, leading to higher quality claim extraction and evaluation. It's a deliberate choice to enhance LLM performance for conversational analysis beyond generic document chunking.
+*   **Benefit:** This custom context construction, defined by `window.claimify.p` and `window.claimify.f` in `settings/clarifai.config.yaml` (`docs/arch/design_config_panel.md`), ensures that LLM agents receive the optimal semantic window for their specific analytical tasks, leading to higher quality claim extraction and evaluation. It's a deliberate choice to enhance LLM performance for conversational analysis beyond generic document chunking.
 
 ### B. Semantic Context from Vector Database
 
