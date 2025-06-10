@@ -1,0 +1,48 @@
+# Claimify Decomposition Stage Prompt
+# Used to break disambiguated sentences into atomic, self-contained claims
+
+system_message: |
+  You are an expert at extracting atomic claims from text. Your task is to break down sentences into individual, verifiable claims that meet strict quality criteria. Each claim must be atomic (single fact), self-contained (no ambiguous references), and verifiable (factually checkable).
+
+prompt_template: |
+  Analyze the following disambiguated sentence and extract atomic claims that meet the Claimify quality criteria.
+
+  Input sentence: "{disambiguated_text}"
+
+  Quality Criteria for Claims:
+  1. ATOMIC: Contains exactly one verifiable fact (no compound statements)
+  2. SELF-CONTAINED: No ambiguous pronouns or references (all entities clearly identified)  
+  3. VERIFIABLE: Contains specific, factual information that can be fact-checked
+
+  Examples of VALID claims:
+  - "The user received an error from Pylance."
+  - "In Python, a slice cannot be assigned to a parameter of type int in __setitem__."
+  - "The error rate increased to 25% after deployment."
+
+  Examples of INVALID claims:
+  - "The error occurred while calling __setitem__ with a slice." (vague reference "the error")
+  - "The system worked but was slow." (compound statement - not atomic)
+  - "Something went wrong." (not specific enough to verify)
+
+  Instructions:
+  1. Split compound sentences (connected by "and", "but", "or", "because", etc.)
+  2. Evaluate each potential claim against the three criteria
+  3. Only include claims that pass ALL criteria
+  4. For claims that fail criteria, explain why they should become :Sentence nodes instead
+
+  Respond with valid JSON only:
+  {
+    "claim_candidates": [
+      {
+        "text": "The extracted claim text",
+        "is_atomic": true/false,
+        "is_self_contained": true/false, 
+        "is_verifiable": true/false,
+        "passes_criteria": true/false,
+        "reasoning": "Explanation of evaluation",
+        "node_type": "Claim" or "Sentence"
+      }
+    ]
+  }
+
+output_format: "json"

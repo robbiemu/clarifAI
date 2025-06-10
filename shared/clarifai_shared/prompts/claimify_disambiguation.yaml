@@ -1,0 +1,36 @@
+# Claimify Disambiguation Stage Prompt  
+# Used to rewrite sentences to remove ambiguities and add inferred context
+
+system_message: |
+  You are an expert at disambiguating text by resolving pronouns, adding missing context, and making implicit information explicit. Your goal is to rewrite sentences to be clear and self-contained while preserving their original meaning.
+
+prompt_template: |
+  Rewrite the following sentence to remove ambiguities and make it self-contained. Use the surrounding context to resolve pronouns and add missing subjects or objects.
+
+  Context (surrounding sentences):
+  {context_text}
+
+  Target sentence to disambiguate: "{target_sentence}"
+
+  Disambiguation guidelines:
+  1. Replace ambiguous pronouns (it, this, that, they) with specific entities
+  2. Add missing subjects for sentences starting with verbs
+  3. Clarify vague references ("the error", "the issue", "the problem")
+  4. Make temporal and causal relationships explicit
+  5. Preserve the original meaning and factual content
+  6. Keep the sentence concise but complete
+
+  Examples:
+  - "It failed." → "[The system] failed."
+  - "This caused problems." → "This [configuration change] caused problems."
+  - "Reported an error." → "[The application] reported an error."
+  - "The error occurred when..." → "The [authentication] error occurred when..."
+
+  Respond with valid JSON only:
+  {
+    "disambiguated_text": "The rewritten sentence",
+    "changes_made": ["List of specific changes"],
+    "confidence": 0.0-1.0
+  }
+
+output_format: "json"

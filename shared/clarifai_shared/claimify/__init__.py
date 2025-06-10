@@ -18,9 +18,15 @@ from .data_models import (
     DecompositionResult,
     ClaimifyResult,
     ClaimifyConfig,
+    NodeType,
 )
 from .pipeline import ClaimifyPipeline
 from .agents import SelectionAgent, DisambiguationAgent, DecompositionAgent
+from .config_integration import (
+    load_claimify_config_from_yaml,
+    load_claimify_config_from_file,
+    get_model_config_for_stage,
+)
 
 __all__ = [
     "SentenceChunk",
@@ -30,8 +36,12 @@ __all__ = [
     "DecompositionResult",
     "ClaimifyResult",
     "ClaimifyConfig",
+    "NodeType",
     "ClaimifyPipeline",
     "SelectionAgent",
     "DisambiguationAgent", 
     "DecompositionAgent",
+    "load_claimify_config_from_yaml",
+    "load_claimify_config_from_file",
+    "get_model_config_for_stage",
 ]

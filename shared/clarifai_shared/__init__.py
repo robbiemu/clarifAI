@@ -2,8 +2,7 @@
 Shared utilities and configuration for ClarifAI services.
 """
 
-# Temporarily comment out config import due to yaml dependency
-# from .config import ClarifAIConfig, DatabaseConfig, VaultPaths, load_config
+from .config import ClarifAIConfig, DatabaseConfig, VaultPaths, load_config
 try:
     from .plugin_interface import Plugin, MarkdownOutput, UnknownFormatError
     from .plugins import ensure_defaults, convert_file_to_markdowns, DefaultPlugin
@@ -13,10 +12,11 @@ except ImportError:
     pass
 
 __all__ = [
-    # "ClarifAIConfig",
-    # "DatabaseConfig", 
-    # "VaultPaths",
-    # "load_config",
+    "ClarifAIConfig",
+    "DatabaseConfig", 
+    "VaultPaths",
+    "load_config",
+    # Plugin system (optional)
     # "Plugin",
     # "MarkdownOutput",
     # "UnknownFormatError",

@@ -77,6 +77,39 @@ llm:
   max_tokens: 1000
   timeout: 30
 
+# Claimify pipeline configuration
+claimify:
+  # Context window parameters (from design_config_panel.md)
+  context_window:
+    p: 3  # Previous sentences
+    f: 1  # Following sentences
+  
+  # Model configuration for each stage
+  models:
+    selection: null      # Uses default if not specified
+    disambiguation: null # Uses default if not specified  
+    decomposition: null  # Uses default if not specified
+    default: "gpt-3.5-turbo"
+  
+  # Processing parameters
+  processing:
+    max_retries: 3
+    timeout_seconds: 30
+    temperature: 0.1
+    max_tokens: 1000
+  
+  # Quality thresholds
+  thresholds:
+    selection_confidence: 0.5
+    disambiguation_confidence: 0.5
+    decomposition_confidence: 0.5
+  
+  # Logging configuration
+  logging:
+    log_decisions: true
+    log_transformations: true
+    log_timing: true
+
 # Concept detection configuration  
 concepts:
   # Vector index settings for concept candidates
