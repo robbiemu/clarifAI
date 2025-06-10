@@ -116,7 +116,7 @@ Each scheduled job shows last run time and next scheduled run:
 
 ## 🔧 Developer Notes
 
-* Pulls state from `.clarifai_pause`, `clarifai.config.yaml`, and runtime job registry
+* Pulls state from `.clarifai_pause`, `settings/clarifai.config.yaml`, and runtime job registry
 * Should support job-specific pause overrides (e.g., `scheduler.claim_linking.enabled: false`)
 * Displays Vault-relative paths for links to Markdown blocks
 

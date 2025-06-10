@@ -36,7 +36,7 @@ Desenvolver e implementar um job agendado para agrupar `(:Concept)` nodes relaci
 - **Índice HNSW de embeddings de conceitos** (`docs/arch/on-concepts.md`, `docs/arch/on-vector_stores.md`) implementado e populado com os vetores dos `(:Concept)` nodes (`docs/project/epic_1/sprint_5-hnswlib.md`).
 - `(:Concept)` nodes existentes no Neo4j, com embeddings atualizados (`docs/project/epic_1/sprint_5-Create_Update_Tier_3.md` e `docs/project/epic_1/sprint_5-Refresh_embeddings.md`).
 - Sistema de agendamento (`clarifai-scheduler` com `APScheduler`) implementado e funcional (`docs/project/epic_1/sprint_3-Bootstrap_scheduler_and_vault_sync_job.md`).
-- Configuração clara dos parâmetros de clustering em `clarifai.config.yaml` (`docs/arch/design_config_panel.md`).
+- Configuração clara dos parâmetros de clustering em `settings/clarifai.config.yaml` (`docs/arch/design_config_panel.md`).
 
 ## Entregáveis
 - Código-fonte do job de clustering de conceitos (dentro do serviço `clarifai-scheduler`).
@@ -57,7 +57,7 @@ Desenvolver e implementar um job agendado para agrupar `(:Concept)` nodes relaci
   - **Mitigação**: Utilizar os parâmetros configuráveis para tamanho mínimo e máximo de cluster (`min_concepts`, `max_concepts`) em `docs/arch/design_config_panel.md` para controlar a granularidade. A escolha do algoritmo de clustering também influenciará (e.g., DBSCAN pode gerar mais outliers, agrupamento hierárquico pode ser controlado por corte na árvore).
 
 ## Notas Técnicas
-- O job deve ser executado periodicamente pelo `clarifai-scheduler`, lendo os parâmetros de `clarifai.config.yaml` para `subject_summaries` (`similarity_threshold`, `min_concepts`, `max_concepts`).
+- O job deve ser executado periodicamente pelo `clarifai-scheduler`, lendo os parâmetros de `settings/clarifai.config.yaml` para `subject_summaries` (`similarity_threshold`, `min_concepts`, `max_concepts`).
 - Considerar o uso de algoritmos de clusterização como DBSCAN (útil para lidar com densidade e identificar outliers) ou agrupamento hierárquico (útil para explorar diferentes granularidades de cluster) para a formação de clusters. A escolha pode depender da complexidade e distribuição dos embeddings.
 - Implementar métricas de qualidade (e.g., Coeficiente de Silhueta, Índice de Davies-Bouldin) para avaliar a coerência e separação dos clusters formados. Isso pode auxiliar na calibração dos parâmetros.
 - O sistema de cache para atribuições de grupo deve ser projetado para permitir rápida recuperação e atualização incremental de associações de conceitos a clusters. Pode ser um simples dicionário em memória para o MVP, mas com consideração para persistência em caso de reinício.

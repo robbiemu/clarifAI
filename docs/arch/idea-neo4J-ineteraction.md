@@ -135,7 +135,7 @@ from llama_index.graph_stores import Neo4jGraphStore
 from llama_index import KnowledgeGraphIndex, ServiceContext
 from llama_index.llms import OpenAI # Example LLM
 
-# Configuration (from .env or clarifai.config.yaml)
+# Configuration (from .env or settings/clarifai.config.yaml)
 NEO4J_URI = "bolt://localhost:7687"
 NEO4J_USERNAME = "neo4j"
 NEO4J_PASSWORD = "password"
