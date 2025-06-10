@@ -277,6 +277,150 @@ import logging
 logging.getLogger("clarifai_shared.embedding").setLevel(logging.DEBUG)
 ```
 
+## API Reference Examples
+
+The following examples show additional ways to use the embedding system API:
+
+### Processing Tier 1 Content Directly
+
+For complete Tier 1 Markdown files with metadata:
+
+```python
+# Process full Tier 1 Markdown content with embedded metadata
+tier1_content = """
+<!-- clarifai:title=Example Conversation -->
+<!-- clarifai:created_at=2024-01-01T10:00:00Z -->
+
+Alice: This is an example utterance for testing.
+<!-- clarifai:id=blk_abc123 ver=1 -->
+^blk_abc123
+
+Bob: And this is another utterance in the conversation.
+<!-- clarifai:id=blk_def456 ver=1 -->
+^blk_def456
+"""
+
+# Process through the pipeline
+result = pipeline.process_tier1_content(tier1_content)
+
+if result.success:
+    print(f"Successfully processed {result.stored_chunks} chunks")
+    print(f"Processing statistics: {result.metrics}")
+else:
+    print(f"Processing failed: {result.errors}")
+```
+
+### Single Block Processing
+
+For processing individual utterance blocks:
+
+```python
+# Process a single utterance block
+result = pipeline.process_single_block(
+    text="This is a single utterance to embed.",
+    clarifai_block_id="blk_single123",
+    replace_existing=True
+)
+
+print(f"Processed {result.total_chunks} chunks")
+print(f"Generated embeddings: {result.embedding_count}")
+```
+
+### Pipeline Health Monitoring
+
+Check the status of pipeline components:
+
+```python
+# Check pipeline component health
+status = pipeline.get_pipeline_status()
+print(f"Overall status: {status['overall_status']}")
+
+for component, info in status['components'].items():
+    print(f"{component}: {info['status']}")
+    if info.get('error'):
+        print(f"  Error: {info['error']}")
+```
+
+### Working with Individual Components
+
+For advanced use cases, you can work with components separately:
+
+```python
+from clarifai_shared.embedding import UtteranceChunker, EmbeddingGenerator, ClarifAIVectorStore
+
+# Use components individually for custom workflows
+chunker = UtteranceChunker()
+chunks = chunker.chunk_utterance_block("Text to chunk", "blk_test")
+
+generator = EmbeddingGenerator()
+embedded_chunks = generator.embed_chunks(chunks)
+
+vector_store = ClarifAIVectorStore()
+metrics = vector_store.store_embeddings(embedded_chunks)
+print(f"Storage metrics: {metrics}")
+```
+
+## Complete Configuration Reference
+
+### Full Configuration Example
+
+Here's a complete configuration template for `settings/clarifai.config.yaml`:
+
+```yaml
+# Embedding system configuration
+embedding:
+  # Model configuration
+  models:
+    default: "sentence-transformers/all-MiniLM-L6-v2"
+  
+  # Processing settings
+  device: "auto"              # "auto", "cpu", "cuda", "mps"
+  batch_size: 32              # Chunks to process at once
+  
+  # PGVector settings
+  pgvector:
+    collection_name: "utterances"
+    embed_dim: 384             # Must match model output dimension
+    index_type: "ivfflat"      # Vector index type
+    index_lists: 100           # Number of index lists
+  
+  # Chunking configuration
+  chunking:
+    chunk_size: 300            # Maximum tokens per chunk
+    chunk_overlap: 30          # Token overlap between chunks
+    keep_separator: true       # Preserve sentence separators
+    merge_colon_endings: true  # Merge "text:" + continuation
+    merge_short_prefixes: true # Merge fragments < min_chunk_tokens
+    min_chunk_tokens: 5        # Minimum tokens per chunk
+
+# Database configuration
+databases:
+  postgres:
+    host: "postgres"           # Database host
+    port: 5432                 # Database port
+    database: "clarifai"       # Database name
+    # User and password loaded from environment:
+    # POSTGRES_USER, POSTGRES_PASSWORD
+```
+
+### Required Environment Variables
+
+Create a `.env` file with these required variables:
+
+```bash
+# Database credentials (required)
+POSTGRES_USER=clarifai
+POSTGRES_PASSWORD=your_secure_password
+
+# Optional database overrides
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=clarifai
+
+# API keys (if using external embedding providers)
+OPENAI_API_KEY=your_openai_key
+```
+
 ## Next Steps
 
 - Explore the [Embedding System Architecture](../components/embedding_system.md) for deeper technical details
