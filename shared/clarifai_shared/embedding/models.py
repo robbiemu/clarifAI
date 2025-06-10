@@ -2,15 +2,18 @@
 Embedding module for ClarifAI utterance chunks.
 
 This module handles the generation of embeddings for utterance chunks using
-configurable models via LlamaIndex. Supports HuggingFace models including
-BERT-based sentence transformers.
+configurable models via LlamaIndex. Supports multiple providers including
+OpenAI, HuggingFace, and SentenceTransformers.
 
 Key Features:
-- Configurable embedding models from clarifai.config.yaml
+- Configurable embedding models from settings/clarifai.config.yaml
+- Multiple provider support (OpenAI, HuggingFace, SentenceTransformers)
 - Batch processing for efficiency
 - Automatic device detection (CPU/GPU)
 - Integration with LlamaIndex embedding abstractions
 - Structured logging with service context
+
+For detailed usage and configuration, see docs/guides/embedding_models_guide.md
 """
 
 import logging

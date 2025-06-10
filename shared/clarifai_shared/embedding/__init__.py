@@ -3,7 +3,7 @@ ClarifAI Embedding Module
 
 This module provides the main interface for utterance chunk embedding functionality.
 It integrates chunking, embedding generation, and vector storage following the
-architecture from docs/arch/on-vector_stores.md and sprint_2-Embed_utterance_chunks.md
+architecture from docs/arch/on-vector_stores.md
 
 Key Components:
 - UtteranceChunker: Segments Tier 1 blocks using LlamaIndex SentenceSplitter

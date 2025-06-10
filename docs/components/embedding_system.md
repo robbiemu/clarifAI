@@ -15,7 +15,7 @@ The embedding system processes Tier 1 Markdown content by:
 
 The system follows the ClarifAI architecture principles:
 
-- **Configuration-driven**: All parameters configurable via `clarifai.config.yaml`
+- **Configuration-driven**: All parameters configurable via `settings/clarifai.config.yaml`
 - **LlamaIndex-first**: Uses LlamaIndex abstractions for consistency
 - **Reusable**: Placed in shared library for cross-service usage
 - **Resilient**: Graceful error handling and fallbacks

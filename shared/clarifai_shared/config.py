@@ -128,8 +128,8 @@ class ClarifAIConfig:
     rabbitmq_password: str = ""
 
     # Service configuration
-    vault_path: str = "/vault"  # Deprecated: use paths.vault
-    settings_path: str = "/settings"  # Deprecated: use paths.settings
+    vault_path: str = "/vault"
+    settings_path: str = "/settings"
     log_level: str = "INFO"
     debug: bool = False
 
@@ -149,7 +149,7 @@ class ClarifAIConfig:
 
         Args:
             env_file: Path to .env file (optional, defaults to searching for .env)
-            config_file: Path to YAML config file (optional, defaults to clarifai.config.yaml)
+            config_file: Path to YAML config file (optional, defaults to settings/clarifai.config.yaml)
         """
         # Load YAML configuration first
         yaml_config = cls._load_yaml_config(config_file)
@@ -288,10 +288,19 @@ class ClarifAIConfig:
             return {}
 
         if config_file is None:
-            # Look for clarifai.config.yaml in current directory or parent directories
+            # Look for clarifai.config.yaml in settings directory first, then current directory or parent directories
             current_path = Path.cwd()
+            search_paths = []
+            
+            # Priority 1: settings directory in current and parent directories
             for path in [current_path] + list(current_path.parents):
-                config_path = path / "clarifai.config.yaml"
+                search_paths.append(path / "settings" / "clarifai.config.yaml")
+            
+            # Priority 2: root level in current and parent directories (legacy)
+            for path in [current_path] + list(current_path.parents):
+                search_paths.append(path / "clarifai.config.yaml")
+            
+            for config_path in search_paths:
                 if config_path.exists():
                     config_file = str(config_path)
                     break
@@ -433,6 +442,16 @@ def load_config(
         ValueError: If required variables are missing
     """
     config = ClarifAIConfig.from_env(env_file, config_file)
+
+    # Validate database passwords for security
+    if validate and not config.postgres.password:
+        error_msg = (
+            "POSTGRES_PASSWORD is not set. This is a security requirement. "
+            "Please create a .env file with POSTGRES_PASSWORD=your_secure_password. "
+            "See .env.example for details."
+        )
+        logger.error(error_msg)
+        raise ValueError(error_msg)
 
     if validate:
         missing_vars = config.validate_required_vars(required_vars)
