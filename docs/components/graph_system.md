@@ -69,92 +69,11 @@ Properties:
 - `verifiable`: Optional boolean - Whether the sentence is verifiable
 - `sentence_id`: Optional string - Auto-generated if not provided
 
-## Basic Usage
+## Usage
 
-### Setup
-
-```python
-from clarifai_shared.graph import Neo4jGraphManager, ClaimInput, SentenceInput
-from clarifai_shared.config import load_config
-
-# Load configuration
-config = load_config()
-
-# Create graph manager
-with Neo4jGraphManager(config) as graph:
-    # Setup schema (constraints and indexes)
-    graph.setup_schema()
-    
-    # Now ready for operations...
-```
-
-### Creating Claims
-
-```python
-# Prepare claim inputs from Claimify pipeline output
-claim_inputs = [
-    ClaimInput(
-        text="Python is a programming language",
-        block_id="block_conv_001_chunk_3",
-        entailed_score=0.98,
-        coverage_score=0.95,
-        decontextualization_score=0.87
-    ),
-    ClaimInput(
-        text="Machine learning requires data",
-        block_id="block_conv_001_chunk_7", 
-        entailed_score=0.92,
-        coverage_score=0.88,
-        decontextualization_score=0.94
-    )
-]
-
-# Create claims in batch
-claims = graph.create_claims(claim_inputs)
-print(f"Created {len(claims)} claims")
-```
-
-### Creating Sentences
-
-```python
-# Prepare sentence inputs for non-claim utterances
-sentence_inputs = [
-    SentenceInput(
-        text="Hmm, that's interesting",
-        block_id="block_conv_001_chunk_12",
-        ambiguous=True,
-        verifiable=False
-    ),
-    SentenceInput(
-        text="What do you think about this?",
-        block_id="block_conv_001_chunk_15",
-        ambiguous=False,
-        verifiable=False
-    )
-]
-
-# Create sentences in batch
-sentences = graph.create_sentences(sentence_inputs)
-print(f"Created {len(sentences)} sentences")
-```
-
-### Retrieving Nodes
-
-```python
-# Get claim by ID
-claim_data = graph.get_claim_by_id("claim_abc123")
-if claim_data:
-    print(f"Found claim: {claim_data['text']}")
-
-# Get sentence by ID  
-sentence_data = graph.get_sentence_by_id("sentence_xyz789")
-if sentence_data:
-    print(f"Found sentence: {sentence_data['text']}")
-
-# Get node counts for monitoring
-counts = graph.count_nodes()
-print(f"Graph contains: {counts['claims']} claims, {counts['sentences']} sentences")
-```
+For complete usage examples and step-by-step tutorials, see:
+- **Tutorial**: `docs/tutorials/neo4j_graph_tutorial.md` - Complete guide with examples and integration patterns
+- **Architecture**: `docs/arch/idea-neo4J-ineteraction.md` - Technical implementation details
 
 ## Schema
 
