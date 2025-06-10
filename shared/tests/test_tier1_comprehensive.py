@@ -224,7 +224,9 @@ def test_import_log_functionality():
         file2 = Path(temp_dir) / "different_dir"
         file2.mkdir()
         file2_path = file2 / "chat1_copy.txt"
-        file2_path.write_text("alice: First conversation\nbob: Yes indeed")  # Same content, different path
+        file2_path.write_text(
+            "alice: First conversation\nbob: Yes indeed"
+        )  # Same content, different path
 
         try:
             system.import_file(file2_path)
@@ -234,7 +236,9 @@ def test_import_log_functionality():
 
         # Import third file with same path as file1 but different content
         file2_samepath = Path(temp_dir) / "chat2.txt"
-        file2_samepath.write_text("alice: First conversation\nbob: Yes indeed")  # Same content, different filename
+        file2_samepath.write_text(
+            "alice: First conversation\nbob: Yes indeed"
+        )  # Same content, different filename
 
         try:
             system.import_file(file2_path)
@@ -268,10 +272,16 @@ def test_import_log_functionality():
         # Check that file paths are recorded
         assert str(file1) in log_data["files"]
         assert str(file3) in log_data["files"]
-        assert str(file2_path) not in log_data["files"]  # Was duplicate, shouldn't be logged
-        assert str(file2_samepath) not in log_data["files"]  # Was duplicate, shouldn't be logged
+        assert (
+            str(file2_path) not in log_data["files"]
+        )  # Was duplicate, shouldn't be logged
+        assert (
+            str(file2_samepath) not in log_data["files"]
+        )  # Was duplicate, shouldn't be logged
 
-        print("✓ Import logging tracks files and detects duplicates correctly (content-based, path-independent)")
+        print(
+            "✓ Import logging tracks files and detects duplicates correctly (content-based, path-independent)"
+        )
 
 
 if __name__ == "__main__":
