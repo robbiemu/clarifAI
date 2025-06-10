@@ -30,7 +30,7 @@ from .config_integration import (
 
 __all__ = [
     "SentenceChunk",
-    "ClaimifyContext", 
+    "ClaimifyContext",
     "SelectionResult",
     "DisambiguationResult",
     "DecompositionResult",
@@ -39,7 +39,7 @@ __all__ = [
     "NodeType",
     "ClaimifyPipeline",
     "SelectionAgent",
-    "DisambiguationAgent", 
+    "DisambiguationAgent",
     "DecompositionAgent",
     "load_claimify_config_from_yaml",
     "load_claimify_config_from_file",
