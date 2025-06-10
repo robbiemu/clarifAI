@@ -13,90 +13,17 @@ The Tier 1 import system provides a complete pipeline for importing conversation
 
 ## Usage
 
-### Programmatic Usage
-
-```python
-from clarifai_shared import Tier1ImportSystem, ClarifAIConfig, VaultPaths
-
-# Initialize with configuration
-config = ClarifAIConfig(
-    vault_path="/path/to/vault",
-    paths=VaultPaths(tier1="conversations", logs="logs")
-)
-system = Tier1ImportSystem(config)
-
-# Import a single file
-output_files = system.import_file("chat_export.txt")
-print(f"Created {len(output_files)} Tier 1 files")
-
-# Import a directory
-results = system.import_directory("exports/", recursive=True)
-```
-
-### Command Line Usage
-
-```bash
-# Import a single file
-python shared/clarifai_shared/scripts/import_cli.py --file chat_export.txt
-
-# Import all files from a directory
-python shared/clarifai_shared/scripts/import_cli.py --directory exports/
-
-# Import with custom vault path
-python shared/clarifai_shared/scripts/import_cli.py --file chat.txt --vault-path /custom/vault
-
-# Verbose logging
-python shared/clarifai_shared/scripts/import_cli.py --file chat.txt --verbose
-```
+For complete usage examples and step-by-step tutorials, see:
+- **Tutorial**: `docs/tutorials/tier1_import_tutorial.md` - Complete guide with examples
+- **CLI Reference**: `shared/clarifai_shared/scripts/import_cli.py --help` - Command line options
 
 ## Configuration
 
-The import system uses the following configuration:
-
-```python
-@dataclass
-class VaultPaths:
-    tier1: str = "tier1"          # Where to write Tier 1 Markdown files
-    summaries: str = "."          # Where to write Tier 2 summaries (future)
-    concepts: str = "."           # Where to write Tier 3 concepts (future)  
-    logs: str = ".clarifai/import_logs"  # Import logging directory
-```
-
-Environment variables:
-- `VAULT_PATH`: Base vault directory
-- `VAULT_TIER1_PATH`: Tier 1 subdirectory (default: "tier1")
-- `VAULT_LOGS_PATH`: Logs subdirectory (default: ".clarifai/import_logs")
+The import system uses the central `ClarifAIConfig` system with vault path configuration. See `shared/clarifai_shared/config.py` for the `VaultPaths` dataclass implementation and `docs/ENVIRONMENT_CONFIGURATION.md` for environment variable details.
 
 ## Generated Format
 
-The system generates Tier 1 Markdown files following this format:
-
-```markdown
-<!-- clarifai:title=Conversation between alice, bob -->
-<!-- clarifai:created_at=2025-06-09T23:23:54.614123 -->
-<!-- clarifai:participants=["alice", "bob"] -->
-<!-- clarifai:message_count=3 -->
-<!-- clarifai:plugin_metadata={"source_format": "fallback_llm", "original_format": "unknown"} -->
-
-alice: Hello there!
-<!-- clarifai:id=blk_k5ly50 ver=1 -->
-^blk_k5ly50
-
-bob: Hi Alice, how are you?
-<!-- clarifai:id=blk_xe5381 ver=1 -->
-^blk_xe5381
-
-alice: I'm doing great, thanks for asking!
-<!-- clarifai:id=blk_mibham ver=1 -->
-^blk_mibham
-```
-
-### Format Elements
-
-- **File-level metadata**: HTML comments at the top with conversation metadata
-- **Block-level annotations**: Each utterance gets a unique `clarifai:id` and Obsidian `^anchor`
-- **Deterministic IDs**: Block IDs are generated deterministically for consistency
-- **Version tracking**: `ver=1` indicates first version (for future updates)
+The system generates Tier 1 Markdown files with proper file-level metadata, block annotations, and Obsidian-compatible anchors. For detailed format specifications and examples, see `docs/tutorials/tier1_import_tutorial.md`.
 
 ## Supported Input Formats
 
@@ -104,7 +31,7 @@ The system supports various conversation formats through the pluggable format co
 
 ## Duplicate Detection
 
-The system uses SHA-256 hashing for content-based duplicate detection and maintains an import log for tracking. See the system implementation for details on the JSON log structure.
+The system uses SHA-256 content hashing for duplicate detection and maintains import logs in JSON format. For usage examples, see `docs/tutorials/tier1_import_tutorial.md`.
 
 ## File Naming
 
@@ -115,34 +42,11 @@ Output files use a canonical naming scheme:
 
 ## Error Handling
 
-The system implements robust error handling:
-
-- **DuplicateDetectionError**: Raised when a file is detected as a duplicate
-- **ImportSystemError**: General import failures (file not found, permission errors, etc.)
-- **UnknownFormatError**: When no plugin can handle the input format
-- **Graceful fallback**: LLM failures fall back to pattern matching
-
-For details on atomic write safety, see `docs/arch/on-filehandle_conflicts.md`.
+The system implements robust error handling with specific exception types for different failure modes. For usage examples and error handling patterns, see `docs/tutorials/tier1_import_tutorial.md`. For architectural details on atomic write safety, see `docs/arch/on-filehandle_conflicts.md`.
 
 ## Testing
 
-The system includes comprehensive tests:
-
-```bash
-# Basic functionality test
-python shared/tests/test_tier1_import.py
-
-# Comprehensive test suite
-python shared/tests/test_tier1_comprehensive.py
-```
-
-Tests cover:
-- Various conversation formats
-- Duplicate detection
-- Atomic write safety  
-- Filename generation
-- Error handling
-- Import logging
+The system includes comprehensive test coverage. See test files in `shared/tests/` for implementation details and `shared/tests/test_tier1_*.py` for running specific test suites.
 
 ## Architecture Integration
 
