@@ -46,6 +46,7 @@ This project uses `uv` for package and virtual environment management.
 4.  **Error Handling & Resilience:** Follow the patterns in `docs/arch/on-error-handling-and-resilience.md`. Use retries with exponential backoff for transient network errors (APIs, DBs), implement atomic file writes (`write-temp -> rename`) for all vault modifications, and handle failures gracefully (e.g., returning `null` scores from evaluation agents).
 5.  **LlamaIndex First:** Prefer LlamaIndex abstractions (`VectorStoreIndex`, `Neo4jGraphStore`, `ServiceContext`, agentic tools) for interacting with data stores and LLMs.
 6.  **Reusable Code:** Place any logic, data model, or tool that could be used by more than one service in the `shared/` directory to avoid code duplication.
+7. **Documentation and comments:** When adding new documentation or comments to code, never reference the documents in the doc/project/epic_M/ folders.
 
 ---
 
