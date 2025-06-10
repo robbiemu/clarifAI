@@ -1,14 +1,6 @@
 [bandit]
 # Bandit configuration for ClarifAI monorepo
-# Configuration to reduce false positives for containerized applications
-# Skip specific checks that are false positives for our use case:
-# B101: Use of assert detected - Normal in test files
-# B104: Hardcoded bind all interfaces - Intentional for containerized web apps
 skips = B101,B104
-
-# Exclude test directories to avoid assert-related warnings  
 exclude_dirs = tests,*/tests
-
-# Focus on medium and high severity issues
 severity = medium
 confidence = medium
