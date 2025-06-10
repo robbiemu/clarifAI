@@ -94,25 +94,27 @@ class ClarifAIVectorStore:
     def _validate_table_name(self, table_name: str) -> str:
         """
         Validate and sanitize table name to prevent SQL injection.
-        
+
         Args:
             table_name: The table name to validate
-            
+
         Returns:
             Sanitized table name
-            
+
         Raises:
             ValueError: If table name is invalid
         """
         # Allow only alphanumeric characters, underscores, and hyphens
         # Must start with a letter or underscore
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_-]*$', table_name):
-            raise ValueError(f"Invalid table name: {table_name}. Only alphanumeric characters, underscores, and hyphens are allowed.")
-        
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_-]*$", table_name):
+            raise ValueError(
+                f"Invalid table name: {table_name}. Only alphanumeric characters, underscores, and hyphens are allowed."
+            )
+
         # Limit length to prevent issues
         if len(table_name) > 63:  # PostgreSQL identifier limit
             raise ValueError(f"Table name too long: {table_name} (max 63 characters)")
-        
+
         return table_name
 
     def store_embeddings(
@@ -339,8 +341,10 @@ class ClarifAIVectorStore:
         try:
             with self.engine.connect() as conn:
                 # Validate table name to prevent SQL injection
-                table_name = self._validate_table_name(self.config.embedding.collection_name)
-                
+                table_name = self._validate_table_name(
+                    self.config.embedding.collection_name
+                )
+
                 # Get total count
                 # Table name is validated above to prevent SQL injection
                 count_query = text(f"""

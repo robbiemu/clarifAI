@@ -98,22 +98,34 @@ def test_class_interfaces():
 
         try:
             # Test chunking module interface - verify they exist
-            _ = __import__("clarifai_shared.embedding.chunking", fromlist=["ChunkMetadata", "UtteranceChunker"])
+            _ = __import__(
+                "clarifai_shared.embedding.chunking",
+                fromlist=["ChunkMetadata", "UtteranceChunker"],
+            )
 
             print("✓ Chunking module imports successfully")
 
             # Test models module interface - verify they exist
-            _ = __import__("clarifai_shared.embedding.models", fromlist=["EmbeddedChunk", "EmbeddingGenerator"])
+            _ = __import__(
+                "clarifai_shared.embedding.models",
+                fromlist=["EmbeddedChunk", "EmbeddingGenerator"],
+            )
 
             print("✓ Models module imports successfully")
 
             # Test storage module interface - verify they exist
-            _ = __import__("clarifai_shared.embedding.storage", fromlist=["ClarifAIVectorStore", "VectorStoreMetrics"])
+            _ = __import__(
+                "clarifai_shared.embedding.storage",
+                fromlist=["ClarifAIVectorStore", "VectorStoreMetrics"],
+            )
 
             print("✓ Storage module imports successfully")
 
             # Test main module interface - verify they exist
-            _ = __import__("clarifai_shared.embedding", fromlist=["EmbeddingPipeline", "EmbeddingResult"])
+            _ = __import__(
+                "clarifai_shared.embedding",
+                fromlist=["EmbeddingPipeline", "EmbeddingResult"],
+            )
 
             print("✓ Main embedding module imports successfully")
 
