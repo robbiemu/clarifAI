@@ -54,6 +54,7 @@ def test_shared_package():
     """Test that shared package can be imported."""
     # Add shared directory to Python path for testing
     import sys
+
     repo_root = Path(__file__).parent.parent
     shared_dir = repo_root / "shared"
 
@@ -63,15 +64,8 @@ def test_shared_package():
     try:
         import clarifai_shared  # noqa: F401
     except ImportError as e:
-        # Allow failures due to missing optional dependencies (like llama_index)
-        # but fail for structural issues with the package itself
-        error_msg = str(e)
-        if "llama_index" in error_msg or "neo4j" in error_msg or "sqlalchemy" in error_msg:
-            # These are expected missing dependencies in test environment
-            pytest.skip(f"Skipping due to missing optional dependency: {e}")
-        else:
-            # This is likely a structural issue with the package
-            pytest.fail(f"Failed to import clarifai_shared package due to structural issue: {e}")
+        # This is likely a structural issue with the package
+        pytest.fail(f"Failed to import clarifai_shared package: {e}")
 
 
 def test_project_structure():

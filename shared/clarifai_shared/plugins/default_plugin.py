@@ -23,15 +23,8 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
-try:
-    from llama_index.core.llms import LLM
-    from llama_index.llms.openai import OpenAI
-    LLAMA_INDEX_AVAILABLE = True
-except ImportError:
-    # Fallback types for when llama_index is not available
-    LLM = object
-    OpenAI = object
-    LLAMA_INDEX_AVAILABLE = False
+from llama_index.core.llms import LLM
+from llama_index.llms.openai import OpenAI
 
 from ..plugin_interface import Plugin, MarkdownOutput
 from ..config import load_config
@@ -49,14 +42,6 @@ class ConversationExtractorAgent:
     def __init__(self, llm: Optional[LLM] = None):
         """Initialize the agent with an LLM instance."""
         if llm is None:
-            # Check if llama_index is available before using LLM
-            if not LLAMA_INDEX_AVAILABLE:
-                self.llm = None
-                logger.info(
-                    "ConversationExtractorAgent initialized without LLM (llama_index not available)"
-                )
-                return
-                
             # Use OpenAI as default, following the architecture docs
             # Note: Future versions will support model.fallback_plugin configuration
             # as specified in docs/arch/design_config_panel.md
