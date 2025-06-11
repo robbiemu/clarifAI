@@ -476,51 +476,6 @@ def test_default_plugin_short_conversation_no_scores():
         temp_path.unlink()
 
 
-def test_default_plugin_handles_missing_openai_package():
-    """Test that DefaultPlugin handles missing OpenAI package gracefully."""
-    from unittest.mock import patch
-
-    # Mock the OpenAI import to simulate package not available
-    with patch("clarifai_shared.plugins.default_plugin.logger") as mock_logger:
-        # Simulate import error during OpenAI import
-        with patch(
-            "builtins.__import__",
-            side_effect=lambda name, *args, **kwargs: exec(
-                'raise ImportError("llama-index-llms-openai package not found")'
-            )
-            if name == "llama_index.llms.openai"
-            else __import__(name, *args, **kwargs),
-        ):
-            # This should NOT raise an exception even if OpenAI package is missing
-            agent = ConversationExtractorAgent()
-
-            # Agent should fall back to no-LLM mode
-            assert agent.llm is None
-
-            # Should have logged the warning about missing package
-            mock_logger.warning.assert_called_once()
-            warning_call = mock_logger.warning.call_args[0][0]
-            assert "llama-index-llms-openai package not available" in warning_call
-            assert "Falling back to no LLM mode" in warning_call
-
-
-def test_default_plugin_import_without_openai_dependency():
-    """Test that importing DefaultPlugin doesn't require OpenAI package."""
-    # This test verifies that the import itself doesn't fail
-    # The import should have succeeded if we got this far in the test
-
-    # Verify we can create instances without OpenAI
-    plugin = DefaultPlugin()
-    assert plugin is not None
-
-    # Verify the plugin still works with fallback extraction only
-    agent = ConversationExtractorAgent()
-    assert agent is not None
-
-    # Test basic functionality
-    assert plugin.can_accept("test") is True
-
-
 def test_default_plugin_uses_customized_prompt():
     """Test that DefaultPlugin uses a user-supplied YAML prompt file when available."""
     import os

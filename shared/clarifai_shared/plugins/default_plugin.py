@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any
 
 from llama_index.core.llms import LLM
+from llama_index.llms.openai import OpenAI
 
 from ..plugin_interface import Plugin, MarkdownOutput
 from ..config import load_config
@@ -47,20 +48,8 @@ class ConversationExtractorAgent:
             config = load_config(validate=False)
             api_key = getattr(config, "openai_api_key", None)
             if api_key:
-                # Conditionally import OpenAI to avoid dependency when not needed
-                try:
-                    from llama_index.llms.openai import OpenAI
-
-                    self.llm = OpenAI(api_key=api_key, model="gpt-3.5-turbo")
-                    logger.info(
-                        "Initialized ConversationExtractorAgent with OpenAI LLM"
-                    )
-                except ImportError as e:
-                    logger.warning(
-                        f"Failed to import OpenAI LLM (llama-index-llms-openai package not available): {e}. "
-                        "Falling back to no LLM mode."
-                    )
-                    self.llm = None
+                self.llm = OpenAI(api_key=api_key, model="gpt-3.5-turbo")
+                logger.info("Initialized ConversationExtractorAgent with OpenAI LLM")
             else:
                 # Graceful fallback for testing/development when no LLM is available
                 self.llm = None
