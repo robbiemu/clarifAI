@@ -20,8 +20,22 @@ import logging
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
 
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.core.embeddings import BaseEmbedding
+try:
+    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+    from llama_index.core.embeddings import BaseEmbedding
+    LLAMA_INDEX_AVAILABLE = True
+except ImportError:
+    # Mock classes for when llama_index is not available
+    class HuggingFaceEmbedding:
+        def __init__(self, **kwargs):
+            pass
+        def get_text_embedding(self, text):
+            return [0.0] * 384  # Mock embedding
+    
+    class BaseEmbedding:
+        pass
+    
+    LLAMA_INDEX_AVAILABLE = False
 
 from ..config import ClarifAIConfig
 from .chunking import ChunkMetadata

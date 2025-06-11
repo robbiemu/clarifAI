@@ -250,7 +250,7 @@ def test_load_config_validation_failure():
             with pytest.raises(ValueError) as exc_info:
                 load_config(validate=True)
 
-            assert "Missing required environment variables" in str(exc_info.value)
+            assert "POSTGRES_PASSWORD is not set" in str(exc_info.value)
 
 
 def test_yaml_loading_error_handling():

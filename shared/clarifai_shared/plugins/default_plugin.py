@@ -23,8 +23,17 @@ import logging
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
-from llama_index.core.llms import LLM
-from llama_index.llms.openai import OpenAI
+try:
+    from llama_index.core.llms import LLM
+    from llama_index.llms.openai import OpenAI
+    LLAMA_INDEX_AVAILABLE = True
+except ImportError:
+    # Define placeholder classes when llama_index is not available
+    class LLM:
+        pass
+    class OpenAI:
+        pass
+    LLAMA_INDEX_AVAILABLE = False
 
 from ..plugin_interface import Plugin, MarkdownOutput
 from ..config import load_config
@@ -45,17 +54,23 @@ class ConversationExtractorAgent:
             # Use OpenAI as default, following the architecture docs
             # Note: Future versions will support model.fallback_plugin configuration
             # as specified in docs/arch/design_config_panel.md
-            config = load_config(validate=False)
-            api_key = getattr(config, "openai_api_key", None)
-            if api_key:
-                self.llm = OpenAI(api_key=api_key, model="gpt-3.5-turbo")
-                logger.info("Initialized ConversationExtractorAgent with OpenAI LLM")
-            else:
-                # Graceful fallback for testing/development when no LLM is available
+            if not LLAMA_INDEX_AVAILABLE:
                 self.llm = None
                 logger.info(
-                    "ConversationExtractorAgent initialized without LLM (fallback mode)"
+                    "ConversationExtractorAgent initialized without LLM (llama_index not available)"
                 )
+            else:
+                config = load_config(validate=False)
+                api_key = getattr(config, "openai_api_key", None)
+                if api_key:
+                    self.llm = OpenAI(api_key=api_key, model="gpt-3.5-turbo")
+                    logger.info("Initialized ConversationExtractorAgent with OpenAI LLM")
+                else:
+                    # Graceful fallback for testing/development when no LLM is available
+                    self.llm = None
+                    logger.info(
+                        "ConversationExtractorAgent initialized without LLM (fallback mode)"
+                    )
         else:
             self.llm = llm
             logger.info(

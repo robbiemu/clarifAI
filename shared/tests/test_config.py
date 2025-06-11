@@ -46,7 +46,7 @@ class TestClarifAIConfig:
         """Clean environment before each test."""
         # Save original env vars
         self.original_env = {}
-        env_vars = [
+        self.env_vars = [
             "POSTGRES_HOST",
             "POSTGRES_PORT",
             "POSTGRES_USER",
@@ -61,15 +61,22 @@ class TestClarifAIConfig:
             "VAULT_PATH",
             "LOG_LEVEL",
             "DEBUG",
+            "DOCKER_CONTAINER",
         ]
 
-        for var in env_vars:
+        for var in self.env_vars:
             if var in os.environ:
                 self.original_env[var] = os.environ[var]
                 del os.environ[var]
 
     def teardown_method(self):
         """Restore original environment after each test."""
+        # First, remove all variables that might have been set during test
+        for var in self.env_vars:
+            if var in os.environ:
+                del os.environ[var]
+        
+        # Then restore original values
         for var, value in self.original_env.items():
             os.environ[var] = value
 
