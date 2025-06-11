@@ -65,9 +65,6 @@ disallow_untyped_defs = true
 testpaths = ["tests", "shared/tests"]
 python_files = ["test_*.py", "*_test.py"]
 addopts = "--cov=clarifai_shared --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml"
-filterwarnings = [
-    "ignore:websockets\\.legacy is deprecated.*:DeprecationWarning"
-]
 
 [tool.coverage.run]
 source = ["clarifai_shared"]
