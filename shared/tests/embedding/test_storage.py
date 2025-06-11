@@ -41,14 +41,10 @@ class TestVectorStoreMetrics:
 
 
 class TestClarifAIVectorStore:
-    """Test cases for ClarifAIVectorStore with mocked dependencies."""
+    """Test cases for ClarifAIVectorStore with configurable dependencies."""
 
-    @patch('clarifai_shared.embedding.storage.create_engine')
-    def test_vector_store_init_with_config(self, mock_create_engine):
+    def test_vector_store_init_with_config(self, integration_mode):
         """Test ClarifAIVectorStore initialization with config."""
-        mock_engine = Mock()
-        mock_create_engine.return_value = mock_engine
-
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
             host="localhost",
@@ -58,19 +54,35 @@ class TestClarifAIVectorStore:
             password="test_pass",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
-        assert vector_store.config == config
+        if not integration_mode:
+            with patch(
+                "clarifai_shared.embedding.storage.create_engine"
+            ) as mock_create_engine:
+                mock_engine = Mock()
+                mock_create_engine.return_value = mock_engine
+                vector_store = ClarifAIVectorStore(config=config)
+                assert vector_store.config == config
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            assert vector_store.config == config
 
-    @patch('clarifai_shared.embedding.storage.create_engine')
-    def test_vector_store_init_default_config(self, mock_create_engine):
+    def test_vector_store_init_default_config(self, integration_mode):
         """Test ClarifAIVectorStore initialization with default config."""
-        mock_engine = Mock()
-        mock_create_engine.return_value = mock_engine
+        if not integration_mode:
+            with patch(
+                "clarifai_shared.embedding.storage.create_engine"
+            ) as mock_create_engine:
+                mock_engine = Mock()
+                mock_create_engine.return_value = mock_engine
+                vector_store = ClarifAIVectorStore()
+                assert vector_store.config is not None
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore()
+            assert vector_store.config is not None
 
-        vector_store = ClarifAIVectorStore()
-        assert vector_store.config is not None
-
-    def test_store_embeddings(self):
+    def test_store_embeddings(self, integration_mode):
         """Test storing embeddings in vector store."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -80,8 +92,6 @@ class TestClarifAIVectorStore:
             password="test_pass",
             database="test_db",
         )
-
-        vector_store = ClarifAIVectorStore(config=config)
 
         # Create test embedded chunks
         chunk_metadata = ChunkMetadata(
@@ -100,10 +110,18 @@ class TestClarifAIVectorStore:
             )
         ]
 
-        metrics = vector_store.store_embeddings(embedded_chunks)
-        assert isinstance(metrics, VectorStoreMetrics)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                metrics = vector_store.store_embeddings(embedded_chunks)
+                assert isinstance(metrics, VectorStoreMetrics)
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            metrics = vector_store.store_embeddings(embedded_chunks)
+            assert isinstance(metrics, VectorStoreMetrics)
 
-    def test_store_embeddings_empty_list(self):
+    def test_store_embeddings_empty_list(self, integration_mode):
         """Test storing empty list of embeddings."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -114,14 +132,22 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
-        metrics = vector_store.store_embeddings([])
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                metrics = vector_store.store_embeddings([])
+                assert metrics.total_vectors == 0
+                assert metrics.successful_inserts == 0
+                assert metrics.failed_inserts == 0
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            metrics = vector_store.store_embeddings([])
+            assert metrics.total_vectors == 0
+            assert metrics.successful_inserts == 0
+            assert metrics.failed_inserts == 0
 
-        assert metrics.total_vectors == 0
-        assert metrics.successful_inserts == 0
-        assert metrics.failed_inserts == 0
-
-    def test_similarity_search(self):
+    def test_similarity_search(self, integration_mode):
         """Test similarity search functionality."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -132,15 +158,22 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                results = vector_store.similarity_search(
+                    query_text="test query", top_k=5, similarity_threshold=0.8
+                )
+                assert isinstance(results, list)
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            results = vector_store.similarity_search(
+                query_text="test query", top_k=5, similarity_threshold=0.8
+            )
+            assert isinstance(results, list)
 
-        results = vector_store.similarity_search(
-            query_text="test query", top_k=5, similarity_threshold=0.8
-        )
-
-        assert isinstance(results, list)
-
-    def test_delete_chunks_by_block_id(self):
+    def test_delete_chunks_by_block_id(self, integration_mode):
         """Test deleting chunks by block ID."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -151,13 +184,22 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                deleted_count = vector_store.delete_chunks_by_block_id(
+                    "blk_delete_test"
+                )
+                assert isinstance(deleted_count, int)
+                assert deleted_count >= 0
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            deleted_count = vector_store.delete_chunks_by_block_id("blk_delete_test")
+            assert isinstance(deleted_count, int)
+            assert deleted_count >= 0
 
-        deleted_count = vector_store.delete_chunks_by_block_id("blk_delete_test")
-        assert isinstance(deleted_count, int)
-        assert deleted_count >= 0
-
-    def test_get_store_metrics(self):
+    def test_get_store_metrics(self, integration_mode):
         """Test getting store metrics."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -168,12 +210,18 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                metrics = vector_store.get_store_metrics()
+                assert isinstance(metrics, VectorStoreMetrics)
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            metrics = vector_store.get_store_metrics()
+            assert isinstance(metrics, VectorStoreMetrics)
 
-        metrics = vector_store.get_store_metrics()
-        assert isinstance(metrics, VectorStoreMetrics)
-
-    def test_ensure_table_exists(self):
+    def test_ensure_table_exists(self, integration_mode):
         """Test table creation/verification."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -184,12 +232,17 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                # This should not raise an exception even if DB isn't available
+                vector_store._ensure_table_exists()
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            vector_store._ensure_table_exists()
 
-        # This should not raise an exception even if DB isn't available
-        vector_store._ensure_table_exists()
-
-    def test_get_connection(self):
+    def test_get_connection(self, integration_mode):
         """Test database connection."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -200,12 +253,18 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                with vector_store._get_connection() as conn:
+                    assert conn is not None
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            with vector_store._get_connection() as conn:
+                assert conn is not None
 
-        with vector_store._get_connection() as conn:
-            assert conn is not None
-
-    def test_initialize_vector_store(self):
+    def test_initialize_vector_store(self, integration_mode):
         """Test vector store initialization."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -216,11 +275,16 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                vector_store._initialize_vector_store()
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            vector_store._initialize_vector_store()
 
-        vector_store._initialize_vector_store()
-
-    def test_create_embedding_vector(self):
+    def test_create_embedding_vector(self, integration_mode):
         """Test embedding vector creation from text."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -231,13 +295,20 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                embedding = vector_store._create_embedding_vector("test text")
+                assert isinstance(embedding, list)
+                assert all(isinstance(x, (int, float)) for x in embedding)
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            embedding = vector_store._create_embedding_vector("test text")
+            assert isinstance(embedding, list)
+            assert all(isinstance(x, (int, float)) for x in embedding)
 
-        embedding = vector_store._create_embedding_vector("test text")
-        assert isinstance(embedding, list)
-        assert all(isinstance(x, (int, float)) for x in embedding)
-
-    def test_format_vector_for_db(self):
+    def test_format_vector_for_db(self, integration_mode):
         """Test vector formatting for database storage."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -248,15 +319,21 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                test_vector = [0.1, 0.2, 0.3, 0.4]
+                formatted = vector_store._format_vector_for_db(test_vector)
+                # Should be formatted as string representation
+                assert isinstance(formatted, str)
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            test_vector = [0.1, 0.2, 0.3, 0.4]
+            formatted = vector_store._format_vector_for_db(test_vector)
+            assert isinstance(formatted, str)
 
-        test_vector = [0.1, 0.2, 0.3, 0.4]
-        formatted = vector_store._format_vector_for_db(test_vector)
-
-        # Should be formatted as string representation
-        assert isinstance(formatted, str)
-
-    def test_validate_embedding_dimensions(self):
+    def test_validate_embedding_dimensions(self, integration_mode):
         """Test embedding dimension validation."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -266,8 +343,6 @@ class TestClarifAIVectorStore:
             password="test_pass",
             database="test_db",
         )
-
-        vector_store = ClarifAIVectorStore(config=config)
 
         # Test valid embeddings
         valid_embeddings = [
@@ -284,10 +359,18 @@ class TestClarifAIVectorStore:
             )
         ]
 
-        is_valid = vector_store._validate_embedding_dimensions(valid_embeddings)
-        assert isinstance(is_valid, bool)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                is_valid = vector_store._validate_embedding_dimensions(valid_embeddings)
+                assert isinstance(is_valid, bool)
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            is_valid = vector_store._validate_embedding_dimensions(valid_embeddings)
+            assert isinstance(is_valid, bool)
 
-    def test_batch_insert_embeddings(self):
+    def test_batch_insert_embeddings(self, integration_mode):
         """Test batch insertion of embeddings."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -297,8 +380,6 @@ class TestClarifAIVectorStore:
             password="test_pass",
             database="test_db",
         )
-
-        vector_store = ClarifAIVectorStore(config=config)
 
         embedded_chunks = [
             EmbeddedChunk(
@@ -314,12 +395,22 @@ class TestClarifAIVectorStore:
             )
         ]
 
-        result = vector_store._batch_insert_embeddings(embedded_chunks)
-        assert isinstance(result, dict)
-        assert "successful" in result
-        assert "failed" in result
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                result = vector_store._batch_insert_embeddings(embedded_chunks)
+                assert isinstance(result, dict)
+                assert "successful" in result
+                assert "failed" in result
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            result = vector_store._batch_insert_embeddings(embedded_chunks)
+            assert isinstance(result, dict)
+            assert "successful" in result
+            assert "failed" in result
 
-    def test_execute_similarity_query(self):
+    def test_execute_similarity_query(self, integration_mode):
         """Test similarity query execution."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
@@ -330,11 +421,19 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        vector_store = ClarifAIVectorStore(config=config)
-
         query_vector = [0.1, 0.2, 0.3]
-        results = vector_store._execute_similarity_query(
-            query_vector=query_vector, top_k=10, similarity_threshold=0.8
-        )
 
-        assert isinstance(results, list)
+        if not integration_mode:
+            with patch("clarifai_shared.embedding.storage.create_engine"):
+                vector_store = ClarifAIVectorStore(config=config)
+                results = vector_store._execute_similarity_query(
+                    query_vector=query_vector, top_k=10, similarity_threshold=0.8
+                )
+                assert isinstance(results, list)
+        else:
+            # Integration test - requires real PostgreSQL service
+            vector_store = ClarifAIVectorStore(config=config)
+            results = vector_store._execute_similarity_query(
+                query_vector=query_vector, top_k=10, similarity_threshold=0.8
+            )
+            assert isinstance(results, list)

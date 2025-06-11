@@ -6,10 +6,7 @@ import os
 from unittest.mock import Mock, patch
 
 import clarifai_shared.embedding as embedding_module
-from clarifai_shared.embedding import (
-    EmbeddingResult,
-    VectorStoreMetrics
-)
+from clarifai_shared.embedding import EmbeddingResult, VectorStoreMetrics
 from clarifai_shared.config import ClarifAIConfig
 
 
@@ -53,7 +50,7 @@ class TestEmbeddingInitFile:
             stored_chunks=8,
             failed_chunks=2,
             metrics=metrics,
-            errors=["test error"]
+            errors=["test error"],
         )
 
         assert result.success is True
@@ -64,66 +61,109 @@ class TestEmbeddingInitFile:
         assert result.metrics == metrics
         assert result.errors == ["test error"]
 
-    @patch('clarifai_shared.embedding.pipeline.ClarifAIVectorStore')
-    @patch('clarifai_shared.embedding.pipeline.EmbeddingGenerator')
-    @patch('clarifai_shared.embedding.pipeline.UtteranceChunker')
-    def test_embedding_pipeline_init(
-        self, mock_chunker, mock_generator, mock_vector_store
-    ):
-        """Test EmbeddingPipeline initialization with mocked dependencies."""
+    def test_embedding_pipeline_init(self, integration_mode):
+        """Test EmbeddingPipeline initialization with configurable dependencies."""
         from clarifai_shared.embedding import EmbeddingPipeline
 
-        # Setup mocks
-        mock_chunker.return_value = Mock()
-        mock_generator.return_value = Mock()
-        mock_vector_store.return_value = Mock()
-
         config = ClarifAIConfig()
-        pipeline = EmbeddingPipeline(config=config)
 
-        assert pipeline.config == config
-        assert hasattr(pipeline, 'chunker')
-        assert hasattr(pipeline, 'embedding_generator')
-        assert hasattr(pipeline, 'vector_store')
+        if not integration_mode:
+            with (
+                patch(
+                    "clarifai_shared.embedding.pipeline.ClarifAIVectorStore"
+                ) as mock_vector_store,
+                patch(
+                    "clarifai_shared.embedding.pipeline.EmbeddingGenerator"
+                ) as mock_generator,
+                patch(
+                    "clarifai_shared.embedding.pipeline.UtteranceChunker"
+                ) as mock_chunker,
+            ):
+                # Setup mocks
+                mock_chunker.return_value = Mock()
+                mock_generator.return_value = Mock()
+                mock_vector_store.return_value = Mock()
 
-    @patch('clarifai_shared.embedding.pipeline.ClarifAIVectorStore')
-    @patch('clarifai_shared.embedding.pipeline.EmbeddingGenerator')
-    @patch('clarifai_shared.embedding.pipeline.UtteranceChunker')
-    def test_embedding_pipeline_init_no_config(
-        self, mock_chunker, mock_generator, mock_vector_store
-    ):
+                pipeline = EmbeddingPipeline(config=config)
+
+                assert pipeline.config == config
+                assert hasattr(pipeline, "chunker")
+                assert hasattr(pipeline, "embedding_generator")
+                assert hasattr(pipeline, "vector_store")
+        else:
+            # Integration test - requires real PostgreSQL service
+            pipeline = EmbeddingPipeline(config=config)
+            assert pipeline.config == config
+            assert hasattr(pipeline, "chunker")
+            assert hasattr(pipeline, "embedding_generator")
+            assert hasattr(pipeline, "vector_store")
+
+    def test_embedding_pipeline_init_no_config(self, integration_mode):
         """Test EmbeddingPipeline initialization without config."""
         from clarifai_shared.embedding import EmbeddingPipeline
 
-        # Setup mocks
-        mock_chunker.return_value = Mock()
-        mock_generator.return_value = Mock()
-        mock_vector_store.return_value = Mock()
+        if not integration_mode:
+            with (
+                patch(
+                    "clarifai_shared.embedding.pipeline.ClarifAIVectorStore"
+                ) as mock_vector_store,
+                patch(
+                    "clarifai_shared.embedding.pipeline.EmbeddingGenerator"
+                ) as mock_generator,
+                patch(
+                    "clarifai_shared.embedding.pipeline.UtteranceChunker"
+                ) as mock_chunker,
+            ):
+                # Setup mocks
+                mock_chunker.return_value = Mock()
+                mock_generator.return_value = Mock()
+                mock_vector_store.return_value = Mock()
 
-        pipeline = EmbeddingPipeline()
+                pipeline = EmbeddingPipeline()
 
-        assert pipeline.config is not None
-        assert hasattr(pipeline, 'chunker')
-        assert hasattr(pipeline, 'embedding_generator')
-        assert hasattr(pipeline, 'vector_store')
+                assert pipeline.config is not None
+                assert hasattr(pipeline, "chunker")
+                assert hasattr(pipeline, "embedding_generator")
+                assert hasattr(pipeline, "vector_store")
+        else:
+            # Integration test - requires real PostgreSQL service
+            pipeline = EmbeddingPipeline()
+            assert pipeline.config is not None
+            assert hasattr(pipeline, "chunker")
+            assert hasattr(pipeline, "embedding_generator")
+            assert hasattr(pipeline, "vector_store")
 
-    @patch('clarifai_shared.embedding.pipeline.ClarifAIVectorStore')
-    @patch('clarifai_shared.embedding.pipeline.EmbeddingGenerator')
-    @patch('clarifai_shared.embedding.pipeline.UtteranceChunker')
-    def test_process_tier1_content_empty(
-        self, mock_chunker, mock_generator, mock_vector_store
-    ):
+    def test_process_tier1_content_empty(self, integration_mode):
         """Test processing empty tier1 content."""
         from clarifai_shared.embedding import EmbeddingPipeline
 
-        # Setup mocks
-        mock_chunker.return_value = Mock()
-        mock_generator.return_value = Mock()
-        mock_vector_store.return_value = Mock()
+        if not integration_mode:
+            with (
+                patch(
+                    "clarifai_shared.embedding.pipeline.ClarifAIVectorStore"
+                ) as mock_vector_store,
+                patch(
+                    "clarifai_shared.embedding.pipeline.EmbeddingGenerator"
+                ) as mock_generator,
+                patch(
+                    "clarifai_shared.embedding.pipeline.UtteranceChunker"
+                ) as mock_chunker,
+            ):
+                # Setup mocks
+                mock_chunker.return_value = Mock()
+                mock_generator.return_value = Mock()
+                mock_vector_store.return_value = Mock()
 
-        pipeline = EmbeddingPipeline()
-        result = pipeline.process_tier1_content("")
+                pipeline = EmbeddingPipeline()
+                result = pipeline.process_tier1_content("")
 
-        assert isinstance(result, EmbeddingResult)
-        assert result.success is False
-        assert result.total_chunks == 0
+                assert isinstance(result, EmbeddingResult)
+                assert result.success is False
+                assert result.total_chunks == 0
+        else:
+            # Integration test - requires real PostgreSQL service
+            pipeline = EmbeddingPipeline()
+            result = pipeline.process_tier1_content("")
+            assert isinstance(result, EmbeddingResult)
+            assert result.success is False
+            assert result.total_chunks == 0

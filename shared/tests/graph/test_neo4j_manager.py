@@ -1,5 +1,5 @@
 """
-Tests for Neo4j graph manager with mocked backend.
+Tests for Neo4j graph manager with configurable backend (mocked or real).
 """
 
 import pytest
@@ -10,11 +10,11 @@ from clarifai_shared.config import ClarifAIConfig, DatabaseConfig
 
 
 class TestNeo4jGraphManager:
-    """Test cases for Neo4jGraphManager using mocked backend."""
+    """Test cases for Neo4jGraphManager using configurable backend."""
 
     @pytest.fixture
     def mock_config(self):
-        """Create a mock configuration for testing."""
+        """Create a configuration for testing."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
             host="localhost",
@@ -30,32 +30,36 @@ class TestNeo4jGraphManager:
         driver = Mock()
         return driver
 
-    @patch('clarifai_shared.graph.neo4j_manager.GraphDatabase.driver')
-    def test_neo4j_manager_init_with_config(self, mock_driver_class, mock_config):
+    def test_neo4j_manager_init_with_config(self, mock_config, integration_mode):
         """Test Neo4jGraphManager initialization with config."""
-        mock_driver_class.return_value = Mock()
+        if not integration_mode:
+            with patch(
+                "clarifai_shared.graph.neo4j_manager.GraphDatabase.driver"
+            ) as mock_driver_class:
+                mock_driver_class.return_value = Mock()
+                manager = Neo4jGraphManager(config=mock_config)
+                assert manager.config == mock_config
+        else:
+            # Integration test - requires real Neo4j service
+            manager = Neo4jGraphManager(config=mock_config)
+            assert manager.config == mock_config
 
-        manager = Neo4jGraphManager(config=mock_config)
-        assert manager.config == mock_config
-
-    @patch('clarifai_shared.graph.neo4j_manager.GraphDatabase.driver')
-    def test_neo4j_manager_init_default_config(self, mock_driver_class):
+    def test_neo4j_manager_init_default_config(self, integration_mode):
         """Test Neo4jGraphManager initialization with default config."""
-        mock_driver_class.return_value = Mock()
+        if not integration_mode:
+            with patch(
+                "clarifai_shared.graph.neo4j_manager.GraphDatabase.driver"
+            ) as mock_driver_class:
+                mock_driver_class.return_value = Mock()
+                manager = Neo4jGraphManager()
+                assert manager.config is not None
+        else:
+            # Integration test - requires real Neo4j service
+            manager = Neo4jGraphManager()
+            assert manager.config is not None
 
-        manager = Neo4jGraphManager()
-        assert manager.config is not None
-
-    @patch('clarifai_shared.graph.neo4j_manager.GraphDatabase.driver')
-    def test_create_claims(self, mock_driver_class, mock_config):
+    def test_create_claims(self, mock_config, integration_mode):
         """Test creating claims in the graph."""
-        mock_driver = Mock()
-        mock_driver_class.return_value = mock_driver
-        mock_session = Mock()
-        mock_driver.session.return_value.__enter__.return_value = mock_session
-
-        manager = Neo4jGraphManager(config=mock_config)
-
         claim_inputs = [
             ClaimInput(
                 text="Test claim for Neo4j",
@@ -64,36 +68,46 @@ class TestNeo4jGraphManager:
             )
         ]
 
-        # Mock the session.run return value
-        mock_result = Mock()
-        mock_result.data.return_value = [
-            {
-                'claim': {
-                    'id': 'claim_test123',
-                    'text': 'Test claim for Neo4j',
-                    'entailed_score': 0.95,
-                    'version': 1,
-                    'timestamp': '2024-01-01T10:00:00Z'
-                }
-            }
-        ]
-        mock_session.run.return_value = mock_result
+        if not integration_mode:
+            with patch(
+                "clarifai_shared.graph.neo4j_manager.GraphDatabase.driver"
+            ) as mock_driver_class:
+                mock_driver = Mock()
+                mock_driver_class.return_value = mock_driver
+                mock_session = Mock()
+                mock_driver.session.return_value.__enter__.return_value = mock_session
 
-        results = manager.create_claims(claim_inputs)
-        assert isinstance(results, list)
-        if results:
-            assert isinstance(results[0], Claim)
+                manager = Neo4jGraphManager(config=mock_config)
 
-    @patch('clarifai_shared.graph.neo4j_manager.GraphDatabase.driver')
-    def test_create_sentences(self, mock_driver_class, mock_config):
+                # Mock the session.run return value
+                mock_result = Mock()
+                mock_result.data.return_value = [
+                    {
+                        "claim": {
+                            "id": "claim_test123",
+                            "text": "Test claim for Neo4j",
+                            "entailed_score": 0.95,
+                            "version": 1,
+                            "timestamp": "2024-01-01T10:00:00Z",
+                        }
+                    }
+                ]
+                mock_session.run.return_value = mock_result
+
+                results = manager.create_claims(claim_inputs)
+                assert isinstance(results, list)
+                if results:
+                    assert isinstance(results[0], Claim)
+        else:
+            # Integration test - requires real Neo4j service
+            manager = Neo4jGraphManager(config=mock_config)
+            results = manager.create_claims(claim_inputs)
+            assert isinstance(results, list)
+            if results:
+                assert isinstance(results[0], Claim)
+
+    def test_create_sentences(self, mock_config, integration_mode):
         """Test creating sentences in the graph."""
-        mock_driver = Mock()
-        mock_driver_class.return_value = mock_driver
-        mock_session = Mock()
-        mock_driver.session.return_value.__enter__.return_value = mock_session
-
-        manager = Neo4jGraphManager(config=mock_config)
-
         sentence_inputs = [
             SentenceInput(
                 text="Test sentence for Neo4j",
@@ -103,75 +117,117 @@ class TestNeo4jGraphManager:
             )
         ]
 
-        # Mock the session.run return value
-        mock_result = Mock()
-        mock_result.data.return_value = [
-            {
-                'sentence': {
-                    'id': 'sentence_test123',
-                    'text': 'Test sentence for Neo4j',
-                    'ambiguous': False,
-                    'verifiable': True,
-                    'version': 1,
-                    'timestamp': '2024-01-01T10:00:00Z'
-                }
-            }
-        ]
-        mock_session.run.return_value = mock_result
+        if not integration_mode:
+            with patch(
+                "clarifai_shared.graph.neo4j_manager.GraphDatabase.driver"
+            ) as mock_driver_class:
+                mock_driver = Mock()
+                mock_driver_class.return_value = mock_driver
+                mock_session = Mock()
+                mock_driver.session.return_value.__enter__.return_value = mock_session
 
-        results = manager.create_sentences(sentence_inputs)
-        assert isinstance(results, list)
-        if results:
-            assert isinstance(results[0], Sentence)
+                manager = Neo4jGraphManager(config=mock_config)
 
-    @patch('clarifai_shared.graph.neo4j_manager.GraphDatabase.driver')
-    def test_get_claim_by_id(self, mock_driver_class, mock_config):
+                # Mock the session.run return value
+                mock_result = Mock()
+                mock_result.data.return_value = [
+                    {
+                        "sentence": {
+                            "id": "sentence_test123",
+                            "text": "Test sentence for Neo4j",
+                            "ambiguous": False,
+                            "verifiable": True,
+                            "version": 1,
+                            "timestamp": "2024-01-01T10:00:00Z",
+                        }
+                    }
+                ]
+                mock_session.run.return_value = mock_result
+
+                results = manager.create_sentences(sentence_inputs)
+                assert isinstance(results, list)
+                if results:
+                    assert isinstance(results[0], Sentence)
+        else:
+            # Integration test - requires real Neo4j service
+            manager = Neo4jGraphManager(config=mock_config)
+            results = manager.create_sentences(sentence_inputs)
+            assert isinstance(results, list)
+            if results:
+                assert isinstance(results[0], Sentence)
+
+    def test_get_claim_by_id(self, mock_config, integration_mode):
         """Test retrieving a claim by ID."""
-        mock_driver = Mock()
-        mock_driver_class.return_value = mock_driver
-        mock_session = Mock()
-        mock_driver.session.return_value.__enter__.return_value = mock_session
+        if not integration_mode:
+            with patch(
+                "clarifai_shared.graph.neo4j_manager.GraphDatabase.driver"
+            ) as mock_driver_class:
+                mock_driver = Mock()
+                mock_driver_class.return_value = mock_driver
+                mock_session = Mock()
+                mock_driver.session.return_value.__enter__.return_value = mock_session
 
-        manager = Neo4jGraphManager(config=mock_config)
+                manager = Neo4jGraphManager(config=mock_config)
 
-        # Mock successful result
-        mock_result = Mock()
-        mock_result.single.return_value = {
-            'claim': {
-                'id': 'claim_test123',
-                'text': 'Test claim',
-                'version': 1,
-                'timestamp': '2024-01-01T10:00:00Z'
-            }
-        }
-        mock_session.run.return_value = mock_result
+                # Mock successful result
+                mock_result = Mock()
+                mock_result.single.return_value = {
+                    "claim": {
+                        "id": "claim_test123",
+                        "text": "Test claim",
+                        "version": 1,
+                        "timestamp": "2024-01-01T10:00:00Z",
+                    }
+                }
+                mock_session.run.return_value = mock_result
 
-        claim = manager.get_claim_by_id("claim_test123")
-        assert claim is not None
-        assert isinstance(claim, dict)
+                claim = manager.get_claim_by_id("claim_test123")
+                assert claim is not None
+                assert isinstance(claim, dict)
+        else:
+            # Integration test - requires real Neo4j service with test data
+            manager = Neo4jGraphManager(config=mock_config)
+            # Note: In integration mode, this requires pre-existing test data
+            # or a test setup that creates the data first
+            claim = manager.get_claim_by_id("claim_test123")
+            # For integration tests, we expect either a valid claim or None
+            if claim is not None:
+                assert isinstance(claim, dict)
 
-    @patch('clarifai_shared.graph.neo4j_manager.GraphDatabase.driver')
-    def test_get_sentence_by_id(self, mock_driver_class, mock_config):
+    def test_get_sentence_by_id(self, mock_config, integration_mode):
         """Test retrieving a sentence by ID."""
-        mock_driver = Mock()
-        mock_driver_class.return_value = mock_driver
-        mock_session = Mock()
-        mock_driver.session.return_value.__enter__.return_value = mock_session
+        if not integration_mode:
+            with patch(
+                "clarifai_shared.graph.neo4j_manager.GraphDatabase.driver"
+            ) as mock_driver_class:
+                mock_driver = Mock()
+                mock_driver_class.return_value = mock_driver
+                mock_session = Mock()
+                mock_driver.session.return_value.__enter__.return_value = mock_session
 
-        manager = Neo4jGraphManager(config=mock_config)
+                manager = Neo4jGraphManager(config=mock_config)
 
-        # Mock successful result
-        mock_result = Mock()
-        mock_result.single.return_value = {
-            'sentence': {
-                'id': 'sentence_test123',
-                'text': 'Test sentence',
-                'version': 1,
-                'timestamp': '2024-01-01T10:00:00Z'
-            }
-        }
-        mock_session.run.return_value = mock_result
+                # Mock successful result
+                mock_result = Mock()
+                mock_result.single.return_value = {
+                    "sentence": {
+                        "id": "sentence_test123",
+                        "text": "Test sentence",
+                        "version": 1,
+                        "timestamp": "2024-01-01T10:00:00Z",
+                    }
+                }
+                mock_session.run.return_value = mock_result
 
-        sentence = manager.get_sentence_by_id("sentence_test123")
-        assert sentence is not None
-        assert isinstance(sentence, dict)
+                sentence = manager.get_sentence_by_id("sentence_test123")
+                assert sentence is not None
+                assert isinstance(sentence, dict)
+        else:
+            # Integration test - requires real Neo4j service with test data
+            manager = Neo4jGraphManager(config=mock_config)
+            # Note: In integration mode, this requires pre-existing test data
+            # or a test setup that creates the data first
+            sentence = manager.get_sentence_by_id("sentence_test123")
+            # For integration tests, we expect either a valid sentence or None
+            if sentence is not None:
+                assert isinstance(sentence, dict)
