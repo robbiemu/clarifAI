@@ -69,12 +69,12 @@ class TestEmbeddingPipeline:
     def test_embedding_pipeline_init_with_config(self, mock_chunker, mock_generator, mock_vector_store):
         """Test EmbeddingPipeline initialization with config."""
         from clarifai_shared.embedding import EmbeddingPipeline
-        
+
         # Setup mocks
         mock_chunker.return_value = Mock()
         mock_generator.return_value = Mock()
         mock_vector_store.return_value = Mock()
-        
+
         config = ClarifAIConfig()
         config.embedding = EmbeddingConfig()
         config.database = DatabaseConfig(
@@ -96,12 +96,12 @@ class TestEmbeddingPipeline:
     def test_embedding_pipeline_init_default_config(self, mock_chunker, mock_generator, mock_vector_store):
         """Test EmbeddingPipeline initialization with default config."""
         from clarifai_shared.embedding import EmbeddingPipeline
-        
+
         # Setup mocks
         mock_chunker.return_value = Mock()
         mock_generator.return_value = Mock()
         mock_vector_store.return_value = Mock()
-        
+
         pipeline = EmbeddingPipeline()
         assert pipeline.config is not None
 
@@ -111,12 +111,12 @@ class TestEmbeddingPipeline:
     def test_process_tier1_content_empty(self, mock_chunker, mock_generator, mock_vector_store):
         """Test processing empty Tier 1 content."""
         from clarifai_shared.embedding import EmbeddingPipeline
-        
+
         # Setup mocks
         mock_chunker.return_value = Mock()
         mock_generator.return_value = Mock()
         mock_vector_store.return_value = Mock()
-        
+
         config = ClarifAIConfig()
         config.embedding = EmbeddingConfig()
         config.database = DatabaseConfig(
@@ -174,7 +174,7 @@ class TestEmbeddingModuleImports:
             token_count=25,
             character_count=100
         )
-        
+
         assert metadata.chunk_id == "chunk_123"
         assert metadata.block_id == "blk_456"
         assert metadata.start_index == 0
@@ -192,13 +192,13 @@ class TestEmbeddingModuleImports:
             token_count=25,
             character_count=100
         )
-        
+
         chunk = EmbeddedChunk(
             text="Test chunk text",
             embedding=[0.1, 0.2, 0.3],
             metadata=metadata
         )
-        
+
         assert chunk.text == "Test chunk text"
         assert chunk.embedding == [0.1, 0.2, 0.3]
         assert chunk.metadata == metadata

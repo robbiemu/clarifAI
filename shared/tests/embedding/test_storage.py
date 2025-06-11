@@ -48,7 +48,7 @@ class TestClarifAIVectorStore:
         """Test ClarifAIVectorStore initialization with config."""
         mock_engine = Mock()
         mock_create_engine.return_value = mock_engine
-        
+
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
             host="localhost",
@@ -66,7 +66,7 @@ class TestClarifAIVectorStore:
         """Test ClarifAIVectorStore initialization with default config."""
         mock_engine = Mock()
         mock_create_engine.return_value = mock_engine
-        
+
         vector_store = ClarifAIVectorStore()
         assert vector_store.config is not None
 

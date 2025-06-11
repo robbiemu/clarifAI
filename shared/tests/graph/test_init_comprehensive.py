@@ -31,33 +31,33 @@ class TestGraphModuleInit:
         # Test that we can create instances of the models
         from clarifai_shared.graph.models import ClaimInput, SentenceInput
         from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
-        
+
         # Test model creation
         claim_input = ClaimInput(text="Test claim", block_id="blk_123")
         assert claim_input.text == "Test claim"
         assert claim_input.block_id == "blk_123"
-        
+
         sentence_input = SentenceInput(text="Test sentence", block_id="blk_456")
         assert sentence_input.text == "Test sentence"
         assert sentence_input.block_id == "blk_456"
-        
+
         # Test that classes can be imported
         assert ClaimInput is not None
-        assert SentenceInput is not None 
+        assert SentenceInput is not None
         assert Neo4jGraphManager is not None
 
     def test_graph_init_file_content(self):
         """Test that graph __init__.py loads correctly."""
         import os
-        
+
         init_path = os.path.join(
             os.path.dirname(__file__), "../../clarifai_shared/graph/__init__.py"
         )
         assert os.path.exists(init_path)
-        
+
         # Read the file to ensure it has content
         with open(init_path, 'r') as f:
             content = f.read()
-        
+
         # Should have some imports or content
         assert len(content.strip()) > 0

@@ -34,7 +34,7 @@ class TestNeo4jGraphManager:
     def test_neo4j_manager_init_with_config(self, mock_driver_class, mock_config):
         """Test Neo4jGraphManager initialization with config."""
         mock_driver_class.return_value = Mock()
-        
+
         manager = Neo4jGraphManager(config=mock_config)
         assert manager.config == mock_config
 
@@ -42,7 +42,7 @@ class TestNeo4jGraphManager:
     def test_neo4j_manager_init_default_config(self, mock_driver_class):
         """Test Neo4jGraphManager initialization with default config."""
         mock_driver_class.return_value = Mock()
-        
+
         manager = Neo4jGraphManager()
         assert manager.config is not None
 
@@ -53,9 +53,9 @@ class TestNeo4jGraphManager:
         mock_driver_class.return_value = mock_driver
         mock_session = Mock()
         mock_driver.session.return_value.__enter__.return_value = mock_session
-        
+
         manager = Neo4jGraphManager(config=mock_config)
-        
+
         claim_inputs = [
             ClaimInput(
                 text="Test claim for Neo4j",
@@ -63,7 +63,7 @@ class TestNeo4jGraphManager:
                 entailed_score=0.95,
             )
         ]
-        
+
         # Mock the session.run return value
         mock_result = Mock()
         mock_result.data.return_value = [
@@ -78,7 +78,7 @@ class TestNeo4jGraphManager:
             }
         ]
         mock_session.run.return_value = mock_result
-        
+
         results = manager.create_claims(claim_inputs)
         assert isinstance(results, list)
         if results:
@@ -91,9 +91,9 @@ class TestNeo4jGraphManager:
         mock_driver_class.return_value = mock_driver
         mock_session = Mock()
         mock_driver.session.return_value.__enter__.return_value = mock_session
-        
+
         manager = Neo4jGraphManager(config=mock_config)
-        
+
         sentence_inputs = [
             SentenceInput(
                 text="Test sentence for Neo4j",
@@ -102,7 +102,7 @@ class TestNeo4jGraphManager:
                 verifiable=True,
             )
         ]
-        
+
         # Mock the session.run return value
         mock_result = Mock()
         mock_result.data.return_value = [
@@ -118,7 +118,7 @@ class TestNeo4jGraphManager:
             }
         ]
         mock_session.run.return_value = mock_result
-        
+
         results = manager.create_sentences(sentence_inputs)
         assert isinstance(results, list)
         if results:
@@ -131,9 +131,9 @@ class TestNeo4jGraphManager:
         mock_driver_class.return_value = mock_driver
         mock_session = Mock()
         mock_driver.session.return_value.__enter__.return_value = mock_session
-        
+
         manager = Neo4jGraphManager(config=mock_config)
-        
+
         # Mock successful result
         mock_result = Mock()
         mock_result.single.return_value = {
@@ -145,7 +145,7 @@ class TestNeo4jGraphManager:
             }
         }
         mock_session.run.return_value = mock_result
-        
+
         claim = manager.get_claim_by_id("claim_test123")
         assert claim is not None
         assert isinstance(claim, dict)
@@ -157,9 +157,9 @@ class TestNeo4jGraphManager:
         mock_driver_class.return_value = mock_driver
         mock_session = Mock()
         mock_driver.session.return_value.__enter__.return_value = mock_session
-        
+
         manager = Neo4jGraphManager(config=mock_config)
-        
+
         # Mock successful result
         mock_result = Mock()
         mock_result.single.return_value = {
@@ -171,7 +171,7 @@ class TestNeo4jGraphManager:
             }
         }
         mock_session.run.return_value = mock_result
-        
+
         sentence = manager.get_sentence_by_id("sentence_test123")
         assert sentence is not None
         assert isinstance(sentence, dict)

@@ -42,8 +42,10 @@ class TestEmbeddingInitFile:
 
     def test_embedding_result_dataclass(self):
         """Test EmbeddingResult dataclass creation."""
-        metrics = VectorStoreMetrics(total_vectors=10, successful_inserts=8, failed_inserts=2)
-        
+        metrics = VectorStoreMetrics(
+            total_vectors=10, successful_inserts=8, failed_inserts=2
+        )
+
         result = EmbeddingResult(
             success=True,
             total_chunks=10,
@@ -53,7 +55,7 @@ class TestEmbeddingInitFile:
             metrics=metrics,
             errors=["test error"]
         )
-        
+
         assert result.success is True
         assert result.total_chunks == 10
         assert result.embedded_chunks == 8
@@ -65,18 +67,20 @@ class TestEmbeddingInitFile:
     @patch('clarifai_shared.embedding.pipeline.ClarifAIVectorStore')
     @patch('clarifai_shared.embedding.pipeline.EmbeddingGenerator')
     @patch('clarifai_shared.embedding.pipeline.UtteranceChunker')
-    def test_embedding_pipeline_init(self, mock_chunker, mock_generator, mock_vector_store):
+    def test_embedding_pipeline_init(
+        self, mock_chunker, mock_generator, mock_vector_store
+    ):
         """Test EmbeddingPipeline initialization with mocked dependencies."""
         from clarifai_shared.embedding import EmbeddingPipeline
-        
+
         # Setup mocks
         mock_chunker.return_value = Mock()
         mock_generator.return_value = Mock()
         mock_vector_store.return_value = Mock()
-        
+
         config = ClarifAIConfig()
         pipeline = EmbeddingPipeline(config=config)
-        
+
         assert pipeline.config == config
         assert hasattr(pipeline, 'chunker')
         assert hasattr(pipeline, 'embedding_generator')
@@ -85,17 +89,19 @@ class TestEmbeddingInitFile:
     @patch('clarifai_shared.embedding.pipeline.ClarifAIVectorStore')
     @patch('clarifai_shared.embedding.pipeline.EmbeddingGenerator')
     @patch('clarifai_shared.embedding.pipeline.UtteranceChunker')
-    def test_embedding_pipeline_init_no_config(self, mock_chunker, mock_generator, mock_vector_store):
+    def test_embedding_pipeline_init_no_config(
+        self, mock_chunker, mock_generator, mock_vector_store
+    ):
         """Test EmbeddingPipeline initialization without config."""
         from clarifai_shared.embedding import EmbeddingPipeline
-        
+
         # Setup mocks
         mock_chunker.return_value = Mock()
         mock_generator.return_value = Mock()
         mock_vector_store.return_value = Mock()
-        
+
         pipeline = EmbeddingPipeline()
-        
+
         assert pipeline.config is not None
         assert hasattr(pipeline, 'chunker')
         assert hasattr(pipeline, 'embedding_generator')
@@ -104,18 +110,20 @@ class TestEmbeddingInitFile:
     @patch('clarifai_shared.embedding.pipeline.ClarifAIVectorStore')
     @patch('clarifai_shared.embedding.pipeline.EmbeddingGenerator')
     @patch('clarifai_shared.embedding.pipeline.UtteranceChunker')
-    def test_process_tier1_content_empty(self, mock_chunker, mock_generator, mock_vector_store):
+    def test_process_tier1_content_empty(
+        self, mock_chunker, mock_generator, mock_vector_store
+    ):
         """Test processing empty tier1 content."""
         from clarifai_shared.embedding import EmbeddingPipeline
-        
+
         # Setup mocks
         mock_chunker.return_value = Mock()
         mock_generator.return_value = Mock()
         mock_vector_store.return_value = Mock()
-        
+
         pipeline = EmbeddingPipeline()
         result = pipeline.process_tier1_content("")
-        
+
         assert isinstance(result, EmbeddingResult)
         assert result.success is False
         assert result.total_chunks == 0
