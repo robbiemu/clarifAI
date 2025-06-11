@@ -32,7 +32,7 @@ class TestEmbeddingGenerator:
             default_model="sentence-transformers/all-MiniLM-L6-v2"
         )
 
-        custom_model = "custom-model"
+        custom_model = "sentence-transformers/all-mpnet-base-v2"
         generator = EmbeddingGenerator(config=config, model_name=custom_model)
 
         assert generator.model_name == custom_model
@@ -58,17 +58,11 @@ class TestEmbeddingGenerator:
             ),
         ]
 
-        # This will likely fail due to dependencies, but will provide coverage
-        try:
-            embedded_chunks = generator.embed_chunks(chunks)
-            # If it succeeds, verify structure
-            assert len(embedded_chunks) == 2
-            for embedded_chunk in embedded_chunks:
-                assert isinstance(embedded_chunk, EmbeddedChunk)
-                assert embedded_chunk.model_name == generator.model_name
-        except Exception:
-            # Expected due to missing dependencies
-            pass
+        embedded_chunks = generator.embed_chunks(chunks)
+        assert len(embedded_chunks) == 2
+        for embedded_chunk in embedded_chunks:
+            assert isinstance(embedded_chunk, EmbeddedChunk)
+            assert embedded_chunk.model_name == generator.model_name
 
     def test_embed_single_chunk(self):
         """Test embedding a single chunk."""
@@ -83,13 +77,9 @@ class TestEmbeddingGenerator:
             text="Single chunk text",
         )
 
-        try:
-            embedded_chunk = generator.embed_single_chunk(chunk)
-            assert isinstance(embedded_chunk, EmbeddedChunk)
-            assert embedded_chunk.chunk_metadata == chunk
-        except Exception:
-            # Expected due to missing dependencies
-            pass
+        embedded_chunk = generator.embed_single_chunk(chunk)
+        assert isinstance(embedded_chunk, EmbeddedChunk)
+        assert embedded_chunk.chunk_metadata == chunk
 
     def test_embed_text(self):
         """Test embedding raw text."""
@@ -97,13 +87,9 @@ class TestEmbeddingGenerator:
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
 
-        try:
-            embedding = generator.embed_text("Test text for embedding")
-            assert isinstance(embedding, list)
-            assert all(isinstance(x, (int, float)) for x in embedding)
-        except Exception:
-            # Expected due to missing dependencies
-            pass
+        embedding = generator.embed_text("Test text for embedding")
+        assert isinstance(embedding, list)
+        assert all(isinstance(x, (int, float)) for x in embedding)
 
     def test_get_embedding_dimension(self):
         """Test getting embedding dimension."""
@@ -111,13 +97,9 @@ class TestEmbeddingGenerator:
         config.embedding = EmbeddingConfig(embed_dim=512)
         generator = EmbeddingGenerator(config=config)
 
-        try:
-            dim = generator.get_embedding_dimension()
-            assert isinstance(dim, int)
-            assert dim > 0
-        except Exception:
-            # Fall back to config dimension
-            pass
+        dim = generator.get_embedding_dimension()
+        assert isinstance(dim, int)
+        assert dim > 0
 
     def test_validate_embeddings(self):
         """Test embedding validation."""
@@ -166,13 +148,9 @@ class TestEmbeddingGenerator:
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
 
-        try:
-            model = generator._initialize_embedding_model()
-            # If successful, should be a BaseEmbedding instance
-            assert model is not None
-        except Exception:
-            # Expected due to missing dependencies
-            pass
+        model = generator._initialize_embedding_model()
+        # Should be a BaseEmbedding instance
+        assert model is not None
 
     def test_get_device(self):
         """Test device detection."""
@@ -202,13 +180,9 @@ class TestEmbeddingGenerator:
 
         texts = ["Text 1", "Text 2", "Text 3"]
 
-        try:
-            embeddings = generator._embed_texts_batch(texts)
-            assert len(embeddings) == 3
-            assert all(isinstance(emb, list) for emb in embeddings)
-        except Exception:
-            # Expected due to missing dependencies
-            pass
+        embeddings = generator._embed_texts_batch(texts)
+        assert len(embeddings) == 3
+        assert all(isinstance(emb, list) for emb in embeddings)
 
 
 class TestEmbeddedChunk:
