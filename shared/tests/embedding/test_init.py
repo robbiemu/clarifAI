@@ -30,10 +30,10 @@ class TestEmbeddingInit:
         """Test ChunkMetadata can be instantiated."""
         # Provide all required fields for ChunkMetadata
         metadata = chunking.ChunkMetadata(
-            clarifai_block_id="block_test_001", # Required
+            clarifai_block_id="block_test_001",  # Required
             chunk_index=0,
-            original_text="This is the original full text for testing.", # Required
-            text="This is the chunked text part." # Required
+            original_text="This is the original full text for testing.",  # Required
+            text="This is the chunked text part.",  # Required
         )
 
         # Assert the fields that were actually set and exist
@@ -53,15 +53,15 @@ class TestEmbeddingInit:
             clarifai_block_id="block_embed_002",
             chunk_index=1,
             original_text="Original text before chunking for embedding test.",
-            text="Test content" # This corresponds to the old "content"
+            text="Test content",  # This corresponds to the old "content"
         )
 
         # 2. Now create the EmbeddedChunk instance using the test_meta
         chunk = models.EmbeddedChunk(
-            chunk_metadata=test_meta, # Pass the ChunkMetadata object
+            chunk_metadata=test_meta,  # Pass the ChunkMetadata object
             embedding=[0.1, 0.2, 0.3],
-            model_name="test_embedding_model", # Required
-            embedding_dim=3 # Required (should match len(embedding))
+            model_name="test_embedding_model",  # Required
+            embedding_dim=3,  # Required (should match len(embedding))
         )
 
         # 3. Assert based on the actual structure
@@ -71,4 +71,4 @@ class TestEmbeddingInit:
         # We assert the other required fields:
         assert chunk.model_name == "test_embedding_model"
         assert chunk.embedding_dim == 3
-        assert chunk.chunk_metadata == test_meta # You can assert the whole object too
+        assert chunk.chunk_metadata == test_meta  # You can assert the whole object too

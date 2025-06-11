@@ -2,7 +2,75 @@
 Tests for graph module initialization.
 """
 
+from clarifai_shared.graph import (
+    Claim,
+    Sentence,
+    ClaimInput,
+    SentenceInput,
+    Neo4jGraphManager,
+)
 from clarifai_shared.graph import models
+
+
+class TestGraphInit:
+    """Test graph module initialization and imports."""
+
+    def test_models_module_loads(self):
+        """Test that models module loads correctly."""
+        assert hasattr(models, "ClaimInput")
+        assert hasattr(models, "SentenceInput")
+        assert hasattr(models, "Claim")
+        assert hasattr(models, "Sentence")
+
+    def test_neo4j_manager_module_loads(self):
+        """Test that neo4j_manager module loads correctly."""
+        from clarifai_shared.graph import neo4j_manager
+
+        assert hasattr(neo4j_manager, "Neo4jGraphManager")
+
+    def test_direct_imports(self):
+        """Test direct imports from graph module."""
+        assert Claim is not None
+        assert Sentence is not None
+        assert ClaimInput is not None
+        assert SentenceInput is not None
+        assert Neo4jGraphManager is not None
+
+    def test_module_all_attribute(self):
+        """Test that __all__ attribute is properly defined."""
+        import clarifai_shared.graph as graph_module
+
+        assert hasattr(graph_module, "__all__")
+        assert isinstance(graph_module.__all__, list)
+        assert len(graph_module.__all__) == 5
+
+        expected_exports = [
+            "Claim",
+            "Sentence",
+            "ClaimInput",
+            "SentenceInput",
+            "Neo4jGraphManager",
+        ]
+        for item in expected_exports:
+            assert item in graph_module.__all__
+            assert hasattr(graph_module, item)
+
+    def test_import_functionality(self):
+        """Test that imports work as expected."""
+        # This exercises the actual import code in __init__.py
+        from clarifai_shared.graph import (
+            Claim as ImportedClaim,
+            Sentence as ImportedSentence,
+            ClaimInput as ImportedClaimInput,
+            SentenceInput as ImportedSentenceInput,
+            Neo4jGraphManager as ImportedNeo4jGraphManager,
+        )
+
+        assert ImportedClaim is not None
+        assert ImportedSentence is not None
+        assert ImportedClaimInput is not None
+        assert ImportedSentenceInput is not None
+        assert ImportedNeo4jGraphManager is not None
 
 
 class TestGraphModuleImports:
