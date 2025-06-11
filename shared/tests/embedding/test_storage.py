@@ -48,7 +48,7 @@ class TestClarifAIVectorStore:
         config.database = DatabaseConfig(
             host="localhost",
             port=5432,
-            name="clarifai_test",
+            database="clarifai_test",
             user="test_user",
             password="test_pass",
         )
