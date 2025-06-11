@@ -1,0 +1,416 @@
+Defaulting to user installation because normal site-packages is not writeable
+Collecting python-dotenv
+  Downloading python_dotenv-1.1.0-py3-none-any.whl.metadata
+     - 24.1 kB ? 0:00:00
+Collecting llama-index-core
+  Downloading llama_index_core-0.12.41-py3-none-any.whl.metadata
+     - 2.4 kB ? 0:00:00
+Collecting llama-index-llms-openai
+  Downloading llama_index_llms_openai-0.4.5-py3-none-any.whl.metadata
+     - 3.0 kB ? 0:00:00
+Collecting llama-index-embeddings-huggingface
+  Downloading llama_index_embeddings_huggingface-0.5.4-py3-none-any.whl.metadata
+     - 458 bytes ? 0:00:00
+Collecting llama-index-vector-stores-postgres
+  Downloading llama_index_vector_stores_postgres-0.5.3-py3-none-any.whl.metadata
+     - 555 bytes ? 0:00:00
+Requirement already satisfied: pyyaml in /usr/lib/python3/dist-packages (6.0.1)
+Collecting sentence-transformers
+  Downloading sentence_transformers-4.1.0-py3-none-any.whl.metadata
+     - 13.8 kB ? 0:00:00
+Collecting psycopg2-binary
+  Downloading psycopg2_binary-2.9.10-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 4.9 kB ? 0:00:00
+Collecting sqlalchemy
+  Downloading sqlalchemy-2.0.41-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 9.6 kB ? 0:00:00
+Collecting pgvector
+  Downloading pgvector-0.4.1-py3-none-any.whl.metadata
+     - 18.1 kB ? 0:00:00
+Collecting neo4j
+  Downloading neo4j-5.28.1-py3-none-any.whl.metadata
+     - 5.9 kB ? 0:00:00
+Collecting aiohttp<4,>=3.8.6 (from llama-index-core)
+  Downloading aiohttp-3.12.12-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 7.6 kB ? 0:00:00
+Collecting aiosqlite (from llama-index-core)
+  Downloading aiosqlite-0.21.0-py3-none-any.whl.metadata
+     - 4.3 kB ? 0:00:00
+Collecting banks<3,>=2.0.0 (from llama-index-core)
+  Downloading banks-2.1.2-py3-none-any.whl.metadata
+     - 12.1 kB ? 0:00:00
+Collecting dataclasses-json (from llama-index-core)
+  Downloading dataclasses_json-0.6.7-py3-none-any.whl.metadata
+     - 25.0 kB ? 0:00:00
+Collecting deprecated>=1.2.9.3 (from llama-index-core)
+  Downloading Deprecated-1.2.18-py2.py3-none-any.whl.metadata
+     - 5.7 kB ? 0:00:00
+Collecting dirtyjson<2,>=1.0.8 (from llama-index-core)
+  Downloading dirtyjson-1.0.8-py3-none-any.whl.metadata
+     - 11.6 kB ? 0:00:00
+Collecting filetype<2,>=1.2.0 (from llama-index-core)
+  Downloading filetype-1.2.0-py2.py3-none-any.whl.metadata
+     - 6.5 kB ? 0:00:00
+Collecting fsspec>=2023.5.0 (from llama-index-core)
+  Downloading fsspec-2025.5.1-py3-none-any.whl.metadata
+     - 11.7 kB ? 0:00:00
+Collecting httpx (from llama-index-core)
+  Downloading httpx-0.28.1-py3-none-any.whl.metadata
+     - 7.1 kB ? 0:00:00
+Collecting nest-asyncio<2,>=1.5.8 (from llama-index-core)
+  Downloading nest_asyncio-1.6.0-py3-none-any.whl.metadata
+     - 2.8 kB ? 0:00:00
+Collecting networkx>=3.0 (from llama-index-core)
+  Downloading networkx-3.5-py3-none-any.whl.metadata
+     - 6.3 kB ? 0:00:00
+Collecting nltk>3.8.1 (from llama-index-core)
+  Downloading nltk-3.9.1-py3-none-any.whl.metadata
+     - 2.9 kB ? 0:00:00
+Collecting numpy (from llama-index-core)
+  Downloading numpy-2.3.0-cp312-cp312-manylinux_2_28_x86_64.whl.metadata
+     - 62.1 kB 304.6 MB/s 0:00:00
+Collecting pillow>=9.0.0 (from llama-index-core)
+  Downloading pillow-11.2.1-cp312-cp312-manylinux_2_28_x86_64.whl.metadata
+     - 8.9 kB ? 0:00:00
+Collecting pydantic>=2.8.0 (from llama-index-core)
+  Downloading pydantic-2.11.5-py3-none-any.whl.metadata
+     - 67.2 kB 200.6 MB/s 0:00:00
+Requirement already satisfied: requests>=2.31.0 in /usr/lib/python3/dist-packages (from llama-index-core) (2.31.0)
+Collecting tenacity!=8.4.0,<10.0.0,>=8.2.0 (from llama-index-core)
+  Downloading tenacity-9.1.2-py3-none-any.whl.metadata
+     - 1.2 kB ? 0:00:00
+Collecting tiktoken>=0.7.0 (from llama-index-core)
+  Downloading tiktoken-0.9.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 6.7 kB ? 0:00:00
+Collecting tqdm<5,>=4.66.1 (from llama-index-core)
+  Downloading tqdm-4.67.1-py3-none-any.whl.metadata
+     - 57.7 kB 281.3 MB/s 0:00:00
+Requirement already satisfied: typing-extensions>=4.5.0 in /usr/lib/python3/dist-packages (from llama-index-core) (4.10.0)
+Collecting typing-inspect>=0.8.0 (from llama-index-core)
+  Downloading typing_inspect-0.9.0-py3-none-any.whl.metadata
+     - 1.5 kB ? 0:00:00
+Collecting wrapt (from llama-index-core)
+  Downloading wrapt-1.17.2-cp312-cp312-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 6.4 kB ? 0:00:00
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp<4,>=3.8.6->llama-index-core)
+  Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl.metadata
+     - 5.9 kB ? 0:00:00
+Collecting aiosignal>=1.1.2 (from aiohttp<4,>=3.8.6->llama-index-core)
+  Downloading aiosignal-1.3.2-py2.py3-none-any.whl.metadata
+     - 3.8 kB ? 0:00:00
+Requirement already satisfied: attrs>=17.3.0 in /usr/lib/python3/dist-packages (from aiohttp<4,>=3.8.6->llama-index-core) (23.2.0)
+Collecting frozenlist>=1.1.1 (from aiohttp<4,>=3.8.6->llama-index-core)
+  Downloading frozenlist-1.7.0-cp312-cp312-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 18.6 kB ? 0:00:00
+Collecting multidict<7.0,>=4.5 (from aiohttp<4,>=3.8.6->llama-index-core)
+  Downloading multidict-6.4.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 5.3 kB ? 0:00:00
+Collecting propcache>=0.2.0 (from aiohttp<4,>=3.8.6->llama-index-core)
+  Downloading propcache-0.3.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 12.0 kB ? 0:00:00
+Collecting yarl<2.0,>=1.17.0 (from aiohttp<4,>=3.8.6->llama-index-core)
+  Downloading yarl-1.20.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 73.9 kB 283.4 MB/s 0:00:00
+Collecting griffe (from banks<3,>=2.0.0->llama-index-core)
+  Downloading griffe-1.7.3-py3-none-any.whl.metadata
+     - 5.0 kB ? 0:00:00
+Requirement already satisfied: jinja2 in /usr/lib/python3/dist-packages (from banks<3,>=2.0.0->llama-index-core) (3.1.2)
+Requirement already satisfied: platformdirs in /usr/local/lib/python3.12/dist-packages (from banks<3,>=2.0.0->llama-index-core) (4.3.8)
+Requirement already satisfied: idna>=2.0 in /usr/lib/python3/dist-packages (from yarl<2.0,>=1.17.0->aiohttp<4,>=3.8.6->llama-index-core) (3.6)
+Collecting openai<2,>=1.81.0 (from llama-index-llms-openai)
+  Downloading openai-1.86.0-py3-none-any.whl.metadata
+     - 25.1 kB ? 0:00:00
+Collecting anyio<5,>=3.5.0 (from openai<2,>=1.81.0->llama-index-llms-openai)
+  Downloading anyio-4.9.0-py3-none-any.whl.metadata
+     - 4.7 kB ? 0:00:00
+Requirement already satisfied: distro<2,>=1.7.0 in /usr/lib/python3/dist-packages (from openai<2,>=1.81.0->llama-index-llms-openai) (1.9.0)
+Collecting jiter<1,>=0.4.0 (from openai<2,>=1.81.0->llama-index-llms-openai)
+  Downloading jiter-0.10.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 5.2 kB ? 0:00:00
+Collecting sniffio (from openai<2,>=1.81.0->llama-index-llms-openai)
+  Downloading sniffio-1.3.1-py3-none-any.whl.metadata
+     - 3.9 kB ? 0:00:00
+Collecting typing-extensions>=4.5.0 (from llama-index-core)
+  Downloading typing_extensions-4.14.0-py3-none-any.whl.metadata
+     - 3.0 kB ? 0:00:00
+Requirement already satisfied: certifi in /usr/lib/python3/dist-packages (from httpx->llama-index-core) (2023.11.17)
+Collecting httpcore==1.* (from httpx->llama-index-core)
+  Downloading httpcore-1.0.9-py3-none-any.whl.metadata
+     - 21.5 kB ? 0:00:00
+Collecting h11>=0.16 (from httpcore==1.*->httpx->llama-index-core)
+  Downloading h11-0.16.0-py3-none-any.whl.metadata
+     - 8.3 kB ? 0:00:00
+Collecting annotated-types>=0.6.0 (from pydantic>=2.8.0->llama-index-core)
+  Downloading annotated_types-0.7.0-py3-none-any.whl.metadata
+     - 15.0 kB ? 0:00:00
+Collecting pydantic-core==2.33.2 (from pydantic>=2.8.0->llama-index-core)
+  Downloading pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 6.8 kB ? 0:00:00
+Collecting typing-inspection>=0.4.0 (from pydantic>=2.8.0->llama-index-core)
+  Downloading typing_inspection-0.4.1-py3-none-any.whl.metadata
+     - 2.6 kB ? 0:00:00
+Collecting huggingface-hub>=0.19.0 (from huggingface-hub[inference]>=0.19.0->llama-index-embeddings-huggingface)
+  Downloading huggingface_hub-0.32.6-py3-none-any.whl.metadata
+     - 14.8 kB ? 0:00:00
+Collecting asyncpg<1.0.0,>=0.29.0 (from llama-index-vector-stores-postgres)
+  Downloading asyncpg-0.30.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 5.0 kB ? 0:00:00
+Collecting greenlet>=1 (from sqlalchemy)
+  Downloading greenlet-3.2.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata
+     - 4.1 kB ? 0:00:00
+Collecting transformers<5.0.0,>=4.41.0 (from sentence-transformers)
+  Downloading transformers-4.52.4-py3-none-any.whl.metadata
+     - 38.3 kB 112.8 MB/s 0:00:00
+Collecting torch>=1.11.0 (from sentence-transformers)
+  Downloading torch-2.7.1-cp312-cp312-manylinux_2_28_x86_64.whl.metadata
+     - 29.3 kB ? 0:00:00
+Collecting scikit-learn (from sentence-transformers)
+  Downloading scikit_learn-1.7.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 17.9 kB ? 0:00:00
+Collecting scipy (from sentence-transformers)
+  Downloading scipy-1.15.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 62.0 kB 311.1 MB/s 0:00:00
+Collecting filelock (from transformers<5.0.0,>=4.41.0->sentence-transformers)
+  Downloading filelock-3.18.0-py3-none-any.whl.metadata
+     - 2.9 kB ? 0:00:00
+Requirement already satisfied: packaging>=20.0 in /usr/lib/python3/dist-packages (from transformers<5.0.0,>=4.41.0->sentence-transformers) (24.0)
+Collecting regex!=2019.12.17 (from transformers<5.0.0,>=4.41.0->sentence-transformers)
+  Downloading regex-2024.11.6-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 40.5 kB 157.0 MB/s 0:00:00
+Collecting tokenizers<0.22,>=0.21 (from transformers<5.0.0,>=4.41.0->sentence-transformers)
+  Downloading tokenizers-0.21.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 6.8 kB ? 0:00:00
+Collecting safetensors>=0.4.3 (from transformers<5.0.0,>=4.41.0->sentence-transformers)
+  Downloading safetensors-0.5.3-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 3.8 kB ? 0:00:00
+Collecting hf-xet<2.0.0,>=1.1.2 (from huggingface-hub>=0.19.0->huggingface-hub[inference]>=0.19.0->llama-index-embeddings-huggingface)
+  Downloading hf_xet-1.1.3-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+     - 879 bytes ? 0:00:00
+Requirement already satisfied: pytz in /usr/lib/python3/dist-packages (from neo4j) (2024.1)
+Requirement already satisfied: click in /usr/lib/python3/dist-packages (from nltk>3.8.1->llama-index-core) (8.1.6)
+Collecting joblib (from nltk>3.8.1->llama-index-core)
+  Downloading joblib-1.5.1-py3-none-any.whl.metadata
+     - 5.6 kB ? 0:00:00
+Requirement already satisfied: setuptools in /usr/lib/python3/dist-packages (from torch>=1.11.0->sentence-transformers) (68.1.2)
+Collecting sympy>=1.13.3 (from torch>=1.11.0->sentence-transformers)
+  Downloading sympy-1.14.0-py3-none-any.whl.metadata
+     - 12.8 kB ? 0:00:00
+Collecting nvidia-cuda-nvrtc-cu12==12.6.77 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_cuda_nvrtc_cu12-12.6.77-py3-none-manylinux2014_x86_64.whl.metadata
+     - 1.5 kB ? 0:00:00
+Collecting nvidia-cuda-runtime-cu12==12.6.77 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_cuda_runtime_cu12-12.6.77-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+     - 1.5 kB ? 0:00:00
+Collecting nvidia-cuda-cupti-cu12==12.6.80 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_cuda_cupti_cu12-12.6.80-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+     - 1.6 kB ? 0:00:00
+Collecting nvidia-cudnn-cu12==9.5.1.17 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_cudnn_cu12-9.5.1.17-py3-none-manylinux_2_28_x86_64.whl.metadata
+     - 1.6 kB ? 0:00:00
+Collecting nvidia-cublas-cu12==12.6.4.1 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_cublas_cu12-12.6.4.1-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+     - 1.5 kB ? 0:00:00
+Collecting nvidia-cufft-cu12==11.3.0.4 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_cufft_cu12-11.3.0.4-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+     - 1.5 kB ? 0:00:00
+Collecting nvidia-curand-cu12==10.3.7.77 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_curand_cu12-10.3.7.77-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+     - 1.5 kB ? 0:00:00
+Collecting nvidia-cusolver-cu12==11.7.1.2 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_cusolver_cu12-11.7.1.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+     - 1.6 kB ? 0:00:00
+Collecting nvidia-cusparse-cu12==12.5.4.2 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_cusparse_cu12-12.5.4.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+     - 1.6 kB ? 0:00:00
+Collecting nvidia-cusparselt-cu12==0.6.3 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_cusparselt_cu12-0.6.3-py3-none-manylinux2014_x86_64.whl.metadata
+     - 6.8 kB ? 0:00:00
+Collecting nvidia-nccl-cu12==2.26.2 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_nccl_cu12-2.26.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+     - 2.0 kB ? 0:00:00
+Collecting nvidia-nvtx-cu12==12.6.77 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_nvtx_cu12-12.6.77-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+     - 1.6 kB ? 0:00:00
+Collecting nvidia-nvjitlink-cu12==12.6.85 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_nvjitlink_cu12-12.6.85-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata
+     - 1.5 kB ? 0:00:00
+Collecting nvidia-cufile-cu12==1.11.1.6 (from torch>=1.11.0->sentence-transformers)
+  Downloading nvidia_cufile_cu12-1.11.1.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata
+     - 1.5 kB ? 0:00:00
+Collecting triton==3.3.1 (from torch>=1.11.0->sentence-transformers)
+  Downloading triton-3.3.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata
+     - 1.5 kB ? 0:00:00
+Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch>=1.11.0->sentence-transformers)
+  Downloading mpmath-1.3.0-py3-none-any.whl.metadata
+     - 8.6 kB ? 0:00:00
+Collecting mypy-extensions>=0.3.0 (from typing-inspect>=0.8.0->llama-index-core)
+  Downloading mypy_extensions-1.1.0-py3-none-any.whl.metadata
+     - 1.1 kB ? 0:00:00
+Collecting marshmallow<4.0.0,>=3.18.0 (from dataclasses-json->llama-index-core)
+  Downloading marshmallow-3.26.1-py3-none-any.whl.metadata
+     - 7.3 kB ? 0:00:00
+Requirement already satisfied: colorama>=0.4 in /usr/lib/python3/dist-packages (from griffe->banks<3,>=2.0.0->llama-index-core) (0.4.6)
+Collecting threadpoolctl>=3.1.0 (from scikit-learn->sentence-transformers)
+  Downloading threadpoolctl-3.6.0-py3-none-any.whl.metadata
+     - 13.8 kB ? 0:00:00
+Downloading python_dotenv-1.1.0-py3-none-any.whl
+   - 20.3 kB 109.1 MB/s 0:00:00
+Downloading llama_index_core-0.12.41-py3-none-any.whl
+   - 7.7 MB 188.7 MB/s 0:00:00
+Downloading aiohttp-3.12.12-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 1.7 MB 245.0 MB/s 0:00:00
+Downloading banks-2.1.2-py3-none-any.whl
+   - 28.1 kB 203.1 MB/s 0:00:00
+Downloading dirtyjson-1.0.8-py3-none-any.whl
+   - 25.2 kB 171.8 MB/s 0:00:00
+Downloading filetype-1.2.0-py2.py3-none-any.whl
+   - 20.0 kB 83.6 MB/s 0:00:00
+Downloading multidict-6.4.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 223.8 kB 214.9 MB/s 0:00:00
+Downloading nest_asyncio-1.6.0-py3-none-any.whl
+   - 5.2 kB ? 0:00:00
+Downloading tenacity-9.1.2-py3-none-any.whl
+   - 28.2 kB 215.4 MB/s 0:00:00
+Downloading tqdm-4.67.1-py3-none-any.whl
+   - 78.5 kB 283.5 MB/s 0:00:00
+Downloading yarl-1.20.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 355.6 kB 198.7 MB/s 0:00:00
+Downloading llama_index_llms_openai-0.4.5-py3-none-any.whl
+   - 25.3 kB 129.7 MB/s 0:00:00
+Downloading openai-1.86.0-py3-none-any.whl
+   - 730.3 kB 256.7 MB/s 0:00:00
+Downloading anyio-4.9.0-py3-none-any.whl
+   - 100.9 kB 164.0 MB/s 0:00:00
+Downloading httpx-0.28.1-py3-none-any.whl
+   - 73.5 kB 183.5 MB/s 0:00:00
+Downloading httpcore-1.0.9-py3-none-any.whl
+   - 78.8 kB 227.7 MB/s 0:00:00
+Downloading jiter-0.10.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 352.0 kB 272.5 MB/s 0:00:00
+Downloading pydantic-2.11.5-py3-none-any.whl
+   - 444.2 kB 262.9 MB/s 0:00:00
+Downloading pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 2.0 MB 250.9 MB/s 0:00:00
+Downloading typing_extensions-4.14.0-py3-none-any.whl
+   - 43.8 kB 240.3 MB/s 0:00:00
+Downloading llama_index_embeddings_huggingface-0.5.4-py3-none-any.whl
+   - 8.9 kB ? 0:00:00
+Downloading llama_index_vector_stores_postgres-0.5.3-py3-none-any.whl
+   - 10.9 kB ? 0:00:00
+Downloading psycopg2_binary-2.9.10-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 3.0 MB 222.4 MB/s 0:00:00
+Downloading sqlalchemy-2.0.41-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 3.3 MB 232.9 MB/s 0:00:00
+Downloading pgvector-0.4.1-py3-none-any.whl
+   - 27.1 kB 136.1 MB/s 0:00:00
+Downloading asyncpg-0.30.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 3.6 MB 228.5 MB/s 0:00:00
+Downloading sentence_transformers-4.1.0-py3-none-any.whl
+   - 345.7 kB 203.4 MB/s 0:00:00
+Downloading transformers-4.52.4-py3-none-any.whl
+   - 10.5 MB 229.4 MB/s 0:00:00
+Downloading huggingface_hub-0.32.6-py3-none-any.whl
+   - 512.8 kB 267.8 MB/s 0:00:00
+Downloading hf_xet-1.1.3-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 4.8 MB 203.1 MB/s 0:00:00
+Downloading tokenizers-0.21.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 3.0 MB 237.2 MB/s 0:00:00
+Downloading neo4j-5.28.1-py3-none-any.whl
+   - 312.3 kB 198.6 MB/s 0:00:00
+Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl
+   - 15.3 kB 32.8 kB/s 0:00:00
+Downloading aiosignal-1.3.2-py2.py3-none-any.whl
+   - 7.6 kB ? 0:00:00
+Downloading annotated_types-0.7.0-py3-none-any.whl
+   - 13.6 kB ? 0:00:00
+Downloading Deprecated-1.2.18-py2.py3-none-any.whl
+   - 10.0 kB ? 0:00:00
+Downloading wrapt-1.17.2-cp312-cp312-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 89.2 kB 222.6 MB/s 0:00:00
+Downloading frozenlist-1.7.0-cp312-cp312-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 241.8 kB 195.3 MB/s 0:00:00
+Downloading fsspec-2025.5.1-py3-none-any.whl
+   - 199.1 kB 244.3 MB/s 0:00:00
+Downloading greenlet-3.2.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl
+   - 605.5 kB 199.4 MB/s 0:00:00
+Downloading h11-0.16.0-py3-none-any.whl
+   - 37.5 kB 201.0 MB/s 0:00:00
+Downloading networkx-3.5-py3-none-any.whl
+   - 2.0 MB 119.6 MB/s 0:00:00
+Downloading nltk-3.9.1-py3-none-any.whl
+   - 1.5 MB 219.4 MB/s 0:00:00
+Downloading numpy-2.3.0-cp312-cp312-manylinux_2_28_x86_64.whl
+   \ 16.6 MB 198.5 MB/s 0:00:00
+Downloading pillow-11.2.1-cp312-cp312-manylinux_2_28_x86_64.whl
+   - 4.6 MB 198.7 MB/s 0:00:00
+Downloading propcache-0.3.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 224.4 kB 185.1 MB/s 0:00:00
+Downloading regex-2024.11.6-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 796.9 kB 226.3 MB/s 0:00:00
+Downloading safetensors-0.5.3-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 471.6 kB 214.1 MB/s 0:00:00
+Downloading sniffio-1.3.1-py3-none-any.whl
+   - 10.2 kB ? 0:00:00
+Downloading tiktoken-0.9.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 1.2 MB 280.6 MB/s 0:00:00
+Downloading torch-2.7.1-cp312-cp312-manylinux_2_28_x86_64.whl
+   | 821.0 MB 169.5 MB/s 0:00:06
+Downloading nvidia_cublas_cu12-12.6.4.1-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+   - 393.1 MB 233.6 MB/s 0:00:03
+Downloading nvidia_cuda_cupti_cu12-12.6.80-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+   - 8.9 MB 208.2 MB/s 0:00:00
+Downloading nvidia_cuda_nvrtc_cu12-12.6.77-py3-none-manylinux2014_x86_64.whl
+   \ 23.7 MB 232.7 MB/s 0:00:00
+Downloading nvidia_cuda_runtime_cu12-12.6.77-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+   - 897.7 kB 262.5 MB/s 0:00:00
+Downloading nvidia_cudnn_cu12-9.5.1.17-py3-none-manylinux_2_28_x86_64.whl
+   | 571.0 MB 234.9 MB/s 0:00:05
+Downloading nvidia_cufft_cu12-11.3.0.4-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+   | 200.2 MB 271.1 MB/s 0:00:01
+Downloading nvidia_cufile_cu12-1.11.1.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+   - 1.1 MB 248.0 MB/s 0:00:00
+Downloading nvidia_curand_cu12-10.3.7.77-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+   - 56.3 MB 273.0 MB/s 0:00:00
+Downloading nvidia_cusolver_cu12-11.7.1.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+   / 158.2 MB 250.0 MB/s 0:00:00
+Downloading nvidia_cusparse_cu12-12.5.4.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+   / 216.6 MB 246.6 MB/s 0:00:02
+Downloading nvidia_cusparselt_cu12-0.6.3-py3-none-manylinux2014_x86_64.whl
+   | 156.8 MB 260.5 MB/s 0:00:00
+Downloading nvidia_nccl_cu12-2.26.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+   - 201.3 MB 216.5 MB/s 0:00:02
+Downloading nvidia_nvjitlink_cu12-12.6.85-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl
+   \ 19.7 MB 255.4 MB/s 0:00:00
+Downloading nvidia_nvtx_cu12-12.6.77-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+   - 89.3 kB 208.8 MB/s 0:00:00
+Downloading triton-3.3.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+   / 155.7 MB 235.9 MB/s 0:00:01
+Downloading sympy-1.14.0-py3-none-any.whl
+   - 6.3 MB 227.1 MB/s 0:00:00
+Downloading mpmath-1.3.0-py3-none-any.whl
+   - 536.2 kB 265.0 MB/s 0:00:00
+Downloading typing_inspect-0.9.0-py3-none-any.whl
+   - 8.8 kB ? 0:00:00
+Downloading mypy_extensions-1.1.0-py3-none-any.whl
+   - 5.0 kB ? 0:00:00
+Downloading typing_inspection-0.4.1-py3-none-any.whl
+   - 14.6 kB ? 0:00:00
+Downloading aiosqlite-0.21.0-py3-none-any.whl
+   - 15.8 kB ? 0:00:00
+Downloading dataclasses_json-0.6.7-py3-none-any.whl
+   - 28.7 kB 193.5 MB/s 0:00:00
+Downloading marshmallow-3.26.1-py3-none-any.whl
+   - 50.9 kB 231.1 MB/s 0:00:00
+Downloading filelock-3.18.0-py3-none-any.whl
+   - 16.2 kB ? 0:00:00
+Downloading griffe-1.7.3-py3-none-any.whl
+   - 129.3 kB 233.2 MB/s 0:00:00
+Downloading joblib-1.5.1-py3-none-any.whl
+   - 307.7 kB 250.5 MB/s 0:00:00
+Downloading scikit_learn-1.7.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   - 12.5 MB 219.7 MB/s 0:00:00
+Downloading scipy-1.15.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+   | 37.3 MB 247.5 MB/s 0:00:00
+Downloading threadpoolctl-3.6.0-py3-none-any.whl
+   - 18.6 kB 96.9 MB/s 0:00:00
+Installing collected packages: nvidia-cusparselt-cu12, mpmath, filetype, dirtyjson, wrapt, typing-extensions, triton, tqdm, threadpoolctl, tenacity, sympy, sniffio, safetensors, regex, python-dotenv, psycopg2-binary, propcache, pillow, nvidia-nvtx-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufile-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, networkx, nest-asyncio, neo4j, mypy-extensions, multidict, marshmallow, joblib, jiter, hf-xet, h11, griffe, greenlet, fsspec, frozenlist, filelock, asyncpg, annotated-types, aiohappyeyeballs, yarl, typing-inspection, typing-inspect, tiktoken, sqlalchemy, scipy, pydantic-core, pgvector, nvidia-cusparse-cu12, nvidia-cufft-cu12, nvidia-cudnn-cu12, nltk, huggingface-hub, httpcore, deprecated, anyio, aiosqlite, aiosignal, tokenizers, scikit-learn, pydantic, nvidia-cusolver-cu12, httpx, dataclasses-json, aiohttp, transformers, torch, openai, banks, sentence-transformers, llama-index-core, llama-index-vector-stores-postgres, llama-index-llms-openai, llama-index-embeddings-huggingface
