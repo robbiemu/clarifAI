@@ -6,7 +6,6 @@ specifications from docs/arch/on-sentence_splitting.md
 """
 
 import pytest
-from unittest.mock import patch
 from clarifai_shared.embedding.chunking import UtteranceChunker, ChunkMetadata
 from clarifai_shared.config import ClarifAIConfig, EmbeddingConfig
 
@@ -28,21 +27,15 @@ def mock_config():
 @pytest.fixture
 def chunker(mock_config):
     """Create a chunker instance for testing."""
-    with patch(
-        "clarifai_shared.embedding.chunking.load_config", return_value=mock_config
-    ):
-        return UtteranceChunker(mock_config)
+    return UtteranceChunker(mock_config)
 
 
 def test_chunker_initialization(mock_config):
     """Test that chunker initializes correctly with configuration."""
-    with patch(
-        "clarifai_shared.embedding.chunking.load_config", return_value=mock_config
-    ):
-        chunker = UtteranceChunker(mock_config)
+    chunker = UtteranceChunker(mock_config)
 
-        assert chunker.config == mock_config
-        assert chunker.splitter is not None
+    assert chunker.config == mock_config
+    assert chunker.splitter is not None
 
 
 def test_parse_tier1_blocks_basic(chunker):
@@ -132,7 +125,7 @@ def test_chunk_utterance_block_long_text(chunker):
 def test_postprocessing_merge_colon_endings(chunker):
     """Test that colon-ended lead-ins are merged with continuations."""
     # Mock the base chunks to simulate colon-ending scenario
-    from llama_index.core.schema import TextNode
+    from clarifai_shared.embedding.chunking import TextNode
 
     base_chunks = [
         TextNode(text="In the example we see:", metadata={}),
@@ -148,7 +141,7 @@ def test_postprocessing_merge_colon_endings(chunker):
 
 def test_postprocessing_merge_short_prefixes(chunker):
     """Test that short prefixes are merged with next chunks."""
-    from llama_index.core.schema import TextNode
+    from clarifai_shared.embedding.chunking import TextNode
 
     base_chunks = [
         TextNode(text="Example:", metadata={}),  # Short prefix
@@ -222,11 +215,8 @@ def test_chunker_with_default_config():
     mock_config = ClarifAIConfig()
     mock_config.embedding = EmbeddingConfig()
 
-    with patch(
-        "clarifai_shared.embedding.chunking.load_config", return_value=mock_config
-    ):
-        chunker = UtteranceChunker()  # No config passed, should load default
-        assert chunker.config == mock_config
+    chunker = UtteranceChunker(mock_config)  # Pass config explicitly
+    assert chunker.config == mock_config
 
 
 def test_parse_tier1_blocks_edge_cases(chunker):

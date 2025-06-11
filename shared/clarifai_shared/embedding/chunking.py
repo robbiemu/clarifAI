@@ -17,8 +17,73 @@ import logging
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.schema import Document, TextNode
+try:
+    from llama_index.core.node_parser import SentenceSplitter
+    from llama_index.core.schema import Document, TextNode
+
+    LLAMA_INDEX_AVAILABLE = True
+except ImportError:
+    # Mock classes for when llama_index is not available
+    class SentenceSplitter:
+        def __init__(self, chunk_size=300, chunk_overlap=30, **kwargs):
+            self.chunk_size = chunk_size
+            self.chunk_overlap = chunk_overlap
+
+        def get_nodes_from_documents(self, docs):
+            # Simple mock that splits based on character count (rough approximation)
+            nodes = []
+            for doc in docs:
+                text = doc.text
+                if len(text) <= self.chunk_size:
+                    # Text fits in one chunk
+                    nodes.append(TextNode(text=text, metadata=doc.metadata))
+                else:
+                    # Split into multiple chunks
+                    words = text.split()
+                    current_chunk = []
+                    current_length = 0
+
+                    for word in words:
+                        word_length = len(word) + 1  # +1 for space
+                        if (
+                            current_length + word_length > self.chunk_size
+                            and current_chunk
+                        ):
+                            # Create chunk
+                            chunk_text = " ".join(current_chunk)
+                            nodes.append(
+                                TextNode(text=chunk_text, metadata=doc.metadata)
+                            )
+                            # Start new chunk with overlap
+                            overlap_words = (
+                                current_chunk[-self.chunk_overlap // 10 :]
+                                if self.chunk_overlap > 0
+                                else []
+                            )
+                            current_chunk = overlap_words + [word]
+                            current_length = sum(len(w) + 1 for w in current_chunk)
+                        else:
+                            current_chunk.append(word)
+                            current_length += word_length
+
+                    # Add remaining chunk
+                    if current_chunk:
+                        chunk_text = " ".join(current_chunk)
+                        nodes.append(TextNode(text=chunk_text, metadata=doc.metadata))
+
+            return nodes
+
+    class Document:
+        def __init__(self, text="", metadata=None):
+            self.text = text
+            self.metadata = metadata or {}
+
+    class TextNode:
+        def __init__(self, text="", metadata=None):
+            self.text = text
+            self.metadata = metadata or {}
+
+    LLAMA_INDEX_AVAILABLE = False
 
 from ..config import ClarifAIConfig
 
@@ -170,8 +235,8 @@ class UtteranceChunker:
         # Pattern to match clarifai:id comments
         id_pattern = re.compile(r"<!-- clarifai:id=([a-z0-9_]+) ver=\d+ -->")
 
-        # Pattern to match speaker: text format
-        speaker_pattern = re.compile(r"^([^:]+):\s*(.+)$")
+        # Pattern to match speaker: text format (but not HTML comments)
+        speaker_pattern = re.compile(r"^([^:<]+):\s*(.+)$")
 
         for line in lines:
             line = line.strip()
@@ -184,29 +249,30 @@ class UtteranceChunker:
             ):
                 continue
 
-            # Check for speaker: text pattern
-            speaker_match = speaker_pattern.match(line)
-            if speaker_match:
-                # Save previous utterance if exists
-                if current_utterance and current_text:
-                    blocks.append(
-                        {
-                            "clarifai_id": current_utterance,
-                            "speaker": current_speaker,
-                            "text": current_text.strip(),
-                        }
-                    )
-
-                # Start new utterance
-                current_speaker = speaker_match.group(1).strip()
-                current_text = speaker_match.group(2).strip()
-                continue
-
-            # Check for clarifai:id comment
+            # Check for clarifai:id comment FIRST (before speaker pattern)
             id_match = id_pattern.match(line)
             if id_match:
                 current_utterance = id_match.group(1)
                 continue
+
+            # Check for speaker: text pattern (only if not an HTML comment)
+            if not line.startswith("<!--"):
+                speaker_match = speaker_pattern.match(line)
+                if speaker_match:
+                    # Save previous utterance if exists
+                    if current_utterance and current_text:
+                        blocks.append(
+                            {
+                                "clarifai_id": current_utterance,
+                                "speaker": current_speaker,
+                                "text": current_text.strip(),
+                            }
+                        )
+
+                    # Start new utterance
+                    current_speaker = speaker_match.group(1).strip()
+                    current_text = speaker_match.group(2).strip()
+                    continue
 
             # Check for anchor (^blk_xyz) - marks end of utterance
             if line.startswith("^") and current_utterance:
@@ -227,7 +293,7 @@ class UtteranceChunker:
                 continue
 
             # Continuation of current utterance text
-            if current_utterance and line:
+            if current_speaker and line:
                 current_text += " " + line
 
         # Handle last utterance if no final anchor

@@ -200,7 +200,7 @@ def ensure_defaults(md: MarkdownOutput, path: Path) -> MarkdownOutput:
         file_mtime = datetime.now().isoformat()
 
     created = meta.get("created_at") or file_mtime
-    title = meta.get("title") or f"Conversation last modified at {created}"
+    title = md.title or f"Conversation last modified at {created}"
 
     # Replace placeholder in markdown text if present
     markdown_text = md.markdown_text
