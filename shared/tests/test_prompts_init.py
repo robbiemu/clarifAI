@@ -2,16 +2,9 @@
 Tests for prompts module initialization.
 """
 
-import importlib.util
-import os
+import types
 
-# Load the module directly
-module_path = os.path.join(
-    os.path.dirname(__file__), "../clarifai_shared/prompts/__init__.py"
-)
-spec = importlib.util.spec_from_file_location("prompts_init", module_path)
-prompts_module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(prompts_module)
+import clarifai_shared.prompts as prompts_module
 
 
 class TestPromptsInit:
@@ -28,13 +21,11 @@ class TestPromptsInit:
 
     def test_module_is_module(self):
         """Test that we loaded a valid module."""
-        import types
-
         assert isinstance(prompts_module, types.ModuleType)
 
     def test_module_name(self):
         """Test module has correct name."""
-        assert prompts_module.__name__ == "prompts_init"
+        assert prompts_module.__name__ == "clarifai_shared.prompts"
 
     def test_module_no_exports(self):
         """Test that module doesn't export unexpected symbols."""

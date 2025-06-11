@@ -3,21 +3,10 @@ Tests for plugin interface and data structures.
 """
 
 import pytest
-import importlib.util
-import os
 from pathlib import Path
 
-# Load the module directly without triggering __init__.py imports
-module_path = os.path.join(
-    os.path.dirname(__file__), "../clarifai_shared/plugin_interface.py"
-)
-spec = importlib.util.spec_from_file_location("plugin_interface", module_path)
-plugin_interface = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(plugin_interface)
-
-MarkdownOutput = plugin_interface.MarkdownOutput
-Plugin = plugin_interface.Plugin
-UnknownFormatError = plugin_interface.UnknownFormatError
+import clarifai_shared.plugin_interface as plugin_interface
+from clarifai_shared.plugin_interface import MarkdownOutput, Plugin, UnknownFormatError
 
 
 class TestMarkdownOutput:

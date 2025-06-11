@@ -2,16 +2,7 @@
 Tests for graph module initialization.
 """
 
-import importlib.util
-import os
-
-# Load the models module directly (we know this works)
-models_path = os.path.join(
-    os.path.dirname(__file__), "../../clarifai_shared/graph/models.py"
-)
-spec = importlib.util.spec_from_file_location("models", models_path)
-models = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(models)
+from clarifai_shared.graph import models
 
 
 class TestGraphModuleImports:

@@ -2,22 +2,9 @@
 Tests for graph data models.
 """
 
-import importlib.util
-import os
 from datetime import datetime, timezone
 
-# Load the module directly without triggering __init__.py imports
-module_path = os.path.join(
-    os.path.dirname(__file__), "../../clarifai_shared/graph/models.py"
-)
-spec = importlib.util.spec_from_file_location("models", module_path)
-models = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(models)
-
-ClaimInput = models.ClaimInput
-SentenceInput = models.SentenceInput
-Claim = models.Claim
-Sentence = models.Sentence
+from clarifai_shared.graph.models import ClaimInput, SentenceInput, Claim, Sentence
 
 
 class TestClaimInput:

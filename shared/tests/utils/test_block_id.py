@@ -3,19 +3,11 @@ Tests for block ID generation utilities.
 """
 
 import pytest
-import importlib.util
-import os
 
-# Load the module directly without triggering __init__.py imports
-module_path = os.path.join(
-    os.path.dirname(__file__), "../../clarifai_shared/utils/block_id.py"
+from clarifai_shared.utils.block_id import (
+    generate_unique_block_id,
+    create_block_id_generator,
 )
-spec = importlib.util.spec_from_file_location("block_id", module_path)
-block_id_module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(block_id_module)
-
-generate_unique_block_id = block_id_module.generate_unique_block_id
-create_block_id_generator = block_id_module.create_block_id_generator
 
 
 class TestBlockIdGeneration:
