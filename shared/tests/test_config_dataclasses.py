@@ -2,14 +2,15 @@
 Tests for configuration dataclasses and basic functionality.
 """
 
-import pytest
 from dataclasses import dataclass, field
 from typing import Optional
+
 
 # Recreate the dataclasses to test their basic functionality
 @dataclass
 class EmbeddingConfig:
     """Configuration for embedding models and vector storage."""
+
     default_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     device: str = "auto"
     batch_size: int = 32
@@ -24,26 +25,32 @@ class EmbeddingConfig:
     merge_short_prefixes: bool = True
     min_chunk_tokens: int = 5
 
+
 @dataclass
 class ConceptsConfig:
     """Configuration for concept detection and management."""
+
     candidates_collection: str = "concept_candidates"
     similarity_threshold: float = 0.9
     canonical_collection: str = "concepts"
     merge_threshold: float = 0.95
 
+
 @dataclass
 class PathsConfig:
     """Configuration for vault and file paths."""
+
     vault: str = "/vault"
     tier1: str = "conversations"
     tier2: str = "summaries"
     tier3: str = "concepts"
     settings: str = "/settings"
 
+
 @dataclass
 class DatabaseConfig:
     """Database connection configuration with fallback support."""
+
     host: str
     port: int
     user: str
@@ -60,9 +67,11 @@ class DatabaseConfig:
         """Get Neo4j bolt connection URL."""
         return f"bolt://{self.host}:{self.port}"
 
+
 @dataclass
 class VaultPaths:
     """Vault directory structure configuration."""
+
     vault: str = "/vault"
     settings: str = "/settings"
     tier1: str = "tier1"
@@ -70,10 +79,14 @@ class VaultPaths:
     concepts: str = "."
     logs: str = ".clarifai/import_logs"
 
+
 @dataclass
 class ClarifAIConfig:
     """Main configuration class for ClarifAI services."""
-    postgres: DatabaseConfig = field(default_factory=lambda: DatabaseConfig("", 0, "", ""))
+
+    postgres: DatabaseConfig = field(
+        default_factory=lambda: DatabaseConfig("", 0, "", "")
+    )
     neo4j: DatabaseConfig = field(default_factory=lambda: DatabaseConfig("", 0, "", ""))
     embedding: EmbeddingConfig = field(default_factory=EmbeddingConfig)
     concepts: ConceptsConfig = field(default_factory=ConceptsConfig)
@@ -96,7 +109,7 @@ class TestEmbeddingConfig:
     def test_embedding_config_defaults(self):
         """Test EmbeddingConfig default values."""
         config = EmbeddingConfig()
-        
+
         assert config.default_model == "sentence-transformers/all-MiniLM-L6-v2"
         assert config.device == "auto"
         assert config.batch_size == 32
@@ -114,12 +127,9 @@ class TestEmbeddingConfig:
     def test_embedding_config_custom_values(self):
         """Test EmbeddingConfig with custom values."""
         config = EmbeddingConfig(
-            default_model="custom/model",
-            device="cuda",
-            batch_size=64,
-            embed_dim=768
+            default_model="custom/model", device="cuda", batch_size=64, embed_dim=768
         )
-        
+
         assert config.default_model == "custom/model"
         assert config.device == "cuda"
         assert config.batch_size == 64
@@ -134,7 +144,7 @@ class TestConceptsConfig:
     def test_concepts_config_defaults(self):
         """Test ConceptsConfig default values."""
         config = ConceptsConfig()
-        
+
         assert config.candidates_collection == "concept_candidates"
         assert config.similarity_threshold == 0.9
         assert config.canonical_collection == "concepts"
@@ -146,9 +156,9 @@ class TestConceptsConfig:
             candidates_collection="custom_candidates",
             similarity_threshold=0.85,
             canonical_collection="custom_concepts",
-            merge_threshold=0.9
+            merge_threshold=0.9,
         )
-        
+
         assert config.candidates_collection == "custom_candidates"
         assert config.similarity_threshold == 0.85
         assert config.canonical_collection == "custom_concepts"
@@ -161,7 +171,7 @@ class TestPathsConfig:
     def test_paths_config_defaults(self):
         """Test PathsConfig default values."""
         config = PathsConfig()
-        
+
         assert config.vault == "/vault"
         assert config.tier1 == "conversations"
         assert config.tier2 == "summaries"
@@ -171,12 +181,9 @@ class TestPathsConfig:
     def test_paths_config_custom_values(self):
         """Test PathsConfig with custom values."""
         config = PathsConfig(
-            vault="/custom/vault",
-            tier1="chats",
-            tier2="abstracts",
-            tier3="topics"
+            vault="/custom/vault", tier1="chats", tier2="abstracts", tier3="topics"
         )
-        
+
         assert config.vault == "/custom/vault"
         assert config.tier1 == "chats"
         assert config.tier2 == "abstracts"
@@ -193,9 +200,9 @@ class TestDatabaseConfig:
             port=5432,
             user="testuser",
             password="testpass",
-            database="testdb"
+            database="testdb",
         )
-        
+
         assert config.host == "localhost"
         assert config.port == 5432
         assert config.user == "testuser"
@@ -205,12 +212,9 @@ class TestDatabaseConfig:
     def test_database_config_no_database(self):
         """Test DatabaseConfig without database name."""
         config = DatabaseConfig(
-            host="db.example.com",
-            port=3306,
-            user="user",
-            password="pass"
+            host="db.example.com", port=3306, user="user", password="pass"
         )
-        
+
         assert config.database == ""
 
     def test_get_connection_url_with_database(self):
@@ -220,9 +224,9 @@ class TestDatabaseConfig:
             port=5432,
             user="testuser",
             password="testpass",
-            database="testdb"
+            database="testdb",
         )
-        
+
         url = config.get_connection_url()
         expected = "postgresql://testuser:testpass@localhost:5432/testdb"
         assert url == expected
@@ -230,12 +234,9 @@ class TestDatabaseConfig:
     def test_get_connection_url_without_database(self):
         """Test connection URL generation without database."""
         config = DatabaseConfig(
-            host="localhost",
-            port=5432,
-            user="testuser",
-            password="testpass"
+            host="localhost", port=5432, user="testuser", password="testpass"
         )
-        
+
         url = config.get_connection_url()
         expected = "postgresql://testuser:testpass@localhost:5432"
         assert url == expected
@@ -243,13 +244,9 @@ class TestDatabaseConfig:
     def test_get_connection_url_custom_scheme(self):
         """Test connection URL with custom scheme."""
         config = DatabaseConfig(
-            host="localhost",
-            port=3306,
-            user="root",
-            password="secret",
-            database="mydb"
+            host="localhost", port=3306, user="root", password="secret", database="mydb"
         )
-        
+
         url = config.get_connection_url("mysql")
         expected = "mysql://root:secret@localhost:3306/mydb"
         assert url == expected
@@ -257,12 +254,9 @@ class TestDatabaseConfig:
     def test_get_neo4j_bolt_url(self):
         """Test Neo4j bolt URL generation."""
         config = DatabaseConfig(
-            host="neo4j.example.com",
-            port=7687,
-            user="neo4j",
-            password="password"
+            host="neo4j.example.com", port=7687, user="neo4j", password="password"
         )
-        
+
         url = config.get_neo4j_bolt_url()
         expected = "bolt://neo4j.example.com:7687"
         assert url == expected
@@ -274,7 +268,7 @@ class TestVaultPaths:
     def test_vault_paths_defaults(self):
         """Test VaultPaths default values."""
         paths = VaultPaths()
-        
+
         assert paths.vault == "/vault"
         assert paths.settings == "/settings"
         assert paths.tier1 == "tier1"
@@ -290,9 +284,9 @@ class TestVaultPaths:
             tier1="conversations",
             summaries="summaries",
             concepts="concepts",
-            logs="logs"
+            logs="logs",
         )
-        
+
         assert paths.vault == "/custom/vault"
         assert paths.settings == "/custom/settings"
         assert paths.tier1 == "conversations"
@@ -307,14 +301,14 @@ class TestClarifAIConfig:
     def test_clarifai_config_defaults(self):
         """Test ClarifAIConfig default values."""
         config = ClarifAIConfig()
-        
+
         # Check default factory instances
         assert isinstance(config.postgres, DatabaseConfig)
         assert isinstance(config.neo4j, DatabaseConfig)
         assert isinstance(config.embedding, EmbeddingConfig)
         assert isinstance(config.concepts, ConceptsConfig)
         assert isinstance(config.paths, VaultPaths)
-        
+
         # Check simple defaults
         assert config.rabbitmq_host == "rabbitmq"
         assert config.rabbitmq_port == 5672
@@ -331,7 +325,7 @@ class TestClarifAIConfig:
         """Test ClarifAIConfig with custom values."""
         postgres_config = DatabaseConfig("pg.host", 5432, "pguser", "pgpass", "pgdb")
         neo4j_config = DatabaseConfig("neo4j.host", 7687, "neo4j", "neo4jpass")
-        
+
         config = ClarifAIConfig(
             postgres=postgres_config,
             neo4j=neo4j_config,
@@ -340,9 +334,9 @@ class TestClarifAIConfig:
             vault_path="/custom/vault",
             log_level="DEBUG",
             debug=True,
-            openai_api_key="sk-test123"
+            openai_api_key="sk-test123",
         )
-        
+
         assert config.postgres == postgres_config
         assert config.neo4j == neo4j_config
         assert config.rabbitmq_host == "custom.rabbit"
@@ -355,15 +349,17 @@ class TestClarifAIConfig:
     def test_clarifai_config_nested_defaults(self):
         """Test that nested configs have proper defaults."""
         config = ClarifAIConfig()
-        
+
         # Check embedding config defaults
-        assert config.embedding.default_model == "sentence-transformers/all-MiniLM-L6-v2"
+        assert (
+            config.embedding.default_model == "sentence-transformers/all-MiniLM-L6-v2"
+        )
         assert config.embedding.batch_size == 32
-        
+
         # Check concepts config defaults
         assert config.concepts.similarity_threshold == 0.9
         assert config.concepts.merge_threshold == 0.95
-        
+
         # Check paths defaults
         assert config.paths.vault == "/vault"
         assert config.paths.tier1 == "tier1"
@@ -372,14 +368,17 @@ class TestClarifAIConfig:
         """Test that different ClarifAIConfig instances have separate nested objects."""
         config1 = ClarifAIConfig()
         config2 = ClarifAIConfig()
-        
+
         # They should be separate instances
         assert config1.embedding is not config2.embedding
         assert config1.concepts is not config2.concepts
         assert config1.paths is not config2.paths
         assert config1.postgres is not config2.postgres
         assert config1.neo4j is not config2.neo4j
-        
+
         # But should have same default values
         assert config1.embedding.batch_size == config2.embedding.batch_size
-        assert config1.concepts.similarity_threshold == config2.concepts.similarity_threshold
+        assert (
+            config1.concepts.similarity_threshold
+            == config2.concepts.similarity_threshold
+        )
