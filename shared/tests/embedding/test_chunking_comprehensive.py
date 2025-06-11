@@ -89,8 +89,8 @@ Charlie: Here's some code: `print("hello world")` and a URL: https://example.com
         assert blocks[1]["clarifai_id"] == "blk_complex_002"
         assert blocks[2]["clarifai_id"] == "blk_complex_003"
         
-        # Check content parsing
-        assert "special characters" in blocks[0]["text"]
+        # Check content parsing - look for the actual special characters
+        assert "@, #, $, %." in blocks[0]["text"]
         assert "First point" in blocks[1]["text"]
         assert "print(" in blocks[2]["text"]
 
