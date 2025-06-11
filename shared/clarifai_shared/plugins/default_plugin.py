@@ -49,9 +49,7 @@ class ConversationExtractorAgent:
             api_key = getattr(config, "openai_api_key", None)
             if api_key:
                 self.llm = OpenAI(api_key=api_key, model="gpt-3.5-turbo")
-                logger.info(
-                    "Initialized ConversationExtractorAgent with OpenAI LLM"
-                )
+                logger.info("Initialized ConversationExtractorAgent with OpenAI LLM")
             else:
                 # Graceful fallback for testing/development when no LLM is available
                 self.llm = None
