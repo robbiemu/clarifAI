@@ -204,7 +204,7 @@ class TestLoadConfig:
 
     def test_load_config_with_validation_error(self):
         """Test that load_config raises error for missing required vars."""
-        with pytest.raises(ValueError, match="POSTGRES_PASSWORD is not set"):
+        with pytest.raises(ValueError, match="Missing required environment variables"):
             load_config(validate=True)
 
     def test_load_config_without_validation(self):

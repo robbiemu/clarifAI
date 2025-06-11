@@ -236,11 +236,19 @@ def detect_file_format(file_path: str, filename: str) -> Tuple[str, str]:
         time.sleep(0.5)  # Simulate processing time
 
         if filename.lower().endswith(".json"):
-            # Simulate checking if it's a ChatGPT export
-            detector, status = "chatgpt_json", "✅ Imported"
+            # Check if it's a Slack export based on filename
+            if "slack" in filename.lower():
+                detector, status = "slack_json", "✅ Imported"
+            else:
+                # Default to ChatGPT JSON format
+                detector, status = "chatgpt_json", "✅ Imported"
         elif filename.lower().endswith(".csv"):
-            # Simulate Slack CSV format
-            detector, status = "slack_csv", "✅ Imported"
+            # Check if it's a generic export based on filename
+            if "generic" in filename.lower() or "tabular" in filename.lower():
+                detector, status = "generic_csv", "✅ Imported"
+            else:
+                # Default to Slack CSV format
+                detector, status = "slack_csv", "✅ Imported"
         elif filename.lower().endswith(".txt"):
             # Simulate generic text that needs fallback
             detector, status = "fallback_llm", "⚠️ Fallback"

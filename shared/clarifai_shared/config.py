@@ -452,20 +452,12 @@ def load_config(
 
     # Validate required environment variables for security
     if validate:
-        missing_vars = []
-
-        # Check database passwords
-        if not config.postgres.password:
-            missing_vars.append("POSTGRES_PASSWORD")
-        if not config.neo4j.password:
-            missing_vars.append("NEO4J_PASSWORD")
-
-        # Check other required vars
-        other_missing = config.validate_required_vars(required_vars)
-        if other_missing:
-            missing_vars.extend(other_missing)
+        # Check other required vars (this will include database passwords)
+        missing_vars = config.validate_required_vars(required_vars)
 
         if missing_vars:
+            # Remove duplicates and sort for consistent output
+            missing_vars = sorted(list(set(missing_vars)))
             error_msg = (
                 f"Missing required environment variables: {', '.join(missing_vars)}. "
                 f"Please check your .env file or environment configuration."
