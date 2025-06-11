@@ -14,9 +14,10 @@ class TestNeo4jGraphManager:
         """Test Neo4jGraphManager initialization with config."""
         config = ClarifAIConfig()
         config.database = DatabaseConfig(
-            neo4j_uri="bolt://localhost:7687",
-            neo4j_user="neo4j",
-            neo4j_password="password",
+            host="localhost",
+            port=7687,
+            user="neo4j",
+            password="password",
         )
 
         try:
