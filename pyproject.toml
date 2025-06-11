@@ -64,7 +64,28 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 testpaths = ["tests", "shared/tests"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "--cov=shared --cov-report=term-missing --cov-report=xml"
+addopts = "--cov=clarifai_shared --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml"
+
+[tool.coverage.run]
+source = ["clarifai_shared"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/migrations/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:"
+]
 
 # Bandit configuration for ClarifAI monorepo
 # Configuration to reduce false positives for containerized applications
