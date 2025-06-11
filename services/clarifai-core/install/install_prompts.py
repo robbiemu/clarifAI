@@ -7,6 +7,7 @@ default prompt files are available for user customization.
 """
 
 import argparse
+import importlib.util
 import sys
 from pathlib import Path
 
@@ -14,27 +15,14 @@ from pathlib import Path
 shared_dir = Path(__file__).parent.parent.parent.parent / "shared"
 sys.path.insert(0, str(shared_dir))
 
-# Import only the utilities we need, not the full plugin system
-try:
-    # Import the module directly to avoid dependencies in __init__.py
-    import importlib.util
+# Get the path to the prompt_installer module
+installer_path = shared_dir / "clarifai_shared" / "utils" / "prompt_installer.py"
+spec = importlib.util.spec_from_file_location("prompt_installer", installer_path)
+prompt_installer = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(prompt_installer)
 
-    # Get the path to the prompt_installer module
-    installer_path = shared_dir / "clarifai_shared" / "utils" / "prompt_installer.py"
-    spec = importlib.util.spec_from_file_location("prompt_installer", installer_path)
-    prompt_installer = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(prompt_installer)
-
-    install_all_default_prompts = prompt_installer.install_all_default_prompts
-    install_default_prompt = prompt_installer.install_default_prompt
-
-except ImportError as e:
-    print(f"Error importing prompt utilities: {e}", file=sys.stderr)
-    # Let's check if the issue is dependencies we don't need
-    import traceback
-
-    traceback.print_exc()
-    sys.exit(1)
+install_all_default_prompts = prompt_installer.install_all_default_prompts
+install_default_prompt = prompt_installer.install_default_prompt
 
 
 def main():

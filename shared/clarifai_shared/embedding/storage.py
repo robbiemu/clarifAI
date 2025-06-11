@@ -24,28 +24,9 @@ from sqlalchemy import (
     text,
 )
 
-try:
-    from llama_index.core import VectorStoreIndex
-    from llama_index.core.schema import Document
-    from llama_index.vector_stores.postgres import PGVectorStore
-
-    LLAMA_INDEX_AVAILABLE = True
-except ImportError:
-    # Mock classes for when llama_index is not available
-    class VectorStoreIndex:
-        def __init__(self, **kwargs):
-            pass
-
-    class Document:
-        def __init__(self, text="", metadata=None):
-            self.text = text
-            self.metadata = metadata or {}
-
-    class PGVectorStore:
-        def __init__(self, **kwargs):
-            pass
-
-    LLAMA_INDEX_AVAILABLE = False
+from llama_index.core import VectorStoreIndex
+from llama_index.core.schema import Document
+from llama_index.vector_stores.postgres import PGVectorStore
 
 from ..config import ClarifAIConfig
 from .models import EmbeddedChunk
