@@ -29,7 +29,7 @@ from llama_index.core.schema import Document
 from llama_index.vector_stores.postgres import PGVectorStore
 
 from ..config import ClarifAIConfig
-from .models import EmbeddedChunk
+from .models import EmbeddedChunk, EmbeddingGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +83,13 @@ class ClarifAIVectorStore:
         # Initialize PGVectorStore
         self.vector_store = self._initialize_pgvector_store()
 
-        # Initialize LlamaIndex VectorStoreIndex
-        self.vector_index = VectorStoreIndex.from_vector_store(self.vector_store)
+        # Initialize embedding generator with configured model
+        self.embedding_generator = EmbeddingGenerator(config=config)
+
+        # Initialize LlamaIndex VectorStoreIndex with configured embedding model
+        self.vector_index = VectorStoreIndex.from_vector_store(
+            self.vector_store, embed_model=self.embedding_generator.embedding_model
+        )
 
         logger.info(
             f"Initialized ClarifAIVectorStore with collection: {config.embedding.collection_name}, "
