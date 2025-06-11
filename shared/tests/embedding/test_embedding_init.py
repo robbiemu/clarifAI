@@ -8,11 +8,6 @@ import clarifai_shared.embedding as embedding_module
 from clarifai_shared.embedding import (
     EmbeddingPipeline, 
     EmbeddingResult,
-    UtteranceChunker,
-    ChunkMetadata,
-    EmbeddingGenerator,
-    EmbeddedChunk,
-    ClarifAIVectorStore,
     VectorStoreMetrics
 )
 from clarifai_shared.config import ClarifAIConfig
