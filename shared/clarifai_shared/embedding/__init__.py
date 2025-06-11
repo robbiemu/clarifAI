@@ -20,7 +20,27 @@ Usage:
 
 from .chunking import UtteranceChunker, ChunkMetadata
 from .models import EmbeddingGenerator, EmbeddedChunk
-from .storage import ClarifAIVectorStore, VectorStoreMetrics
+
+# Optional imports for storage components that require external dependencies
+try:
+    from .storage import ClarifAIVectorStore, VectorStoreMetrics
+
+    STORAGE_AVAILABLE = True
+except ImportError:
+    # Mock classes for when storage dependencies are not available
+    class ClarifAIVectorStore:
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                "Storage dependencies not available. Install with: pip install sqlalchemy psycopg2-binary pgvector"
+            )
+
+    class VectorStoreMetrics:
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                "Storage dependencies not available. Install with: pip install sqlalchemy psycopg2-binary pgvector"
+            )
+
+    STORAGE_AVAILABLE = False
 
 __all__ = [
     "UtteranceChunker",

@@ -10,9 +10,21 @@ from unittest.mock import Mock, patch
 from clarifai_shared.embedding import (
     EmbeddingPipeline,
     EmbeddingResult,
-    VectorStoreMetrics,
 )
 from clarifai_shared.embedding.chunking import ChunkMetadata
+
+# Try to import VectorStoreMetrics, but allow the test to run without it
+try:
+    from clarifai_shared.embedding import VectorStoreMetrics
+except ImportError:
+    # Mock VectorStoreMetrics for tests when storage dependencies aren't available
+    class VectorStoreMetrics:
+        def __init__(self, total_vectors=0, successful_inserts=0, failed_inserts=0):
+            self.total_vectors = total_vectors
+            self.successful_inserts = successful_inserts
+            self.failed_inserts = failed_inserts
+
+
 from clarifai_shared.embedding.models import EmbeddedChunk
 from clarifai_shared.config import ClarifAIConfig, EmbeddingConfig
 

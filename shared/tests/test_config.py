@@ -75,7 +75,7 @@ class TestClarifAIConfig:
         for var in self.env_vars:
             if var in os.environ:
                 del os.environ[var]
-        
+
         # Then restore original values
         for var, value in self.original_env.items():
             os.environ[var] = value

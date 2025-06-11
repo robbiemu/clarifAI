@@ -26,13 +26,16 @@ from typing import List, Optional, Dict, Any
 try:
     from llama_index.core.llms import LLM
     from llama_index.llms.openai import OpenAI
+
     LLAMA_INDEX_AVAILABLE = True
 except ImportError:
     # Define placeholder classes when llama_index is not available
     class LLM:
         pass
+
     class OpenAI:
         pass
+
     LLAMA_INDEX_AVAILABLE = False
 
 from ..plugin_interface import Plugin, MarkdownOutput
@@ -64,7 +67,9 @@ class ConversationExtractorAgent:
                 api_key = getattr(config, "openai_api_key", None)
                 if api_key:
                     self.llm = OpenAI(api_key=api_key, model="gpt-3.5-turbo")
-                    logger.info("Initialized ConversationExtractorAgent with OpenAI LLM")
+                    logger.info(
+                        "Initialized ConversationExtractorAgent with OpenAI LLM"
+                    )
                 else:
                     # Graceful fallback for testing/development when no LLM is available
                     self.llm = None

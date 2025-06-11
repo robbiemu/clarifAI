@@ -98,6 +98,8 @@ class DatabaseConfig:
 class VaultPaths:
     """Vault directory structure configuration."""
 
+    vault: str = "/vault"
+    settings: str = "/settings"
     tier1: str = "tier1"
     summaries: str = "."
     concepts: str = "."
@@ -251,10 +253,18 @@ class ClarifAIConfig:
 
         # Vault paths configuration (from main branch)
         paths = VaultPaths(
-            tier1=os.getenv("VAULT_TIER1_PATH", "tier1"),
-            summaries=os.getenv("VAULT_SUMMARIES_PATH", "."),
-            concepts=os.getenv("VAULT_CONCEPTS_PATH", "."),
-            logs=os.getenv("VAULT_LOGS_PATH", ".clarifai/import_logs"),
+            vault=vault_path,
+            settings=settings_path,
+            tier1=os.getenv("VAULT_TIER1_PATH", paths_config.get("tier1", "tier1")),
+            summaries=os.getenv(
+                "VAULT_SUMMARIES_PATH", paths_config.get("summaries", ".")
+            ),
+            concepts=os.getenv(
+                "VAULT_CONCEPTS_PATH", paths_config.get("concepts", ".")
+            ),
+            logs=os.getenv(
+                "VAULT_LOGS_PATH", paths_config.get("logs", ".clarifai/import_logs")
+            ),
         )
 
         return cls(
@@ -440,18 +450,21 @@ def load_config(
     """
     config = ClarifAIConfig.from_env(env_file, config_file)
 
-    # Validate database passwords for security
-    if validate and not config.postgres.password:
-        error_msg = (
-            "POSTGRES_PASSWORD is not set. This is a security requirement. "
-            "Please create a .env file with POSTGRES_PASSWORD=your_secure_password. "
-            "See .env.example for details."
-        )
-        logger.error(error_msg)
-        raise ValueError(error_msg)
-
+    # Validate required environment variables for security
     if validate:
-        missing_vars = config.validate_required_vars(required_vars)
+        missing_vars = []
+
+        # Check database passwords
+        if not config.postgres.password:
+            missing_vars.append("POSTGRES_PASSWORD")
+        if not config.neo4j.password:
+            missing_vars.append("NEO4J_PASSWORD")
+
+        # Check other required vars
+        other_missing = config.validate_required_vars(required_vars)
+        if other_missing:
+            missing_vars.extend(other_missing)
+
         if missing_vars:
             error_msg = (
                 f"Missing required environment variables: {', '.join(missing_vars)}. "

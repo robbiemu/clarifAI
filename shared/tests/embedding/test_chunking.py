@@ -6,7 +6,6 @@ specifications from docs/arch/on-sentence_splitting.md
 """
 
 import pytest
-from unittest.mock import patch
 from clarifai_shared.embedding.chunking import UtteranceChunker, ChunkMetadata
 from clarifai_shared.config import ClarifAIConfig, EmbeddingConfig
 
@@ -126,7 +125,7 @@ def test_chunk_utterance_block_long_text(chunker):
 def test_postprocessing_merge_colon_endings(chunker):
     """Test that colon-ended lead-ins are merged with continuations."""
     # Mock the base chunks to simulate colon-ending scenario
-    from llama_index.core.schema import TextNode
+    from clarifai_shared.embedding.chunking import TextNode
 
     base_chunks = [
         TextNode(text="In the example we see:", metadata={}),
@@ -142,7 +141,7 @@ def test_postprocessing_merge_colon_endings(chunker):
 
 def test_postprocessing_merge_short_prefixes(chunker):
     """Test that short prefixes are merged with next chunks."""
-    from llama_index.core.schema import TextNode
+    from clarifai_shared.embedding.chunking import TextNode
 
     base_chunks = [
         TextNode(text="Example:", metadata={}),  # Short prefix
