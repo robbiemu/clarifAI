@@ -2,120 +2,72 @@
 Tests for embedding module initialization and basic imports.
 """
 
-import sys
-from unittest.mock import Mock
+import importlib.util
+import os
 
-# Mock all problematic dependencies before any imports
-def setup_comprehensive_mocks():
-    """Set up comprehensive mocks for heavy dependencies."""
-    # Mock all llama_index modules
-    mock_llm = Mock()
-    mock_openai = Mock()
-    mock_sentence_splitter = Mock()
-    mock_vector_store_index = Mock()
-    mock_storage_context = Mock()
-    mock_service_context = Mock()
-    
-    # Core llama_index mocks
-    sys.modules['llama_index'] = Mock()
-    sys.modules['llama_index.core'] = Mock()
-    sys.modules['llama_index.core.llms'] = Mock()
-    sys.modules['llama_index.core.llms'].LLM = mock_llm
-    sys.modules['llama_index.llms'] = Mock()
-    sys.modules['llama_index.llms.openai'] = Mock()
-    sys.modules['llama_index.llms.openai'].OpenAI = mock_openai
-    
-    # Embedding-specific mocks
-    sys.modules['llama_index.embeddings'] = Mock()
-    sys.modules['llama_index.embeddings.base'] = Mock()
-    sys.modules['llama_index.embeddings.huggingface'] = Mock()
-    sys.modules['llama_index.core.embeddings'] = Mock()
-    sys.modules['llama_index.core.embeddings.base'] = Mock()
-    
-    # Vector store mocks
-    sys.modules['llama_index.vector_stores'] = Mock()
-    sys.modules['llama_index.vector_stores.postgres'] = Mock()
-    sys.modules['llama_index.core.vector_stores'] = Mock()
-    sys.modules['llama_index.core.vector_stores.types'] = Mock()
-    
-    # Index and storage mocks
-    sys.modules['llama_index.core.indices'] = Mock()
-    sys.modules['llama_index.core.storage'] = Mock()
-    sys.modules['llama_index.core.storage.storage_context'] = Mock()
-    sys.modules['llama_index.core.indices.vector_store'] = Mock()
-    sys.modules['llama_index.core.indices.vector_store'].VectorStoreIndex = mock_vector_store_index
-    
-    # Schema and node parser mocks
-    sys.modules['llama_index.core.schema'] = Mock()
-    sys.modules['llama_index.core.node_parser'] = Mock()
-    sys.modules['llama_index.core.node_parser'].SentenceSplitter = mock_sentence_splitter
-    
-    # External library mocks
-    sys.modules['hnswlib'] = Mock()
-    sys.modules['sentence_transformers'] = Mock()
-    sys.modules['psycopg2'] = Mock()
-    sys.modules['psycopg2.extensions'] = Mock()
-    sys.modules['pgvector'] = Mock()
-    sys.modules['sqlalchemy'] = Mock()
-    
-    # Neo4j mocks
-    neo4j_mock = Mock()
-    neo4j_exceptions_mock = Mock()
-    neo4j_exceptions_mock.ServiceUnavailable = Exception
-    neo4j_exceptions_mock.AuthError = Exception  
-    neo4j_exceptions_mock.TransientError = Exception
-    
-    sys.modules['neo4j'] = neo4j_mock
-    sys.modules['neo4j.exceptions'] = neo4j_exceptions_mock
-    neo4j_mock.exceptions = neo4j_exceptions_mock
-    neo4j_mock.GraphDatabase = Mock()
-
-# Set up mocks before importing
-setup_comprehensive_mocks()
-
-# Add shared directory to sys.path to enable imports
-sys.path.insert(0, '/home/runner/work/clarifAI/clarifAI/shared')
-
-# Now we can import the embedding modules
-from clarifai_shared.embedding import (
-    UtteranceChunker, 
-    ChunkMetadata, 
-    EmbeddingGenerator, 
-    EmbeddedChunk,
-    ClarifAIVectorStore,
-    VectorStoreMetrics
-)
+# Load the modules directly without triggering __init__.py imports
+def load_embedding_module(module_name):
+    """Load an embedding module directly from file path."""
+    module_path = os.path.join(
+        os.path.dirname(__file__), f"../../clarifai_shared/embedding/{module_name}.py"
+    )
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 class TestEmbeddingInit:
-    """Test that embedding module components can be imported and instantiated."""
+    """Test that embedding module components can be loaded and have expected attributes."""
     
-    def test_utterance_chunker_import(self):
-        """Test UtteranceChunker can be imported."""
-        assert UtteranceChunker is not None
-        assert hasattr(UtteranceChunker, '__name__')
+    def test_chunking_module_loads(self):
+        """Test chunking module can be loaded."""
+        chunking = load_embedding_module("chunking")
+        
+        # Check expected classes exist
+        assert hasattr(chunking, 'UtteranceChunker')
+        assert hasattr(chunking, 'ChunkMetadata')
     
-    def test_chunk_metadata_import(self):
-        """Test ChunkMetadata can be imported."""
-        assert ChunkMetadata is not None
-        assert hasattr(ChunkMetadata, '__name__')
+    def test_models_module_loads(self):
+        """Test models module can be loaded."""
+        models = load_embedding_module("models")
+        
+        # Check expected classes exist
+        assert hasattr(models, 'EmbeddingGenerator')
+        assert hasattr(models, 'EmbeddedChunk')
     
-    def test_embedding_generator_import(self):
-        """Test EmbeddingGenerator can be imported."""
-        assert EmbeddingGenerator is not None
-        assert hasattr(EmbeddingGenerator, '__name__')
+    def test_storage_module_loads(self):
+        """Test storage module can be loaded."""
+        storage = load_embedding_module("storage")
+        
+        # Check expected classes exist
+        assert hasattr(storage, 'ClarifAIVectorStore')
+        assert hasattr(storage, 'VectorStoreMetrics')
     
-    def test_embedded_chunk_import(self):
-        """Test EmbeddedChunk can be imported."""
-        assert EmbeddedChunk is not None
-        assert hasattr(EmbeddedChunk, '__name__')
+    def test_chunk_metadata_creation(self):
+        """Test ChunkMetadata can be instantiated."""
+        chunking = load_embedding_module("chunking")
+        
+        metadata = chunking.ChunkMetadata(
+            chunk_index=0,
+            source_file="test.txt",
+            document_id="doc_123"
+        )
+        
+        assert metadata.chunk_index == 0
+        assert metadata.source_file == "test.txt"
+        assert metadata.document_id == "doc_123"
     
-    def test_vector_store_import(self):
-        """Test ClarifAIVectorStore can be imported."""
-        assert ClarifAIVectorStore is not None
-        assert hasattr(ClarifAIVectorStore, '__name__')
-    
-    def test_vector_store_metrics_import(self):
-        """Test VectorStoreMetrics can be imported."""
-        assert VectorStoreMetrics is not None
-        assert hasattr(VectorStoreMetrics, '__name__')
+    def test_embedded_chunk_creation(self):
+        """Test EmbeddedChunk can be instantiated."""
+        models = load_embedding_module("models")
+        
+        chunk = models.EmbeddedChunk(
+            content="Test content",
+            embedding=[0.1, 0.2, 0.3],
+            metadata={"test": "value"}
+        )
+        
+        assert chunk.content == "Test content"
+        assert chunk.embedding == [0.1, 0.2, 0.3]
+        assert chunk.metadata == {"test": "value"}

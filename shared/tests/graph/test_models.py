@@ -2,49 +2,22 @@
 Tests for graph data models.
 """
 
-import sys
-from unittest.mock import Mock
+import importlib.util
+import os
 from datetime import datetime, timezone
 
-# Create comprehensive mocks for llama_index
-mock_llm = Mock()
-mock_openai = Mock()
+# Load the module directly without triggering __init__.py imports
+module_path = os.path.join(
+    os.path.dirname(__file__), "../../clarifai_shared/graph/models.py"
+)
+spec = importlib.util.spec_from_file_location("models", module_path)
+models = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(models)
 
-# Mock all llama_index modules that are imported
-sys.modules['llama_index'] = Mock()
-sys.modules['llama_index.core'] = Mock()
-sys.modules['llama_index.core.llms'] = Mock()
-sys.modules['llama_index.core.llms'].LLM = mock_llm
-sys.modules['llama_index.llms'] = Mock()
-sys.modules['llama_index.llms.openai'] = Mock()
-sys.modules['llama_index.llms.openai'].OpenAI = mock_openai
-sys.modules['llama_index.embeddings'] = Mock()
-sys.modules['llama_index.embeddings.base'] = Mock()
-sys.modules['llama_index.vector_stores'] = Mock()
-sys.modules['llama_index.vector_stores.postgres'] = Mock()
-sys.modules['llama_index.core.vector_stores'] = Mock()
-sys.modules['llama_index.core.indices'] = Mock()
-sys.modules['llama_index.core.storage'] = Mock()
-sys.modules['llama_index.core.storage.storage_context'] = Mock()
-sys.modules['llama_index.core.indices.vector_store'] = Mock()
-sys.modules['hnswlib'] = Mock()
-
-# Mock neo4j modules comprehensively
-neo4j_mock = Mock()
-neo4j_exceptions_mock = Mock()
-neo4j_exceptions_mock.ServiceUnavailable = Exception
-neo4j_exceptions_mock.AuthError = Exception  
-neo4j_exceptions_mock.TransientError = Exception
-
-sys.modules['neo4j'] = neo4j_mock
-sys.modules['neo4j.exceptions'] = neo4j_exceptions_mock
-neo4j_mock.exceptions = neo4j_exceptions_mock
-
-# Add shared directory to sys.path to enable imports
-sys.path.insert(0, '/home/runner/work/clarifAI/clarifAI/shared')
-
-# Now import the actual modules for coverage
-from clarifai_shared.graph.models import ClaimInput, SentenceInput, Claim, Sentence
+ClaimInput = models.ClaimInput
+SentenceInput = models.SentenceInput
+Claim = models.Claim
+Sentence = models.Sentence
 
 
 class TestClaimInput:

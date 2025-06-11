@@ -3,48 +3,19 @@ Tests for block ID generation utilities.
 """
 
 import pytest
-import sys
-from unittest.mock import Mock
+import importlib.util
+import os
 
-# Mock problematic dependencies before importing
-mock_llm = Mock()
-mock_openai = Mock()
+# Load the module directly without triggering __init__.py imports
+module_path = os.path.join(
+    os.path.dirname(__file__), "../../clarifai_shared/utils/block_id.py"
+)
+spec = importlib.util.spec_from_file_location("block_id", module_path)
+block_id_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(block_id_module)
 
-# Mock all llama_index modules that are imported
-sys.modules['llama_index'] = Mock()
-sys.modules['llama_index.core'] = Mock()
-sys.modules['llama_index.core.llms'] = Mock()
-sys.modules['llama_index.core.llms'].LLM = mock_llm
-sys.modules['llama_index.llms'] = Mock()
-sys.modules['llama_index.llms.openai'] = Mock()
-sys.modules['llama_index.llms.openai'].OpenAI = mock_openai
-sys.modules['llama_index.embeddings'] = Mock()
-sys.modules['llama_index.embeddings.base'] = Mock()
-sys.modules['llama_index.vector_stores'] = Mock()
-sys.modules['llama_index.vector_stores.postgres'] = Mock()
-sys.modules['llama_index.core.vector_stores'] = Mock()
-sys.modules['llama_index.core.indices'] = Mock()
-sys.modules['llama_index.core.storage'] = Mock()
-sys.modules['llama_index.core.storage.storage_context'] = Mock()
-sys.modules['llama_index.core.indices.vector_store'] = Mock()
-sys.modules['hnswlib'] = Mock()
-
-# Mock neo4j modules comprehensively
-neo4j_mock = Mock()
-neo4j_exceptions_mock = Mock()
-neo4j_exceptions_mock.ServiceUnavailable = Exception
-neo4j_exceptions_mock.AuthError = Exception  
-neo4j_exceptions_mock.TransientError = Exception
-
-sys.modules['neo4j'] = neo4j_mock
-sys.modules['neo4j.exceptions'] = neo4j_exceptions_mock
-neo4j_mock.exceptions = neo4j_exceptions_mock
-
-# Add shared directory to sys.path to enable imports
-sys.path.insert(0, '/home/runner/work/clarifAI/clarifAI/shared')
-
-# Now import the actual modules for coverage
-from clarifai_shared.utils.block_id import generate_unique_block_id, create_block_id_generator
+generate_unique_block_id = block_id_module.generate_unique_block_id
+create_block_id_generator = block_id_module.create_block_id_generator
 
 
 class TestBlockIdGeneration:
