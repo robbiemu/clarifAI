@@ -24,7 +24,7 @@ from sqlalchemy import (
     text,
 )
 
-from llama_index.core import VectorStoreIndex
+from llama_index.core import VectorStoreIndex, Settings
 from llama_index.core.schema import Document
 from llama_index.vector_stores.postgres import PGVectorStore
 
@@ -85,6 +85,10 @@ class ClarifAIVectorStore:
 
         # Initialize embedding generator with configured model
         self.embedding_generator = EmbeddingGenerator(config=config)
+
+        # Set LlamaIndex global embedding model to prevent default OpenAI dependency
+        # This ensures VectorStoreIndex doesn't try to import llama-index-embeddings-openai
+        Settings.embed_model = self.embedding_generator.embedding_model
 
         # Initialize LlamaIndex VectorStoreIndex with configured embedding model
         self.vector_index = VectorStoreIndex.from_vector_store(
