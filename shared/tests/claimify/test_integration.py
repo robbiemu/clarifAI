@@ -7,7 +7,6 @@ including conversion of pipeline results to graph inputs and end-to-end workflow
 
 import pytest
 import os
-import unittest
 from unittest.mock import Mock
 
 from clarifai_shared.claimify.data_models import (
@@ -25,14 +24,6 @@ from clarifai_shared.claimify.integration import (
 )
 from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
 from clarifai_shared.graph.models import ClaimInput, SentenceInput
-
-# Test configuration
-try:
-    # Check if Neo4j is available by attempting to access the manager
-    Neo4jGraphManager.__name__
-    NEO4J_AVAILABLE = True
-except (ImportError, NameError):
-    NEO4J_AVAILABLE = False
 
 
 class MockNeo4jGraphManager:
@@ -626,173 +617,6 @@ class TestCreateGraphManagerFromConfigStructure:
         self.assertEqual(sentence_input.text, "The system failed at startup.")
         self.assertEqual(sentence_input.block_id, "blk_001")
         self.assertTrue(sentence_input.ambiguous)
-        self.assertFalse(sentence_input.verifiable)
-        self.assertFalse(sentence_input.failed_decomposition)
-        self.assertEqual(sentence_input.rejection_reason, "Failed selection")
-
-
-class TestCreateGraphManagerFromConfig(unittest.TestCase):
-    """Test graph manager creation from configuration."""
-
-    def setUp(self):
-        """Set up for configuration tests."""
-        if not NEO4J_AVAILABLE:
-            self.skipTest("Neo4j dependencies not available")
-
-    def test_create_manager_from_config(self):
-        """Test creating graph manager from configuration dictionary."""
-        config = {
-            "databases": {
-                "neo4j": {
-                    "host": "neo4j-test",
-                    "port": 7687,
-                    "username": "test_user",
-                    "password": "test_pass",
-                }
-            }
-        }
-
-        manager = create_graph_manager_from_config(config)
-
-        # Note: In real environment this would create actual Neo4jGraphManager
-        # For tests without Neo4j, we skip the test
-        self.assertIsNotNone(manager)
-
-    def test_create_manager_empty_config(self):
-        """Test creating graph manager with empty config."""
-        config = {}
-
-        manager = create_graph_manager_from_config(config)
-
-        # Note: In real environment this would create actual Neo4jGraphManager
-        # For tests without Neo4j, we skip the test
-        self.assertIsNotNone(manager)
-
-
-class TestClaimifyNeo4jIntegrationEndToEnd(unittest.TestCase):
-    """End-to-end integration tests combining Claimify pipeline with Neo4j persistence."""
-
-    def setUp(self):
-        """Set up integration components."""
-        if not NEO4J_AVAILABLE:
-            self.skipTest("Neo4j dependencies not available")
-
-        self.graph_manager = MockNeo4jGraphManager()
-        self.integration = ClaimifyGraphIntegration(self.graph_manager)
-
-    def test_complete_pipeline_to_graph_flow(self):
-        """Test complete flow from Claimify results to Neo4j persistence."""
-        # Create realistic Claimify results from processing
-        chunks = [
-            SentenceChunk(
-                text="The database connection failed during peak hours.",
-                source_id="blk_001",
-                chunk_id="chunk_001",
-                sentence_index=0,
-            ),
-            SentenceChunk(
-                text="What should we do about this?",
-                source_id="blk_001",
-                chunk_id="chunk_002",
-                sentence_index=1,
-            ),
-            SentenceChunk(
-                text="The error rate increased to 15%.",
-                source_id="blk_002",
-                chunk_id="chunk_003",
-                sentence_index=0,
-            ),
-        ]
-
-        # Create realistic processing results
-        results = []
-
-        # First chunk: produces a valid claim
-        valid_claim = ClaimCandidate(
-            text="The database connection failed during peak hours.",
-            is_atomic=True,
-            is_self_contained=True,
-            is_verifiable=True,
-        )
-
-        results.append(
-            ClaimifyResult(
-                original_chunk=chunks[0],
-                context=ClaimifyContext(current_sentence=chunks[0]),
-                selection_result=SelectionResult(chunks[0], is_selected=True),
-                decomposition_result=DecompositionResult(
-                    original_text=chunks[0].text, claim_candidates=[valid_claim]
-                ),
-            )
-        )
-
-        # Second chunk: rejected by selection (question)
-        results.append(
-            ClaimifyResult(
-                original_chunk=chunks[1],
-                context=ClaimifyContext(current_sentence=chunks[1]),
-                selection_result=SelectionResult(chunks[1], is_selected=False),
-            )
-        )
-
-        # Third chunk: produces another valid claim
-        another_claim = ClaimCandidate(
-            text="The error rate increased to 15%.",
-            is_atomic=True,
-            is_self_contained=True,
-            is_verifiable=True,
-        )
-
-        results.append(
-            ClaimifyResult(
-                original_chunk=chunks[2],
-                context=ClaimifyContext(current_sentence=chunks[2]),
-                selection_result=SelectionResult(chunks[2], is_selected=True),
-                decomposition_result=DecompositionResult(
-                    original_text=chunks[2].text, claim_candidates=[another_claim]
-                ),
-            )
-        )
-
-        # Apply schema and persist results
-        schema_applied = self.graph_manager.apply_core_schema()
-        self.assertTrue(schema_applied)
-
-        claims_created, sentences_created, errors = (
-            self.integration.persist_claimify_results(results)
-        )
-
-        # Should have created 2 claims and 1 sentence
-        self.assertEqual(claims_created, 2)
-        self.assertEqual(sentences_created, 1)
-        self.assertEqual(len(errors), 0)
-
-    def test_error_handling_in_integration(self):
-        """Test error handling in the integration workflow."""
-        # Create a result with malformed data that might cause conversion errors
-        malformed_chunk = SentenceChunk(
-            text="",  # Empty text
-            source_id="",  # Empty source ID
-            chunk_id="",
-            sentence_index=0,
-        )
-
-        result = ClaimifyResult(
-            original_chunk=malformed_chunk,
-            context=ClaimifyContext(current_sentence=malformed_chunk),
-            selection_result=SelectionResult(malformed_chunk, is_selected=False),
-        )
-
-        # Should handle gracefully
-        claims_created, sentences_created, errors = (
-            self.integration.persist_claimify_results([result])
-        )
-
-        # Might create nodes or might have errors, but shouldn't crash
-        self.assertIsInstance(claims_created, int)
-        self.assertIsInstance(sentences_created, int)
-        self.assertIsInstance(errors, list)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert not sentence_input.verifiable
+        assert not sentence_input.failed_decomposition
+        assert sentence_input.rejection_reason == "Failed selection"

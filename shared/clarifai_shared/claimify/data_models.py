@@ -67,6 +67,7 @@ class SelectionResult:
     confidence: Optional[float] = None
     reasoning: Optional[str] = None
     processing_time: Optional[float] = None
+    rewritten_text: Optional[str] = None  # Cleaned sentence text from LLM
 
 
 @dataclass

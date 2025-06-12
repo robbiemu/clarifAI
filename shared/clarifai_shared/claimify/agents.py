@@ -147,37 +147,61 @@ class SelectionAgent(BaseClaimifyAgent):
             )
 
     def _llm_selection(self, context: ClaimifyContext) -> SelectionResult:
-        """LLM-based selection for more sophisticated analysis."""
-        # For now, implement a placeholder that would use the LLM
-        # This will be expanded when LLM integration is available
+        """
+        LLM-based selection following the Claimify approach.
+        
+        This implements Stage 1: Selection from the Claimify pipeline, which:
+        1. Identifies if the sentence contains verifiable factual information
+        2. Removes subjective or speculative language if verifiable content exists
+        3. Returns either the cleaned sentence or "NO_VERIFIABLE_CONTENT"
+        """
+        sentence = context.current_sentence
+        context_text = self._build_context_text(context)
+        
+        # Prompt based on Claimify for Dummies Stage 1: Selection
+        prompt = f"""You are a fact-checking assistant. Your job is to identify if the following sentence contains a specific, verifiable proposition. A verifiable proposition is a statement of fact, not an opinion, a recommendation, or a vague statement.
 
-        # TODO: Implement LLM-based selection using prompt
-        # sentence = context.current_sentence
-        # context_text = self._build_context_text(context)
-        # prompt = f"""Analyze the following sentence to determine if it contains verifiable, factual information that could be extracted as a claim.
-        #
-        # Context (surrounding sentences):
-        # {context_text}
-        #
-        # Target sentence: "{sentence.text}"
-        #
-        # Consider:
-        # 1. Does this sentence contain factual, verifiable information?
-        # 2. Is it a statement (not a question or command)?
-        # 3. Could this information be fact-checked or validated?
-        # 4. Does it describe events, relationships, or measurable properties?
-        #
-        # Respond with JSON: {{"selected": true/false, "confidence": 0.0-1.0, "reasoning": "explanation"}}"""
+**Source Sentence:** "{sentence.text}"
+
+**Context (surrounding sentences):**
+{context_text}
+
+**Task:**
+1. **Analyze:** Does the sentence contain a verifiable fact?
+2. **Decide:**
+   - If NO, respond with "NO_VERIFIABLE_CONTENT".
+   - If YES, rewrite the sentence to *only* include the verifiable parts. Remove any subjective or speculative language.
+
+**Your rewritten sentence or "NO_VERIFIABLE_CONTENT":**"""
 
         try:
-            # This would call the LLM when available
-            # For now, fall back to heuristics
-            return self._heuristic_selection(context)
+            # Call the LLM with the prompt
+            response = self.llm.complete(
+                prompt,
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens or 500
+            ).strip()
+            
+            # Parse the response
+            if response == "NO_VERIFIABLE_CONTENT":
+                return SelectionResult(
+                    sentence_chunk=sentence,
+                    is_selected=False,
+                    reasoning="No verifiable content found",
+                    rewritten_text=None
+                )
+            else:
+                # The response is a rewritten sentence with only verifiable content
+                return SelectionResult(
+                    sentence_chunk=sentence,
+                    is_selected=True,
+                    reasoning="Contains verifiable content",
+                    rewritten_text=response
+                )
+                
         except Exception as e:
-            self.logger.warning(
-                f"[agents.{self.__class__.__name__}._llm_selection] LLM selection failed, falling back to heuristics: {e}"
-            )
-            return self._heuristic_selection(context)
+            # If LLM fails, we cannot perform selection without heuristics
+            raise ValueError(f"LLM selection failed and no fallback available: {e}")
 
     def _build_context_text(self, context: ClaimifyContext) -> str:
         """Build context text from surrounding sentences."""
@@ -259,15 +283,82 @@ class DisambiguationAgent(BaseClaimifyAgent):
     def _llm_disambiguation(
         self, sentence: SentenceChunk, context: ClaimifyContext
     ) -> DisambiguationResult:
-        """LLM-based disambiguation for more sophisticated rewriting."""
-        # TODO: Implement LLM-based disambiguation using prompt
-        # For now, return original text as placeholder
-        return DisambiguationResult(
-            original_sentence=sentence,
-            disambiguated_text=sentence.text,
-            changes_made=[],
-            confidence=1.0,
-        )
+        """
+        LLM-based disambiguation following the Claimify approach.
+        
+        This implements Stage 2: Disambiguation from the Claimify pipeline, which:
+        1. Identifies ambiguities (pronouns, time references, structural ambiguities)
+        2. Uses context to resolve ambiguities confidently
+        3. Returns either the clarified sentence or "CANNOT_DISAMBIGUATE"
+        """
+        context_text = self._build_context_text(context)
+        
+        # Prompt based on Claimify for Dummies Stage 2: Disambiguation
+        prompt = f"""You are a fact-checking assistant. Your goal is to resolve ambiguity.
+
+**Context (surrounding text):** 
+{context_text}
+
+**Sentence to Analyze:** "{sentence.text}"
+
+**Task:**
+1. **Identify Ambiguity:** Does the sentence contain any pronouns (he, it, they), ambiguous time references (last year), or structural ambiguities (where grammar allows multiple readings)?
+2. **Resolve with Context:** Can the context clearly and confidently resolve all ambiguities?
+3. **Decide:**
+   - If the ambiguity CANNOT be confidently resolved, respond with "CANNOT_DISAMBIGUATE".
+   - If it CAN be resolved (or if there was no ambiguity), return the fully clarified and rewritten sentence.
+
+**Your rewritten sentence or "CANNOT_DISAMBIGUATE":**"""
+
+        try:
+            # Call the LLM with the prompt
+            response = self.llm.complete(
+                prompt,
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens or 500
+            ).strip()
+            
+            # Parse the response
+            if response == "CANNOT_DISAMBIGUATE":
+                return DisambiguationResult(
+                    original_sentence=sentence,
+                    disambiguated_text=sentence.text,  # Keep original
+                    changes_made=["Could not resolve ambiguities"],
+                    confidence=0.0
+                )
+            else:
+                # The response is a disambiguated sentence
+                changes_made = []
+                if response != sentence.text:
+                    changes_made.append("Resolved pronouns and ambiguous references")
+                    
+                return DisambiguationResult(
+                    original_sentence=sentence,
+                    disambiguated_text=response,
+                    changes_made=changes_made,
+                    confidence=0.8
+                )
+                
+        except Exception as e:
+            # If LLM fails, we cannot perform disambiguation without heuristics
+            raise ValueError(f"LLM disambiguation failed and no fallback available: {e}")
+            
+    def _build_context_text(self, context: ClaimifyContext) -> str:
+        """Build context text from surrounding sentences."""
+        parts = []
+
+        # Add preceding sentences
+        for i, sent in enumerate(context.preceding_sentences):
+            parts.append(f"[{-len(context.preceding_sentences) + i}] {sent.text}")
+
+        # Add current sentence marker
+        parts.append(f"[0] {context.current_sentence.text} ← TARGET")
+
+        # Add following sentences
+        for i, sent in enumerate(context.following_sentences):
+            parts.append(f"[{i + 1}] {sent.text}")
+
+        return "\n".join(parts)
 
 
 class DecompositionAgent(BaseClaimifyAgent):
@@ -337,16 +428,70 @@ class DecompositionAgent(BaseClaimifyAgent):
             )
 
     def _llm_decomposition(self, text: str) -> DecompositionResult:
-        """LLM-based decomposition for more sophisticated analysis."""
-        # TODO: Implement LLM-based decomposition using prompt
-        # For now, return simple single-claim candidate as placeholder
-        candidate = ClaimCandidate(
-            text=text,
-            is_atomic=True,
-            is_self_contained=True,
-            is_verifiable=True,
-            confidence=0.8,
-            reasoning="Placeholder LLM decomposition - single claim",
-        )
+        """
+        LLM-based decomposition following the Claimify approach.
+        
+        This implements Stage 3: Decomposition from the Claimify pipeline, which:
+        1. Breaks the sentence into atomic, self-contained claims
+        2. Adds clarifying information in [square brackets] if needed
+        3. Ensures each claim meets quality criteria (atomic, self-contained, verifiable)
+        """
+        
+        # Prompt based on Claimify for Dummies Stage 3: Decomposition
+        prompt = f"""You are an expert fact-checker. Your task is to decompose the given sentence into a list of simple, atomic, and fully decontextualized factual claims.
 
-        return DecompositionResult(original_text=text, claim_candidates=[candidate])
+**Rules:**
+1. Each claim must be a complete, self-contained sentence.
+2. Break the sentence into the smallest possible pieces of verifiable information.
+3. If a claim needs context to be understood, add the clarifying information inside [square brackets].
+4. Only include factual, verifiable statements - no opinions or speculative content.
+5. Each claim should be atomic (single fact), self-contained (no ambiguous references), and verifiable (can be fact-checked).
+
+**Sentence to Decompose:** "{text}"
+
+**List of Decomposed Claims (one per line, or write "NO_VALID_CLAIMS" if no verifiable claims can be extracted):**"""
+
+        try:
+            # Call the LLM with the prompt
+            response = self.llm.complete(
+                prompt,
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens or 1000
+            ).strip()
+            
+            # Parse the response
+            if response == "NO_VALID_CLAIMS":
+                return DecompositionResult(
+                    original_text=text,
+                    claim_candidates=[]
+                )
+            
+            # Split response into individual claims
+            claim_lines = [line.strip() for line in response.split('\n') if line.strip()]
+            claim_candidates = []
+            
+            for claim_text in claim_lines:
+                # Remove bullet points or numbering if present
+                claim_text = claim_text.lstrip('- •*123456789.)')
+                claim_text = claim_text.strip()
+                
+                if claim_text and claim_text != "NO_VALID_CLAIMS":
+                    # Evaluate the claim quality (simplified for now)
+                    candidate = ClaimCandidate(
+                        text=claim_text,
+                        is_atomic=True,  # Assume LLM followed instructions
+                        is_self_contained=True,  # Assume LLM followed instructions  
+                        is_verifiable=True,  # Assume LLM followed instructions
+                        confidence=0.8,
+                        reasoning="Extracted by LLM decomposition"
+                    )
+                    claim_candidates.append(candidate)
+            
+            return DecompositionResult(
+                original_text=text,
+                claim_candidates=claim_candidates
+            )
+                
+        except Exception as e:
+            # If LLM fails, we cannot perform decomposition without heuristics
+            raise ValueError(f"LLM decomposition failed and no fallback available: {e}")
