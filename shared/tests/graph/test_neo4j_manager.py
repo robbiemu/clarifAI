@@ -12,7 +12,6 @@ Tests for Neo4j graph manager with configurable backend (mocked or real).
 """
 
 
-
 class TestNeo4jGraphManager:
     """Test cases for Neo4jGraphManager using configurable backend."""
 

@@ -11,7 +11,6 @@ Tests for embedding module pipeline and initialization.
 """
 
 
-
 class TestEmbeddingResult:
     """Test cases for EmbeddingResult dataclass."""
 
