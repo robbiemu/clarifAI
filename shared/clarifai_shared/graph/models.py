@@ -22,7 +22,7 @@ class ClaimInput:
     coverage_score: Optional[float] = None
     decontextualization_score: Optional[float] = None
     claim_id: Optional[str] = None  # Will generate if not provided
-    
+
     # Properties derived from ClaimCandidate for testing/validation
     verifiable: bool = True
     self_contained: bool = True
@@ -48,7 +48,7 @@ class SentenceInput:
     ambiguous: Optional[bool] = None
     verifiable: Optional[bool] = None
     sentence_id: Optional[str] = None  # Will generate if not provided
-    
+
     # Additional properties for testing/validation
     failed_decomposition: bool = False
     rejection_reason: Optional[str] = None

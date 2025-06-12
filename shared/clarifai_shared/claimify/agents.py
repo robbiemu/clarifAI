@@ -114,7 +114,7 @@ class SelectionAgent(BaseClaimifyAgent):
             # LLM is required for selection processing
             if self.llm is None:
                 raise ValueError("LLM is required for Selection agent processing")
-                
+
             result = self._llm_selection(context)
 
             processing_time = time.time() - start_time
@@ -223,7 +223,7 @@ class DisambiguationAgent(BaseClaimifyAgent):
             # LLM is required for disambiguation processing
             if self.llm is None:
                 raise ValueError("LLM is required for Disambiguation agent processing")
-                
+
             result = self._llm_disambiguation(sentence, context)
 
             processing_time = time.time() - start_time
@@ -296,7 +296,7 @@ class DecompositionAgent(BaseClaimifyAgent):
             # LLM is required for decomposition processing
             if self.llm is None:
                 raise ValueError("LLM is required for Decomposition agent processing")
-                
+
             result = self._llm_decomposition(disambiguated_text)
 
             processing_time = time.time() - start_time
@@ -346,11 +346,7 @@ class DecompositionAgent(BaseClaimifyAgent):
             is_self_contained=True,
             is_verifiable=True,
             confidence=0.8,
-            reasoning="Placeholder LLM decomposition - single claim"
-        )
-        
-        return DecompositionResult(
-            original_text=text,
-            claim_candidates=[candidate]
+            reasoning="Placeholder LLM decomposition - single claim",
         )
 
+        return DecompositionResult(original_text=text, claim_candidates=[candidate])
