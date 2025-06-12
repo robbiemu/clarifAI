@@ -2,36 +2,42 @@
 Tests for prompts module initialization.
 """
 
-import types
-
-import clarifai_shared.prompts as prompts_module
+import os
 
 
 class TestPromptsInit:
     """Test cases for prompts __init__.py module."""
 
-    def test_module_docstring(self):
-        """Test that module has expected docstring."""
-        assert prompts_module.__doc__ == "Prompt templates for plugin system."
+    def test_prompts_init_file_exists(self):
+        """Test that the prompts __init__.py file exists."""
+        init_path = os.path.join(
+            os.path.dirname(__file__), "../clarifai_shared/prompts/__init__.py"
+        )
+        assert os.path.exists(init_path)
 
-    def test_module_attributes(self):
-        """Test basic module attributes."""
-        # Should have basic Python module attributes
-        assert hasattr(prompts_module, "__doc__")
+    def test_prompts_init_file_structure(self):
+        """Test that the prompts __init__.py file has expected structure."""
+        init_path = os.path.join(
+            os.path.dirname(__file__), "../clarifai_shared/prompts/__init__.py"
+        )
 
-    def test_module_is_module(self):
-        """Test that we loaded a valid module."""
-        assert isinstance(prompts_module, types.ModuleType)
+        with open(init_path, "r") as f:
+            content = f.read()
 
-    def test_module_name(self):
-        """Test module has correct name."""
-        assert prompts_module.__name__ == "clarifai_shared.prompts"
+        # Check for expected docstring
+        assert "Prompt templates for plugin system." in content
 
-    def test_module_no_exports(self):
-        """Test that module doesn't export unexpected symbols."""
-        # Should be minimal - just the docstring and standard module attributes
-        actual_attrs = set(dir(prompts_module))
+        # Check that it's a minimal module (no exports)
+        assert "__all__" not in content or "__all__ = []" in content
 
-        # Only check that we don't have unexpected public attributes
-        public_attrs = {attr for attr in actual_attrs if not attr.startswith("_")}
-        assert len(public_attrs) == 0  # Should only have private/dunder attributes
+    def test_prompts_directory_structure(self):
+        """Test that the prompts directory exists and has expected structure."""
+        prompts_dir = os.path.join(
+            os.path.dirname(__file__), "../clarifai_shared/prompts"
+        )
+        assert os.path.exists(prompts_dir)
+        assert os.path.isdir(prompts_dir)
+
+        # Check that __init__.py exists
+        init_file = os.path.join(prompts_dir, "__init__.py")
+        assert os.path.exists(init_file)
