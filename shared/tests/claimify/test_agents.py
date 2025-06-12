@@ -4,7 +4,7 @@ Tests for Claimify pipeline agents.
 Tests the Selection, Disambiguation, and Decomposition agents.
 """
 
-import unittest
+# import unittest
 from unittest.mock import Mock
 
 # Import the agent classes
@@ -38,10 +38,10 @@ class MockLLM:
         return self.response
 
 
-class TestSelectionAgent(unittest.TestCase):
+class TestSelectionAgent:
     """Test SelectionAgent functionality."""
 
-    def setUp(self):
+    def setup_method(self):
         """Set up test data."""
         self.config = ClaimifyConfig()
         self.agent = SelectionAgent(config=self.config)
@@ -59,8 +59,8 @@ class TestSelectionAgent(unittest.TestCase):
         """Test selection of sentence with verifiable content."""
         result = self.agent.process(self.context)
 
-        self.assertTrue(result.is_selected)
-        self.assertEqual(result.sentence_chunk, self.test_sentence)
+        assert result.is_selected
+        assert result.sentence_chunk == self.test_sentence
         self.assertIsNotNone(result.reasoning)
         self.assertGreater(result.confidence, 0.5)
 
@@ -76,8 +76,8 @@ class TestSelectionAgent(unittest.TestCase):
 
         result = self.agent.process(context)
 
-        self.assertFalse(result.is_selected)
-        self.assertIn("Questions are not verifiable claims", result.reasoning)
+        assert not result.is_selected
+        assert "Questions are not verifiable claims" in result.reasoning
 
     def test_heuristic_selection_short_sentence(self):
         """Test rejection of very short sentences."""
@@ -88,8 +88,8 @@ class TestSelectionAgent(unittest.TestCase):
 
         result = self.agent.process(context)
 
-        self.assertFalse(result.is_selected)
-        self.assertIn("too short", result.reasoning)
+        assert not result.is_selected
+        assert "too short" in result.reasoning
 
     def test_context_window_building(self):
         """Test that context window is properly built."""
@@ -115,12 +115,12 @@ class TestSelectionAgent(unittest.TestCase):
 
         context_text = self.agent._build_context_text(context)
 
-        self.assertIn("[-1] The user submitted a form.", context_text)
+        assert "[-1] The user submitted a form." in context_text
         self.assertIn(
             "[0] The system reported an error when processing the request. ← TARGET",
             context_text,
         )
-        self.assertIn("[1] The error was logged to the database.", context_text)
+        assert "[1] The error was logged to the database." in context_text
 
     def test_agent_with_mock_llm(self):
         """Test agent behavior with a mock LLM."""
@@ -133,13 +133,13 @@ class TestSelectionAgent(unittest.TestCase):
         result = agent.process(self.context)
 
         # Should still work with heuristics
-        self.assertTrue(result.is_selected)
+        assert result.is_selected
 
 
-class TestDisambiguationAgent(unittest.TestCase):
+class TestDisambiguationAgent:
     """Test DisambiguationAgent functionality."""
 
-    def setUp(self):
+    def setup_method(self):
         """Set up test data."""
         self.config = ClaimifyConfig()
         self.agent = DisambiguationAgent(config=self.config)
@@ -158,9 +158,9 @@ class TestDisambiguationAgent(unittest.TestCase):
         result = self.agent.process(self.test_sentence, self.context)
 
         self.assertNotEqual(result.disambiguated_text, self.test_sentence.text)
-        self.assertIn("system", result.disambiguated_text.lower())
-        self.assertTrue(len(result.changes_made) > 0)
-        self.assertIn("it", result.changes_made[0].lower())
+        assert "system" in result.disambiguated_text.lower()
+        assert len(result.changes_made > 0)
+        assert "it" in result.changes_made[0].lower()
 
     def test_no_changes_needed(self):
         """Test sentence that doesn't need disambiguation."""
@@ -173,9 +173,9 @@ class TestDisambiguationAgent(unittest.TestCase):
 
         result = self.agent.process(clear_sentence, self.context)
 
-        self.assertEqual(result.disambiguated_text, clear_sentence.text)
-        self.assertEqual(len(result.changes_made), 0)
-        self.assertEqual(result.confidence, 1.0)  # No changes needed = high confidence
+        assert result.disambiguated_text == clear_sentence.text
+        assert len(result.changes_made) == 0
+        assert result.confidence == 1.0  # No changes needed = high confidence
 
     def test_verb_starter_subject_addition(self):
         """Test adding inferred subject to verb-starting sentences."""
@@ -188,16 +188,16 @@ class TestDisambiguationAgent(unittest.TestCase):
 
         result = self.agent.process(verb_sentence, self.context)
 
-        self.assertTrue(result.disambiguated_text.startswith("[The system]"))
+        assert result.disambiguated_text.startswith("[The system]")
         self.assertTrue(
             any("subject" in change.lower() for change in result.changes_made)
         )
 
 
-class TestDecompositionAgent(unittest.TestCase):
+class TestDecompositionAgent:
     """Test DecompositionAgent functionality."""
 
-    def setUp(self):
+    def setup_method(self):
         """Set up test data."""
         self.config = ClaimifyConfig()
         self.agent = DecompositionAgent(config=self.config)
@@ -215,14 +215,14 @@ class TestDecompositionAgent(unittest.TestCase):
 
         result = self.agent.process(text, self.test_sentence)
 
-        self.assertEqual(len(result.claim_candidates), 1)
+        assert len(result.claim_candidates) == 1
         claim = result.claim_candidates[0]
-        self.assertEqual(claim.text, text)
-        self.assertTrue(claim.is_atomic)
-        self.assertTrue(claim.is_self_contained)
-        self.assertTrue(claim.is_verifiable)
-        self.assertTrue(claim.passes_criteria)
-        self.assertEqual(claim.node_type, NodeType.CLAIM)
+        assert claim.text == text
+        assert claim.is_atomic
+        assert claim.is_self_contained
+        assert claim.is_verifiable
+        assert claim.passes_criteria
+        assert claim.node_type == NodeType.CLAIM
 
     def test_compound_sentence_splitting(self):
         """Test splitting of compound sentences."""
@@ -235,8 +235,8 @@ class TestDecompositionAgent(unittest.TestCase):
 
         # Check that parts were properly split
         claim_texts = [claim.text for claim in result.claim_candidates]
-        self.assertTrue(any("system reported" in text for text in claim_texts))
-        self.assertTrue(any("user was notified" in text for text in claim_texts))
+        assert any("system reported" in text for text in claim_texts)
+        assert any("user was notified" in text for text in claim_texts)
 
     def test_ambiguous_reference_detection(self):
         """Test detection of ambiguous references."""
@@ -244,22 +244,22 @@ class TestDecompositionAgent(unittest.TestCase):
 
         result = self.agent.process(text, self.test_sentence)
 
-        self.assertEqual(len(result.claim_candidates), 1)
+        assert len(result.claim_candidates) == 1
         claim = result.claim_candidates[0]
-        self.assertFalse(claim.is_self_contained)  # "It" is ambiguous
-        self.assertFalse(claim.passes_criteria)
-        self.assertEqual(claim.node_type, NodeType.SENTENCE)
+        assert not claim.is_self_contained  # "It" is ambiguous
+        assert not claim.passes_criteria
+        assert claim.node_type == NodeType.SENTENCE
 
     def test_atomicity_checking(self):
         """Test atomicity checking for compound statements."""
         # Test atomic statement
-        self.assertTrue(self.agent._check_atomicity("The system reported an error."))
+        assert self.agent._check_atomicity("The system reported an error.")
 
         # Test compound statements
         self.assertFalse(
             self.agent._check_atomicity("The system reported an error and crashed.")
         )
-        self.assertFalse(self.agent._check_atomicity("The system worked but was slow."))
+        assert not self.agent._check_atomicity("The system worked but was slow.")
         self.assertFalse(
             self.agent._check_atomicity("The error occurred because of invalid input.")
         )
@@ -275,9 +275,9 @@ class TestDecompositionAgent(unittest.TestCase):
         )
 
         # Test statements with ambiguous references
-        self.assertFalse(self.agent._check_self_containment("It reported an error."))
-        self.assertFalse(self.agent._check_self_containment("This caused the problem."))
-        self.assertFalse(self.agent._check_self_containment("That was unexpected."))
+        assert not self.agent._check_self_containment("It reported an error.")
+        assert not self.agent._check_self_containment("This caused the problem.")
+        assert not self.agent._check_self_containment("That was unexpected.")
 
     def test_verifiability_checking(self):
         """Test verifiability checking."""
@@ -285,7 +285,7 @@ class TestDecompositionAgent(unittest.TestCase):
         self.assertTrue(
             self.agent._check_verifiability("The system reported an error.")
         )
-        self.assertTrue(self.agent._check_verifiability("The count was 42."))
+        assert self.agent._check_verifiability("The count was 42.")
         self.assertTrue(
             self.agent._check_verifiability("The process resulted in success.")
         )
@@ -310,13 +310,13 @@ class TestDecompositionAgent(unittest.TestCase):
         if len(result.claim_candidates) == 1:  # If not split
             claim = result.claim_candidates[0]
             self.assertIsNotNone(claim.reasoning)
-            self.assertIn("Issues:", claim.reasoning)
+            assert "Issues:" in claim.reasoning
 
 
-class TestAgentErrorHandling(unittest.TestCase):
+class TestAgentErrorHandling:
     """Test error handling in agents."""
 
-    def setUp(self):
+    def setup_method(self):
         """Set up test data."""
         self.config = ClaimifyConfig()
         self.test_sentence = SentenceChunk(
@@ -339,7 +339,7 @@ class TestAgentErrorHandling(unittest.TestCase):
         result = agent.process(self.context)
 
         self.assertIsNotNone(result)
-        self.assertEqual(result.sentence_chunk, self.test_sentence)
+        assert result.sentence_chunk == self.test_sentence
         # Should have processed (even if heuristic fallback)
 
     def test_disambiguation_agent_error_handling(self):
@@ -353,7 +353,7 @@ class TestAgentErrorHandling(unittest.TestCase):
         result = agent.process(self.test_sentence, self.context)
 
         self.assertIsNotNone(result)
-        self.assertEqual(result.original_sentence, self.test_sentence)
+        assert result.original_sentence == self.test_sentence
 
     def test_decomposition_agent_error_handling(self):
         """Test DecompositionAgent error handling."""
@@ -366,8 +366,4 @@ class TestAgentErrorHandling(unittest.TestCase):
         result = agent.process("Test text", self.test_sentence)
 
         self.assertIsNotNone(result)
-        self.assertEqual(result.original_text, "Test text")
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert result.original_text == "Test text"

@@ -7,7 +7,6 @@ including conversion of pipeline results to graph inputs and end-to-end workflow
 
 import pytest
 import os
-import unittest
 from unittest.mock import Mock
 
 from clarifai_shared.claimify.data_models import (
@@ -344,7 +343,7 @@ class TestCreateGraphManagerFromConfigStructure:
     def test_integration_initialization(self):
         """Test integration initialization."""
         integration = ClaimifyGraphIntegration(self.graph_manager)
-        self.assertEqual(integration.graph_manager, self.graph_manager)
+        assert integration.graph_manager == self.graph_manager
 
     def test_convert_successful_claim_result(self):
         """Test conversion of result with valid claims."""
@@ -378,17 +377,17 @@ class TestCreateGraphManagerFromConfigStructure:
         )
 
         # Should have one claim, no sentences
-        self.assertEqual(len(claim_inputs), 1)
-        self.assertEqual(len(sentence_inputs), 0)
+        assert len(claim_inputs) == 1
+        assert len(sentence_inputs) == 0
 
         # Check claim properties
         claim = claim_inputs[0]
-        self.assertIsInstance(claim, ClaimInput)
-        self.assertEqual(claim.text, "The system failed at startup.")
-        self.assertEqual(claim.block_id, "blk_001")
-        self.assertTrue(claim.verifiable)
-        self.assertTrue(claim.self_contained)
-        self.assertTrue(claim.context_complete)
+        assert isinstance(claim, ClaimInput)
+        assert claim.text == "The system failed at startup."
+        assert claim.block_id == "blk_001"
+        assert claim.verifiable
+        assert claim.self_contained
+        assert claim.context_complete
 
     def test_convert_failed_claim_result(self):
         """Test conversion of result with claims that failed criteria."""
@@ -421,17 +420,17 @@ class TestCreateGraphManagerFromConfigStructure:
         )
 
         # Should have no claims, one sentence
-        self.assertEqual(len(claim_inputs), 0)
-        self.assertEqual(len(sentence_inputs), 1)
+        assert len(claim_inputs) == 0
+        assert len(sentence_inputs) == 1
 
         # Check sentence properties
         sentence = sentence_inputs[0]
-        self.assertIsInstance(sentence, SentenceInput)
-        self.assertEqual(sentence.text, "It failed again.")
-        self.assertEqual(sentence.block_id, "blk_001")
-        self.assertTrue(sentence.ambiguous)  # Because not self-contained
-        self.assertTrue(sentence.verifiable)
-        self.assertFalse(sentence.failed_decomposition)  # Was atomic
+        assert isinstance(sentence, SentenceInput)
+        assert sentence.text == "It failed again."
+        assert sentence.block_id == "blk_001"
+        assert sentence.ambiguous  # Because not self-contained
+        assert sentence.verifiable
+        assert not sentence.failed_decomposition  # Was atomic
 
     def test_convert_mixed_decomposition_result(self):
         """Test conversion of result with both valid and invalid claims."""
@@ -471,16 +470,16 @@ class TestCreateGraphManagerFromConfigStructure:
         )
 
         # Should have one claim, one sentence
-        self.assertEqual(len(claim_inputs), 1)
-        self.assertEqual(len(sentence_inputs), 1)
+        assert len(claim_inputs) == 1
+        assert len(sentence_inputs) == 1
 
         # Check that valid claim became ClaimInput
         claim = claim_inputs[0]
-        self.assertEqual(claim.text, "The database connection failed.")
+        assert claim.text == "The database connection failed."
 
         # Check that invalid claim became SentenceInput
         sentence = sentence_inputs[0]
-        self.assertEqual(sentence.text, "This is ambiguous.")
+        assert sentence.text == "This is ambiguous."
 
     def test_convert_unprocessed_result(self):
         """Test conversion of result that was not processed."""
@@ -497,18 +496,16 @@ class TestCreateGraphManagerFromConfigStructure:
         )
 
         # Should have no claims, one sentence from original chunk
-        self.assertEqual(len(claim_inputs), 0)
-        self.assertEqual(len(sentence_inputs), 1)
+        assert len(claim_inputs) == 0
+        assert len(sentence_inputs) == 1
 
         # Check sentence properties
         sentence = sentence_inputs[0]
-        self.assertEqual(sentence.text, "The system failed at startup.")
-        self.assertEqual(sentence.block_id, "blk_001")
-        self.assertTrue(sentence.ambiguous)  # Assumed ambiguous since not selected
-        self.assertFalse(
-            sentence.verifiable
-        )  # Assumed not verifiable since not selected
-        self.assertEqual(sentence.rejection_reason, "Not selected by Selection agent")
+        assert sentence.text == "The system failed at startup."
+        assert sentence.block_id == "blk_001"
+        assert sentence.ambiguous  # Assumed ambiguous since not selected
+        assert not sentence.verifiable  # Assumed not verifiable since not selected
+        assert sentence.rejection_reason == "Not selected by Selection agent"
 
     def test_persist_claimify_results_empty(self):
         """Test persisting empty results list."""
@@ -516,9 +513,9 @@ class TestCreateGraphManagerFromConfigStructure:
             self.integration.persist_claimify_results([])
         )
 
-        self.assertEqual(claims_created, 0)
-        self.assertEqual(sentences_created, 0)
-        self.assertEqual(len(errors), 0)
+        assert claims_created == 0
+        assert sentences_created == 0
+        assert len(errors) == 0
 
     def test_persist_claimify_results_with_claims(self):
         """Test persisting results with valid claims."""
@@ -547,9 +544,9 @@ class TestCreateGraphManagerFromConfigStructure:
             self.integration.persist_claimify_results([result])
         )
 
-        self.assertEqual(claims_created, 1)
-        self.assertEqual(sentences_created, 0)
-        self.assertEqual(len(errors), 0)
+        assert claims_created == 1
+        assert sentences_created == 0
+        assert len(errors) == 0
 
     def test_persist_claimify_results_with_sentences(self):
         """Test persisting results with sentence nodes."""
@@ -565,9 +562,9 @@ class TestCreateGraphManagerFromConfigStructure:
             self.integration.persist_claimify_results([result])
         )
 
-        self.assertEqual(claims_created, 0)
-        self.assertEqual(sentences_created, 1)
-        self.assertEqual(len(errors), 0)
+        assert claims_created == 0
+        assert sentences_created == 1
+        assert len(errors) == 0
 
     def test_create_claim_input(self):
         """Test creation of ClaimInput from ClaimCandidate."""
@@ -583,16 +580,16 @@ class TestCreateGraphManagerFromConfigStructure:
             claim_candidate, self.test_chunk
         )
 
-        self.assertIsInstance(claim_input, ClaimInput)
-        self.assertEqual(claim_input.text, "The error occurred at 10:30 AM.")
-        self.assertEqual(claim_input.block_id, "blk_001")
-        self.assertTrue(claim_input.verifiable)
-        self.assertTrue(claim_input.self_contained)
-        self.assertTrue(claim_input.context_complete)
-        self.assertIsNone(claim_input.entailed_score)  # Not set by pipeline
-        self.assertIsNone(claim_input.coverage_score)
-        self.assertIsNone(claim_input.decontextualization_score)
-        self.assertTrue(claim_input.id.startswith("claim_"))
+        assert isinstance(claim_input, ClaimInput)
+        assert claim_input.text == "The error occurred at 10:30 AM."
+        assert claim_input.block_id == "blk_001"
+        assert claim_input.verifiable
+        assert claim_input.self_contained
+        assert claim_input.context_complete
+        assert claim_input.entailed_score is None  # Not set by pipeline
+        assert claim_input.coverage_score is None
+        assert claim_input.decontextualization_score is None
+        assert claim_input.id.startswith("claim_")
 
     def test_create_sentence_input(self):
         """Test creation of SentenceInput from ClaimCandidate."""
@@ -607,14 +604,14 @@ class TestCreateGraphManagerFromConfigStructure:
             sentence_candidate, self.test_chunk, rejection_reason="Ambiguous pronoun"
         )
 
-        self.assertIsInstance(sentence_input, SentenceInput)
-        self.assertEqual(sentence_input.text, "It was problematic.")
-        self.assertEqual(sentence_input.block_id, "blk_001")
-        self.assertTrue(sentence_input.ambiguous)  # Because not self-contained
-        self.assertTrue(sentence_input.verifiable)
-        self.assertFalse(sentence_input.failed_decomposition)  # Was atomic
-        self.assertEqual(sentence_input.rejection_reason, "Ambiguous pronoun")
-        self.assertTrue(sentence_input.id.startswith("sent_"))
+        assert isinstance(sentence_input, SentenceInput)
+        assert sentence_input.text == "It was problematic."
+        assert sentence_input.block_id == "blk_001"
+        assert sentence_input.ambiguous  # Because not self-contained
+        assert sentence_input.verifiable
+        assert not sentence_input.failed_decomposition  # Was atomic
+        assert sentence_input.rejection_reason == "Ambiguous pronoun"
+        assert sentence_input.id.startswith("sent_")
 
     def test_create_sentence_input_from_chunk(self):
         """Test creation of SentenceInput directly from chunk."""
@@ -622,25 +619,23 @@ class TestCreateGraphManagerFromConfigStructure:
             self.test_chunk, rejection_reason="Failed selection"
         )
 
-        self.assertIsInstance(sentence_input, SentenceInput)
-        self.assertEqual(sentence_input.text, "The system failed at startup.")
-        self.assertEqual(sentence_input.block_id, "blk_001")
-        self.assertTrue(sentence_input.ambiguous)
-        self.assertFalse(sentence_input.verifiable)
-        self.assertFalse(sentence_input.failed_decomposition)
-        self.assertEqual(sentence_input.rejection_reason, "Failed selection")
+        assert isinstance(sentence_input, SentenceInput)
+        assert sentence_input.text == "The system failed at startup."
+        assert sentence_input.block_id == "blk_001"
+        assert sentence_input.ambiguous
+        assert not sentence_input.verifiable
+        assert not sentence_input.failed_decomposition
+        assert sentence_input.rejection_reason == "Failed selection"
 
 
-class TestCreateGraphManagerFromConfig(unittest.TestCase):
+class TestCreateGraphManagerFromConfig:
     """Test graph manager creation from configuration."""
-
-    def setUp(self):
-        """Set up for configuration tests."""
-        if not NEO4J_AVAILABLE:
-            self.skipTest("Neo4j dependencies not available")
 
     def test_create_manager_from_config(self):
         """Test creating graph manager from configuration dictionary."""
+        if not NEO4J_AVAILABLE:
+            pytest.skip("Neo4j dependencies not available")
+
         config = {
             "databases": {
                 "neo4j": {
@@ -656,26 +651,29 @@ class TestCreateGraphManagerFromConfig(unittest.TestCase):
 
         # Note: In real environment this would create actual Neo4jGraphManager
         # For tests without Neo4j, we skip the test
-        self.assertIsNotNone(manager)
+        assert manager is not None
 
     def test_create_manager_empty_config(self):
         """Test creating graph manager with empty config."""
+        if not NEO4J_AVAILABLE:
+            pytest.skip("Neo4j dependencies not available")
+
         config = {}
 
         manager = create_graph_manager_from_config(config)
 
         # Note: In real environment this would create actual Neo4jGraphManager
         # For tests without Neo4j, we skip the test
-        self.assertIsNotNone(manager)
+        assert manager is not None
 
 
-class TestClaimifyNeo4jIntegrationEndToEnd(unittest.TestCase):
+class TestClaimifyNeo4jIntegrationEndToEnd:
     """End-to-end integration tests combining Claimify pipeline with Neo4j persistence."""
 
-    def setUp(self):
+    def setup_method(self):
         """Set up integration components."""
         if not NEO4J_AVAILABLE:
-            self.skipTest("Neo4j dependencies not available")
+            pytest.skip("Neo4j dependencies not available")
 
         self.graph_manager = MockNeo4jGraphManager()
         self.integration = ClaimifyGraphIntegration(self.graph_manager)
@@ -756,16 +754,16 @@ class TestClaimifyNeo4jIntegrationEndToEnd(unittest.TestCase):
 
         # Apply schema and persist results
         schema_applied = self.graph_manager.apply_core_schema()
-        self.assertTrue(schema_applied)
+        assert schema_applied
 
         claims_created, sentences_created, errors = (
             self.integration.persist_claimify_results(results)
         )
 
         # Should have created 2 claims and 1 sentence
-        self.assertEqual(claims_created, 2)
-        self.assertEqual(sentences_created, 1)
-        self.assertEqual(len(errors), 0)
+        assert claims_created == 2
+        assert sentences_created == 1
+        assert len(errors) == 0
 
     def test_error_handling_in_integration(self):
         """Test error handling in the integration workflow."""
@@ -789,10 +787,6 @@ class TestClaimifyNeo4jIntegrationEndToEnd(unittest.TestCase):
         )
 
         # Might create nodes or might have errors, but shouldn't crash
-        self.assertIsInstance(claims_created, int)
-        self.assertIsInstance(sentences_created, int)
-        self.assertIsInstance(errors, list)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert isinstance(claims_created, int)
+        assert isinstance(sentences_created, int)
+        assert isinstance(errors, list)

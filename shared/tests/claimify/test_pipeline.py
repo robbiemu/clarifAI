@@ -4,7 +4,7 @@ Tests for the main Claimify pipeline.
 Tests the ClaimifyPipeline orchestrator and end-to-end processing.
 """
 
-import unittest
+# import unittest
 from unittest.mock import Mock
 
 # Import the pipeline classes
@@ -21,10 +21,10 @@ from clarifai_shared.claimify.data_models import (
 )
 
 
-class TestClaimifyPipeline(unittest.TestCase):
+class TestClaimifyPipeline:
     """Test ClaimifyPipeline functionality."""
 
-    def setUp(self):
+    def setup_method(self):
         """Set up test data."""
         self.config = ClaimifyConfig()
         self.pipeline = ClaimifyPipeline(config=self.config)
@@ -59,8 +59,8 @@ class TestClaimifyPipeline(unittest.TestCase):
             context_window_p=5, context_window_f=2, selection_model="gpt-4"
         )
         pipeline = ClaimifyPipeline(config=custom_config)
-        self.assertEqual(pipeline.config.context_window_p, 5)
-        self.assertEqual(pipeline.config.context_window_f, 2)
+        assert pipeline.config.context_window_p == 5
+        assert pipeline.config.context_window_f == 2
 
     def test_context_window_building(self):
         """Test context window building with different configurations."""
@@ -73,23 +73,23 @@ class TestClaimifyPipeline(unittest.TestCase):
         # Test context for sentence in middle
         context = self.pipeline._build_context_window(sentences[5], sentences, 5)
 
-        self.assertEqual(len(context.preceding_sentences), 3)
-        self.assertEqual(len(context.following_sentences), 1)
-        self.assertEqual(context.current_sentence, sentences[5])
+        assert len(context.preceding_sentences) == 3
+        assert len(context.following_sentences) == 1
+        assert context.current_sentence == sentences[5]
 
         # Test context for sentence at beginning
         context = self.pipeline._build_context_window(sentences[0], sentences, 0)
 
-        self.assertEqual(len(context.preceding_sentences), 0)
-        self.assertEqual(len(context.following_sentences), 1)
+        assert len(context.preceding_sentences) == 0
+        assert len(context.following_sentences) == 1
 
         # Test context for sentence at end
         context = self.pipeline._build_context_window(
             sentences[-1], sentences, len(sentences) - 1
         )
 
-        self.assertEqual(len(context.preceding_sentences), 3)
-        self.assertEqual(len(context.following_sentences), 0)
+        assert len(context.preceding_sentences) == 3
+        assert len(context.following_sentences) == 0
 
     def test_single_sentence_processing(self):
         """Test processing of a single sentence through the pipeline."""
@@ -110,12 +110,12 @@ class TestClaimifyPipeline(unittest.TestCase):
             # If selected, should have disambiguation and decomposition results
             self.assertIsNotNone(result.disambiguation_result)
             self.assertIsNotNone(result.decomposition_result)
-            self.assertTrue(result.was_processed)
+            assert result.was_processed
         else:
             # If not selected, should not have further processing
-            self.assertIsNone(result.disambiguation_result)
-            self.assertIsNone(result.decomposition_result)
-            self.assertFalse(result.was_processed)
+            assert result.disambiguation_result is None
+            assert result.decomposition_result is None
+            assert not result.was_processed
 
         # Should have timing information
         self.assertIsNotNone(result.total_processing_time)
@@ -124,18 +124,18 @@ class TestClaimifyPipeline(unittest.TestCase):
         """Test processing of multiple sentences."""
         results = self.pipeline.process_sentences(self.test_sentences)
 
-        self.assertEqual(len(results), len(self.test_sentences))
+        assert len(results) == len(self.test_sentences)
 
         # Each result should correspond to the correct sentence
         for i, result in enumerate(results):
-            self.assertEqual(result.original_chunk, self.test_sentences[i])
+            assert result.original_chunk == self.test_sentences[i]
             self.assertIsNotNone(result.selection_result)
 
     def test_empty_sentence_list(self):
         """Test handling of empty sentence list."""
         results = self.pipeline.process_sentences([])
 
-        self.assertEqual(len(results), 0)
+        assert len(results) == 0
 
     def test_error_handling_in_pipeline(self):
         """Test error handling when processing fails."""
@@ -149,12 +149,12 @@ class TestClaimifyPipeline(unittest.TestCase):
 
         results = self.pipeline.process_sentences([problematic_sentence])
 
-        self.assertEqual(len(results), 1)
+        assert len(results) == 1
         result = results[0]
 
         # Should handle gracefully and return a result
         self.assertIsNotNone(result)
-        self.assertEqual(result.original_chunk, problematic_sentence)
+        assert result.original_chunk == problematic_sentence
 
     def test_pipeline_stats_generation(self):
         """Test generation of pipeline statistics."""
@@ -162,17 +162,17 @@ class TestClaimifyPipeline(unittest.TestCase):
         stats = self.pipeline.get_pipeline_stats(results)
 
         # Check that stats contain expected fields
-        self.assertIn("pipeline", stats)
-        self.assertIn("total_sentences", stats)
-        self.assertIn("processed_sentences", stats)
-        self.assertIn("selection_rate", stats)
-        self.assertIn("total_claims", stats)
-        self.assertIn("total_sentence_nodes", stats)
-        self.assertIn("errors", stats)
-        self.assertIn("timing", stats)
+        assert "pipeline" in stats
+        assert "total_sentences" in stats
+        assert "processed_sentences" in stats
+        assert "selection_rate" in stats
+        assert "total_claims" in stats
+        assert "total_sentence_nodes" in stats
+        assert "errors" in stats
+        assert "timing" in stats
 
         # Check that values make sense
-        self.assertEqual(stats["total_sentences"], len(self.test_sentences))
+        assert stats["total_sentences"] == len(self.test_sentences)
         self.assertGreaterEqual(stats["processed_sentences"], 0)
         self.assertLessEqual(stats["processed_sentences"], stats["total_sentences"])
         self.assertGreaterEqual(stats["selection_rate"], 0.0)
@@ -207,7 +207,7 @@ class TestClaimifyPipeline(unittest.TestCase):
         results = self.pipeline.process_sentences(verifiable_sentences)
 
         # Should have results for all sentences
-        self.assertEqual(len(results), 3)
+        assert len(results) == 3
 
         # Check for successful processing
         processed_results = [r for r in results if r.was_processed]
@@ -235,8 +235,8 @@ class TestClaimifyPipeline(unittest.TestCase):
         # Test context building with larger window
         context = pipeline._build_context_window(sentences[6], sentences, 6)
 
-        self.assertEqual(len(context.preceding_sentences), 5)
-        self.assertEqual(len(context.following_sentences), 3)
+        assert len(context.preceding_sentences) == 5
+        assert len(context.following_sentences) == 3
 
     def test_logging_configuration(self):
         """Test pipeline with different logging configurations."""
@@ -255,7 +255,7 @@ class TestClaimifyPipeline(unittest.TestCase):
         )
 
         results = pipeline.process_sentences([sentence])
-        self.assertEqual(len(results), 1)
+        assert len(results) == 1
 
     def test_model_injection(self):
         """Test pipeline with different LLM instances."""
@@ -280,9 +280,9 @@ class TestClaimifyPipeline(unittest.TestCase):
         )
 
         # Test that the agents have the correct LLMs
-        self.assertEqual(pipeline.selection_agent.llm, mock_selection_llm)
-        self.assertEqual(pipeline.disambiguation_agent.llm, mock_disambiguation_llm)
-        self.assertEqual(pipeline.decomposition_agent.llm, mock_decomposition_llm)
+        assert pipeline.selection_agent.llm == mock_selection_llm
+        assert pipeline.disambiguation_agent.llm == mock_disambiguation_llm
+        assert pipeline.decomposition_agent.llm == mock_decomposition_llm
 
         # Process a sentence (should work even if mocks don't return proper JSON)
         sentence = SentenceChunk(
@@ -293,10 +293,10 @@ class TestClaimifyPipeline(unittest.TestCase):
         )
 
         results = pipeline.process_sentences([sentence])
-        self.assertEqual(len(results), 1)
+        assert len(results) == 1
 
 
-class TestClaimifyPipelineIntegration(unittest.TestCase):
+class TestClaimifyPipelineIntegration:
     """Integration tests for the Claimify pipeline with realistic scenarios."""
 
     def test_example_from_documentation(self):
@@ -323,7 +323,7 @@ class TestClaimifyPipelineIntegration(unittest.TestCase):
         results = pipeline.process_sentences(sentences)
 
         # Should process both sentences
-        self.assertEqual(len(results), 2)
+        assert len(results) == 2
 
         # Both sentences should be selected (contain error information)
         selected_results = [r for r in results if r.was_processed]
@@ -370,7 +370,7 @@ class TestClaimifyPipelineIntegration(unittest.TestCase):
 
         results = pipeline.process_sentences(sentences)
 
-        self.assertEqual(len(results), 4)
+        assert len(results) == 4
 
         # Check selection results
         selected = [r for r in results if r.was_processed]
@@ -384,9 +384,5 @@ class TestClaimifyPipelineIntegration(unittest.TestCase):
         question_result = results[1]  # "What should we do about this?"
         short_result = results[2]  # "Hmm."
 
-        self.assertFalse(question_result.was_processed)
-        self.assertFalse(short_result.was_processed)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert not question_result.was_processed
+        assert not short_result.was_processed

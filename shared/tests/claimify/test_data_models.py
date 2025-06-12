@@ -4,8 +4,6 @@ Tests for Claimify pipeline data models.
 Tests the core data structures used throughout the Claimify pipeline.
 """
 
-import unittest
-
 # Import the data models
 import sys
 import os
@@ -25,7 +23,7 @@ from clarifai_shared.claimify.data_models import (
 )
 
 
-class TestSentenceChunk(unittest.TestCase):
+class TestSentenceChunk:
     """Test SentenceChunk data model."""
 
     def test_sentence_chunk_creation(self):
@@ -37,16 +35,16 @@ class TestSentenceChunk(unittest.TestCase):
             sentence_index=0,
         )
 
-        self.assertEqual(chunk.text, "This is a test sentence.")
-        self.assertEqual(chunk.source_id, "blk_001")
-        self.assertEqual(chunk.chunk_id, "chunk_001")
-        self.assertEqual(chunk.sentence_index, 0)
+        assert chunk.text == "This is a test sentence."
+        assert chunk.source_id == "blk_001"
+        assert chunk.chunk_id == "chunk_001"
+        assert chunk.sentence_index == 0
 
 
-class TestClaimifyContext(unittest.TestCase):
+class TestClaimifyContext:
     """Test ClaimifyContext data model."""
 
-    def setUp(self):
+    def setup_method(self):
         """Set up test data."""
         self.current_sentence = SentenceChunk(
             text="This is the current sentence.",
@@ -77,21 +75,21 @@ class TestClaimifyContext(unittest.TestCase):
             following_sentences=[self.following_sentence],
         )
 
-        self.assertEqual(context.current_sentence, self.current_sentence)
-        self.assertEqual(len(context.preceding_sentences), 1)
-        self.assertEqual(len(context.following_sentences), 1)
-        self.assertEqual(context.context_window_size, (1, 1))
+        assert context.current_sentence == self.current_sentence
+        assert len(context.preceding_sentences) == 1
+        assert len(context.following_sentences) == 1
+        assert context.context_window_size == (1, 1)
 
     def test_empty_context(self):
         """Test context with no surrounding sentences."""
         context = ClaimifyContext(current_sentence=self.current_sentence)
 
-        self.assertEqual(len(context.preceding_sentences), 0)
-        self.assertEqual(len(context.following_sentences), 0)
-        self.assertEqual(context.context_window_size, (0, 0))
+        assert len(context.preceding_sentences) == 0
+        assert len(context.following_sentences) == 0
+        assert context.context_window_size == (0, 0)
 
 
-class TestClaimCandidate(unittest.TestCase):
+class TestClaimCandidate:
     """Test ClaimCandidate data model."""
 
     def test_valid_claim_candidate(self):
@@ -104,8 +102,8 @@ class TestClaimCandidate(unittest.TestCase):
             confidence=0.9,
         )
 
-        self.assertTrue(candidate.passes_criteria)
-        self.assertEqual(candidate.node_type, NodeType.CLAIM)
+        assert candidate.passes_criteria
+        assert candidate.node_type == NodeType.CLAIM
 
     def test_invalid_claim_candidate(self):
         """Test a claim candidate that fails criteria."""
@@ -117,8 +115,8 @@ class TestClaimCandidate(unittest.TestCase):
             confidence=0.6,
         )
 
-        self.assertFalse(candidate.passes_criteria)
-        self.assertEqual(candidate.node_type, NodeType.SENTENCE)
+        assert not candidate.passes_criteria
+        assert candidate.node_type == NodeType.SENTENCE
 
     def test_partial_failure(self):
         """Test a candidate that fails some but not all criteria."""
@@ -130,11 +128,11 @@ class TestClaimCandidate(unittest.TestCase):
             confidence=0.7,
         )
 
-        self.assertFalse(candidate.passes_criteria)
-        self.assertEqual(candidate.node_type, NodeType.SENTENCE)
+        assert not candidate.passes_criteria
+        assert candidate.node_type == NodeType.SENTENCE
 
 
-class TestDecompositionResult(unittest.TestCase):
+class TestDecompositionResult:
     """Test DecompositionResult data model."""
 
     def test_decomposition_result_filtering(self):
@@ -158,16 +156,16 @@ class TestDecompositionResult(unittest.TestCase):
             claim_candidates=[valid_claim, invalid_claim],
         )
 
-        self.assertEqual(len(result.valid_claims), 1)
-        self.assertEqual(len(result.sentence_nodes), 1)
-        self.assertEqual(result.valid_claims[0].text, "The system reported an error.")
-        self.assertEqual(result.sentence_nodes[0].text, "It was problematic.")
+        assert len(result.valid_claims) == 1
+        assert len(result.sentence_nodes) == 1
+        assert result.valid_claims[0].text == "The system reported an error."
+        assert result.sentence_nodes[0].text == "It was problematic."
 
 
-class TestClaimifyResult(unittest.TestCase):
+class TestClaimifyResult:
     """Test ClaimifyResult data model."""
 
-    def setUp(self):
+    def setup_method(self):
         """Set up test data."""
         self.sentence = SentenceChunk(
             text="The user received an error from the system.",
@@ -192,9 +190,9 @@ class TestClaimifyResult(unittest.TestCase):
             selection_result=selection_result,
         )
 
-        self.assertFalse(result.was_processed)
-        self.assertEqual(len(result.final_claims), 0)
-        self.assertEqual(len(result.final_sentences), 0)
+        assert not result.was_processed
+        assert len(result.final_claims) == 0
+        assert len(result.final_sentences) == 0
 
     def test_processed_result_with_claims(self):
         """Test result for sentence that produced valid claims."""
@@ -230,27 +228,27 @@ class TestClaimifyResult(unittest.TestCase):
             decomposition_result=decomposition_result,
         )
 
-        self.assertTrue(result.was_processed)
-        self.assertEqual(len(result.final_claims), 1)
-        self.assertEqual(len(result.final_sentences), 0)
+        assert result.was_processed
+        assert len(result.final_claims) == 1
+        assert len(result.final_sentences) == 0
         self.assertEqual(
             result.final_claims[0].text, "The user received an error from the system."
         )
 
 
-class TestClaimifyConfig(unittest.TestCase):
+class TestClaimifyConfig:
     """Test ClaimifyConfig data model."""
 
     def test_default_config(self):
         """Test default configuration values."""
         config = ClaimifyConfig()
 
-        self.assertEqual(config.context_window_p, 3)
-        self.assertEqual(config.context_window_f, 1)
-        self.assertEqual(config.default_model, "gpt-3.5-turbo")
-        self.assertIsNone(config.selection_model)
-        self.assertEqual(config.max_retries, 3)
-        self.assertEqual(config.temperature, 0.1)
+        assert config.context_window_p == 3
+        assert config.context_window_f == 1
+        assert config.default_model == "gpt-3.5-turbo"
+        assert config.selection_model is None
+        assert config.max_retries == 3
+        assert config.temperature == 0.1
 
     def test_custom_config(self):
         """Test custom configuration values."""
@@ -263,12 +261,12 @@ class TestClaimifyConfig(unittest.TestCase):
             temperature=0.2,
         )
 
-        self.assertEqual(config.context_window_p, 5)
-        self.assertEqual(config.context_window_f, 2)
-        self.assertEqual(config.get_model_for_stage("selection"), "gpt-4")
-        self.assertEqual(config.get_model_for_stage("disambiguation"), "claude-3-opus")
-        self.assertEqual(config.get_model_for_stage("decomposition"), "gpt-4")
-        self.assertEqual(config.temperature, 0.2)
+        assert config.context_window_p == 5
+        assert config.context_window_f == 2
+        assert config.get_model_for_stage("selection") == "gpt-4"
+        assert config.get_model_for_stage("disambiguation") == "claude-3-opus"
+        assert config.get_model_for_stage("decomposition") == "gpt-4"
+        assert config.temperature == 0.2
 
     def test_model_fallback(self):
         """Test fallback to default model when stage model not configured."""
@@ -277,10 +275,6 @@ class TestClaimifyConfig(unittest.TestCase):
             selection_model="gpt-4",  # Only selection model configured
         )
 
-        self.assertEqual(config.get_model_for_stage("selection"), "gpt-4")
-        self.assertEqual(config.get_model_for_stage("disambiguation"), "custom-model")
-        self.assertEqual(config.get_model_for_stage("decomposition"), "custom-model")
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert config.get_model_for_stage("selection") == "gpt-4"
+        assert config.get_model_for_stage("disambiguation") == "custom-model"
+        assert config.get_model_for_stage("decomposition") == "custom-model"
