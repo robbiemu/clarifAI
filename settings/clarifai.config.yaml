@@ -97,8 +97,9 @@ window:
     p: 3  # Previous sentences
     f: 1  # Following sentences
 
-# Processing configuration for Claimify
+# Processing configuration
 processing:
+  # Claimify pipeline configuration
   claimify:
     max_retries: 3
     timeout_seconds: 30
@@ -116,6 +117,17 @@ processing:
       log_decisions: true
       log_transformations: true
       log_timing: true
+      
+  # Batch sizes for various operations
+  batch_sizes:
+    embedding: 50      # Documents to embed at once
+    chunking: 100      # Documents to chunk at once
+    
+  # Retry configuration following on-error-handling-and-resilience.md
+  retries:
+    max_attempts: 3
+    backoff_factor: 2
+    max_wait_time: 60
 
 # Concept detection configuration  
 concepts:
@@ -180,18 +192,7 @@ features:
   concept_linking: false
   tier2_generation: false
 
-# Processing configuration
-processing:
-  # Batch sizes for various operations
-  batch_sizes:
-    embedding: 50      # Documents to embed at once
-    chunking: 100      # Documents to chunk at once
-    
-  # Retry configuration following on-error-handling-and-resilience.md
-  retries:
-    max_attempts: 3
-    backoff_factor: 2
-    max_wait_time: 60
+
 
 # Development and testing
 development:
