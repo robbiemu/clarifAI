@@ -1,8 +1,8 @@
 """
 Configuration integration for Claimify pipeline.
 
-This module provides integration between the main ClarifAI configuration system
-and the Claimify pipeline configuration.
+This module extracts and applies configuration options for the Claimify pipeline
+from the main ClarifAI configuration file.
 """
 
 import logging

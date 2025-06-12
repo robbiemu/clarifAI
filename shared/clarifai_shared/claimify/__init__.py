@@ -27,15 +27,7 @@ from .config_integration import (
     load_claimify_config_from_file,
     get_model_config_for_stage,
 )
-
-# Only import integration if Neo4j is available
-try:
-    from .integration import ClaimifyGraphIntegration, create_graph_manager_from_config
-    NEO4J_INTEGRATION_AVAILABLE = True
-except ImportError:
-    NEO4J_INTEGRATION_AVAILABLE = False
-    ClaimifyGraphIntegration = None
-    create_graph_manager_from_config = None
+from .integration import ClaimifyGraphIntegration, create_graph_manager_from_config
 
 __all__ = [
     "SentenceChunk",
@@ -53,11 +45,6 @@ __all__ = [
     "load_claimify_config_from_yaml",
     "load_claimify_config_from_file",
     "get_model_config_for_stage",
+    "ClaimifyGraphIntegration",
+    "create_graph_manager_from_config",
 ]
-
-# Add integration classes if available
-if NEO4J_INTEGRATION_AVAILABLE:
-    __all__.extend([
-        "ClaimifyGraphIntegration",
-        "create_graph_manager_from_config",
-    ])

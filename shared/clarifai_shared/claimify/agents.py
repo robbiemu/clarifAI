@@ -111,11 +111,11 @@ class SelectionAgent(BaseClaimifyAgent):
         sentence = context.current_sentence
 
         try:
-            # If no LLM is provided, use simple heuristics
+            # LLM is required for selection processing
             if self.llm is None:
-                result = self._heuristic_selection(context)
-            else:
-                result = self._llm_selection(context)
+                raise ValueError("LLM is required for Selection agent processing")
+                
+            result = self._llm_selection(context)
 
             processing_time = time.time() - start_time
             result.processing_time = processing_time
@@ -145,104 +145,6 @@ class SelectionAgent(BaseClaimifyAgent):
                 reasoning=f"Error during processing: {e}",
                 processing_time=processing_time,
             )
-
-    def _heuristic_selection(self, context: ClaimifyContext) -> SelectionResult:
-        """Simple heuristic-based selection when no LLM is available."""
-        sentence = context.current_sentence
-        text = sentence.text.strip()
-
-        # Basic heuristics for selecting potentially verifiable content
-        verifiable_indicators = [
-            # Technical/error content
-            "error",
-            "exception",
-            "bug",
-            "issue",
-            "problem",
-            "erro",
-            # Portuguese error indicators
-            "argumento",
-            "tipo",
-            "não pode",
-            "atribuído",
-            "função",
-            # Factual statements
-            "is",
-            "are",
-            "was",
-            "were",
-            "has",
-            "have",
-            "had",
-            # Actions and outcomes
-            "caused",
-            "resulted",
-            "occurred",
-            "happened",
-            "found",
-            "reported",
-            # Measurements and quantities
-            "percent",
-            "%",
-            "number",
-            "count",
-            "amount",
-            "size",
-            # Comparisons
-            "better",
-            "worse",
-            "more",
-            "less",
-            "faster",
-            "slower",
-            # Technical content
-            "slice",
-            "none",
-            "int",
-            "__setitem__",
-            "pylance",
-        ]
-
-        # Skip very short or empty sentences
-        if len(text) < 10:
-            return SelectionResult(
-                sentence_chunk=sentence,
-                is_selected=False,
-                confidence=0.9,
-                reasoning="Sentence too short to contain verifiable information",
-            )
-
-        # Skip questions (usually not verifiable claims)
-        if text.endswith("?"):
-            return SelectionResult(
-                sentence_chunk=sentence,
-                is_selected=False,
-                confidence=0.8,
-                reasoning="Questions are not verifiable claims",
-            )
-
-        # Check for verifiable indicators
-        text_lower = text.lower()
-        indicator_count = sum(
-            1 for indicator in verifiable_indicators if indicator in text_lower
-        )
-
-        # Select if we find verifiable content indicators
-        is_selected = indicator_count > 0
-        confidence = min(0.6 + (indicator_count * 0.1), 0.9)
-
-        reasoning = (
-            f"Found {indicator_count} verifiable indicators"
-            if is_selected
-            else "No verifiable indicators found"
-        )
-
-        return SelectionResult(
-            sentence_chunk=sentence,
-            is_selected=is_selected,
-            confidence=confidence,
-            reasoning=reasoning,
-        )
 
     def _llm_selection(self, context: ClaimifyContext) -> SelectionResult:
         """LLM-based selection for more sophisticated analysis."""
@@ -318,10 +220,11 @@ class DisambiguationAgent(BaseClaimifyAgent):
         start_time = time.time()
 
         try:
+            # LLM is required for disambiguation processing
             if self.llm is None:
-                result = self._heuristic_disambiguation(sentence, context)
-            else:
-                result = self._llm_disambiguation(sentence, context)
+                raise ValueError("LLM is required for Disambiguation agent processing")
+                
+            result = self._llm_disambiguation(sentence, context)
 
             processing_time = time.time() - start_time
             result.processing_time = processing_time
@@ -353,65 +256,18 @@ class DisambiguationAgent(BaseClaimifyAgent):
                 processing_time=processing_time,
             )
 
-    def _heuristic_disambiguation(
-        self, sentence: SentenceChunk, context: ClaimifyContext
-    ) -> DisambiguationResult:
-        """Simple heuristic-based disambiguation."""
-        original_text = sentence.text
-        disambiguated = original_text
-        changes = []
-
-        # Simple pronoun resolution heuristics
-        pronouns_to_replace = {
-            " it ": " the system ",
-            " It ": " The system ",
-            "It ": "The system ",  # Handle sentence start
-            " this ": " this issue ",
-            " This ": " This issue ",
-            " that ": " that problem ",
-            " That ": " That problem ",
-        }
-
-        for pronoun, replacement in pronouns_to_replace.items():
-            if pronoun in disambiguated:
-                disambiguated = disambiguated.replace(pronoun, replacement)
-                changes.append(
-                    f"Replaced '{pronoun.strip()}' with '{replacement.strip()}'"
-                )
-
-        # Add subject inference for sentences starting with verbs
-        verb_starters = [
-            "reported",
-            "shows",
-            "indicates",
-            "caused",
-            "resulted",
-            "occurred",
-        ]
-        text_lower = disambiguated.lower()
-
-        for verb in verb_starters:
-            if text_lower.startswith(verb):
-                disambiguated = f"[The system] {disambiguated}"
-                changes.append(
-                    "Added inferred subject '[The system]' to verb-starting sentence"
-                )
-                break
-
-        return DisambiguationResult(
-            original_sentence=sentence,
-            disambiguated_text=disambiguated,
-            changes_made=changes,
-            confidence=0.7 if changes else 1.0,
-        )
-
     def _llm_disambiguation(
         self, sentence: SentenceChunk, context: ClaimifyContext
     ) -> DisambiguationResult:
         """LLM-based disambiguation for more sophisticated rewriting."""
-        # Placeholder for LLM implementation
-        # Fall back to heuristics for now
-        return self._heuristic_disambiguation(sentence, context)
+        # TODO: Implement LLM-based disambiguation using prompt
+        # For now, return original text as placeholder
+        return DisambiguationResult(
+            original_sentence=sentence,
+            disambiguated_text=sentence.text,
+            changes_made=[],
+            confidence=1.0,
+        )
 
 
 class DecompositionAgent(BaseClaimifyAgent):
@@ -437,10 +293,11 @@ class DecompositionAgent(BaseClaimifyAgent):
         start_time = time.time()
 
         try:
+            # LLM is required for decomposition processing
             if self.llm is None:
-                result = self._heuristic_decomposition(disambiguated_text)
-            else:
-                result = self._llm_decomposition(disambiguated_text)
+                raise ValueError("LLM is required for Decomposition agent processing")
+                
+            result = self._llm_decomposition(disambiguated_text)
 
             processing_time = time.time() - start_time
             result.processing_time = processing_time
@@ -479,138 +336,21 @@ class DecompositionAgent(BaseClaimifyAgent):
                 processing_time=processing_time,
             )
 
-    def _heuristic_decomposition(self, text: str) -> DecompositionResult:
-        """Simple heuristic-based decomposition."""
-        candidates = []
-
-        # For simple cases, treat the whole sentence as one candidate
-        # and apply basic criteria checks
-        candidate = ClaimCandidate(
-            text=text.strip(),
-            is_atomic=self._check_atomicity(text),
-            is_self_contained=self._check_self_containment(text),
-            is_verifiable=self._check_verifiability(text),
-            confidence=0.7,
-        )
-
-        # Add reasoning based on the checks
-        issues = []
-        if not candidate.is_atomic:
-            issues.append("contains compound statements")
-        if not candidate.is_self_contained:
-            issues.append("contains ambiguous references")
-        if not candidate.is_verifiable:
-            issues.append("not verifiable")
-
-        candidate.reasoning = (
-            "Passes all criteria"
-            if candidate.passes_criteria
-            else f"Issues: {', '.join(issues)}"
-        )
-        candidates.append(candidate)
-
-        # Try to split compound sentences
-        if " and " in text or " but " in text or " or " in text:
-            # Simple splitting on conjunctions
-            parts = []
-            for separator in [" and ", " but ", " or "]:
-                if separator in text:
-                    parts = [
-                        part.strip() for part in text.split(separator) if part.strip()
-                    ]
-                    break
-
-            if len(parts) > 1:
-                candidates = []  # Replace single candidate with split ones
-                for part in parts:
-                    candidate = ClaimCandidate(
-                        text=part,
-                        is_atomic=True,  # Split parts are more likely atomic
-                        is_self_contained=self._check_self_containment(part),
-                        is_verifiable=self._check_verifiability(part),
-                        confidence=0.8,
-                    )
-                    candidate.reasoning = "Split from compound sentence"
-                    candidates.append(candidate)
-
-        return DecompositionResult(original_text=text, claim_candidates=candidates)
-
-    def _check_atomicity(self, text: str) -> bool:
-        """Check if the text represents an atomic claim."""
-        # Simple heuristics for atomicity
-        conjunctions = [" and ", " but ", " or ", " while ", " because ", " since "]
-        return not any(conj in text.lower() for conj in conjunctions)
-
-    def _check_self_containment(self, text: str) -> bool:
-        """Check if the text is self-contained (no ambiguous references)."""
-        # Check for ambiguous pronouns and references
-        ambiguous_refs = [
-            " it ",
-            " this ",
-            " that ",
-            " they ",
-            " these ",
-            " those ",
-            " the error",
-            " the issue",
-        ]
-        text_lower = text.lower()
-
-        # Also check for sentence-starting ambiguous pronouns
-        if (
-            text_lower.startswith("it ")
-            or text_lower.startswith("this ")
-            or text_lower.startswith("that ")
-        ):
-            return False
-
-        # Allow some specific, clear references
-        clear_refs = ["the system", "the user", "the application", "the code"]
-
-        for ref in ambiguous_refs:
-            if ref in text_lower:
-                # Check if it's clarified by context
-                if not any(clear_ref in text_lower for clear_ref in clear_refs):
-                    return False
-
-        return True
-
-    def _check_verifiability(self, text: str) -> bool:
-        """Check if the text contains verifiable information."""
-        # Check for factual, verifiable content
-        verifiable_patterns = [
-            # Technical facts
-            "error",
-            "exception",
-            "bug",
-            "issue",
-            # States and properties
-            "is",
-            "are",
-            "was",
-            "were",
-            "has",
-            "have",
-            "had",
-            # Events and actions
-            "occurred",
-            "happened",
-            "caused",
-            "resulted",
-            "reported",
-            # Measurements
-            "percent",
-            "%",
-            "number",
-            "size",
-            "count",
-        ]
-
-        text_lower = text.lower()
-        return any(pattern in text_lower for pattern in verifiable_patterns)
-
     def _llm_decomposition(self, text: str) -> DecompositionResult:
         """LLM-based decomposition for more sophisticated analysis."""
-        # Placeholder for LLM implementation
-        # Fall back to heuristics for now
-        return self._heuristic_decomposition(text)
+        # TODO: Implement LLM-based decomposition using prompt
+        # For now, return simple single-claim candidate as placeholder
+        candidate = ClaimCandidate(
+            text=text,
+            is_atomic=True,
+            is_self_contained=True,
+            is_verifiable=True,
+            confidence=0.8,
+            reasoning="Placeholder LLM decomposition - single claim"
+        )
+        
+        return DecompositionResult(
+            original_text=text,
+            claim_candidates=[candidate]
+        )
+

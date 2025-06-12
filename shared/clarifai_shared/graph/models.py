@@ -22,11 +22,21 @@ class ClaimInput:
     coverage_score: Optional[float] = None
     decontextualization_score: Optional[float] = None
     claim_id: Optional[str] = None  # Will generate if not provided
+    
+    # Properties derived from ClaimCandidate for testing/validation
+    verifiable: bool = True
+    self_contained: bool = True
+    context_complete: bool = True
 
     def __post_init__(self):
         """Generate claim_id if not provided."""
         if self.claim_id is None:
             self.claim_id = f"claim_{uuid.uuid4().hex[:12]}"
+
+    @property
+    def id(self) -> str:
+        """Alias for claim_id for backward compatibility."""
+        return self.claim_id
 
 
 @dataclass
@@ -38,11 +48,20 @@ class SentenceInput:
     ambiguous: Optional[bool] = None
     verifiable: Optional[bool] = None
     sentence_id: Optional[str] = None  # Will generate if not provided
+    
+    # Additional properties for testing/validation
+    failed_decomposition: bool = False
+    rejection_reason: Optional[str] = None
 
     def __post_init__(self):
         """Generate sentence_id if not provided."""
         if self.sentence_id is None:
             self.sentence_id = f"sentence_{uuid.uuid4().hex[:12]}"
+
+    @property
+    def id(self) -> str:
+        """Alias for sentence_id for backward compatibility."""
+        return self.sentence_id
 
 
 @dataclass

@@ -2,8 +2,7 @@
 Complete integration example for Claimify pipeline with Neo4j persistence.
 
 This example demonstrates the end-to-end workflow from sentence processing
-through the Claimify pipeline to Neo4j graph persistence, as required for
-Sprint 3 functionality.
+through the Claimify pipeline to Neo4j graph persistence.
 """
 
 import sys
