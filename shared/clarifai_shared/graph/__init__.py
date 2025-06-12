@@ -1,16 +1,17 @@
 """
-Graph management components for ClarifAI.
+Graph management module for ClarifAI Neo4j integration.
 
-This module provides Neo4j interaction utilities and data models
-for managing the knowledge graph.
+This module provides data models and utilities for managing the knowledge graph
+structure including Claims, Sentences, and their relationships.
 """
 
-from .data_models import ClaimInput, SentenceInput, GraphNodeInput
-from .manager import Neo4jGraphManager
+from .models import Claim, Sentence, ClaimInput, SentenceInput
+from .neo4j_manager import Neo4jGraphManager
 
 __all__ = [
+    "Claim",
+    "Sentence",
     "ClaimInput",
-    "SentenceInput", 
-    "GraphNodeInput",
+    "SentenceInput",
     "Neo4jGraphManager",
 ]

@@ -24,12 +24,12 @@ from sqlalchemy import (
     text,
 )
 
-from llama_index.core import VectorStoreIndex
+from llama_index.core import VectorStoreIndex, Settings
 from llama_index.core.schema import Document
 from llama_index.vector_stores.postgres import PGVectorStore
 
 from ..config import ClarifAIConfig
-from .models import EmbeddedChunk
+from .models import EmbeddedChunk, EmbeddingGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +83,19 @@ class ClarifAIVectorStore:
         # Initialize PGVectorStore
         self.vector_store = self._initialize_pgvector_store()
 
-        # Initialize LlamaIndex VectorStoreIndex
-        self.vector_index = VectorStoreIndex.from_vector_store(self.vector_store)
+        # Initialize embedding generator with configured model
+        self.embedding_generator = EmbeddingGenerator(config=config)
+
+        # Set LlamaIndex global embedding model IMMEDIATELY to prevent default OpenAI dependency
+        # This ensures VectorStoreIndex doesn't try to import llama-index-embeddings-openai
+        # We set this as early as possible to prevent any race conditions
+        Settings.embed_model = self.embedding_generator.embedding_model
+
+        # Initialize LlamaIndex VectorStoreIndex with configured embedding model
+        # Pass embed_model explicitly as additional safety to avoid any fallback to Settings.embed_model
+        self.vector_index = VectorStoreIndex.from_vector_store(
+            self.vector_store, embed_model=self.embedding_generator.embedding_model
+        )
 
         logger.info(
             f"Initialized ClarifAIVectorStore with collection: {config.embedding.collection_name}, "

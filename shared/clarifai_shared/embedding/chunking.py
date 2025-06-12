@@ -170,8 +170,8 @@ class UtteranceChunker:
         # Pattern to match clarifai:id comments
         id_pattern = re.compile(r"<!-- clarifai:id=([a-z0-9_]+) ver=\d+ -->")
 
-        # Pattern to match speaker: text format
-        speaker_pattern = re.compile(r"^([^:]+):\s*(.+)$")
+        # Pattern to match speaker: text format (but not HTML comments)
+        speaker_pattern = re.compile(r"^([^:<]+):\s*(.+)$")
 
         for line in lines:
             line = line.strip()
@@ -184,29 +184,30 @@ class UtteranceChunker:
             ):
                 continue
 
-            # Check for speaker: text pattern
-            speaker_match = speaker_pattern.match(line)
-            if speaker_match:
-                # Save previous utterance if exists
-                if current_utterance and current_text:
-                    blocks.append(
-                        {
-                            "clarifai_id": current_utterance,
-                            "speaker": current_speaker,
-                            "text": current_text.strip(),
-                        }
-                    )
-
-                # Start new utterance
-                current_speaker = speaker_match.group(1).strip()
-                current_text = speaker_match.group(2).strip()
-                continue
-
-            # Check for clarifai:id comment
+            # Check for clarifai:id comment FIRST (before speaker pattern)
             id_match = id_pattern.match(line)
             if id_match:
                 current_utterance = id_match.group(1)
                 continue
+
+            # Check for speaker: text pattern (only if not an HTML comment)
+            if not line.startswith("<!--"):
+                speaker_match = speaker_pattern.match(line)
+                if speaker_match:
+                    # Save previous utterance if exists
+                    if current_utterance and current_text:
+                        blocks.append(
+                            {
+                                "clarifai_id": current_utterance,
+                                "speaker": current_speaker,
+                                "text": current_text.strip(),
+                            }
+                        )
+
+                    # Start new utterance
+                    current_speaker = speaker_match.group(1).strip()
+                    current_text = speaker_match.group(2).strip()
+                    continue
 
             # Check for anchor (^blk_xyz) - marks end of utterance
             if line.startswith("^") and current_utterance:
@@ -227,7 +228,7 @@ class UtteranceChunker:
                 continue
 
             # Continuation of current utterance text
-            if current_utterance and line:
+            if current_speaker and line:
                 current_text += " " + line
 
         # Handle last utterance if no final anchor

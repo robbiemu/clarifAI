@@ -27,8 +27,40 @@ from clarifai_shared.claimify.integration import (
     ClaimifyGraphIntegration,
     create_graph_manager_from_config
 )
-from clarifai_shared.graph.manager import Neo4jGraphManager
-from clarifai_shared.graph.data_models import ClaimInput, SentenceInput
+try:
+    from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
+    from clarifai_shared.graph.models import ClaimInput, SentenceInput
+    NEO4J_AVAILABLE = True
+except ImportError:
+    # Handle case where neo4j is not installed
+    NEO4J_AVAILABLE = False
+    Neo4jGraphManager = None
+    ClaimInput = None
+    SentenceInput = None
+
+
+class MockNeo4jGraphManager:
+    """Mock implementation of Neo4jGraphManager for testing."""
+    
+    def __init__(self):
+        self.created_claims = []
+        self.created_sentences = []
+    
+    def create_claims(self, claim_inputs):
+        """Mock create_claims method."""
+        # Simulate successful creation by storing inputs
+        self.created_claims.extend(claim_inputs)
+        return [f"claim_{i}" for i in range(len(claim_inputs))]
+    
+    def create_sentences(self, sentence_inputs):
+        """Mock create_sentences method."""
+        # Simulate successful creation by storing inputs
+        self.created_sentences.extend(sentence_inputs)
+        return [f"sentence_{i}" for i in range(len(sentence_inputs))]
+    
+    def setup_schema(self):
+        """Mock setup_schema method."""
+        pass
 
 
 class TestClaimifyGraphIntegration(unittest.TestCase):
@@ -36,8 +68,15 @@ class TestClaimifyGraphIntegration(unittest.TestCase):
     
     def setUp(self):
         """Set up test data and integration instance."""
-        # Create a mock graph manager
-        self.graph_manager = Neo4jGraphManager()
+        # Mock the neo4j dependency if not available
+        try:
+            from ..graph.neo4j_manager import Neo4jGraphManager
+            # In tests, we'll use a mocked manager
+            self.graph_manager = MockNeo4jGraphManager()
+        except ImportError:
+            # If neo4j is not available, use the mock
+            self.graph_manager = MockNeo4jGraphManager()
+        
         self.integration = ClaimifyGraphIntegration(self.graph_manager)
         
         # Create test sentence chunks

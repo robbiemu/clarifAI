@@ -1,1 +1,1 @@
-"""Tests for graph data models."""
+# Graph tests package

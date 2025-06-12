@@ -20,6 +20,7 @@ Usage:
 
 from .chunking import UtteranceChunker, ChunkMetadata
 from .models import EmbeddingGenerator, EmbeddedChunk
+
 from .storage import ClarifAIVectorStore, VectorStoreMetrics
 
 __all__ = [
