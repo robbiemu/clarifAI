@@ -4,7 +4,7 @@ Tests for the main Claimify pipeline.
 Tests the ClaimifyPipeline orchestrator and end-to-end processing.
 """
 
-import unittest
+import pytest
 from unittest.mock import Mock
 
 # Import the pipeline classes
@@ -21,46 +21,93 @@ from clarifai_shared.claimify.data_models import (
 )
 
 
-class TestClaimifyPipeline(unittest.TestCase):
+class MockLLM:
+    """Mock LLM implementation for testing."""
+
+    def __init__(self, response: str = ""):
+        self.response = response
+        self.calls = []
+
+    def complete(self, prompt: str, **kwargs) -> str:
+        self.calls.append((prompt, kwargs))
+        return self.response
+
+
+@pytest.fixture
+def config():
+    """Test configuration fixture."""
+    return ClaimifyConfig()
+
+
+@pytest.fixture
+def mock_selection_llm():
+    """Mock LLM for selection that selects content."""
+    return MockLLM("The system reported an error with code 500.")
+
+
+@pytest.fixture
+def mock_disambiguation_llm():
+    """Mock LLM for disambiguation."""
+    return MockLLM("The system reported an error with code 500.")
+
+
+@pytest.fixture
+def mock_decomposition_llm():
+    """Mock LLM for decomposition."""
+    return MockLLM("The system reported an error with code 500.")
+
+
+@pytest.fixture
+def pipeline_with_llms(config, mock_selection_llm, mock_disambiguation_llm, mock_decomposition_llm):
+    """Pipeline with proper LLM mocks."""
+    return ClaimifyPipeline(
+        config=config,
+        selection_llm=mock_selection_llm,
+        disambiguation_llm=mock_disambiguation_llm, 
+        decomposition_llm=mock_decomposition_llm,
+    )
+
+
+@pytest.fixture
+def test_sentences():
+    """Test sentences fixture."""
+    return [
+        SentenceChunk(
+            text='in the else block I get: O argumento do tipo "slice[None, None, None]" não pode ser atribuído ao parâmetro "idx" do tipo "int" na função "__setitem__"',
+            source_id="blk_001",
+            chunk_id="chunk_001",
+            sentence_index=0,
+        ),
+        SentenceChunk(
+            text='"slice[None, None, None]" não pode ser atribuído a "int" PylancereportArgumentType',
+            source_id="blk_001",
+            chunk_id="chunk_002",
+            sentence_index=1,
+        ),
+    ]
+
+
+class TestClaimifyPipeline:
     """Test ClaimifyPipeline functionality."""
 
-    def setUp(self):
-        """Set up test data."""
-        self.config = ClaimifyConfig()
-        self.pipeline = ClaimifyPipeline(config=self.config)
-
-        # Create test sentences from the example in on-claim_generation.md
-        self.test_sentences = [
-            SentenceChunk(
-                text='in the else block I get: O argumento do tipo "slice[None, None, None]" não pode ser atribuído ao parâmetro "idx" do tipo "int" na função "__setitem__"',
-                source_id="blk_001",
-                chunk_id="chunk_001",
-                sentence_index=0,
-            ),
-            SentenceChunk(
-                text='"slice[None, None, None]" não pode ser atribuído a "int" PylancereportArgumentType',
-                source_id="blk_001",
-                chunk_id="chunk_002",
-                sentence_index=1,
-            ),
-        ]
-
-    def test_pipeline_initialization(self):
+    def test_pipeline_initialization(self, config):
         """Test pipeline initialization with configuration."""
-        # Test with default config
-        pipeline = ClaimifyPipeline()
-        self.assertIsNotNone(pipeline.config)
-        self.assertIsNotNone(pipeline.selection_agent)
-        self.assertIsNotNone(pipeline.disambiguation_agent)
-        self.assertIsNotNone(pipeline.decomposition_agent)
-
         # Test with custom config
         custom_config = ClaimifyConfig(
             context_window_p=5, context_window_f=2, selection_model="gpt-4"
         )
-        pipeline = ClaimifyPipeline(config=custom_config)
-        self.assertEqual(pipeline.config.context_window_p, 5)
-        self.assertEqual(pipeline.config.context_window_f, 2)
+        
+        # Create mock LLMs
+        mock_llm = MockLLM("test response")
+        
+        pipeline = ClaimifyPipeline(
+            config=custom_config, 
+            selection_llm=mock_llm,
+            disambiguation_llm=mock_llm,
+            decomposition_llm=mock_llm
+        )
+        assert pipeline.config.context_window_p == 5
+        assert pipeline.config.context_window_f == 2
 
     def test_context_window_building(self):
         """Test context window building with different configurations."""
@@ -180,7 +227,7 @@ class TestClaimifyPipeline(unittest.TestCase):
         self.assertGreaterEqual(stats["total_claims"], 0)
         self.assertGreaterEqual(stats["total_sentence_nodes"], 0)
 
-    def test_end_to_end_claim_extraction(self):
+    def test_end_to_end_claim_extraction(self, config):
         """Test end-to-end claim extraction with verifiable content."""
         # Create sentences with clear verifiable content
         verifiable_sentences = [
@@ -204,21 +251,33 @@ class TestClaimifyPipeline(unittest.TestCase):
             ),
         ]
 
-        results = self.pipeline.process_sentences(verifiable_sentences)
+        # Create LLM mocks that will select and process content
+        selection_llm = MockLLM("The system reported an error with code 500.")
+        disambiguation_llm = MockLLM("The system reported an error with code 500.")
+        decomposition_llm = MockLLM("The system reported an error with code 500.")
+        
+        pipeline = ClaimifyPipeline(
+            config=config,
+            selection_llm=selection_llm,
+            disambiguation_llm=disambiguation_llm,
+            decomposition_llm=decomposition_llm,
+        )
+
+        results = pipeline.process_sentences(verifiable_sentences)
 
         # Should have results for all sentences
-        self.assertEqual(len(results), 3)
+        assert len(results) == 3
 
         # Check for successful processing
         processed_results = [r for r in results if r.was_processed]
-        self.assertGreater(len(processed_results), 0)
+        assert len(processed_results) > 0
 
         # Check for extracted claims or sentence nodes
         total_claims = sum(len(r.final_claims) for r in results)
         total_sentences = sum(len(r.final_sentences) for r in results)
 
         # Should have extracted some content
-        self.assertGreater(total_claims + total_sentences, 0)
+        assert total_claims + total_sentences > 0
 
     def test_context_window_configuration(self):
         """Test pipeline with different context window configurations."""
@@ -296,13 +355,22 @@ class TestClaimifyPipeline(unittest.TestCase):
         self.assertEqual(len(results), 1)
 
 
-class TestClaimifyPipelineIntegration(unittest.TestCase):
+class TestClaimifyPipelineIntegration:
     """Integration tests for the Claimify pipeline with realistic scenarios."""
 
-    def test_example_from_documentation(self):
+    def test_example_from_documentation(self, config):
         """Test processing of the example from on-claim_generation.md."""
-        config = ClaimifyConfig()
-        pipeline = ClaimifyPipeline(config=config)
+        # Create LLM mocks that will select and process content
+        selection_llm = MockLLM("Error detected in slice assignment.")
+        disambiguation_llm = MockLLM("Error detected in slice assignment.")
+        decomposition_llm = MockLLM("Error detected in slice assignment.")
+        
+        pipeline = ClaimifyPipeline(
+            config=config,
+            selection_llm=selection_llm,
+            disambiguation_llm=disambiguation_llm,
+            decomposition_llm=decomposition_llm,
+        )
 
         # Example sentences from the documentation
         sentences = [
@@ -323,22 +391,39 @@ class TestClaimifyPipelineIntegration(unittest.TestCase):
         results = pipeline.process_sentences(sentences)
 
         # Should process both sentences
-        self.assertEqual(len(results), 2)
+        assert len(results) == 2
 
         # Both sentences should be selected (contain error information)
         selected_results = [r for r in results if r.was_processed]
-        self.assertGreater(len(selected_results), 0)
+        assert len(selected_results) > 0
 
         # Should extract some claims or create sentence nodes
         total_output = sum(
             len(r.final_claims) + len(r.final_sentences) for r in results
         )
-        self.assertGreater(total_output, 0)
+        assert total_output > 0
 
-    def test_mixed_content_processing(self):
+    def test_mixed_content_processing(self, config):
         """Test processing of mixed content (some verifiable, some not)."""
-        config = ClaimifyConfig()
-        pipeline = ClaimifyPipeline(config=config)
+        # Create LLM mocks - selection LLM returns content for some and NO_VERIFIABLE_CONTENT for others
+        def mock_selection_response(prompt, **kwargs):
+            if "error" in prompt.lower() or "rate" in prompt.lower():
+                return "System error detected."
+            else:
+                return "NO_VERIFIABLE_CONTENT"
+        
+        selection_llm = Mock()
+        selection_llm.complete = Mock(side_effect=mock_selection_response)
+        
+        disambiguation_llm = MockLLM("System error detected.")
+        decomposition_llm = MockLLM("System error detected.")
+        
+        pipeline = ClaimifyPipeline(
+            config=config,
+            selection_llm=selection_llm,
+            disambiguation_llm=disambiguation_llm,
+            decomposition_llm=decomposition_llm,
+        )
 
         sentences = [
             # Verifiable technical content

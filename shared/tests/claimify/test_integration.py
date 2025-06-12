@@ -252,7 +252,6 @@ class TestClaimifyGraphIntegration:
                 is_atomic=True,
                 is_self_contained=False,  # Ambiguous
                 is_verifiable=True,
-                rejection_reason="Ambiguous pronoun",
             )
 
             sentence_input = integration._create_sentence_input(
