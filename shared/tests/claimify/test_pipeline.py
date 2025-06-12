@@ -410,8 +410,23 @@ class TestClaimifyPipelineIntegration:
 
         # Create LLM mocks - selection LLM returns content for some and NO_VERIFIABLE_CONTENT for others
         def mock_selection_response(prompt, **kwargs):
-            if "error" in prompt.lower() or "rate" in prompt.lower():
-                return "System error detected."
+            # Extract the actual target sentence from the prompt
+            if '**Source Sentence:** "' in prompt:
+                start_idx = prompt.find('**Source Sentence:** "') + len(
+                    '**Source Sentence:** "'
+                )
+                end_idx = prompt.find('"', start_idx)
+                target_sentence = prompt[start_idx:end_idx]
+
+                # Check if the target sentence itself contains verifiable content
+                if (
+                    "exception" in target_sentence.lower()
+                    or "error rate" in target_sentence.lower()
+                    or "deployment" in target_sentence.lower()
+                ):
+                    return "System error detected."
+                else:
+                    return "NO_VERIFIABLE_CONTENT"
             else:
                 return "NO_VERIFIABLE_CONTENT"
 
