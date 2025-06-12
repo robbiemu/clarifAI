@@ -45,7 +45,7 @@ def config():
     return ClaimifyConfig()
 
 
-@pytest.fixture  
+@pytest.fixture
 def test_sentence():
     """Test sentence fixture."""
     return SentenceChunk(
@@ -69,7 +69,7 @@ class TestSelectionAgent:
         """Test selection of sentence with verifiable content."""
         mock_llm = MockLLM("The system reported an error when processing the request.")
         agent = SelectionAgent(llm=mock_llm, config=config)
-        
+
         result = agent.process(test_context)
 
         assert result.is_selected
@@ -81,7 +81,7 @@ class TestSelectionAgent:
         """Test rejection of non-verifiable content."""
         mock_llm = MockLLM("NO_VERIFIABLE_CONTENT")
         agent = SelectionAgent(llm=mock_llm, config=config)
-        
+
         question_sentence = SentenceChunk(
             text="What caused the error?",
             source_id="blk_001",
@@ -98,9 +98,9 @@ class TestSelectionAgent:
     def test_selection_without_llm_fails(self, config, test_context):
         """Test that selection fails without LLM."""
         agent = SelectionAgent(config=config)  # No LLM provided
-        
+
         result = agent.process(test_context)
-        
+
         assert not result.is_selected
         assert "LLM is required for Selection agent processing" in result.reasoning
 
@@ -108,7 +108,7 @@ class TestSelectionAgent:
         """Test that context window is properly built."""
         mock_llm = MockLLM("Test response")
         agent = SelectionAgent(llm=mock_llm, config=config)
-        
+
         preceding = SentenceChunk(
             text="The user submitted a form.",
             source_id="blk_001",
@@ -132,7 +132,10 @@ class TestSelectionAgent:
         context_text = agent._build_context_text(context)
 
         assert "[-1] The user submitted a form." in context_text
-        assert "[0] The system reported an error when processing the request. ← TARGET" in context_text
+        assert (
+            "[0] The system reported an error when processing the request. ← TARGET"
+            in context_text
+        )
         assert "[1] The error was logged to the database." in context_text
 
 
@@ -143,7 +146,7 @@ class TestDisambiguationAgent:
         """Test successful disambiguation with LLM."""
         mock_llm = MockLLM("The system reported an error when the system failed.")
         agent = DisambiguationAgent(llm=mock_llm, config=config)
-        
+
         test_sentence = SentenceChunk(
             text="It reported an error when this failed.",
             source_id="blk_001",
@@ -164,7 +167,7 @@ class TestDisambiguationAgent:
         original_text = "The system reported an error when the request failed."
         mock_llm = MockLLM(original_text)
         agent = DisambiguationAgent(llm=mock_llm, config=config)
-        
+
         clear_sentence = SentenceChunk(
             text=original_text,
             source_id="blk_001",
@@ -182,7 +185,7 @@ class TestDisambiguationAgent:
         """Test LLM cannot resolve ambiguities."""
         mock_llm = MockLLM("CANNOT_DISAMBIGUATE")
         agent = DisambiguationAgent(llm=mock_llm, config=config)
-        
+
         test_sentence = SentenceChunk(
             text="It reported an error when this failed.",
             source_id="blk_001",
@@ -200,7 +203,7 @@ class TestDisambiguationAgent:
     def test_disambiguation_without_llm_fails(self, config):
         """Test that disambiguation fails without LLM."""
         agent = DisambiguationAgent(config=config)  # No LLM provided
-        
+
         test_sentence = SentenceChunk(
             text="It failed.",
             source_id="blk_001",
@@ -208,10 +211,13 @@ class TestDisambiguationAgent:
             sentence_index=1,
         )
         context = ClaimifyContext(current_sentence=test_sentence)
-        
+
         result = agent.process(test_sentence, context)
-        
-        assert "LLM is required for Disambiguation agent processing" in result.changes_made[0]
+
+        assert (
+            "LLM is required for Disambiguation agent processing"
+            in result.changes_made[0]
+        )
 
 
 class TestDecompositionAgent:
@@ -221,14 +227,14 @@ class TestDecompositionAgent:
         """Test processing of a simple atomic claim."""
         mock_llm = MockLLM("The system reported an error.")
         agent = DecompositionAgent(llm=mock_llm, config=config)
-        
+
         test_sentence = SentenceChunk(
             text="The system reported an error.",
             source_id="blk_001",
             chunk_id="chunk_001",
             sentence_index=1,
         )
-        
+
         text = "The system reported an error."
         result = agent.process(text, test_sentence)
 
@@ -242,20 +248,20 @@ class TestDecompositionAgent:
         """Test splitting of compound sentences."""
         mock_llm = MockLLM("The system reported an error.\nThe user was notified.")
         agent = DecompositionAgent(llm=mock_llm, config=config)
-        
+
         test_sentence = SentenceChunk(
             text="compound sentence",
-            source_id="blk_001", 
+            source_id="blk_001",
             chunk_id="chunk_001",
             sentence_index=1,
         )
-        
+
         text = "The system reported an error and the user was notified."
         result = agent.process(text, test_sentence)
 
         # Should split into multiple candidates
         assert len(result.claim_candidates) >= 1
-        
+
         # Check that we got some claims
         claim_texts = [claim.text for claim in result.claim_candidates]
         assert len(claim_texts) > 0
@@ -264,14 +270,14 @@ class TestDecompositionAgent:
         """Test when LLM finds no valid claims."""
         mock_llm = MockLLM("NO_VALID_CLAIMS")
         agent = DecompositionAgent(llm=mock_llm, config=config)
-        
+
         test_sentence = SentenceChunk(
             text="test",
             source_id="blk_001",
-            chunk_id="chunk_001", 
+            chunk_id="chunk_001",
             sentence_index=1,
         )
-        
+
         text = "It caused an error in the system."
         result = agent.process(text, test_sentence)
 
@@ -280,17 +286,18 @@ class TestDecompositionAgent:
     def test_decomposition_without_llm_fails(self, config):
         """Test that decomposition fails without LLM."""
         agent = DecompositionAgent(config=config)  # No LLM provided
-        
+
         test_sentence = SentenceChunk(
             text="test sentence",
             source_id="blk_001",
             chunk_id="chunk_001",
             sentence_index=1,
         )
-        
+
         result = agent.process("test text", test_sentence)
-        
+
         assert len(result.claim_candidates) == 0
+
 
 class TestAgentErrorHandling:
     """Test error handling in agents."""
@@ -302,7 +309,7 @@ class TestAgentErrorHandling:
         mock_llm.complete.side_effect = Exception("LLM error")
 
         agent = SelectionAgent(llm=mock_llm, config=config)
-        
+
         test_sentence = SentenceChunk(
             text="Test sentence.",
             source_id="blk_001",
@@ -325,10 +332,10 @@ class TestAgentErrorHandling:
         mock_llm.complete.side_effect = Exception("LLM error")
 
         agent = DisambiguationAgent(llm=mock_llm, config=config)
-        
+
         test_sentence = SentenceChunk(
             text="Test sentence.",
-            source_id="blk_001", 
+            source_id="blk_001",
             chunk_id="chunk_001",
             sentence_index=1,
         )
@@ -339,7 +346,9 @@ class TestAgentErrorHandling:
 
         assert result is not None
         assert result.original_sentence == test_sentence
-        assert result.disambiguated_text == test_sentence.text  # Returns original on error
+        assert (
+            result.disambiguated_text == test_sentence.text
+        )  # Returns original on error
 
     def test_decomposition_agent_error_handling(self, config):
         """Test DecompositionAgent error handling."""
@@ -347,11 +356,11 @@ class TestAgentErrorHandling:
         mock_llm.complete.side_effect = Exception("LLM error")
 
         agent = DecompositionAgent(llm=mock_llm, config=config)
-        
+
         test_sentence = SentenceChunk(
             text="Test sentence.",
             source_id="blk_001",
-            chunk_id="chunk_001", 
+            chunk_id="chunk_001",
             sentence_index=1,
         )
 

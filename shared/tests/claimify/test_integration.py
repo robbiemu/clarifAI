@@ -20,9 +20,7 @@ from clarifai_shared.claimify.data_models import (
 )
 from clarifai_shared.claimify.integration import (
     ClaimifyGraphIntegration,
-    create_graph_manager_from_config,
 )
-from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
 from clarifai_shared.graph.models import ClaimInput, SentenceInput
 
 

@@ -58,12 +58,14 @@ def mock_decomposition_llm():
 
 
 @pytest.fixture
-def pipeline_with_llms(config, mock_selection_llm, mock_disambiguation_llm, mock_decomposition_llm):
+def pipeline_with_llms(
+    config, mock_selection_llm, mock_disambiguation_llm, mock_decomposition_llm
+):
     """Pipeline with proper LLM mocks."""
     return ClaimifyPipeline(
         config=config,
         selection_llm=mock_selection_llm,
-        disambiguation_llm=mock_disambiguation_llm, 
+        disambiguation_llm=mock_disambiguation_llm,
         decomposition_llm=mock_decomposition_llm,
     )
 
@@ -96,15 +98,15 @@ class TestClaimifyPipeline:
         custom_config = ClaimifyConfig(
             context_window_p=5, context_window_f=2, selection_model="gpt-4"
         )
-        
+
         # Create mock LLMs
         mock_llm = MockLLM("test response")
-        
+
         pipeline = ClaimifyPipeline(
-            config=custom_config, 
+            config=custom_config,
             selection_llm=mock_llm,
             disambiguation_llm=mock_llm,
-            decomposition_llm=mock_llm
+            decomposition_llm=mock_llm,
         )
         assert pipeline.config.context_window_p == 5
         assert pipeline.config.context_window_f == 2
@@ -255,7 +257,7 @@ class TestClaimifyPipeline:
         selection_llm = MockLLM("The system reported an error with code 500.")
         disambiguation_llm = MockLLM("The system reported an error with code 500.")
         decomposition_llm = MockLLM("The system reported an error with code 500.")
-        
+
         pipeline = ClaimifyPipeline(
             config=config,
             selection_llm=selection_llm,
@@ -364,7 +366,7 @@ class TestClaimifyPipelineIntegration:
         selection_llm = MockLLM("Error detected in slice assignment.")
         disambiguation_llm = MockLLM("Error detected in slice assignment.")
         decomposition_llm = MockLLM("Error detected in slice assignment.")
-        
+
         pipeline = ClaimifyPipeline(
             config=config,
             selection_llm=selection_llm,
@@ -405,19 +407,20 @@ class TestClaimifyPipelineIntegration:
 
     def test_mixed_content_processing(self, config):
         """Test processing of mixed content (some verifiable, some not)."""
+
         # Create LLM mocks - selection LLM returns content for some and NO_VERIFIABLE_CONTENT for others
         def mock_selection_response(prompt, **kwargs):
             if "error" in prompt.lower() or "rate" in prompt.lower():
                 return "System error detected."
             else:
                 return "NO_VERIFIABLE_CONTENT"
-        
+
         selection_llm = Mock()
         selection_llm.complete = Mock(side_effect=mock_selection_response)
-        
+
         disambiguation_llm = MockLLM("System error detected.")
         decomposition_llm = MockLLM("System error detected.")
-        
+
         pipeline = ClaimifyPipeline(
             config=config,
             selection_llm=selection_llm,
@@ -471,7 +474,3 @@ class TestClaimifyPipelineIntegration:
 
         self.assertFalse(question_result.was_processed)
         self.assertFalse(short_result.was_processed)
-
-
-if __name__ == "__main__":
-    unittest.main()
