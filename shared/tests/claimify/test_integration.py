@@ -359,7 +359,9 @@ class TestCreateGraphManagerFromConfigStructure:
         integration = ClaimifyGraphIntegration(mock_graph_manager)
         assert integration.graph_manager == mock_graph_manager
 
-    def test_convert_successful_claim_result(self, integration, test_chunk, test_context):
+    def test_convert_successful_claim_result(
+        self, integration, test_chunk, test_context
+    ):
         """Test conversion of result with valid claims."""
         # Create a successful processing result with valid claims
         claim_candidate = ClaimCandidate(
@@ -386,9 +388,7 @@ class TestCreateGraphManagerFromConfigStructure:
         )
 
         # Convert to graph inputs
-        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
-            result
-        )
+        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
 
         # Should have one claim, no sentences
         assert len(claim_inputs) == 1
@@ -422,16 +422,12 @@ class TestCreateGraphManagerFromConfigStructure:
             original_chunk=test_chunk,
             context=test_context,
             selection_result=SelectionResult(test_chunk, is_selected=True),
-            disambiguation_result=DisambiguationResult(
-                test_chunk, "It failed again."
-            ),
+            disambiguation_result=DisambiguationResult(test_chunk, "It failed again."),
             decomposition_result=decomposition_result,
         )
 
         # Convert to graph inputs
-        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
-            result
-        )
+        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
 
         # Should have no claims, one sentence
         assert len(claim_inputs) == 0
@@ -446,7 +442,9 @@ class TestCreateGraphManagerFromConfigStructure:
         assert sentence.verifiable
         assert not sentence.failed_decomposition  # Was atomic
 
-    def test_convert_mixed_decomposition_result(self, integration, test_chunk, test_context):
+    def test_convert_mixed_decomposition_result(
+        self, integration, test_chunk, test_context
+    ):
         """Test conversion of result with both valid and invalid claims."""
         # Create mix of valid and invalid claim candidates
         valid_claim = ClaimCandidate(
@@ -479,9 +477,7 @@ class TestCreateGraphManagerFromConfigStructure:
         )
 
         # Convert to graph inputs
-        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
-            result
-        )
+        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
 
         # Should have one claim, one sentence
         assert len(claim_inputs) == 1
@@ -505,9 +501,7 @@ class TestCreateGraphManagerFromConfigStructure:
         )
 
         # Convert to graph inputs
-        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
-            result
-        )
+        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
 
         # Should have no claims, one sentence from original chunk
         assert len(claim_inputs) == 0
@@ -531,7 +525,9 @@ class TestCreateGraphManagerFromConfigStructure:
         assert sentences_created == 0
         assert len(errors) == 0
 
-    def test_persist_claimify_results_with_claims(self, integration, test_chunk, test_context):
+    def test_persist_claimify_results_with_claims(
+        self, integration, test_chunk, test_context
+    ):
         """Test persisting results with valid claims."""
         # Create test results with claims
         claim_candidate = ClaimCandidate(
@@ -562,7 +558,9 @@ class TestCreateGraphManagerFromConfigStructure:
         assert sentences_created == 0
         assert len(errors) == 0
 
-    def test_persist_claimify_results_with_sentences(self, integration, test_chunk, test_context):
+    def test_persist_claimify_results_with_sentences(
+        self, integration, test_chunk, test_context
+    ):
         """Test persisting results with sentence nodes."""
         # Create test results with rejected sentences
         result = ClaimifyResult(
@@ -590,9 +588,7 @@ class TestCreateGraphManagerFromConfigStructure:
             confidence=0.95,
         )
 
-        claim_input = integration._create_claim_input(
-            claim_candidate, test_chunk
-        )
+        claim_input = integration._create_claim_input(claim_candidate, test_chunk)
 
         assert isinstance(claim_input, ClaimInput)
         assert claim_input.text == "The error occurred at 10:30 AM."
