@@ -12,19 +12,19 @@ class TestGraphModuleInit:
     def test_graph_module_structure(self):
         """Test that graph module has expected structure."""
         # Test that we can import the submodules
-        assert hasattr(graph_module, 'models')
-        assert hasattr(graph_module, 'neo4j_manager')
+        assert hasattr(graph_module, "models")
+        assert hasattr(graph_module, "neo4j_manager")
 
     def test_models_module_attributes(self):
         """Test that models module has expected attributes."""
-        assert hasattr(models, 'ClaimInput')
-        assert hasattr(models, 'SentenceInput')
-        assert hasattr(models, 'Claim')
-        assert hasattr(models, 'Sentence')
+        assert hasattr(models, "ClaimInput")
+        assert hasattr(models, "SentenceInput")
+        assert hasattr(models, "Claim")
+        assert hasattr(models, "Sentence")
 
     def test_neo4j_manager_attributes(self):
         """Test that neo4j_manager module has expected attributes."""
-        assert hasattr(neo4j_manager, 'Neo4jGraphManager')
+        assert hasattr(neo4j_manager, "Neo4jGraphManager")
 
     def test_graph_module_functionality(self):
         """Test basic functionality of graph modules."""
@@ -56,7 +56,7 @@ class TestGraphModuleInit:
         assert os.path.exists(init_path)
 
         # Read the file to ensure it has content
-        with open(init_path, 'r') as f:
+        with open(init_path, "r") as f:
             content = f.read()
 
         # Should have some imports or content

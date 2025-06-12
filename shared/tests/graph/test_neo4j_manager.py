@@ -75,7 +75,10 @@ class TestNeo4jGraphManager:
                 mock_driver = Mock()
                 mock_driver_class.return_value = mock_driver
                 mock_session = Mock()
-                mock_driver.session.return_value.__enter__.return_value = mock_session
+                mock_context_manager = Mock()
+                mock_context_manager.__enter__ = Mock(return_value=mock_session)
+                mock_context_manager.__exit__ = Mock(return_value=None)
+                mock_driver.session.return_value = mock_context_manager
 
                 manager = Neo4jGraphManager(config=mock_config)
 
@@ -124,7 +127,10 @@ class TestNeo4jGraphManager:
                 mock_driver = Mock()
                 mock_driver_class.return_value = mock_driver
                 mock_session = Mock()
-                mock_driver.session.return_value.__enter__.return_value = mock_session
+                mock_context_manager = Mock()
+                mock_context_manager.__enter__ = Mock(return_value=mock_session)
+                mock_context_manager.__exit__ = Mock(return_value=None)
+                mock_driver.session.return_value = mock_context_manager
 
                 manager = Neo4jGraphManager(config=mock_config)
 
@@ -165,7 +171,10 @@ class TestNeo4jGraphManager:
                 mock_driver = Mock()
                 mock_driver_class.return_value = mock_driver
                 mock_session = Mock()
-                mock_driver.session.return_value.__enter__.return_value = mock_session
+                mock_context_manager = Mock()
+                mock_context_manager.__enter__ = Mock(return_value=mock_session)
+                mock_context_manager.__exit__ = Mock(return_value=None)
+                mock_driver.session.return_value = mock_context_manager
 
                 manager = Neo4jGraphManager(config=mock_config)
 
@@ -203,7 +212,10 @@ class TestNeo4jGraphManager:
                 mock_driver = Mock()
                 mock_driver_class.return_value = mock_driver
                 mock_session = Mock()
-                mock_driver.session.return_value.__enter__.return_value = mock_session
+                mock_context_manager = Mock()
+                mock_context_manager.__enter__ = Mock(return_value=mock_session)
+                mock_context_manager.__exit__ = Mock(return_value=None)
+                mock_driver.session.return_value = mock_context_manager
 
                 manager = Neo4jGraphManager(config=mock_config)
 

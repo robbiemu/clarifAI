@@ -13,10 +13,10 @@ class TestChunkingModule:
         """Test that chunking module has expected attributes."""
         from clarifai_shared.embedding import chunking
 
-        assert hasattr(chunking, 'UtteranceChunker')
-        assert hasattr(chunking, 'ChunkMetadata')
-        assert hasattr(chunking, 'TextNode')
-        assert hasattr(chunking, 'logger')
+        assert hasattr(chunking, "UtteranceChunker")
+        assert hasattr(chunking, "ChunkMetadata")
+        assert hasattr(chunking, "TextNode")
+        assert hasattr(chunking, "logger")
 
     def test_chunk_metadata_all_fields(self):
         """Test ChunkMetadata with all fields."""
@@ -29,7 +29,10 @@ class TestChunkingModule:
 
         assert metadata.clarifai_block_id == "blk_comprehensive_001"
         assert metadata.chunk_index == 5
-        assert metadata.original_text == "This is the complete original text for comprehensive testing purposes."
+        assert (
+            metadata.original_text
+            == "This is the complete original text for comprehensive testing purposes."
+        )
         assert metadata.text == "This is the chunked portion of the text."
 
     def test_utterance_chunker_config_loading(self):
@@ -112,7 +115,12 @@ Charlie: Here's some code: `print("hello world")` and a URL: https://example.com
         assert all(chunk.clarifai_block_id == "blk_medium" for chunk in chunks)
 
         # Very long text
-        long_text = " ".join([f"Very detailed sentence number {i} with lots of content to ensure we exceed chunk size limits." for i in range(100)])
+        long_text = " ".join(
+            [
+                f"Very detailed sentence number {i} with lots of content to ensure we exceed chunk size limits."
+                for i in range(100)
+            ]
+        )
         chunks = chunker.chunk_utterance_block(long_text, "blk_long")
         assert len(chunks) > 1
         assert all(chunk.clarifai_block_id == "blk_long" for chunk in chunks)
@@ -141,7 +149,9 @@ Charlie: Here's some code: `print("hello world")` and a URL: https://example.com
         # Test short prefix merge
         prefix_chunks = [
             TextNode(text="Note:", metadata={}),
-            TextNode(text="This is the important information that follows.", metadata={}),
+            TextNode(
+                text="This is the important information that follows.", metadata={}
+            ),
         ]
         processed = chunker._apply_postprocessing_rules(prefix_chunks)
         assert len(processed) == 1

@@ -215,36 +215,43 @@ class TestEmbeddingModuleImports:
     def test_chunk_metadata_creation(self):
         """Test ChunkMetadata dataclass creation."""
         metadata = ChunkMetadata(
-            chunk_id="chunk_123",
-            block_id="blk_456",
-            start_index=0,
-            end_index=100,
+            clarifai_block_id="blk_456",
+            chunk_index=0,
+            original_text="Original test text",
+            text="Test chunk text",
             token_count=25,
-            character_count=100,
+            offset_start=0,
+            offset_end=100,
         )
 
-        assert metadata.chunk_id == "chunk_123"
-        assert metadata.block_id == "blk_456"
-        assert metadata.start_index == 0
-        assert metadata.end_index == 100
+        assert metadata.clarifai_block_id == "blk_456"
+        assert metadata.chunk_index == 0
+        assert metadata.original_text == "Original test text"
+        assert metadata.text == "Test chunk text"
         assert metadata.token_count == 25
-        assert metadata.character_count == 100
+        assert metadata.offset_start == 0
+        assert metadata.offset_end == 100
 
     def test_embedded_chunk_creation(self):
         """Test EmbeddedChunk dataclass creation."""
         metadata = ChunkMetadata(
-            chunk_id="chunk_123",
-            block_id="blk_456",
-            start_index=0,
-            end_index=100,
+            clarifai_block_id="blk_456",
+            chunk_index=0,
+            original_text="Original test text",
+            text="Test chunk text",
             token_count=25,
-            character_count=100,
+            offset_start=0,
+            offset_end=100,
         )
 
         chunk = EmbeddedChunk(
-            text="Test chunk text", embedding=[0.1, 0.2, 0.3], metadata=metadata
+            chunk_metadata=metadata,
+            embedding=[0.1, 0.2, 0.3],
+            model_name="test-model",
+            embedding_dim=3,
         )
 
-        assert chunk.text == "Test chunk text"
+        assert chunk.chunk_metadata == metadata
         assert chunk.embedding == [0.1, 0.2, 0.3]
-        assert chunk.metadata == metadata
+        assert chunk.model_name == "test-model"
+        assert chunk.embedding_dim == 3

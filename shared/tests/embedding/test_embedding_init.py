@@ -6,7 +6,11 @@ import os
 from unittest.mock import Mock, patch
 
 import clarifai_shared.embedding as embedding_module
-from clarifai_shared.embedding import EmbeddingResult, VectorStoreMetrics
+from clarifai_shared.embedding import (
+    EmbeddingResult,
+    VectorStoreMetrics,
+    EmbeddingPipeline,
+)
 from clarifai_shared.config import ClarifAIConfig
 
 
@@ -63,20 +67,18 @@ class TestEmbeddingInitFile:
 
     def test_embedding_pipeline_init(self, integration_mode):
         """Test EmbeddingPipeline initialization with configurable dependencies."""
-        from clarifai_shared.embedding import EmbeddingPipeline
-
         config = ClarifAIConfig()
 
         if not integration_mode:
             with (
                 patch(
-                    "clarifai_shared.embedding.pipeline.ClarifAIVectorStore"
+                    "clarifai_shared.embedding.storage.ClarifAIVectorStore"
                 ) as mock_vector_store,
                 patch(
-                    "clarifai_shared.embedding.pipeline.EmbeddingGenerator"
+                    "clarifai_shared.embedding.models.EmbeddingGenerator"
                 ) as mock_generator,
                 patch(
-                    "clarifai_shared.embedding.pipeline.UtteranceChunker"
+                    "clarifai_shared.embedding.chunking.UtteranceChunker"
                 ) as mock_chunker,
             ):
                 # Setup mocks
@@ -100,18 +102,17 @@ class TestEmbeddingInitFile:
 
     def test_embedding_pipeline_init_no_config(self, integration_mode):
         """Test EmbeddingPipeline initialization without config."""
-        from clarifai_shared.embedding import EmbeddingPipeline
 
         if not integration_mode:
             with (
                 patch(
-                    "clarifai_shared.embedding.pipeline.ClarifAIVectorStore"
+                    "clarifai_shared.embedding.storage.ClarifAIVectorStore"
                 ) as mock_vector_store,
                 patch(
-                    "clarifai_shared.embedding.pipeline.EmbeddingGenerator"
+                    "clarifai_shared.embedding.models.EmbeddingGenerator"
                 ) as mock_generator,
                 patch(
-                    "clarifai_shared.embedding.pipeline.UtteranceChunker"
+                    "clarifai_shared.embedding.chunking.UtteranceChunker"
                 ) as mock_chunker,
             ):
                 # Setup mocks
@@ -135,18 +136,17 @@ class TestEmbeddingInitFile:
 
     def test_process_tier1_content_empty(self, integration_mode):
         """Test processing empty tier1 content."""
-        from clarifai_shared.embedding import EmbeddingPipeline
 
         if not integration_mode:
             with (
                 patch(
-                    "clarifai_shared.embedding.pipeline.ClarifAIVectorStore"
+                    "clarifai_shared.embedding.storage.ClarifAIVectorStore"
                 ) as mock_vector_store,
                 patch(
-                    "clarifai_shared.embedding.pipeline.EmbeddingGenerator"
+                    "clarifai_shared.embedding.models.EmbeddingGenerator"
                 ) as mock_generator,
                 patch(
-                    "clarifai_shared.embedding.pipeline.UtteranceChunker"
+                    "clarifai_shared.embedding.chunking.UtteranceChunker"
                 ) as mock_chunker,
             ):
                 # Setup mocks
