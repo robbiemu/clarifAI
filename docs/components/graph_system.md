@@ -69,10 +69,28 @@ Properties:
 - `verifiable`: Optional boolean - Whether the sentence is verifiable
 - `sentence_id`: Optional string - Auto-generated if not provided
 
+## Claimify Pipeline Integration
+
+The graph system integrates seamlessly with the Claimify pipeline to persist extracted claims and sentences:
+
+### Integration Flow
+1. **Claimify Processing**: Sentences are processed through Selection → Disambiguation → Decomposition
+2. **Result Conversion**: `ClaimifyResult` objects are converted to graph input data
+3. **Batch Persistence**: Claims and sentences are persisted in batches with relationships
+
+### Node Creation Patterns
+- **Valid Claims**: Claims meeting quality criteria (atomic, self-contained, verifiable) → `:Claim` nodes
+- **Invalid Claims**: Claims failing criteria → `:Sentence` nodes with rejection reasons
+- **Unprocessed Sentences**: Sentences not selected by pipeline → `:Sentence` nodes
+
+### Relationship Management
+All created nodes automatically get `ORIGINATES_FROM` relationships to their source `:Block` nodes, maintaining data lineage.
+
 ## Usage
 
 For complete usage examples and step-by-step tutorials, see:
 - **Tutorial**: `docs/tutorials/neo4j_graph_tutorial.md` - Complete guide with examples and integration patterns
+- **Claimify Integration**: `docs/tutorials/claimify_integration_tutorial.md` - End-to-end Claimify pipeline integration
 - **Architecture**: `docs/arch/idea-neo4J-ineteraction.md` - Technical implementation details
 
 ## Schema
