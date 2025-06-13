@@ -16,27 +16,29 @@ class TestMarkdownOutput:
         assert os.path.exists(interface_path)
 
     def test_plugin_interface_structure(self):
-        """Test that the plugin interface file has expected structure."""
-        interface_path = os.path.join(
-            os.path.dirname(__file__), "../clarifai_shared/plugin_interface.py"
+        """Test that the plugin interface classes and methods are properly implemented."""
+        # Import the actual classes instead of checking strings in files
+        from clarifai_shared.plugin_interface import MarkdownOutput, Plugin, UnknownFormatError
+        
+        # Test MarkdownOutput dataclass can be instantiated
+        output = MarkdownOutput(
+            title="Test Title",
+            markdown_text="# Test Content",
+            metadata={"test": "data"}
         )
-
-        with open(interface_path, "r") as f:
-            content = f.read()
-
-        # Check for expected classes and structures
-        assert "class MarkdownOutput" in content
-        assert "class Plugin" in content
-        assert "class UnknownFormatError" in content
-
-        # Check for expected methods
-        assert "def can_accept" in content
-        assert "def convert" in content
-
-        # Check for dataclass structure
-        assert "title:" in content
-        assert "markdown_text:" in content
-        assert "metadata:" in content
+        assert output.title == "Test Title"
+        assert output.markdown_text == "# Test Content" 
+        assert output.metadata == {"test": "data"}
+        
+        # Test Plugin abstract class has required methods
+        assert hasattr(Plugin, 'can_accept')
+        assert hasattr(Plugin, 'convert')
+        
+        # Test UnknownFormatError exception can be raised
+        try:
+            raise UnknownFormatError("Test error")
+        except UnknownFormatError as e:
+            assert str(e) == "Test error"
 
     def test_markdown_output_simulation(self):
         """Test MarkdownOutput structure simulation."""

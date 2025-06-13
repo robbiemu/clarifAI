@@ -17,26 +17,38 @@ class TestClaimInput:
         assert os.path.exists(models_path)
 
     def test_graph_models_structure(self):
-        """Test that the graph models file has expected structure."""
-        models_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/graph/models.py"
+        """Test that the graph models classes are properly implemented."""
+        # Import the actual classes instead of checking strings in files
+        from clarifai_shared.graph.models import ClaimInput, SentenceInput, Claim, Sentence
+        
+        # Test ClaimInput can be instantiated and has expected properties
+        claim_input = ClaimInput(
+            text="Test claim",
+            block_id="block_123"
         )
-
-        with open(models_path, "r") as f:
-            content = f.read()
-
-        # Check for expected dataclasses
-        assert "class ClaimInput" in content
-        assert "class SentenceInput" in content
-        assert "class Claim" in content
-        assert "class Sentence" in content
-
-        # Check for expected attributes
-        assert "text:" in content
-        assert "block_id:" in content
-        assert "entailed_score:" in content
-        assert "coverage_score:" in content
-        assert "decontextualization_score:" in content
+        assert claim_input.text == "Test claim"
+        assert claim_input.block_id == "block_123"
+        assert hasattr(claim_input, 'entailed_score')
+        assert hasattr(claim_input, 'coverage_score')
+        assert hasattr(claim_input, 'decontextualization_score')
+        
+        # Test SentenceInput can be instantiated
+        sentence_input = SentenceInput(
+            text="Test sentence",
+            block_id="block_456"
+        )
+        assert sentence_input.text == "Test sentence"
+        assert sentence_input.block_id == "block_456"
+        
+        # Test Claim can be created from ClaimInput
+        claim = Claim.from_input(claim_input)
+        assert claim.text == "Test claim"
+        assert claim.claim_id == claim_input.claim_id
+        
+        # Test Sentence can be created from SentenceInput  
+        sentence = Sentence.from_input(sentence_input)
+        assert sentence.text == "Test sentence"
+        assert sentence.sentence_id == sentence_input.sentence_id
 
     def test_claim_input_dataclass_simulation(self):
         """Test ClaimInput dataclass behavior simulation."""
