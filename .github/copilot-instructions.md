@@ -47,7 +47,8 @@ This project uses `uv` for package and virtual environment management.
 5.  **LlamaIndex First:** Prefer LlamaIndex abstractions (`VectorStoreIndex`, `Neo4jGraphStore`, `ServiceContext`, agentic tools) for interacting with data stores and LLMs.
 6.  **Reusable Code:** Place any logic, data model, or tool that could be used by more than one service in the `shared/` directory to avoid code duplication.
 7. **Documentation and comments:** When adding new documentation or comments to code, never reference the documents in the doc/project/epic_M/ folders.
-8. More on new **Documentation:**  If something is explained in docs/project and docs/arch directories, it's fine to include in implementation documentation. BUT if something is explained in OTHER implementation documents (like plugins documentation, tutorials, etc.) that could be considered authoritative, then I should reference those instead of rewriting the content
+8. More on new **Documentation style:**  If something is explained in docs/project and docs/arch directories, it's fine to include a repeat of that detail in implementation documentation. BUT if something is explained in OTHER implementation documents (like plugins documentation, tutorials, etc.) that could be considered authoritative, then reference those instead of rewriting the content.
+9. **No Example code:** Rather than writing example code, write tutorial-blog style documents for inclusion in the docs/tutorials directory. If the code indicates how to add on or work with tools, a guide like the docs/guides/plugin_system_guide.md makes sense. If the task you are implementing is a fairly self-contained component of the projectm a document, instead of writing a README.md in the same directory as the code, use docs/components. To facilitate good style, please see an example in any of these directories before adding your own.
 
 ---
 
