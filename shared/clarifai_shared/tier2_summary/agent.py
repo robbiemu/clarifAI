@@ -8,7 +8,7 @@ coherent groupings, as specified in docs/arch/on-writing_vault_documents.md.
 import logging
 import time
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any, Union, Tuple
 
 from llama_index.core.llms import LLM
 from llama_index.llms.openai import OpenAI
@@ -187,7 +187,7 @@ class Tier2SummaryAgent:
     
     def retrieve_grouped_content(
         self, 
-        similarity_threshold: float = 0.7,
+        similarity_threshold: Optional[float] = None,
         max_groups: int = 10,
         min_group_size: int = 2,
     ) -> List[SummaryInput]:
@@ -195,10 +195,11 @@ class Tier2SummaryAgent:
         Retrieve grouped Claims and Sentences using vector similarity.
         
         This implements the non-agentic retrieval process described in
-        on-writing_vault_documents.md using pg_vector_search.
+        on-writing_vault_documents.md using pg_vector_search and semantic
+        neighborhoods based on utterance embeddings.
         
         Args:
-            similarity_threshold: Minimum cosine similarity for grouping
+            similarity_threshold: Minimum cosine similarity for grouping (uses config if None)
             max_groups: Maximum number of groups to return
             min_group_size: Minimum items per group
             
@@ -215,38 +216,58 @@ class Tier2SummaryAgent:
             )
             return []
         
-        start_time = time.time()
-        
-        try:
-            # For now, implement a simple grouping strategy
-            # In a full implementation, this would use sophisticated vector clustering
-            
-            # Get all Claims and Sentences from Neo4j with retry logic
-            claims = self._retry_with_backoff(self._get_all_claims)
-            sentences = self._retry_with_backoff(self._get_all_sentences)
-            
-            logger.info(
-                "Retrieved claims and sentences for grouping",
+        if not self.embedding_storage:
+            logger.warning(
+                "No embedding storage configured - cannot perform similarity search",
                 extra={
                     "service": "clarifai",
                     "filename.function_name": "agent.retrieve_grouped_content",
-                    "claims_count": len(claims),
-                    "sentences_count": len(sentences),
+                }
+            )
+            return []
+        
+        # Use configured threshold if not provided
+        if similarity_threshold is None:
+            similarity_threshold = self.config.threshold.get("summary_grouping_similarity", 0.80)
+        
+        start_time = time.time()
+        
+        try:
+            # Get high-quality Claims nodes as seeds for similarity search
+            seed_claims = self._retry_with_backoff(self._get_high_quality_claims)
+            
+            if not seed_claims:
+                logger.warning(
+                    "No high-quality claims found to use as seeds",
+                    extra={
+                        "service": "clarifai",
+                        "filename.function_name": "agent.retrieve_grouped_content",
+                    }
+                )
+                return []
+            
+            logger.info(
+                "Retrieved seed claims for semantic grouping",
+                extra={
+                    "service": "clarifai",
+                    "filename.function_name": "agent.retrieve_grouped_content",
+                    "seed_claims_count": len(seed_claims),
+                    "similarity_threshold": similarity_threshold,
                 }
             )
             
-            # Simple grouping by file/conversation context for MVP
-            # In production, this would use vector similarity clustering
-            groups = self._group_by_conversation_context(claims, sentences, min_group_size)
-            
-            # Limit to max_groups
-            if len(groups) > max_groups:
-                groups = groups[:max_groups]
+            # Build semantic neighborhoods using vector similarity
+            groups = self._build_semantic_neighborhoods(
+                seed_claims, 
+                similarity_threshold, 
+                max_groups, 
+                min_group_size
+            )
             
             processing_time = time.time() - start_time
             
             logger.info(
-                "Created content groups for summarization",
+                "Created semantic neighborhoods for summarization",
                 extra={
                     "service": "clarifai", 
                     "filename.function_name": "agent.retrieve_grouped_content",
@@ -268,14 +289,30 @@ class Tier2SummaryAgent:
             )
             return []
     
-    def _get_all_claims(self) -> List[Dict[str, Any]]:
-        """Retrieve all Claim nodes from Neo4j."""
+    def _get_high_quality_claims(self) -> List[Dict[str, Any]]:
+        """
+        Retrieve high-quality Claim nodes from Neo4j to use as seeds.
+        
+        High-quality claims are those with good evaluation scores that can 
+        serve as seeds for finding semantically related content.
+        """
         try:
+            # Get claims with high evaluation scores
+            # These serve as "seeds" for finding semantic neighborhoods
             query = """
-            MATCH (c:Claim)
+            MATCH (c:Claim)-[:REFERENCES]->(b:Block)
+            WHERE c.entailed_score IS NOT NULL 
+              AND c.coverage_score IS NOT NULL 
+              AND c.decontextualization_score IS NOT NULL
+              AND c.entailed_score > 0.7
+              AND c.coverage_score > 0.7  
+              AND c.decontextualization_score > 0.7
             RETURN c.id as id, c.text as text, c.entailed_score as entailed_score,
                    c.coverage_score as coverage_score, c.decontextualization_score as decontextualization_score,
-                   c.version as version, c.timestamp as timestamp
+                   c.version as version, c.timestamp as timestamp,
+                   b.clarifai_id as source_block_id, b.text as source_block_text
+            ORDER BY (c.entailed_score + c.coverage_score + c.decontextualization_score) DESC
+            LIMIT 50
             """
             result = self.neo4j_manager.execute_query(query)
             
@@ -289,34 +326,175 @@ class Tier2SummaryAgent:
                     'decontextualization_score': record['decontextualization_score'],
                     'version': record['version'],
                     'timestamp': record['timestamp'],
+                    'source_block_id': record['source_block_id'],
+                    'source_block_text': record['source_block_text'],
                     'node_type': 'claim'
                 })
+            
+            logger.info(
+                "Retrieved high-quality claims as seeds",
+                extra={
+                    "service": "clarifai",
+                    "filename.function_name": "agent._get_high_quality_claims",
+                    "claims_count": len(claims),
+                }
+            )
             
             return claims
             
         except Exception as e:
             logger.error(
-                "Failed to retrieve claims from Neo4j",
+                "Failed to retrieve high-quality claims from Neo4j",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "agent._get_all_claims",
+                    "filename.function_name": "agent._get_high_quality_claims",
                     "error": str(e),
                 }
             )
             return []
     
-    def _get_all_sentences(self) -> List[Dict[str, Any]]:
-        """Retrieve all Sentence nodes from Neo4j."""
+    def _build_semantic_neighborhoods(
+        self,
+        seed_claims: List[Dict[str, Any]],
+        similarity_threshold: float,
+        max_groups: int,
+        min_group_size: int,
+    ) -> List[SummaryInput]:
+        """
+        Build semantic neighborhoods using vector similarity search.
+        
+        This implements the core strategy described in the comment:
+        1. Use high-quality Claims as seeds
+        2. For each seed, query utterances vector store for similar content
+        3. Group the similar content into semantic neighborhoods
+        4. Return groups suitable for summarization
+        """
+        groups = []
+        processed_block_ids = set()  # Track to avoid duplicates
+        
+        for seed_claim in seed_claims[:max_groups]:  # Limit seeds to max_groups
+            if len(groups) >= max_groups:
+                break
+                
+            seed_text = seed_claim.get('source_block_text') or seed_claim.get('text')
+            seed_block_id = seed_claim.get('source_block_id')
+            
+            if not seed_text or seed_block_id in processed_block_ids:
+                continue
+            
+            try:
+                # Perform vector similarity search on utterances vector store
+                similar_chunks = self.embedding_storage.similarity_search(
+                    query_text=seed_text,
+                    top_k=20,  # Get more candidates than needed
+                    similarity_threshold=similarity_threshold
+                )
+                
+                if not similar_chunks:
+                    continue
+                
+                # Extract block IDs from similar chunks
+                similar_block_ids = []
+                for chunk_metadata, score in similar_chunks:
+                    block_id = chunk_metadata.get('clarifai_id')
+                    if block_id and block_id not in processed_block_ids:
+                        similar_block_ids.append(block_id)
+                        processed_block_ids.add(block_id)
+                
+                if len(similar_block_ids) < min_group_size:
+                    continue
+                
+                # Get Claims and Sentences associated with these blocks
+                group_claims, group_sentences = self._get_claims_and_sentences_for_blocks(
+                    similar_block_ids
+                )
+                
+                # Create the semantic neighborhood group
+                if group_claims or group_sentences:
+                    summary_input = SummaryInput(
+                        claims=group_claims,
+                        sentences=group_sentences,
+                        group_context=f"Semantic neighborhood for: {seed_claim.get('text', '')[:50]}..."
+                    )
+                    groups.append(summary_input)
+                    
+                    logger.debug(
+                        "Created semantic neighborhood",
+                        extra={
+                            "service": "clarifai",
+                            "filename.function_name": "agent._build_semantic_neighborhoods",
+                            "seed_claim_id": seed_claim.get('id'),
+                            "similar_blocks_count": len(similar_block_ids),
+                            "group_claims_count": len(group_claims),
+                            "group_sentences_count": len(group_sentences),
+                        }
+                    )
+            
+            except Exception as e:
+                logger.warning(
+                    "Failed to build semantic neighborhood for seed",
+                    extra={
+                        "service": "clarifai",
+                        "filename.function_name": "agent._build_semantic_neighborhoods",
+                        "seed_claim_id": seed_claim.get('id'),
+                        "error": str(e),
+                    }
+                )
+                continue
+        
+        return groups
+    
+    def _get_claims_and_sentences_for_blocks(
+        self, 
+        block_ids: List[str]
+    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """
+        Retrieve Claims and Sentences associated with specific block IDs.
+        
+        Args:
+            block_ids: List of clarifai_id values for blocks
+            
+        Returns:
+            Tuple of (claims, sentences) lists
+        """
         try:
-            query = """
-            MATCH (s:Sentence)
-            RETURN s.id as id, s.text as text, s.ambiguous as ambiguous,
-                   s.verifiable as verifiable, s.version as version, s.timestamp as timestamp
+            # Get Claims that reference these blocks
+            claims_query = """
+            MATCH (c:Claim)-[:REFERENCES]->(b:Block)
+            WHERE b.clarifai_id IN $block_ids
+            RETURN c.id as id, c.text as text, c.entailed_score as entailed_score,
+                   c.coverage_score as coverage_score, c.decontextualization_score as decontextualization_score,
+                   c.version as version, c.timestamp as timestamp,
+                   b.clarifai_id as source_block_id
             """
-            result = self.neo4j_manager.execute_query(query)
+            claims_result = self.neo4j_manager.execute_query(claims_query, block_ids=block_ids)
+            
+            claims = []
+            for record in claims_result:
+                claims.append({
+                    'id': record['id'],
+                    'text': record['text'],
+                    'entailed_score': record['entailed_score'],
+                    'coverage_score': record['coverage_score'], 
+                    'decontextualization_score': record['decontextualization_score'],
+                    'version': record['version'],
+                    'timestamp': record['timestamp'],
+                    'source_block_id': record['source_block_id'],
+                    'node_type': 'claim'
+                })
+            
+            # Get Sentences that reference these blocks  
+            sentences_query = """
+            MATCH (s:Sentence)-[:REFERENCES]->(b:Block)
+            WHERE b.clarifai_id IN $block_ids
+            RETURN s.id as id, s.text as text, s.ambiguous as ambiguous,
+                   s.verifiable as verifiable, s.version as version, s.timestamp as timestamp,
+                   b.clarifai_id as source_block_id
+            """
+            sentences_result = self.neo4j_manager.execute_query(sentences_query, block_ids=block_ids)
             
             sentences = []
-            for record in result:
+            for record in sentences_result:
                 sentences.append({
                     'id': record['id'],
                     'text': record['text'],
@@ -324,55 +502,23 @@ class Tier2SummaryAgent:
                     'verifiable': record['verifiable'],
                     'version': record['version'],
                     'timestamp': record['timestamp'],
+                    'source_block_id': record['source_block_id'],
                     'node_type': 'sentence'
                 })
             
-            return sentences
+            return claims, sentences
             
         except Exception as e:
             logger.error(
-                "Failed to retrieve sentences from Neo4j",
+                "Failed to retrieve claims and sentences for blocks",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "agent._get_all_sentences",
+                    "filename.function_name": "agent._get_claims_and_sentences_for_blocks",
+                    "block_ids_count": len(block_ids),
                     "error": str(e),
                 }
             )
-            return []
-    
-    def _group_by_conversation_context(
-        self, 
-        claims: List[Dict[str, Any]], 
-        sentences: List[Dict[str, Any]],
-        min_group_size: int,
-    ) -> List[SummaryInput]:
-        """
-        Simple grouping strategy by conversation context.
-        
-        In production, this would be replaced by vector similarity clustering.
-        """
-        # For MVP, we'll create groups of mixed claims and sentences
-        # In practice, the grouping would use vector embeddings
-        
-        groups = []
-        all_content = claims + sentences
-        
-        # Create groups of min_group_size items
-        for i in range(0, len(all_content), min_group_size):
-            group_items = all_content[i:i + min_group_size]
-            
-            if len(group_items) >= min_group_size:
-                group_claims = [item for item in group_items if item.get('node_type') == 'claim']
-                group_sentences = [item for item in group_items if item.get('node_type') == 'sentence']
-                
-                summary_input = SummaryInput(
-                    claims=group_claims,
-                    sentences=group_sentences,
-                    group_context=f"Mixed content group {len(groups) + 1}"
-                )
-                groups.append(summary_input)
-        
-        return groups
+            return [], []
     
     def generate_summary(self, summary_input: SummaryInput) -> SummaryResult:
         """

@@ -42,11 +42,11 @@ class SummaryInput:
         """Get all unique source block IDs from claims and sentences."""
         block_ids = set()
         for claim in self.claims:
-            if 'block_id' in claim:
-                block_ids.add(claim['block_id'])
+            if 'source_block_id' in claim:
+                block_ids.add(claim['source_block_id'])
         for sentence in self.sentences:
-            if 'block_id' in sentence:
-                block_ids.add(sentence['block_id'])
+            if 'source_block_id' in sentence:
+                block_ids.add(sentence['source_block_id'])
         return list(block_ids)
 
 

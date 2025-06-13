@@ -90,6 +90,7 @@ model:
 threshold:
   concept_merge: 0.90
   claim_link_strength: 0.60
+  summary_grouping_similarity: 0.80
 
 # Window configuration (following design_config_panel.md structure)
 window:

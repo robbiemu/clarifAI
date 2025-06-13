@@ -27,11 +27,11 @@ class TestSummaryDataModels:
     def test_summary_input_creation(self):
         """Test SummaryInput object creation and properties."""
         claims = [
-            {"id": "claim1", "text": "First claim", "node_type": "claim", "block_id": "blk_001"},
-            {"id": "claim2", "text": "Second claim", "node_type": "claim", "block_id": "blk_002"},
+            {"id": "claim1", "text": "First claim", "node_type": "claim", "source_block_id": "blk_001"},
+            {"id": "claim2", "text": "Second claim", "node_type": "claim", "source_block_id": "blk_002"},
         ]
         sentences = [
-            {"id": "sent1", "text": "First sentence", "node_type": "sentence", "block_id": "blk_003"},
+            {"id": "sent1", "text": "First sentence", "node_type": "sentence", "source_block_id": "blk_003"},
         ]
 
         summary_input = SummaryInput(
@@ -273,29 +273,57 @@ class TestTier2SummaryAgent:
                     max_tokens=1000
                 )
 
-    def test_get_all_claims(self, mock_config, mock_neo4j_manager, mock_llm):
-        """Test retrieval of all claims from Neo4j."""
+    def test_get_high_quality_claims(self, mock_config, mock_neo4j_manager, mock_llm):
+        """Test retrieval of high-quality claims from Neo4j."""
+        # Mock high-quality claims response
+        mock_neo4j_manager.execute_query.return_value = [
+            {
+                'id': 'claim1',
+                'text': 'High quality claim 1',
+                'entailed_score': 0.8,
+                'coverage_score': 0.9,
+                'decontextualization_score': 0.85,
+                'version': 1,
+                'timestamp': '2024-01-01T10:00:00Z',
+                'source_block_id': 'blk_001',
+                'source_block_text': 'Original utterance text 1'
+            },
+            {
+                'id': 'claim2',
+                'text': 'High quality claim 2',
+                'entailed_score': 0.75,
+                'coverage_score': 0.8,
+                'decontextualization_score': 0.78,
+                'version': 1,
+                'timestamp': '2024-01-01T11:00:00Z',
+                'source_block_id': 'blk_002',
+                'source_block_text': 'Original utterance text 2'
+            }
+        ]
+        
         agent = Tier2SummaryAgent(
             config=mock_config,
             neo4j_manager=mock_neo4j_manager,
             llm=mock_llm
         )
 
-        claims = agent._get_all_claims()
+        claims = agent._get_high_quality_claims()
         
         assert len(claims) == 2
         assert claims[0]['id'] == 'claim1'
-        assert claims[0]['text'] == 'Test claim 1'
+        assert claims[0]['text'] == 'High quality claim 1'
+        assert claims[0]['source_block_id'] == 'blk_001'
         assert claims[0]['node_type'] == 'claim'
         assert claims[1]['id'] == 'claim2'
         
         # Verify Neo4j query was called
         mock_neo4j_manager.execute_query.assert_called_once()
         call_args = mock_neo4j_manager.execute_query.call_args[0]
-        assert "MATCH (c:Claim)" in call_args[0]
+        assert "MATCH (c:Claim)-[:REFERENCES]->(b:Block)" in call_args[0]
+        assert "entailed_score > 0.7" in call_args[0]
 
-    def test_get_all_claims_error_handling(self, mock_config, mock_llm):
-        """Test error handling in claim retrieval."""
+    def test_get_high_quality_claims_error_handling(self, mock_config, mock_llm):
+        """Test error handling in high-quality claim retrieval."""
         mock_neo4j_manager = Mock()
         mock_neo4j_manager.execute_query.side_effect = Exception("Database error")
         
@@ -305,7 +333,7 @@ class TestTier2SummaryAgent:
             llm=mock_llm
         )
 
-        claims = agent._get_all_claims()
+        claims = agent._get_high_quality_claims()
         
         # Should return empty list on error
         assert claims == []
@@ -479,46 +507,85 @@ class TestTier2SummaryAgent:
         
         assert groups == []
 
-    def test_retrieve_grouped_content_success(self, mock_config, mock_neo4j_manager, mock_llm):
-        """Test successful content retrieval and grouping."""
+    def test_retrieve_grouped_content_no_embedding_storage(self, mock_config, mock_neo4j_manager, mock_llm):
+        """Test content retrieval without embedding storage."""
         agent = Tier2SummaryAgent(
             config=mock_config,
             neo4j_manager=mock_neo4j_manager,
+            embedding_storage=None,  # No embedding storage
             llm=mock_llm
         )
 
-        # Mock both claims and sentences
-        mock_neo4j_manager.execute_query.side_effect = [
-            [  # Claims query result
-                {
-                    'id': 'claim1',
-                    'text': 'Test claim 1',
-                    'entailed_score': 0.8,
-                    'coverage_score': 0.9,
-                    'decontextualization_score': 0.7,
-                    'version': 1,
-                    'timestamp': '2024-01-01T10:00:00Z'
-                }
-            ],
-            [  # Sentences query result  
-                {
-                    'id': 'sent1',
-                    'text': 'Test sentence 1',
-                    'ambiguous': False,
-                    'verifiable': True,
-                    'version': 1,
-                    'timestamp': '2024-01-01T11:00:00Z'
-                }
-            ]
-        ]
-
-        groups = agent.retrieve_grouped_content(min_group_size=2)
+        groups = agent.retrieve_grouped_content()
         
-        assert len(groups) == 1  # Should create one group with claim + sentence
-        group = groups[0]
-        assert len(group.claims) == 1
-        assert len(group.sentences) == 1
-        assert group.group_context == "Mixed content group 1"
+        assert groups == []
+
+    def test_retrieve_grouped_content_no_seeds(self, mock_config, mock_neo4j_manager, mock_llm):
+        """Test content retrieval when no high-quality claims are found."""
+        # Mock empty high-quality claims response
+        mock_neo4j_manager.execute_query.return_value = []
+        
+        mock_embedding_storage = Mock()
+        
+        agent = Tier2SummaryAgent(
+            config=mock_config,
+            neo4j_manager=mock_neo4j_manager,
+            embedding_storage=mock_embedding_storage,
+            llm=mock_llm
+        )
+
+        groups = agent.retrieve_grouped_content()
+        
+        assert groups == []
+        # Should call high-quality claims but not similarity search
+        mock_neo4j_manager.execute_query.assert_called_once()
+        mock_embedding_storage.similarity_search.assert_not_called()
+
+    @patch('clarifai_shared.tier2_summary.agent.Tier2SummaryAgent._build_semantic_neighborhoods')
+    def test_retrieve_grouped_content_success(self, mock_build_neighborhoods, mock_config, mock_neo4j_manager, mock_llm):
+        """Test successful content retrieval with vector similarity."""
+        # Mock high-quality claims
+        mock_neo4j_manager.execute_query.return_value = [
+            {
+                'id': 'claim1',
+                'text': 'High quality claim',
+                'entailed_score': 0.8,
+                'coverage_score': 0.9,
+                'decontextualization_score': 0.85,
+                'version': 1,
+                'timestamp': '2024-01-01T10:00:00Z',
+                'source_block_id': 'blk_001',
+                'source_block_text': 'Original utterance text'
+            }
+        ]
+        
+        # Mock semantic neighborhoods result
+        mock_summary_input = SummaryInput(
+            claims=[{"text": "Test claim", "source_block_id": "blk_001"}],
+            sentences=[{"text": "Test sentence", "source_block_id": "blk_002"}],
+            group_context="Semantic neighborhood test"
+        )
+        mock_build_neighborhoods.return_value = [mock_summary_input]
+        
+        mock_embedding_storage = Mock()
+        
+        agent = Tier2SummaryAgent(
+            config=mock_config,
+            neo4j_manager=mock_neo4j_manager,
+            embedding_storage=mock_embedding_storage,
+            llm=mock_llm
+        )
+
+        groups = agent.retrieve_grouped_content()
+        
+        assert len(groups) == 1
+        assert groups[0].group_context == "Semantic neighborhood test"
+        
+        # Verify the semantic neighborhoods builder was called with correct params
+        mock_build_neighborhoods.assert_called_once()
+        call_args = mock_build_neighborhoods.call_args[0]
+        assert len(call_args[0]) == 1  # seed_claims
+        assert call_args[1] == 0.80    # similarity_threshold (from config)
 
 
 class TestAtomicFileWriting:
