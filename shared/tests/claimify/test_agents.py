@@ -445,3 +445,101 @@ class TestAgentErrorHandling:
         assert result is not None
         assert result.original_text == "Test text"
         assert len(result.claim_candidates) == 0  # No claims on error
+
+
+class TestAgentConfidenceThresholds:
+    """Test confidence threshold enforcement in all agents."""
+
+    def test_selection_agent_confidence_threshold_rejection(self):
+        """Test SelectionAgent rejects selections below confidence threshold."""
+        # Set a high confidence threshold
+        config = ClaimifyConfig(selection_confidence_threshold=0.8)
+
+        # LLM returns selection with low confidence
+        json_response = '{"selected": true, "confidence": 0.3, "reasoning": "Contains some verifiable content"}'
+        mock_llm = MockLLM(json_response)
+        agent = SelectionAgent(llm=mock_llm, config=config)
+
+        test_sentence = SentenceChunk(
+            text="The system might have failed.",
+            source_id="blk_001",
+            chunk_id="chunk_001",
+            sentence_index=1,
+        )
+        context = ClaimifyContext(current_sentence=test_sentence)
+
+        result = agent.process(context)
+
+        # Should be rejected due to low confidence
+        assert not result.is_selected
+        assert result.confidence == 0.3  # Original confidence preserved
+        assert "below threshold" in result.reasoning
+
+    def test_selection_agent_confidence_threshold_acceptance(self):
+        """Test SelectionAgent accepts selections above confidence threshold."""
+        # Set a moderate confidence threshold
+        config = ClaimifyConfig(selection_confidence_threshold=0.5)
+
+        # LLM returns selection with high confidence
+        json_response = '{"selected": true, "confidence": 0.9, "reasoning": "Contains clear verifiable content"}'
+        mock_llm = MockLLM(json_response)
+        agent = SelectionAgent(llm=mock_llm, config=config)
+
+        test_sentence = SentenceChunk(
+            text="The system failed at 10:30 AM.",
+            source_id="blk_001",
+            chunk_id="chunk_001",
+            sentence_index=1,
+        )
+        context = ClaimifyContext(current_sentence=test_sentence)
+
+        result = agent.process(context)
+
+        # Should be accepted due to high confidence
+        assert result.is_selected
+        assert result.confidence == 0.9
+
+    def test_disambiguation_agent_confidence_threshold_fallback(self):
+        """Test DisambiguationAgent falls back to original text when confidence is low."""
+        # Set a high confidence threshold
+        config = ClaimifyConfig(disambiguation_confidence_threshold=0.7)
+
+        # LLM returns disambiguation with low confidence
+        json_response = '{"disambiguated_text": "The uncertain system failed.", "changes_made": ["Uncertain replacement"], "confidence": 0.4}'
+        mock_llm = MockLLM(json_response)
+        agent = DisambiguationAgent(llm=mock_llm, config=config)
+
+        test_sentence = SentenceChunk(
+            text="It failed.",
+            source_id="blk_001",
+            chunk_id="chunk_001",
+            sentence_index=1,
+        )
+        context = ClaimifyContext(current_sentence=test_sentence)
+
+        result = agent.process(test_sentence, context)
+
+        # Should fall back to original text due to low confidence
+        assert result.disambiguated_text == "It failed."  # Original text
+        assert result.confidence == 0.4  # Original confidence preserved
+        assert "below threshold" in result.changes_made[0]
+
+    def test_decomposition_agent_confidence_threshold_filtering(self):
+        """Test DecompositionAgent filters out low-confidence claims."""
+        # Set a high confidence threshold
+        config = ClaimifyConfig(decomposition_confidence_threshold=0.7)
+
+        # LLM returns mix of high and low confidence claims
+        json_response = """{"claim_candidates": [
+            {"text": "High quality claim", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Excellent claim"},
+            {"text": "Low quality claim", "is_atomic": false, "is_self_contained": false, "is_verifiable": false, "passes_criteria": false, "reasoning": "Poor claim"}
+        ]}"""
+        mock_llm = MockLLM(json_response)
+        agent = DecompositionAgent(llm=mock_llm, config=config)
+
+        result = agent.process("Test text", None)
+
+        # Should only include high-confidence claim (0.9) and exclude low-confidence claim (0.3)
+        assert len(result.claim_candidates) == 1
+        assert result.claim_candidates[0].text == "High quality claim"
+        assert result.claim_candidates[0].confidence == 0.9

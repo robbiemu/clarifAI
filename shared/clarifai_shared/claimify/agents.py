@@ -211,6 +211,14 @@ Respond with valid JSON only:
                 confidence = result_data.get("confidence", 0.0)
                 reasoning = result_data.get("reasoning", "No reasoning provided")
 
+                # Apply confidence threshold - if LLM confidence is below threshold, reject selection
+                if (
+                    is_selected
+                    and confidence < self.config.selection_confidence_threshold
+                ):
+                    is_selected = False
+                    reasoning = f"LLM selected but confidence {confidence:.2f} below threshold {self.config.selection_confidence_threshold:.2f}"
+
                 return SelectionResult(
                     sentence_chunk=sentence,
                     is_selected=is_selected,
@@ -363,6 +371,13 @@ Respond with valid JSON only:
                 )
                 changes_made = result_data.get("changes_made", [])
                 confidence = result_data.get("confidence", 0.8)
+
+                # Apply confidence threshold - if LLM confidence is below threshold, use original text
+                if confidence < self.config.disambiguation_confidence_threshold:
+                    disambiguated_text = sentence.text
+                    changes_made = [
+                        f"LLM confidence {confidence:.2f} below threshold {self.config.disambiguation_confidence_threshold:.2f}, using original text"
+                    ]
 
                 return DisambiguationResult(
                     original_sentence=sentence,
@@ -556,15 +571,17 @@ Respond with valid JSON only:
                     else:
                         confidence = 0.3
 
-                    candidate = ClaimCandidate(
-                        text=claim_text,
-                        is_atomic=is_atomic,
-                        is_self_contained=is_self_contained,
-                        is_verifiable=is_verifiable,
-                        confidence=confidence,
-                        reasoning=reasoning,
-                    )
-                    claim_candidates.append(candidate)
+                    # Apply confidence threshold - only include candidates above threshold
+                    if confidence >= self.config.decomposition_confidence_threshold:
+                        candidate = ClaimCandidate(
+                            text=claim_text,
+                            is_atomic=is_atomic,
+                            is_self_contained=is_self_contained,
+                            is_verifiable=is_verifiable,
+                            confidence=confidence,
+                            reasoning=reasoning,
+                        )
+                        claim_candidates.append(candidate)
 
                 return DecompositionResult(
                     original_text=text, claim_candidates=claim_candidates
