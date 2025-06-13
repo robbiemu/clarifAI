@@ -38,19 +38,17 @@ def load_claimify_config_from_yaml(config_data: Dict[str, Any]) -> ClaimifyConfi
     decomposition_model = claimify_models.get("decomposition")
     claimify_default = claimify_models.get("default")
 
-    # Fall back to global LLM config if needed
+    # Fall back to global processing config if claimify-specific values not set
     if not claimify_default:
-        llm_config = config_data.get("llm", {})
-        llm_models = llm_config.get("models", {})
-        claimify_default = llm_models.get("default", "gpt-3.5-turbo")
+        claimify_default = config_data.get("processing", {}).get("default_model") or model_config.get("default", "gpt-3.5-turbo")
 
-    # Processing settings
+    # Processing settings (check global processing first, then claimify-specific)
     processing_config = config_data.get("processing", {})
     claimify_processing = processing_config.get("claimify", {})
     max_retries = claimify_processing.get("max_retries", 3)
-    timeout_seconds = claimify_processing.get("timeout_seconds", 30)
-    temperature = claimify_processing.get("temperature", 0.1)
-    max_tokens = claimify_processing.get("max_tokens", 1000)
+    timeout_seconds = processing_config.get("timeout_seconds", 30)
+    temperature = processing_config.get("temperature", 0.1)
+    max_tokens = processing_config.get("max_tokens", 1000)
 
     # Threshold settings
     thresholds = claimify_processing.get("thresholds", {})
@@ -167,7 +165,6 @@ def get_model_config_for_stage(config_data: Dict[str, Any], stage: str) -> str:
     if claimify_default:
         return claimify_default
 
-    # Fall back to global default
-    llm_config = config_data.get("llm", {})
-    llm_models = llm_config.get("models", {})
-    return llm_models.get("default", "gpt-3.5-turbo")
+    # Fall back to global model config
+    global_default = model_config.get("default", "gpt-3.5-turbo")
+    return global_default

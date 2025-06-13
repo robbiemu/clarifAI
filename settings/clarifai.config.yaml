@@ -64,19 +64,6 @@ embedding:
     merge_short_prefixes: true   # Merge fragments < 5 tokens
     min_chunk_tokens: 5          # Minimum tokens per chunk
 
-# LLM configuration
-llm:
-  # Default models for different tasks
-  models:
-    default: "gpt-3.5-turbo"
-    fallback_plugin: "gpt-3.5-turbo"
-    conversation_extraction: "gpt-3.5-turbo"
-  
-  # Model parameters
-  temperature: 0.1
-  max_tokens: 1000
-  timeout: 30
-
 # Model configuration (following design_config_panel.md structure)
 model:
   claimify:
@@ -84,6 +71,10 @@ model:
     selection: null      # Uses default if not specified
     disambiguation: null # Uses default if not specified  
     decomposition: null  # Uses default if not specified
+  concept_linker: "gpt-3.5-turbo"
+  concept_summary: "gpt-3.5-turbo"  
+  subject_summary: "gpt-3.5-turbo"
+  trending_concepts_agent: "gpt-3.5-turbo"
   fallback_plugin: "gpt-3.5-turbo"
 
 # Threshold configuration (following design_config_panel.md structure)
@@ -99,12 +90,14 @@ window:
 
 # Processing configuration
 processing:
+  # Global LLM parameters (moved from llm: block to consolidate)
+  temperature: 0.1
+  max_tokens: 1000
+  timeout_seconds: 30
+  
   # Claimify pipeline configuration
   claimify:
     max_retries: 3
-    timeout_seconds: 30
-    temperature: 0.1
-    max_tokens: 1000
     
     # Quality thresholds
     thresholds:
