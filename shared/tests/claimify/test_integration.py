@@ -24,12 +24,6 @@ from clarifai_shared.claimify.integration import (
 from clarifai_shared.graph.models import ClaimInput, SentenceInput
 
 
-@pytest.fixture
-def integration_mode():
-    """Fixture to control integration vs unit test mode."""
-    return False  # Always run as unit tests for now
-
-
 class MockNeo4jGraphManager:
     """Mock Neo4j graph manager for testing."""
 
@@ -84,216 +78,236 @@ class TestClaimifyGraphIntegration:
         )
 
     def test_convert_successful_claim_result(
-        self, integration, test_chunk, integration_mode
+        self, integration, test_chunk
     ):
         """Test conversion of successful claim result."""
-        if not integration_mode:
-            # Mock test - verify conversion logic
-            # Create a valid claim candidate
-            valid_claim = ClaimCandidate(
-                text="The system failed at startup.",
-                is_atomic=True,
-                is_self_contained=True,
-                is_verifiable=True,
-                confidence=0.95,
-            )
+        # Mock test - verify conversion logic
+        # Create a valid claim candidate
+        valid_claim = ClaimCandidate(
+            text="The system failed at startup.",
+            is_atomic=True,
+            is_self_contained=True,
+            is_verifiable=True,
+            confidence=0.95,
+        )
 
-            # Create decomposition result with valid claim
-            decomposition_result = DecompositionResult(
-                original_text="The system failed at startup.",
-                claim_candidates=[valid_claim],
-            )
+        # Create decomposition result with valid claim
+        decomposition_result = DecompositionResult(
+            original_text="The system failed at startup.",
+            claim_candidates=[valid_claim],
+        )
 
-            # Create a successful claimify result
-            result = ClaimifyResult(
-                original_chunk=test_chunk,
-                context=ClaimifyContext(current_sentence=test_chunk),
-                selection_result=SelectionResult(
-                    sentence_chunk=test_chunk, is_selected=True
-                ),
-                decomposition_result=decomposition_result,
-            )
+        # Create a successful claimify result
+        result = ClaimifyResult(
+            original_chunk=test_chunk,
+            context=ClaimifyContext(current_sentence=test_chunk),
+            selection_result=SelectionResult(
+                sentence_chunk=test_chunk, is_selected=True
+            ),
+            decomposition_result=decomposition_result,
+        )
 
-            # Convert to inputs
-            claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
-                result
-            )
+        # Convert to inputs
+        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
+            result
+        )
 
-            # Check claim properties
-            assert len(claim_inputs) == 1
-            claim = claim_inputs[0]
-            assert isinstance(claim, ClaimInput)
-            assert claim.text == "The system failed at startup."
-            assert claim.block_id == "blk_001"
-            assert claim.verifiable
-            assert claim.self_contained
-            assert claim.context_complete
-        else:
-            # Integration test - requires real Neo4j service
-            pytest.skip("Integration tests require real database setup")
+        # Check claim properties
+        assert len(claim_inputs) == 1
+        claim = claim_inputs[0]
+        assert isinstance(claim, ClaimInput)
+        assert claim.text == "The system failed at startup."
+        assert claim.block_id == "blk_001"
+        assert claim.verifiable
+        assert claim.self_contained
+        assert claim.context_complete
+
+    @pytest.mark.integration
+    def test_convert_successful_claim_result_integration(
+        self, integration, test_chunk
+    ):
+        """Integration test for successful claim result conversion."""
+        # Integration test - requires real Neo4j service
+        pytest.skip("Integration tests require real database setup")
 
     def test_convert_failed_claim_result(
-        self, integration, test_chunk, integration_mode
+        self, integration, test_chunk
     ):
         """Test conversion of result with claims that failed criteria."""
-        if not integration_mode:
-            # Mock test - verify conversion logic
-            # Create a claim candidate that fails some criteria
-            failed_candidate = ClaimCandidate(
-                text="It failed again.",
-                is_atomic=True,
-                is_self_contained=False,  # Fails self-containment
-                is_verifiable=True,
-                confidence=0.3,
-            )
+        # Mock test - verify conversion logic
+        # Create a claim candidate that fails some criteria
+        failed_candidate = ClaimCandidate(
+            text="It failed again.",
+            is_atomic=True,
+            is_self_contained=False,  # Fails self-containment
+            is_verifiable=True,
+            confidence=0.3,
+        )
 
-            decomposition_result = DecompositionResult(
-                original_text="It failed again.", claim_candidates=[failed_candidate]
-            )
+        decomposition_result = DecompositionResult(
+            original_text="It failed again.", claim_candidates=[failed_candidate]
+        )
 
-            result = ClaimifyResult(
-                original_chunk=test_chunk,
-                context=ClaimifyContext(current_sentence=test_chunk),
-                selection_result=SelectionResult(
-                    sentence_chunk=test_chunk, is_selected=True
-                ),
-                decomposition_result=decomposition_result,
-            )
+        result = ClaimifyResult(
+            original_chunk=test_chunk,
+            context=ClaimifyContext(current_sentence=test_chunk),
+            selection_result=SelectionResult(
+                sentence_chunk=test_chunk, is_selected=True
+            ),
+            decomposition_result=decomposition_result,
+        )
 
-            # Convert to graph inputs
-            claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
-                result
-            )
+        # Convert to graph inputs
+        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
+            result
+        )
 
-            # Should have no claims, one sentence
-            assert len(claim_inputs) == 0
-            assert len(sentence_inputs) == 1
+        # Should have no claims, one sentence
+        assert len(claim_inputs) == 0
+        assert len(sentence_inputs) == 1
 
-            # Check sentence properties
-            sentence = sentence_inputs[0]
-            assert isinstance(sentence, SentenceInput)
-            assert sentence.text == "It failed again."
-            assert sentence.block_id == "blk_001"
-            assert sentence.ambiguous  # Because not self-contained
-            assert sentence.verifiable
-            assert not sentence.failed_decomposition  # Was atomic
-        else:
-            # Integration test - requires real Neo4j service
-            pytest.skip("Integration tests require real database setup")
+        # Check sentence properties
+        sentence = sentence_inputs[0]
+        assert isinstance(sentence, SentenceInput)
+        assert sentence.text == "It failed again."
+        assert sentence.block_id == "blk_001"
+        assert sentence.ambiguous  # Because not self-contained
+        assert sentence.verifiable
+        assert not sentence.failed_decomposition  # Was atomic
+
+    @pytest.mark.integration
+    def test_convert_failed_claim_result_integration(
+        self, integration, test_chunk
+    ):
+        """Integration test for failed claim result conversion."""
+        # Integration test - requires real Neo4j service
+        pytest.skip("Integration tests require real database setup")
 
     def test_convert_unprocessed_result(
-        self, integration, test_chunk, integration_mode
+        self, integration, test_chunk
     ):
         """Test conversion of result that wasn't selected for processing."""
-        if not integration_mode:
-            # Mock test - verify conversion logic
-            # Create result where selection failed
-            result = ClaimifyResult(
-                original_chunk=test_chunk,
-                context=ClaimifyContext(current_sentence=test_chunk),
-                selection_result=SelectionResult(
-                    sentence_chunk=test_chunk, is_selected=False
-                ),
-                # No decomposition result since it wasn't selected
-            )
+        # Mock test - verify conversion logic
+        # Create result where selection failed
+        result = ClaimifyResult(
+            original_chunk=test_chunk,
+            context=ClaimifyContext(current_sentence=test_chunk),
+            selection_result=SelectionResult(
+                sentence_chunk=test_chunk, is_selected=False
+            ),
+            # No decomposition result since it wasn't selected
+        )
 
-            # Convert to graph inputs
-            claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
-                result
-            )
+        # Convert to graph inputs
+        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
+            result
+        )
 
-            # Should have no claims, one sentence
-            assert len(claim_inputs) == 0
-            assert len(sentence_inputs) == 1
+        # Should have no claims, one sentence
+        assert len(claim_inputs) == 0
+        assert len(sentence_inputs) == 1
 
-            # Check sentence properties
-            sentence = sentence_inputs[0]
-            assert isinstance(sentence, SentenceInput)
-            assert sentence.text == "The system failed at startup."
-            assert sentence.block_id == "blk_001"
-            assert sentence.ambiguous  # Because not selected
-            assert not sentence.verifiable  # Because not selected
-            assert not sentence.failed_decomposition  # Wasn't decomposed
-            assert sentence.rejection_reason == "Not selected by Selection agent"
-        else:
-            # Integration test - requires real Neo4j service
-            pytest.skip("Integration tests require real database setup")
+        # Check sentence properties
+        sentence = sentence_inputs[0]
+        assert isinstance(sentence, SentenceInput)
+        assert sentence.text == "The system failed at startup."
+        assert sentence.block_id == "blk_001"
+        assert sentence.ambiguous  # Because not selected
+        assert not sentence.verifiable  # Because not selected
+        assert not sentence.failed_decomposition  # Wasn't decomposed
+        assert sentence.rejection_reason == "Not selected by Selection agent"
 
-    def test_create_claim_input(self, integration, test_chunk, integration_mode):
+    @pytest.mark.integration  
+    def test_convert_unprocessed_result_integration(
+        self, integration, test_chunk
+    ):
+        """Integration test for unprocessed result conversion."""
+        # Integration test - requires real Neo4j service
+        pytest.skip("Integration tests require real database setup")
+
+    def test_create_claim_input(self, integration, test_chunk):
         """Test creation of ClaimInput from ClaimCandidate."""
-        if not integration_mode:
-            # Mock test - verify claim input creation
-            claim_candidate = ClaimCandidate(
-                text="The error occurred at 10:30 AM.",
-                is_atomic=True,
-                is_self_contained=True,
-                is_verifiable=True,
-                confidence=0.95,
-            )
+        # Mock test - verify claim input creation
+        claim_candidate = ClaimCandidate(
+            text="The error occurred at 10:30 AM.",
+            is_atomic=True,
+            is_self_contained=True,
+            is_verifiable=True,
+            confidence=0.95,
+        )
 
-            claim_input = integration._create_claim_input(claim_candidate, test_chunk)
+        claim_input = integration._create_claim_input(claim_candidate, test_chunk)
 
-            assert isinstance(claim_input, ClaimInput)
-            assert claim_input.text == "The error occurred at 10:30 AM."
-            assert claim_input.block_id == "blk_001"
-            assert claim_input.verifiable
-            assert claim_input.self_contained
-            assert claim_input.context_complete
-            assert claim_input.entailed_score is None  # Not set by pipeline
-            assert claim_input.coverage_score is None
-            assert claim_input.decontextualization_score is None
-            assert claim_input.id.startswith("claim_")
-        else:
-            # Integration test - requires real Neo4j service
-            pytest.skip("Integration tests require real database setup")
+        assert isinstance(claim_input, ClaimInput)
+        assert claim_input.text == "The error occurred at 10:30 AM."
+        assert claim_input.block_id == "blk_001"
+        assert claim_input.verifiable
+        assert claim_input.self_contained
+        assert claim_input.context_complete
+        assert claim_input.entailed_score is None  # Not set by pipeline
+        assert claim_input.coverage_score is None
+        assert claim_input.decontextualization_score is None
+        assert claim_input.id.startswith("claim_")
 
-    def test_create_sentence_input(self, integration, test_chunk, integration_mode):
+    @pytest.mark.integration
+    def test_create_claim_input_integration(self, integration, test_chunk):
+        """Integration test for claim input creation."""
+        # Integration test - requires real Neo4j service
+        pytest.skip("Integration tests require real database setup")
+
+    def test_create_sentence_input(self, integration, test_chunk):
         """Test creation of SentenceInput from ClaimCandidate."""
-        if not integration_mode:
-            # Mock test - verify sentence input creation
-            sentence_candidate = ClaimCandidate(
-                text="It was problematic.",
-                is_atomic=True,
-                is_self_contained=False,  # Ambiguous
-                is_verifiable=True,
-            )
+        # Mock test - verify sentence input creation
+        sentence_candidate = ClaimCandidate(
+            text="It was problematic.",
+            is_atomic=True,
+            is_self_contained=False,  # Ambiguous
+            is_verifiable=True,
+        )
 
-            sentence_input = integration._create_sentence_input(
-                sentence_candidate, test_chunk, rejection_reason="Ambiguous pronoun"
-            )
+        sentence_input = integration._create_sentence_input(
+            sentence_candidate, test_chunk, rejection_reason="Ambiguous pronoun"
+        )
 
-            assert isinstance(sentence_input, SentenceInput)
-            assert sentence_input.text == "It was problematic."
-            assert sentence_input.block_id == "blk_001"
-            assert sentence_input.ambiguous  # Because not self-contained
-            assert sentence_input.verifiable
-            assert not sentence_input.failed_decomposition  # Was atomic
-            assert sentence_input.rejection_reason == "Ambiguous pronoun"
-            assert sentence_input.id.startswith("sentence_")
-        else:
-            # Integration test - requires real Neo4j service
-            pytest.skip("Integration tests require real database setup")
+        assert isinstance(sentence_input, SentenceInput)
+        assert sentence_input.text == "It was problematic."
+        assert sentence_input.block_id == "blk_001"
+        assert sentence_input.ambiguous  # Because not self-contained
+        assert sentence_input.verifiable
+        assert not sentence_input.failed_decomposition  # Was atomic
+        assert sentence_input.rejection_reason == "Ambiguous pronoun"
+        assert sentence_input.id.startswith("sentence_")
+
+    @pytest.mark.integration
+    def test_create_sentence_input_integration(self, integration, test_chunk):
+        """Integration test for sentence input creation."""
+        # Integration test - requires real Neo4j service
+        pytest.skip("Integration tests require real database setup")
 
     def test_create_sentence_input_from_chunk(
-        self, integration, test_chunk, integration_mode
+        self, integration, test_chunk
     ):
         """Test creation of SentenceInput directly from chunk."""
-        if not integration_mode:
-            # Mock test - verify sentence input creation from chunk
-            sentence_input = integration._create_sentence_input_from_chunk(
-                test_chunk, rejection_reason="Failed selection"
-            )
+        # Mock test - verify sentence input creation from chunk
+        sentence_input = integration._create_sentence_input_from_chunk(
+            test_chunk, rejection_reason="Failed selection"
+        )
 
-            assert isinstance(sentence_input, SentenceInput)
-            assert sentence_input.text == "The system failed at startup."
-            assert sentence_input.block_id == "blk_001"
-            assert sentence_input.ambiguous
-            assert not sentence_input.verifiable
-            assert not sentence_input.failed_decomposition
-            assert sentence_input.rejection_reason == "Failed selection"
-        else:
-            # Integration test - requires real Neo4j service
-            pytest.skip("Integration tests require real database setup")
+        assert isinstance(sentence_input, SentenceInput)
+        assert sentence_input.text == "The system failed at startup."
+        assert sentence_input.block_id == "blk_001"
+        assert sentence_input.ambiguous
+        assert not sentence_input.verifiable
+        assert not sentence_input.failed_decomposition
+        assert sentence_input.rejection_reason == "Failed selection"
+
+    @pytest.mark.integration
+    def test_create_sentence_input_from_chunk_integration(
+        self, integration, test_chunk
+    ):
+        """Integration test for sentence input creation from chunk."""
+        # Integration test - requires real Neo4j service
+        pytest.skip("Integration tests require real database setup")
 
 
 class TestCreateGraphManagerFromConfigStructure:

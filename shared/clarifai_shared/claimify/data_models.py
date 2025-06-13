@@ -174,10 +174,10 @@ class ClaimifyConfig:
     temperature: float = 0.1
     max_tokens: int = 1000
 
-    # Quality thresholds
-    selection_confidence_threshold: float = 0.5
-    disambiguation_confidence_threshold: float = 0.5
-    decomposition_confidence_threshold: float = 0.5
+    # Quality thresholds (will be added back in Sprint 7)
+    # selection_confidence_threshold: float = 0.5
+    # disambiguation_confidence_threshold: float = 0.5
+    # decomposition_confidence_threshold: float = 0.5
 
     # Logging configuration
     log_decisions: bool = True

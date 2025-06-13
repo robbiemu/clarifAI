@@ -212,7 +212,8 @@ INPUT TEXT:
         entry_pattern = r"^ENTRY\s*\[([^\]]+)\]\s*([^>]+)\s*>>\s*(.+)$"
 
         # Pattern 2: "speaker: message" format (but exclude metadata lines)
-        speaker_pattern = r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.+)$"
+        # Updated to handle speakers with spaces like "Dr. Smith"
+        speaker_pattern = r"^([a-zA-Z_][a-zA-Z0-9_\s\.]*[a-zA-Z0-9_])\s*:\s*(.+)$"
 
         # Metadata fields to exclude from speaker detection
         metadata_fields = {
