@@ -50,6 +50,19 @@ class Tier2SummaryAgent:
             llm: Language model for summary generation
         """
         self.config = config or ClarifAIConfig()
+        
+        # Check if tier2_generation is enabled in configuration
+        tier2_enabled = self.config.features.get("tier2_generation", False)
+        if not tier2_enabled:
+            logger.warning(
+                "Tier 2 generation is disabled in configuration",
+                extra={
+                    "service": "clarifai",
+                    "filename.function_name": "agent.__init__",
+                    "tier2_generation": tier2_enabled,
+                }
+            )
+        
         self.neo4j_manager = neo4j_manager
         self.embedding_storage = embedding_storage
         
@@ -66,13 +79,111 @@ class Tier2SummaryAgent:
             )
         
         logger.info(
-            f"Initialized Tier2SummaryAgent",
+            "Initialized Tier2SummaryAgent",
             extra={
                 "service": "clarifai",
-                "filename.function_name": "tier2_summary.agent.__init__",
+                "filename.function_name": "agent.__init__",
                 "model": str(self.llm.model) if hasattr(self.llm, 'model') else "unknown",
             }
         )
+    
+    def _is_enabled(self) -> bool:
+        """
+        Check if Tier 2 summary generation is enabled in configuration.
+        
+        Returns:
+            True if enabled, False otherwise
+        """
+        return self.config.features.get("tier2_generation", False)
+    
+    def _retry_with_backoff(self, func, *args, **kwargs):
+        """
+        Execute function with retry logic and exponential backoff.
+        
+        Following guidelines from docs/arch/on-error-handling-and-resilience.md
+        for handling transient errors from LLM APIs and Neo4j.
+        """
+        max_attempts = (
+            getattr(self.config, "processing", {})
+            .get("retries", {})
+            .get("max_attempts", 3)
+        )
+        backoff_factor = (
+            getattr(self.config, "processing", {})
+            .get("retries", {})
+            .get("backoff_factor", 2)
+        )
+        max_wait_time = (
+            getattr(self.config, "processing", {})
+            .get("retries", {})
+            .get("max_wait_time", 60)
+        )
+        
+        for attempt in range(max_attempts):
+            try:
+                logger.debug(
+                    "Retrying operation",
+                    extra={
+                        "service": "clarifai",
+                        "filename.function_name": f"agent.{func.__name__}",
+                        "attempt": attempt + 1,
+                        "max_attempts": max_attempts,
+                    }
+                )
+                return func(*args, **kwargs)
+            except Exception as e:
+                # Check if it's a transient error that should be retried
+                is_transient = self._is_transient_error(e)
+                
+                if attempt == max_attempts - 1 or not is_transient:
+                    error_msg = (
+                        "Operation failed after retries" 
+                        if is_transient 
+                        else "Non-transient error occurred"
+                    )
+                    logger.error(
+                        error_msg,
+                        extra={
+                            "service": "clarifai",
+                            "filename.function_name": f"agent.{func.__name__}",
+                            "attempt": attempt + 1,
+                            "error": str(e),
+                            "is_transient": is_transient,
+                        }
+                    )
+                    raise
+                
+                wait_time = min(backoff_factor ** attempt, max_wait_time)
+                logger.warning(
+                    "Transient error occurred, retrying",
+                    extra={
+                        "service": "clarifai",
+                        "filename.function_name": f"agent.{func.__name__}",
+                        "attempt": attempt + 1,
+                        "wait_time": wait_time,
+                        "error": str(e),
+                    }
+                )
+                time.sleep(wait_time)
+    
+    def _is_transient_error(self, error: Exception) -> bool:
+        """
+        Determine if an error is transient and should be retried.
+        
+        Args:
+            error: The exception that occurred
+            
+        Returns:
+            True if error is transient, False otherwise
+        """
+        # Common transient error patterns
+        transient_patterns = [
+            "timeout", "connection", "network", "rate limit", "throttle",
+            "service unavailable", "temporary", "retry", "busy"
+        ]
+        
+        error_str = str(error).lower()
+        return any(pattern in error_str for pattern in transient_patterns)
     
     def retrieve_grouped_content(
         self, 
@@ -99,7 +210,7 @@ class Tier2SummaryAgent:
                 "No Neo4j manager configured - cannot retrieve content",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.retrieve_grouped_content",
+                    "filename.function_name": "agent.retrieve_grouped_content",
                 }
             )
             return []
@@ -110,15 +221,15 @@ class Tier2SummaryAgent:
             # For now, implement a simple grouping strategy
             # In a full implementation, this would use sophisticated vector clustering
             
-            # Get all Claims and Sentences from Neo4j
-            claims = self._get_all_claims()
-            sentences = self._get_all_sentences()
+            # Get all Claims and Sentences from Neo4j with retry logic
+            claims = self._retry_with_backoff(self._get_all_claims)
+            sentences = self._retry_with_backoff(self._get_all_sentences)
             
             logger.info(
-                f"Retrieved {len(claims)} claims and {len(sentences)} sentences for grouping",
+                "Retrieved claims and sentences for grouping",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.retrieve_grouped_content",
+                    "filename.function_name": "agent.retrieve_grouped_content",
                     "claims_count": len(claims),
                     "sentences_count": len(sentences),
                 }
@@ -135,10 +246,10 @@ class Tier2SummaryAgent:
             processing_time = time.time() - start_time
             
             logger.info(
-                f"Created {len(groups)} content groups for summarization",
+                "Created content groups for summarization",
                 extra={
                     "service": "clarifai", 
-                    "filename.function_name": "tier2_summary.agent.retrieve_grouped_content",
+                    "filename.function_name": "agent.retrieve_grouped_content",
                     "groups_count": len(groups),
                     "processing_time": processing_time,
                 }
@@ -148,10 +259,10 @@ class Tier2SummaryAgent:
             
         except Exception as e:
             logger.error(
-                f"Failed to retrieve grouped content: {e}",
+                "Failed to retrieve grouped content",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.retrieve_grouped_content",
+                    "filename.function_name": "agent.retrieve_grouped_content",
                     "error": str(e),
                 }
             )
@@ -185,10 +296,10 @@ class Tier2SummaryAgent:
             
         except Exception as e:
             logger.error(
-                f"Failed to retrieve claims from Neo4j: {e}",
+                "Failed to retrieve claims from Neo4j",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent._get_all_claims",
+                    "filename.function_name": "agent._get_all_claims",
                     "error": str(e),
                 }
             )
@@ -220,10 +331,10 @@ class Tier2SummaryAgent:
             
         except Exception as e:
             logger.error(
-                f"Failed to retrieve sentences from Neo4j: {e}",
+                "Failed to retrieve sentences from Neo4j",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent._get_all_sentences",
+                    "filename.function_name": "agent._get_all_sentences",
                     "error": str(e),
                 }
             )
@@ -286,16 +397,19 @@ class Tier2SummaryAgent:
             prompt = self._create_summary_prompt(summary_input)
             
             logger.debug(
-                f"Generating summary for {len(summary_input.all_texts)} content items",
+                "Generating summary for content items",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.generate_summary",
+                    "filename.function_name": "agent.generate_summary",
                     "content_count": len(summary_input.all_texts),
                 }
             )
             
-            # Generate summary using LLM
-            response = self.llm.complete(prompt)
+            # Generate summary using LLM with retry logic
+            def _generate_llm_response():
+                return self.llm.complete(prompt)
+            
+            response = self._retry_with_backoff(_generate_llm_response)
             summary_text = response.text.strip()
             
             # Create summary block
@@ -315,10 +429,10 @@ class Tier2SummaryAgent:
             )
             
             logger.info(
-                f"Generated summary successfully",
+                "Generated summary successfully",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.generate_summary",
+                    "filename.function_name": "agent.generate_summary",
                     "clarifai_id": summary_block.clarifai_id,
                     "processing_time": processing_time,
                 }
@@ -330,10 +444,10 @@ class Tier2SummaryAgent:
             processing_time = time.time() - start_time
             
             logger.error(
-                f"Failed to generate summary: {e}",
+                "Failed to generate summary",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.generate_summary",
+                    "filename.function_name": "agent.generate_summary",
                     "error": str(e),
                     "processing_time": processing_time,
                 }
@@ -396,10 +510,10 @@ class Tier2SummaryAgent:
         """
         if not summary_result.is_successful:
             logger.error(
-                f"Cannot write summary file - generation failed: {summary_result.error}",
+                "Cannot write summary file - generation failed",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.write_summary_file",
+                    "filename.function_name": "agent.write_summary_file",
                     "output_path": str(output_path),
                     "error": summary_result.error,
                 }
@@ -414,10 +528,10 @@ class Tier2SummaryAgent:
             write_file_atomically(Path(output_path), markdown_content)
             
             logger.info(
-                f"Successfully wrote Tier 2 summary file",
+                "Successfully wrote Tier 2 summary file",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.write_summary_file",
+                    "filename.function_name": "agent.write_summary_file",
                     "output_path": str(output_path),
                     "summary_blocks_count": len(summary_result.summary_blocks),
                 }
@@ -427,10 +541,10 @@ class Tier2SummaryAgent:
             
         except Exception as e:
             logger.error(
-                f"Failed to write summary file: {e}",
+                "Failed to write summary file",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.write_summary_file",
+                    "filename.function_name": "agent.write_summary_file",
                     "output_path": str(output_path),
                     "error": str(e),
                 }
@@ -452,6 +566,17 @@ class Tier2SummaryAgent:
         Returns:
             List of paths to successfully written files
         """
+        # Check if tier2_generation is enabled
+        if not self._is_enabled():
+            logger.warning(
+                "Tier 2 summary generation is disabled in configuration - skipping",
+                extra={
+                    "service": "clarifai",
+                    "filename.function_name": "agent.process_and_generate_summaries",
+                }
+            )
+            return []
+        
         if output_dir is None:
             # Use configured Tier 2 path
             vault_path = Path(self.config.paths.vault)
@@ -465,10 +590,10 @@ class Tier2SummaryAgent:
         written_files = []
         
         logger.info(
-            f"Starting Tier 2 summary generation process",
+            "Starting Tier 2 summary generation process",
             extra={
                 "service": "clarifai",
-                "filename.function_name": "tier2_summary.agent.process_and_generate_summaries",
+                "filename.function_name": "agent.process_and_generate_summaries",
                 "output_dir": str(output_dir),
             }
         )
@@ -482,7 +607,7 @@ class Tier2SummaryAgent:
                     "No content groups found for summarization",
                     extra={
                         "service": "clarifai",
-                        "filename.function_name": "tier2_summary.agent.process_and_generate_summaries",
+                        "filename.function_name": "agent.process_and_generate_summaries",
                     }
                 )
                 return written_files
@@ -504,10 +629,10 @@ class Tier2SummaryAgent:
                             written_files.append(output_path)
                     else:
                         logger.warning(
-                            f"Failed to generate summary for group {i+1}: {summary_result.error}",
+                            "Failed to generate summary for group",
                             extra={
                                 "service": "clarifai",
-                                "filename.function_name": "tier2_summary.agent.process_and_generate_summaries",
+                                "filename.function_name": "agent.process_and_generate_summaries",
                                 "group_index": i+1,
                                 "error": summary_result.error,
                             }
@@ -515,10 +640,10 @@ class Tier2SummaryAgent:
                 
                 except Exception as e:
                     logger.error(
-                        f"Error processing group {i+1}: {e}",
+                        "Error processing group",
                         extra={
                             "service": "clarifai",
-                            "filename.function_name": "tier2_summary.agent.process_and_generate_summaries",
+                            "filename.function_name": "agent.process_and_generate_summaries",
                             "group_index": i+1,
                             "error": str(e),
                         }
@@ -527,10 +652,10 @@ class Tier2SummaryAgent:
             processing_time = time.time() - start_time
             
             logger.info(
-                f"Completed Tier 2 summary generation",
+                "Completed Tier 2 summary generation",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.process_and_generate_summaries",
+                    "filename.function_name": "agent.process_and_generate_summaries",
                     "groups_processed": len(groups),
                     "files_written": len(written_files),
                     "processing_time": processing_time,
@@ -543,10 +668,10 @@ class Tier2SummaryAgent:
             processing_time = time.time() - start_time
             
             logger.error(
-                f"Failed to complete summary generation process: {e}",
+                "Failed to complete summary generation process",
                 extra={
                     "service": "clarifai",
-                    "filename.function_name": "tier2_summary.agent.process_and_generate_summaries",
+                    "filename.function_name": "agent.process_and_generate_summaries",
                     "error": str(e),
                     "processing_time": processing_time,
                 }

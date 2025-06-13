@@ -82,7 +82,7 @@ class Tier2SummaryService:
             )
             
             logger.info(
-                f"Completed Tier 2 summary generation - wrote {len(written_files)} files",
+                "Completed Tier 2 summary generation",
                 extra={
                     "service": "clarifai-core",
                     "filename.function_name": "tier2_integration.Tier2SummaryService.generate_summaries",
@@ -95,7 +95,7 @@ class Tier2SummaryService:
             
         except Exception as e:
             logger.error(
-                f"Failed to generate Tier 2 summaries: {e}",
+                "Failed to generate Tier 2 summaries",
                 extra={
                     "service": "clarifai-core",
                     "filename.function_name": "tier2_integration.Tier2SummaryService.generate_summaries",
@@ -141,7 +141,7 @@ def run_tier2_summary_job() -> bool:
         success = len(written_files) > 0
         
         logger.info(
-            f"Tier 2 summary job completed - success: {success}",
+            "Tier 2 summary job completed",
             extra={
                 "service": "clarifai-core",
                 "filename.function_name": "tier2_integration.run_tier2_summary_job",
@@ -154,7 +154,7 @@ def run_tier2_summary_job() -> bool:
         
     except Exception as e:
         logger.error(
-            f"Tier 2 summary job failed: {e}",
+            "Tier 2 summary job failed",
             extra={
                 "service": "clarifai-core",
                 "filename.function_name": "tier2_integration.run_tier2_summary_job",
