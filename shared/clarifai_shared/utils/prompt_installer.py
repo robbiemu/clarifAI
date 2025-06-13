@@ -88,9 +88,15 @@ def install_default_prompt(
         logger.debug(f"Prompt file already exists: {target_file}")
         return False
 
-    # Find the built-in template
+    # Find the built-in template using more robust path handling  
     current_file = Path(__file__)
+    # First try: prompts at shared package level (shared/prompts/)
     builtin_template = current_file.parent.parent / "prompts" / f"{template_name}.yaml"
+    
+    # If not found, try project root level (for development/testing)
+    if not builtin_template.exists():
+        project_root = current_file.parent.parent.parent  
+        builtin_template = project_root / "prompts" / f"{template_name}.yaml"
 
     if not builtin_template.exists():
         raise FileNotFoundError(f"Built-in template not found: {builtin_template}")
