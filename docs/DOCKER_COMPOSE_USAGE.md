@@ -33,18 +33,29 @@ The Docker Compose stack includes the following services:
    cp .env.example .env
    ```
 
-3. **Edit the environment file (optional):**
+3. **Install default configuration (optional):**
    ```bash
-   # Edit .env with your preferred settings
+   cd services/clarifai-core
+   python install/install_config.py
+   cd ../..
+   ```
+   This creates `settings/clarifai.config.yaml` with default settings that you can customize.
+
+4. **Edit configuration files (optional):**
+   ```bash
+   # Edit environment variables
    nano .env
+   
+   # Edit configuration settings
+   nano settings/clarifai.config.yaml
    ```
 
-4. **Start the entire stack:**
+5. **Start the entire stack:**
    ```bash
    docker compose up -d
    ```
 
-5. **Check the status of all services:**
+6. **Check the status of all services:**
    ```bash
    docker compose ps
    ```
@@ -115,6 +126,35 @@ echo "This is a test document for ClarifAI processing." >> vault/sample.md
 ```
 
 The vault-watcher service will automatically detect changes to files in this directory.
+
+## Configuration System
+
+ClarifAI uses a three-tier configuration system:
+
+### Initial Setup
+On first startup, ClarifAI will automatically create `settings/clarifai.config.yaml` from the default template if it doesn't exist. You can also manually install it:
+
+```bash
+cd services/clarifai-core
+python install/install_config.py
+```
+
+### Configuration Files
+- **`settings/clarifai.config.yaml`** - Your customizable settings (created from template)
+- **Default template** - Built-in defaults in the shared package (not user-visible)
+- **`.env`** - Environment variables for database connections and secrets
+
+### Restoring Defaults
+If you need to reset your configuration:
+
+```bash
+# Delete user config (will be regenerated on next startup)
+rm settings/clarifai.config.yaml
+
+# Or force reinstall
+cd services/clarifai-core
+python install/install_config.py --force
+```
 
 ## Environment Variables
 
