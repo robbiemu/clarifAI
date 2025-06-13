@@ -526,6 +526,7 @@ Respond with valid JSON only:
       "is_self_contained": true/false, 
       "is_verifiable": true/false,
       "passes_criteria": true/false,
+      "confidence": 0.0-1.0,
       "reasoning": "Explanation of evaluation",
       "node_type": "Claim" or "Sentence"
     }}
@@ -557,19 +558,21 @@ Respond with valid JSON only:
                     passes_criteria = candidate_data.get("passes_criteria", False)
                     reasoning = candidate_data.get("reasoning", "No reasoning provided")
 
-                    # Calculate confidence based on quality flags
-                    confidence = 0.0
-                    if (
-                        passes_criteria
-                        and is_atomic
-                        and is_self_contained
-                        and is_verifiable
-                    ):
-                        confidence = 0.9
-                    elif sum([is_atomic, is_self_contained, is_verifiable]) >= 2:
-                        confidence = 0.6
-                    else:
-                        confidence = 0.3
+                    # Get confidence from LLM response or calculate based on quality flags
+                    confidence = candidate_data.get("confidence")
+                    if confidence is None:
+                        # Fallback calculation if LLM doesn't provide confidence
+                        if (
+                            passes_criteria
+                            and is_atomic
+                            and is_self_contained
+                            and is_verifiable
+                        ):
+                            confidence = 0.9
+                        elif sum([is_atomic, is_self_contained, is_verifiable]) >= 2:
+                            confidence = 0.6
+                        else:
+                            confidence = 0.3
 
                     # Apply confidence threshold - only include candidates above threshold
                     if confidence >= self.config.decomposition_confidence_threshold:

@@ -39,6 +39,7 @@ prompt_template: |
         "is_self_contained": true/false, 
         "is_verifiable": true/false,
         "passes_criteria": true/false,
+        "confidence": 0.0-1.0,
         "reasoning": "Explanation of evaluation",
         "node_type": "Claim" or "Sentence"
       }

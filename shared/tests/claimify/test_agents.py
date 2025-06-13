@@ -236,7 +236,7 @@ class TestDecompositionAgent:
 
     def test_llm_decomposition_single_claim(self, config):
         """Test processing of a simple atomic claim."""
-        json_response = """{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Single atomic verifiable fact", "node_type": "Claim"}]}"""
+        json_response = """{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "confidence": 0.95, "reasoning": "Single atomic verifiable fact", "node_type": "Claim"}]}"""
         mock_llm = MockLLM(json_response)
         agent = DecompositionAgent(llm=mock_llm, config=config)
 
@@ -256,11 +256,11 @@ class TestDecompositionAgent:
         assert claim.is_atomic
         assert claim.is_self_contained
         assert claim.is_verifiable
-        assert claim.confidence == 0.9  # Based on all criteria passed
+        assert claim.confidence == 0.95  # From LLM response
 
     def test_llm_decomposition_multiple_claims(self, config):
         """Test splitting of compound sentences and JSON parsing."""
-        json_response = """{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "First atomic claim", "node_type": "Claim"}, {"text": "The user was notified.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Second atomic claim", "node_type": "Claim"}]}"""
+        json_response = """{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "confidence": 0.92, "reasoning": "First atomic claim", "node_type": "Claim"}, {"text": "The user was notified.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "confidence": 0.88, "reasoning": "Second atomic claim", "node_type": "Claim"}]}"""
         mock_llm = MockLLM(json_response)
         agent = DecompositionAgent(llm=mock_llm, config=config)
 
@@ -298,6 +298,7 @@ class TestDecompositionAgent:
                 "is_self_contained": true,
                 "is_verifiable": true,
                 "passes_criteria": true,
+                "confidence": 0.93,
                 "reasoning": "Meets all criteria",
                 "node_type": "Claim"
             },
@@ -307,10 +308,14 @@ class TestDecompositionAgent:
                 "is_self_contained": true,
                 "is_verifiable": true,
                 "passes_criteria": false,
+                "confidence": 0.25,
                 "reasoning": "Not atomic - compound statement",
                 "node_type": "Sentence"
             }
         ]}"""
+
+        # Set a low confidence threshold to include all candidates
+        config = ClaimifyConfig(decomposition_confidence_threshold=0.1)
 
         mock_llm = MockLLM(json_response)
         agent = DecompositionAgent(llm=mock_llm, config=config)
@@ -372,6 +377,72 @@ class TestDecompositionAgent:
         result = agent.process("test text", test_sentence)
 
         assert len(result.claim_candidates) == 0
+
+    def test_decomposition_confidence_fallback_calculation(self, config):
+        """Test confidence fallback calculation when LLM doesn't provide confidence."""
+        # JSON response without confidence field - should trigger fallback calculation
+        json_response = """{"claim_candidates": [
+            {
+                "text": "Perfect claim meeting all criteria.",
+                "is_atomic": true,
+                "is_self_contained": true,
+                "is_verifiable": true,
+                "passes_criteria": true,
+                "reasoning": "Meets all criteria - no confidence provided",
+                "node_type": "Claim"
+            },
+            {
+                "text": "Partial claim meeting some criteria.",
+                "is_atomic": true,
+                "is_self_contained": true,
+                "is_verifiable": false,
+                "passes_criteria": false,
+                "reasoning": "Meets 2 of 3 criteria - no confidence provided",
+                "node_type": "Sentence"
+            },
+            {
+                "text": "Poor claim meeting few criteria.",
+                "is_atomic": false,
+                "is_self_contained": false,
+                "is_verifiable": false,
+                "passes_criteria": false,
+                "reasoning": "Meets 0 of 3 criteria - no confidence provided",
+                "node_type": "Sentence"
+            }
+        ]}"""
+
+        # Set a low confidence threshold to include all candidates
+        config = ClaimifyConfig(decomposition_confidence_threshold=0.1)
+
+        mock_llm = MockLLM(json_response)
+        agent = DecompositionAgent(llm=mock_llm, config=config)
+
+        test_sentence = SentenceChunk(
+            text="test sentence",
+            source_id="blk_001",
+            chunk_id="chunk_001",
+            sentence_index=1,
+        )
+
+        result = agent.process("Test input text.", test_sentence)
+
+        assert len(result.claim_candidates) == 3
+
+        # Test fallback confidence calculation
+        # Perfect claim (all criteria met): should get 0.9
+        perfect_claim = result.claim_candidates[0]
+        assert perfect_claim.confidence == 0.9
+        assert perfect_claim.text == "Perfect claim meeting all criteria."
+
+        # Partial claim (2 of 3 criteria): should get 0.6
+        partial_claim = result.claim_candidates[1]
+        assert partial_claim.confidence == 0.6
+        assert partial_claim.text == "Partial claim meeting some criteria."
+
+        # Poor claim (0 of 3 criteria): should get 0.3
+        poor_claim = result.claim_candidates[2]
+        assert poor_claim.confidence == 0.3
+        assert poor_claim.text == "Poor claim meeting few criteria."
 
 
 class TestAgentErrorHandling:
@@ -531,8 +602,8 @@ class TestAgentConfidenceThresholds:
 
         # LLM returns mix of high and low confidence claims
         json_response = """{"claim_candidates": [
-            {"text": "High quality claim", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Excellent claim"},
-            {"text": "Low quality claim", "is_atomic": false, "is_self_contained": false, "is_verifiable": false, "passes_criteria": false, "reasoning": "Poor claim"}
+            {"text": "High quality claim", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "confidence": 0.95, "reasoning": "Excellent claim"},
+            {"text": "Low quality claim", "is_atomic": false, "is_self_contained": false, "is_verifiable": false, "passes_criteria": false, "confidence": 0.2, "reasoning": "Poor claim"}
         ]}"""
         mock_llm = MockLLM(json_response)
         agent = DecompositionAgent(llm=mock_llm, config=config)
@@ -542,4 +613,4 @@ class TestAgentConfidenceThresholds:
         # Should only include high-confidence claim (0.9) and exclude low-confidence claim (0.3)
         assert len(result.claim_candidates) == 1
         assert result.claim_candidates[0].text == "High quality claim"
-        assert result.claim_candidates[0].confidence == 0.9
+        assert result.claim_candidates[0].confidence == 0.95
