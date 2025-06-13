@@ -36,13 +36,13 @@ class TestNeo4jGraphManager:
         """Test Neo4jGraphManager initialization with config (unit test)."""
         # Import and test the actual class instead of checking file contents
         from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
-        
+
         # Test that the class can be imported and has expected methods
-        assert hasattr(Neo4jGraphManager, '__init__')
-        assert hasattr(Neo4jGraphManager, 'create_claims')
-        assert hasattr(Neo4jGraphManager, 'create_sentences')
-        assert hasattr(Neo4jGraphManager, 'get_sentence_by_id')
-        
+        assert hasattr(Neo4jGraphManager, "__init__")
+        assert hasattr(Neo4jGraphManager, "create_claims")
+        assert hasattr(Neo4jGraphManager, "create_sentences")
+        assert hasattr(Neo4jGraphManager, "get_sentence_by_id")
+
         # Test initialization doesn't crash with mock config
         # Note: This will fail if it tries to connect to real Neo4j, but that's
         # expected for a unit test. Integration tests should be separate.

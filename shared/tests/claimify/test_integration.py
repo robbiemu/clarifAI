@@ -77,9 +77,7 @@ class TestClaimifyGraphIntegration:
             sentence_index=0,
         )
 
-    def test_convert_successful_claim_result(
-        self, integration, test_chunk
-    ):
+    def test_convert_successful_claim_result(self, integration, test_chunk):
         """Test conversion of successful claim result."""
         # Mock test - verify conversion logic
         # Create a valid claim candidate
@@ -108,9 +106,7 @@ class TestClaimifyGraphIntegration:
         )
 
         # Convert to inputs
-        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
-            result
-        )
+        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
 
         # Check claim properties
         assert len(claim_inputs) == 1
@@ -123,16 +119,12 @@ class TestClaimifyGraphIntegration:
         assert claim.context_complete
 
     @pytest.mark.integration
-    def test_convert_successful_claim_result_integration(
-        self, integration, test_chunk
-    ):
+    def test_convert_successful_claim_result_integration(self, integration, test_chunk):
         """Integration test for successful claim result conversion."""
         # Integration test - requires real Neo4j service
         pytest.skip("Integration tests require real database setup")
 
-    def test_convert_failed_claim_result(
-        self, integration, test_chunk
-    ):
+    def test_convert_failed_claim_result(self, integration, test_chunk):
         """Test conversion of result with claims that failed criteria."""
         # Mock test - verify conversion logic
         # Create a claim candidate that fails some criteria
@@ -158,9 +150,7 @@ class TestClaimifyGraphIntegration:
         )
 
         # Convert to graph inputs
-        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
-            result
-        )
+        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
 
         # Should have no claims, one sentence
         assert len(claim_inputs) == 0
@@ -176,16 +166,12 @@ class TestClaimifyGraphIntegration:
         assert not sentence.failed_decomposition  # Was atomic
 
     @pytest.mark.integration
-    def test_convert_failed_claim_result_integration(
-        self, integration, test_chunk
-    ):
+    def test_convert_failed_claim_result_integration(self, integration, test_chunk):
         """Integration test for failed claim result conversion."""
         # Integration test - requires real Neo4j service
         pytest.skip("Integration tests require real database setup")
 
-    def test_convert_unprocessed_result(
-        self, integration, test_chunk
-    ):
+    def test_convert_unprocessed_result(self, integration, test_chunk):
         """Test conversion of result that wasn't selected for processing."""
         # Mock test - verify conversion logic
         # Create result where selection failed
@@ -199,9 +185,7 @@ class TestClaimifyGraphIntegration:
         )
 
         # Convert to graph inputs
-        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(
-            result
-        )
+        claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
 
         # Should have no claims, one sentence
         assert len(claim_inputs) == 0
@@ -217,10 +201,8 @@ class TestClaimifyGraphIntegration:
         assert not sentence.failed_decomposition  # Wasn't decomposed
         assert sentence.rejection_reason == "Not selected by Selection agent"
 
-    @pytest.mark.integration  
-    def test_convert_unprocessed_result_integration(
-        self, integration, test_chunk
-    ):
+    @pytest.mark.integration
+    def test_convert_unprocessed_result_integration(self, integration, test_chunk):
         """Integration test for unprocessed result conversion."""
         # Integration test - requires real Neo4j service
         pytest.skip("Integration tests require real database setup")
@@ -284,9 +266,7 @@ class TestClaimifyGraphIntegration:
         # Integration test - requires real Neo4j service
         pytest.skip("Integration tests require real database setup")
 
-    def test_create_sentence_input_from_chunk(
-        self, integration, test_chunk
-    ):
+    def test_create_sentence_input_from_chunk(self, integration, test_chunk):
         """Test creation of SentenceInput directly from chunk."""
         # Mock test - verify sentence input creation from chunk
         sentence_input = integration._create_sentence_input_from_chunk(

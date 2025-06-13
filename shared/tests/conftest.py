@@ -27,15 +27,11 @@ def pytest_collection_modifyitems(config, items):
     if config.getoption("--integration"):
         # Integration mode - run all tests
         return
-    
+
     # Unit test mode - skip integration tests
-    skip_integration = pytest.mark.skip(reason="integration tests require --integration flag")
+    skip_integration = pytest.mark.skip(
+        reason="integration tests require --integration flag"
+    )
     for item in items:
         if "integration" in item.keywords:
             item.add_marker(skip_integration)
-
-
-@pytest.fixture
-def integration_mode(request):
-    """Fixture to determine if tests should run in integration mode."""
-    return request.config.getoption("--integration")

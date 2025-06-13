@@ -44,19 +44,23 @@ class ConversationExtractorAgent:
         if llm is None:
             # Load model configuration from YAML following design_config_panel.md
             config = load_config(validate=False)
-            
+
             # Try to load model configuration from YAML
             fallback_model = self._get_fallback_model_from_config()
-            
+
             api_key = getattr(config, "openai_api_key", None)
             if api_key and fallback_model:
                 # Use configured model if available
                 self.llm = OpenAI(api_key=api_key, model=fallback_model)
-                logger.info(f"Initialized ConversationExtractorAgent with configured model: {fallback_model}")
+                logger.info(
+                    f"Initialized ConversationExtractorAgent with configured model: {fallback_model}"
+                )
             elif api_key:
-                # Fallback to default model if no specific config found
-                self.llm = OpenAI(api_key=api_key, model="gpt-3.5-turbo")
-                logger.info("Initialized ConversationExtractorAgent with default OpenAI model")
+                # No specific model configuration found - this indicates a configuration issue
+                logger.warning(
+                    "No fallback_plugin model configured, initializing without LLM"
+                )
+                self.llm = None
             else:
                 # Graceful fallback for testing/development when no LLM is available
                 self.llm = None
@@ -72,28 +76,30 @@ class ConversationExtractorAgent:
     def _get_fallback_model_from_config(self) -> Optional[str]:
         """
         Get the fallback_plugin model configuration from YAML config.
-        
+
         Returns:
             Model name for fallback plugin or None if not configured
         """
         try:
             # Import here to avoid circular imports
             from ..config import ClarifAIConfig
-            
+
             # Load YAML config using the existing utility
             yaml_config = ClarifAIConfig._load_yaml_config()
-            
+
             # Get model.fallback_plugin configuration following design_config_panel.md
             model_config = yaml_config.get("model", {})
             fallback_model = model_config.get("fallback_plugin")
-            
+
             if fallback_model:
-                logger.debug(f"Found fallback_plugin model configuration: {fallback_model}")
+                logger.debug(
+                    f"Found fallback_plugin model configuration: {fallback_model}"
+                )
                 return fallback_model
             else:
                 logger.debug("No fallback_plugin model configuration found")
                 return None
-                
+
         except Exception as e:
             logger.warning(f"Failed to load model configuration: {e}")
             return None

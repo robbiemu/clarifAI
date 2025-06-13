@@ -40,7 +40,7 @@ def load_claimify_config_from_yaml(config_data: Dict[str, Any]) -> ClaimifyConfi
 
     # Fall back to global processing config if claimify-specific values not set
     if not claimify_default:
-        claimify_default = config_data.get("processing", {}).get("default_model") or model_config.get("default", "gpt-3.5-turbo")
+        claimify_default = model_config.get("fallback_plugin", "gpt-3.5-turbo")
 
     # Processing settings (check global processing first, then claimify-specific)
     processing_config = config_data.get("processing", {})
@@ -50,13 +50,11 @@ def load_claimify_config_from_yaml(config_data: Dict[str, Any]) -> ClaimifyConfi
     temperature = processing_config.get("temperature", 0.1)
     max_tokens = processing_config.get("max_tokens", 1000)
 
-    # Threshold settings
-    thresholds = claimify_processing.get("thresholds", {})
-    selection_confidence_threshold = thresholds.get("selection_confidence", 0.5)
-    disambiguation_confidence_threshold = thresholds.get(
-        "disambiguation_confidence", 0.5
-    )
-    decomposition_confidence_threshold = thresholds.get("decomposition_confidence", 0.5)
+    # Threshold settings (to be implemented when threshold evaluation is added)
+    # For now, these return default values as the thresholds are not yet configured
+    selection_confidence_threshold = 0.5
+    disambiguation_confidence_threshold = 0.5
+    decomposition_confidence_threshold = 0.5
 
     # Logging settings
     logging_config = claimify_processing.get("logging", {})
@@ -165,6 +163,6 @@ def get_model_config_for_stage(config_data: Dict[str, Any], stage: str) -> str:
     if claimify_default:
         return claimify_default
 
-    # Fall back to global model config
-    global_default = model_config.get("default", "gpt-3.5-turbo")
-    return global_default
+    # Use global fallback_plugin model if no claimify-specific config
+    fallback_plugin = model_config.get("fallback_plugin", "gpt-3.5-turbo")
+    return fallback_plugin

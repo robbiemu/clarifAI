@@ -19,33 +19,32 @@ class TestClaimInput:
     def test_graph_models_structure(self):
         """Test that the graph models classes are properly implemented."""
         # Import the actual classes instead of checking strings in files
-        from clarifai_shared.graph.models import ClaimInput, SentenceInput, Claim, Sentence
-        
-        # Test ClaimInput can be instantiated and has expected properties
-        claim_input = ClaimInput(
-            text="Test claim",
-            block_id="block_123"
+        from clarifai_shared.graph.models import (
+            ClaimInput,
+            SentenceInput,
+            Claim,
+            Sentence,
         )
+
+        # Test ClaimInput can be instantiated and has expected properties
+        claim_input = ClaimInput(text="Test claim", block_id="block_123")
         assert claim_input.text == "Test claim"
         assert claim_input.block_id == "block_123"
-        assert hasattr(claim_input, 'entailed_score')
-        assert hasattr(claim_input, 'coverage_score')
-        assert hasattr(claim_input, 'decontextualization_score')
-        
+        assert hasattr(claim_input, "entailed_score")
+        assert hasattr(claim_input, "coverage_score")
+        assert hasattr(claim_input, "decontextualization_score")
+
         # Test SentenceInput can be instantiated
-        sentence_input = SentenceInput(
-            text="Test sentence",
-            block_id="block_456"
-        )
+        sentence_input = SentenceInput(text="Test sentence", block_id="block_456")
         assert sentence_input.text == "Test sentence"
         assert sentence_input.block_id == "block_456"
-        
+
         # Test Claim can be created from ClaimInput
         claim = Claim.from_input(claim_input)
         assert claim.text == "Test claim"
         assert claim.claim_id == claim_input.claim_id
-        
-        # Test Sentence can be created from SentenceInput  
+
+        # Test Sentence can be created from SentenceInput
         sentence = Sentence.from_input(sentence_input)
         assert sentence.text == "Test sentence"
         assert sentence.sentence_id == sentence_input.sentence_id

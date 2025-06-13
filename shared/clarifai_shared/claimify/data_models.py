@@ -174,7 +174,7 @@ class ClaimifyConfig:
     temperature: float = 0.1
     max_tokens: int = 1000
 
-    # Quality thresholds (will be added back in Sprint 7)
+    # Quality thresholds (to be added when threshold evaluation is implemented)
     # selection_confidence_threshold: float = 0.5
     # disambiguation_confidence_threshold: float = 0.5
     # decomposition_confidence_threshold: float = 0.5

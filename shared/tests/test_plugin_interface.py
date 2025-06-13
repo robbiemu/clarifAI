@@ -18,22 +18,26 @@ class TestMarkdownOutput:
     def test_plugin_interface_structure(self):
         """Test that the plugin interface classes and methods are properly implemented."""
         # Import the actual classes instead of checking strings in files
-        from clarifai_shared.plugin_interface import MarkdownOutput, Plugin, UnknownFormatError
-        
+        from clarifai_shared.plugin_interface import (
+            MarkdownOutput,
+            Plugin,
+            UnknownFormatError,
+        )
+
         # Test MarkdownOutput dataclass can be instantiated
         output = MarkdownOutput(
             title="Test Title",
             markdown_text="# Test Content",
-            metadata={"test": "data"}
+            metadata={"test": "data"},
         )
         assert output.title == "Test Title"
-        assert output.markdown_text == "# Test Content" 
+        assert output.markdown_text == "# Test Content"
         assert output.metadata == {"test": "data"}
-        
+
         # Test Plugin abstract class has required methods
-        assert hasattr(Plugin, 'can_accept')
-        assert hasattr(Plugin, 'convert')
-        
+        assert hasattr(Plugin, "can_accept")
+        assert hasattr(Plugin, "convert")
+
         # Test UnknownFormatError exception can be raised
         try:
             raise UnknownFormatError("Test error")

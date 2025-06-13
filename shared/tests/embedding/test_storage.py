@@ -2,6 +2,7 @@
 Tests for embedding storage components.
 """
 
+import pytest
 from unittest.mock import Mock, patch
 
 from clarifai_shared.embedding.storage import ClarifAIVectorStore, VectorStoreMetrics
@@ -44,8 +45,8 @@ class TestVectorStoreMetrics:
 class TestClarifAIVectorStore:
     """Test cases for ClarifAIVectorStore with configurable dependencies."""
 
-    def test_vector_store_init_with_config(self, integration_mode):
-        """Test ClarifAIVectorStore initialization with config."""
+    def test_vector_store_init_with_config(self):
+        """Test ClarifAIVectorStore initialization with config (unit test)."""
         config = ClarifAIConfig()
         config.postgres = DatabaseConfig(
             host="localhost",
@@ -55,30 +56,41 @@ class TestClarifAIVectorStore:
             password="test_pass",
         )
 
-        if not integration_mode:
-            with (
-                patch(
-                    "clarifai_shared.embedding.storage.create_engine"
-                ) as mock_create_engine,
-                patch("clarifai_shared.embedding.storage.PGVectorStore"),
-                patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
-                patch("clarifai_shared.config.load_config") as mock_load_config,
-            ):
-                mock_engine = Mock()
-                mock_engine.connect.return_value.__enter__ = Mock()
-                mock_engine.connect.return_value.__exit__ = Mock()
-                mock_create_engine.return_value = mock_engine
-                mock_load_config.return_value = config
+        with (
+            patch(
+                "clarifai_shared.embedding.storage.create_engine"
+            ) as mock_create_engine,
+            patch("clarifai_shared.embedding.storage.PGVectorStore"),
+            patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
+            patch("clarifai_shared.config.load_config") as mock_load_config,
+        ):
+            mock_engine = Mock()
+            mock_engine.connect.return_value.__enter__ = Mock()
+            mock_engine.connect.return_value.__exit__ = Mock()
+            mock_create_engine.return_value = mock_engine
+            mock_load_config.return_value = config
 
-                vector_store = ClarifAIVectorStore(config=config)
-                assert vector_store.config == config
-        else:
-            # Integration test - requires real PostgreSQL service
             vector_store = ClarifAIVectorStore(config=config)
             assert vector_store.config == config
 
-    def test_store_embeddings(self, integration_mode):
-        """Test storing embeddings in vector store."""
+    @pytest.mark.integration
+    def test_vector_store_init_with_config_integration(self):
+        """Test ClarifAIVectorStore initialization with config (integration test)."""
+        config = ClarifAIConfig()
+        config.postgres = DatabaseConfig(
+            host="localhost",
+            port=5432,
+            database="clarifai_test",
+            user="test_user",
+            password="test_pass",
+        )
+
+        # Integration test - requires real PostgreSQL service
+        vector_store = ClarifAIVectorStore(config=config)
+        assert vector_store.config == config
+
+    def test_store_embeddings(self):
+        """Test storing embeddings in vector store (unit test)."""
         config = ClarifAIConfig()
         config.postgres = DatabaseConfig(
             host="localhost",
@@ -105,39 +117,34 @@ class TestClarifAIVectorStore:
             )
         ]
 
-        if not integration_mode:
-            with (
-                patch(
-                    "clarifai_shared.embedding.storage.create_engine"
-                ) as mock_create_engine,
-                patch("clarifai_shared.embedding.storage.PGVectorStore"),
-                patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
-                patch("clarifai_shared.config.load_config") as mock_load_config,
-            ):
-                mock_engine = Mock()
-                mock_engine.connect.return_value.__enter__ = Mock()
-                mock_engine.connect.return_value.__exit__ = Mock()
-                mock_create_engine.return_value = mock_engine
-                mock_load_config.return_value = config
+        with (
+            patch(
+                "clarifai_shared.embedding.storage.create_engine"
+            ) as mock_create_engine,
+            patch("clarifai_shared.embedding.storage.PGVectorStore"),
+            patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
+            patch("clarifai_shared.config.load_config") as mock_load_config,
+        ):
+            mock_engine = Mock()
+            mock_engine.connect.return_value.__enter__ = Mock()
+            mock_engine.connect.return_value.__exit__ = Mock()
+            mock_create_engine.return_value = mock_engine
+            mock_load_config.return_value = config
 
-                vector_store = ClarifAIVectorStore(config=config)
-
-                # Mock the store_embeddings return value
-                with patch.object(
-                    vector_store,
-                    "store_embeddings",
-                    return_value=VectorStoreMetrics(1, 1, 0),
-                ):
-                    metrics = vector_store.store_embeddings(embedded_chunks)
-                    assert isinstance(metrics, VectorStoreMetrics)
-        else:
-            # Integration test - requires real PostgreSQL service
             vector_store = ClarifAIVectorStore(config=config)
-            metrics = vector_store.store_embeddings(embedded_chunks)
-            assert isinstance(metrics, VectorStoreMetrics)
 
-    def test_store_embeddings_empty_list(self, integration_mode):
-        """Test storing empty list of embeddings."""
+            # Mock the store_embeddings return value
+            with patch.object(
+                vector_store,
+                "store_embeddings",
+                return_value=VectorStoreMetrics(1, 1, 0),
+            ):
+                metrics = vector_store.store_embeddings(embedded_chunks)
+                assert isinstance(metrics, VectorStoreMetrics)
+
+    @pytest.mark.integration
+    def test_store_embeddings_integration(self):
+        """Test storing embeddings in vector store (integration test)."""
         config = ClarifAIConfig()
         config.postgres = DatabaseConfig(
             host="localhost",
@@ -147,43 +154,30 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        if not integration_mode:
-            with (
-                patch(
-                    "clarifai_shared.embedding.storage.create_engine"
-                ) as mock_create_engine,
-                patch("clarifai_shared.embedding.storage.PGVectorStore"),
-                patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
-                patch("clarifai_shared.config.load_config") as mock_load_config,
-            ):
-                mock_engine = Mock()
-                mock_engine.connect.return_value.__enter__ = Mock()
-                mock_engine.connect.return_value.__exit__ = Mock()
-                mock_create_engine.return_value = mock_engine
-                mock_load_config.return_value = config
+        # Create test embedded chunks
+        chunk_metadata = ChunkMetadata(
+            clarifai_block_id="blk_store_test",
+            chunk_index=0,
+            original_text="Test original text",
+            text="Test chunk text",
+        )
 
-                vector_store = ClarifAIVectorStore(config=config)
+        embedded_chunks = [
+            EmbeddedChunk(
+                chunk_metadata=chunk_metadata,
+                embedding=[0.1, 0.2, 0.3],
+                model_name="test-model",
+                embedding_dim=3,
+            )
+        ]
 
-                # Mock the store_embeddings return value
-                with patch.object(
-                    vector_store,
-                    "store_embeddings",
-                    return_value=VectorStoreMetrics(0, 0, 0),
-                ):
-                    metrics = vector_store.store_embeddings([])
-                    assert metrics.total_vectors == 0
-                    assert metrics.successful_inserts == 0
-                    assert metrics.failed_inserts == 0
-        else:
-            # Integration test - requires real PostgreSQL service
-            vector_store = ClarifAIVectorStore(config=config)
-            metrics = vector_store.store_embeddings([])
-            assert metrics.total_vectors == 0
-            assert metrics.successful_inserts == 0
-            assert metrics.failed_inserts == 0
+        # Integration test - requires real PostgreSQL service
+        vector_store = ClarifAIVectorStore(config=config)
+        metrics = vector_store.store_embeddings(embedded_chunks)
+        assert isinstance(metrics, VectorStoreMetrics)
 
-    def test_similarity_search(self, integration_mode):
-        """Test similarity search functionality."""
+    def test_store_embeddings_empty_list(self):
+        """Test storing empty list of embeddings (unit test)."""
         config = ClarifAIConfig()
         config.postgres = DatabaseConfig(
             host="localhost",
@@ -193,35 +187,36 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        if not integration_mode:
-            with (
-                patch(
-                    "clarifai_shared.embedding.storage.create_engine"
-                ) as mock_create_engine,
-                patch("clarifai_shared.embedding.storage.PGVectorStore"),
-                patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
-                patch("clarifai_shared.config.load_config") as mock_load_config,
-            ):
-                mock_engine = Mock()
-                mock_engine.connect.return_value.__enter__ = Mock()
-                mock_engine.connect.return_value.__exit__ = Mock()
-                mock_create_engine.return_value = mock_engine
-                mock_load_config.return_value = config
+        with (
+            patch(
+                "clarifai_shared.embedding.storage.create_engine"
+            ) as mock_create_engine,
+            patch("clarifai_shared.embedding.storage.PGVectorStore"),
+            patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
+            patch("clarifai_shared.config.load_config") as mock_load_config,
+        ):
+            mock_engine = Mock()
+            mock_engine.connect.return_value.__enter__ = Mock()
+            mock_engine.connect.return_value.__exit__ = Mock()
+            mock_create_engine.return_value = mock_engine
+            mock_load_config.return_value = config
 
-                vector_store = ClarifAIVectorStore(config=config)
-
-                # Mock the similarity_search return value
-                with patch.object(vector_store, "similarity_search", return_value=[]):
-                    results = vector_store.similarity_search("test query", top_k=5)
-                    assert isinstance(results, list)
-        else:
-            # Integration test - requires real PostgreSQL service
             vector_store = ClarifAIVectorStore(config=config)
-            results = vector_store.similarity_search("test query", top_k=5)
-            assert isinstance(results, list)
 
-    def test_delete_chunks_by_block_id(self, integration_mode):
-        """Test deleting chunks by block ID."""
+            # Mock the store_embeddings return value
+            with patch.object(
+                vector_store,
+                "store_embeddings",
+                return_value=VectorStoreMetrics(0, 0, 0),
+            ):
+                metrics = vector_store.store_embeddings([])
+                assert metrics.total_vectors == 0
+                assert metrics.successful_inserts == 0
+                assert metrics.failed_inserts == 0
+
+    @pytest.mark.integration
+    def test_store_embeddings_empty_list_integration(self):
+        """Test storing empty list of embeddings (integration test)."""
         config = ClarifAIConfig()
         config.postgres = DatabaseConfig(
             host="localhost",
@@ -231,39 +226,15 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        if not integration_mode:
-            with (
-                patch(
-                    "clarifai_shared.embedding.storage.create_engine"
-                ) as mock_create_engine,
-                patch("clarifai_shared.embedding.storage.PGVectorStore"),
-                patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
-                patch("clarifai_shared.config.load_config") as mock_load_config,
-            ):
-                mock_engine = Mock()
-                mock_engine.connect.return_value.__enter__ = Mock()
-                mock_engine.connect.return_value.__exit__ = Mock()
-                mock_create_engine.return_value = mock_engine
-                mock_load_config.return_value = config
+        # Integration test - requires real PostgreSQL service
+        vector_store = ClarifAIVectorStore(config=config)
+        metrics = vector_store.store_embeddings([])
+        assert metrics.total_vectors == 0
+        assert metrics.successful_inserts == 0
+        assert metrics.failed_inserts == 0
 
-                vector_store = ClarifAIVectorStore(config=config)
-
-                # Mock the delete_chunks_by_block_id return value
-                with patch.object(
-                    vector_store, "delete_chunks_by_block_id", return_value=0
-                ):
-                    deleted_count = vector_store.delete_chunks_by_block_id(
-                        "test_block_id"
-                    )
-                    assert isinstance(deleted_count, int)
-        else:
-            # Integration test - requires real PostgreSQL service
-            vector_store = ClarifAIVectorStore(config=config)
-            deleted_count = vector_store.delete_chunks_by_block_id("test_block_id")
-            assert isinstance(deleted_count, int)
-
-    def test_get_store_metrics(self, integration_mode):
-        """Test getting vector store metrics."""
+    def test_similarity_search(self):
+        """Test similarity search functionality (unit test)."""
         config = ClarifAIConfig()
         config.postgres = DatabaseConfig(
             host="localhost",
@@ -273,33 +244,144 @@ class TestClarifAIVectorStore:
             database="test_db",
         )
 
-        if not integration_mode:
-            with (
-                patch(
-                    "clarifai_shared.embedding.storage.create_engine"
-                ) as mock_create_engine,
-                patch("clarifai_shared.embedding.storage.PGVectorStore"),
-                patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
-                patch("clarifai_shared.config.load_config") as mock_load_config,
-            ):
-                mock_engine = Mock()
-                mock_engine.connect.return_value.__enter__ = Mock()
-                mock_engine.connect.return_value.__exit__ = Mock()
-                mock_create_engine.return_value = mock_engine
-                mock_load_config.return_value = config
+        with (
+            patch(
+                "clarifai_shared.embedding.storage.create_engine"
+            ) as mock_create_engine,
+            patch("clarifai_shared.embedding.storage.PGVectorStore"),
+            patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
+            patch("clarifai_shared.config.load_config") as mock_load_config,
+        ):
+            mock_engine = Mock()
+            mock_engine.connect.return_value.__enter__ = Mock()
+            mock_engine.connect.return_value.__exit__ = Mock()
+            mock_create_engine.return_value = mock_engine
+            mock_load_config.return_value = config
 
-                vector_store = ClarifAIVectorStore(config=config)
-
-                # Mock the get_store_metrics return value
-                with patch.object(
-                    vector_store,
-                    "get_store_metrics",
-                    return_value=VectorStoreMetrics(0, 0, 0),
-                ):
-                    metrics = vector_store.get_store_metrics()
-                    assert isinstance(metrics, VectorStoreMetrics)
-        else:
-            # Integration test - requires real PostgreSQL service
             vector_store = ClarifAIVectorStore(config=config)
-            metrics = vector_store.get_store_metrics()
-            assert isinstance(metrics, VectorStoreMetrics)
+
+            # Mock the similarity_search return value
+            with patch.object(vector_store, "similarity_search", return_value=[]):
+                results = vector_store.similarity_search("test query", top_k=5)
+                assert isinstance(results, list)
+
+    @pytest.mark.integration
+    def test_similarity_search_integration(self):
+        """Test similarity search functionality (integration test)."""
+        config = ClarifAIConfig()
+        config.postgres = DatabaseConfig(
+            host="localhost",
+            port=5432,
+            user="test_user",
+            password="test_pass",
+            database="test_db",
+        )
+
+        # Integration test - requires real PostgreSQL service
+        vector_store = ClarifAIVectorStore(config=config)
+        results = vector_store.similarity_search("test query", top_k=5)
+        assert isinstance(results, list)
+
+    def test_delete_chunks_by_block_id(self):
+        """Test deleting chunks by block ID (unit test)."""
+        config = ClarifAIConfig()
+        config.postgres = DatabaseConfig(
+            host="localhost",
+            port=5432,
+            user="test_user",
+            password="test_pass",
+            database="test_db",
+        )
+
+        with (
+            patch(
+                "clarifai_shared.embedding.storage.create_engine"
+            ) as mock_create_engine,
+            patch("clarifai_shared.embedding.storage.PGVectorStore"),
+            patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
+            patch("clarifai_shared.config.load_config") as mock_load_config,
+        ):
+            mock_engine = Mock()
+            mock_engine.connect.return_value.__enter__ = Mock()
+            mock_engine.connect.return_value.__exit__ = Mock()
+            mock_create_engine.return_value = mock_engine
+            mock_load_config.return_value = config
+
+            vector_store = ClarifAIVectorStore(config=config)
+
+            # Mock the delete_chunks_by_block_id return value
+            with patch.object(
+                vector_store, "delete_chunks_by_block_id", return_value=0
+            ):
+                deleted_count = vector_store.delete_chunks_by_block_id("test_block_id")
+                assert isinstance(deleted_count, int)
+
+    @pytest.mark.integration
+    def test_delete_chunks_by_block_id_integration(self):
+        """Test deleting chunks by block ID (integration test)."""
+        config = ClarifAIConfig()
+        config.postgres = DatabaseConfig(
+            host="localhost",
+            port=5432,
+            user="test_user",
+            password="test_pass",
+            database="test_db",
+        )
+
+        # Integration test - requires real PostgreSQL service
+        vector_store = ClarifAIVectorStore(config=config)
+        deleted_count = vector_store.delete_chunks_by_block_id("test_block_id")
+        assert isinstance(deleted_count, int)
+
+    def test_get_store_metrics(self):
+        """Test getting vector store metrics (unit test)."""
+        config = ClarifAIConfig()
+        config.postgres = DatabaseConfig(
+            host="localhost",
+            port=5432,
+            user="test_user",
+            password="test_pass",
+            database="test_db",
+        )
+
+        with (
+            patch(
+                "clarifai_shared.embedding.storage.create_engine"
+            ) as mock_create_engine,
+            patch("clarifai_shared.embedding.storage.PGVectorStore"),
+            patch("clarifai_shared.embedding.storage.VectorStoreIndex"),
+            patch("clarifai_shared.config.load_config") as mock_load_config,
+        ):
+            mock_engine = Mock()
+            mock_engine.connect.return_value.__enter__ = Mock()
+            mock_engine.connect.return_value.__exit__ = Mock()
+            mock_create_engine.return_value = mock_engine
+            mock_load_config.return_value = config
+
+            vector_store = ClarifAIVectorStore(config=config)
+
+            # Mock the get_store_metrics return value
+            with patch.object(
+                vector_store,
+                "get_store_metrics",
+                return_value=VectorStoreMetrics(0, 0, 0),
+            ):
+                metrics = vector_store.get_store_metrics()
+                assert isinstance(metrics, VectorStoreMetrics)
+
+    @pytest.mark.integration
+    def test_get_store_metrics_integration(self):
+        """Test getting vector store metrics (integration test)."""
+        config = ClarifAIConfig()
+        config.postgres = DatabaseConfig(
+            host="localhost",
+            port=5432,
+            user="test_user",
+            password="test_pass",
+            database="test_db",
+        )
+
+        # Integration test - requires real PostgreSQL service
+        vector_store = ClarifAIVectorStore(config=config)
+        metrics = vector_store.get_store_metrics()
+        assert isinstance(metrics, VectorStoreMetrics)

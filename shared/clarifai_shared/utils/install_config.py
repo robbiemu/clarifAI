@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+"""
+Configuration installer for ClarifAI.
+
+Similar to the prompt installer, this script ensures the user has a 
+configuration file and can restore defaults when needed.
+"""
+
+import argparse
+import logging
+import shutil
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+
+def find_project_root() -> Path:
+    """Find the project root directory."""
+    current = Path.cwd()
+    for path in [current] + list(current.parents):
+        if (path / "settings").exists() and (path / "shared").exists():
+            return path
+    
+    # Fallback to current directory
+    return current
+
+
+def install_default_config(force: bool = False) -> bool:
+    """
+    Install the default configuration file if it doesn't exist.
+    
+    Args:
+        force: If True, overwrites existing user config
+        
+    Returns:
+        True if config was installed, False if already exists
+    """
+    project_root = find_project_root()
+    settings_dir = project_root / "settings"
+    
+    default_config_path = settings_dir / "clarifai.config.default.yaml"
+    user_config_path = settings_dir / "clarifai.config.yaml"
+    
+    # Check if default config exists
+    if not default_config_path.exists():
+        logger.error(f"Default configuration file not found at {default_config_path}")
+        return False
+    
+    # Check if user config already exists
+    if user_config_path.exists() and not force:
+        logger.info(f"User configuration already exists at {user_config_path}")
+        return False
+    
+    # Create settings directory if it doesn't exist
+    settings_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Copy default config to user config
+    try:
+        shutil.copy2(default_config_path, user_config_path)
+        if force:
+            logger.info(f"Restored configuration from defaults: {user_config_path}")
+        else:
+            logger.info(f"Installed configuration file: {user_config_path}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to install configuration: {e}")
+        return False
+
+
+def main():
+    """Main entry point for the configuration installer."""
+    parser = argparse.ArgumentParser(
+        description="Install or restore ClarifAI configuration files"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing configuration file with defaults"
+    )
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose logging"
+    )
+    
+    args = parser.parse_args()
+    
+    # Configure logging
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format="%(levelname)s: %(message)s"
+    )
+    
+    success = install_default_config(force=args.force)
+    
+    if success:
+        print("✅ Configuration installation complete!")
+        if args.force:
+            print("Your configuration has been restored to defaults.")
+        else:
+            print("You can now customize settings/clarifai.config.yaml as needed.")
+    else:
+        print("❌ Configuration installation failed.")
+        exit(1)
+
+
+if __name__ == "__main__":
+    main()
