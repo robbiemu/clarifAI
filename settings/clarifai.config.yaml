@@ -71,10 +71,6 @@ model:
     selection: null      # Uses default if not specified
     disambiguation: null # Uses default if not specified  
     decomposition: null  # Uses default if not specified
-  concept_linker: "gpt-3.5-turbo"
-  concept_summary: "gpt-3.5-turbo"  
-  subject_summary: "gpt-3.5-turbo"
-  trending_concepts_agent: "gpt-3.5-turbo"
   fallback_plugin: "gpt-3.5-turbo"
 
 # Threshold configuration (following design_config_panel.md structure)
@@ -98,12 +94,6 @@ processing:
   # Claimify pipeline configuration
   claimify:
     max_retries: 3
-    
-    # Quality thresholds
-    thresholds:
-      selection_confidence: 0.5
-      disambiguation_confidence: 0.5
-      decomposition_confidence: 0.5
     
     # Logging configuration
     logging:
