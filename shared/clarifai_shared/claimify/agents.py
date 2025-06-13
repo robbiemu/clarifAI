@@ -11,6 +11,7 @@ Each agent is designed to accept different LLM instances for future configurabil
 
 import logging
 import time
+import json
 from abc import ABC
 from typing import Optional, Protocol
 
@@ -152,27 +153,48 @@ class SelectionAgent(BaseClaimifyAgent):
         
         This implements Stage 1: Selection from the Claimify pipeline, which:
         1. Identifies if the sentence contains verifiable factual information
-        2. Removes subjective or speculative language if verifiable content exists
-        3. Returns either the cleaned sentence or "NO_VERIFIABLE_CONTENT"
+        2. Uses JSON output format as specified in claimify_selection.yaml prompt
         """
         sentence = context.current_sentence
         context_text = self._build_context_text(context)
         
-        # Prompt based on Claimify for Dummies Stage 1: Selection
-        prompt = f"""You are a fact-checking assistant. Your job is to identify if the following sentence contains a specific, verifiable proposition. A verifiable proposition is a statement of fact, not an opinion, a recommendation, or a vague statement.
+        # Use JSON prompt format matching claimify_selection.yaml
+        prompt = f"""You are an expert at identifying verifiable factual content in text. Your task is to determine whether a given sentence contains information that could be extracted as verifiable claims.
 
-**Source Sentence:** "{sentence.text}"
+Analyze the following sentence within its context to determine if it contains verifiable, factual information.
 
-**Context (surrounding sentences):**
+Context (surrounding sentences):
 {context_text}
 
-**Task:**
-1. **Analyze:** Does the sentence contain a verifiable fact?
-2. **Decide:**
-   - If NO, respond with "NO_VERIFIABLE_CONTENT".
-   - If YES, rewrite the sentence to *only* include the verifiable parts. Remove any subjective or speculative language.
+Target sentence: "{sentence.text}"
 
-**Your rewritten sentence or "NO_VERIFIABLE_CONTENT":**"""
+Consider these criteria:
+1. Does this sentence contain factual, verifiable information?
+2. Is it a statement (not a question, command, or exclamation)?
+3. Could this information be fact-checked or validated?
+4. Does it describe events, relationships, measurements, or properties?
+5. Is it specific enough to be meaningful?
+
+Sentences to REJECT:
+- Questions ("What should we do?")
+- Commands ("Please fix this.")
+- Opinions without factual basis ("I think it's bad.")
+- Vague statements ("Something happened.")
+- Very short fragments ("Yes.", "OK.")
+
+Sentences to SELECT:
+- Technical facts ("The system returned error code 500.")
+- Event descriptions ("The deployment occurred at 10:30 AM.")
+- Measurements ("The response time was 2.3 seconds.")
+- Relationships ("User A reported the bug to Team B.")
+- Specific observations ("The CPU usage spiked to 95%.")
+
+Respond with valid JSON only:
+{{
+  "selected": true/false,
+  "confidence": 0.0-1.0,
+  "reasoning": "Brief explanation of decision"
+}}"""
 
         try:
             # Call the LLM with the prompt
@@ -182,22 +204,38 @@ class SelectionAgent(BaseClaimifyAgent):
                 max_tokens=self.config.max_tokens or 500
             ).strip()
             
-            # Parse the response
-            if response == "NO_VERIFIABLE_CONTENT":
+            # Parse JSON response
+            try:
+                result_data = json.loads(response)
+                is_selected = result_data.get("selected", False)
+                confidence = result_data.get("confidence", 0.0)
+                reasoning = result_data.get("reasoning", "No reasoning provided")
+                
                 return SelectionResult(
                     sentence_chunk=sentence,
-                    is_selected=False,
-                    reasoning="No verifiable content found",
-                    rewritten_text=None
+                    is_selected=is_selected,
+                    reasoning=reasoning,
+                    confidence=confidence,
+                    rewritten_text=sentence.text if is_selected else None
                 )
-            else:
-                # The response is a rewritten sentence with only verifiable content
-                return SelectionResult(
-                    sentence_chunk=sentence,
-                    is_selected=True,
-                    reasoning="Contains verifiable content",
-                    rewritten_text=response
-                )
+                
+            except json.JSONDecodeError as json_err:
+                # Fallback: try to parse as legacy text format
+                if response == "NO_VERIFIABLE_CONTENT":
+                    return SelectionResult(
+                        sentence_chunk=sentence,
+                        is_selected=False,
+                        reasoning="No verifiable content found (legacy format)",
+                        rewritten_text=None
+                    )
+                else:
+                    # Assume it's verifiable content
+                    return SelectionResult(
+                        sentence_chunk=sentence,
+                        is_selected=True,
+                        reasoning="Contains verifiable content (legacy format)",
+                        rewritten_text=response
+                    )
                 
         except Exception as e:
             # If LLM fails, we cannot perform selection without heuristics
@@ -289,26 +327,40 @@ class DisambiguationAgent(BaseClaimifyAgent):
         This implements Stage 2: Disambiguation from the Claimify pipeline, which:
         1. Identifies ambiguities (pronouns, time references, structural ambiguities)
         2. Uses context to resolve ambiguities confidently
-        3. Returns either the clarified sentence or "CANNOT_DISAMBIGUATE"
+        3. Uses JSON output format as specified in claimify_disambiguation.yaml prompt
         """
         context_text = self._build_context_text(context)
         
-        # Prompt based on Claimify for Dummies Stage 2: Disambiguation
-        prompt = f"""You are a fact-checking assistant. Your goal is to resolve ambiguity.
+        # Use JSON prompt format matching claimify_disambiguation.yaml
+        prompt = f"""You are an expert at disambiguating text by resolving pronouns, adding missing context, and making implicit information explicit. Your goal is to rewrite sentences to be clear and self-contained while preserving their original meaning.
 
-**Context (surrounding text):** 
+Rewrite the following sentence to remove ambiguities and make it self-contained. Use the surrounding context to resolve pronouns and add missing subjects or objects.
+
+Context (surrounding sentences):
 {context_text}
 
-**Sentence to Analyze:** "{sentence.text}"
+Target sentence to disambiguate: "{sentence.text}"
 
-**Task:**
-1. **Identify Ambiguity:** Does the sentence contain any pronouns (he, it, they), ambiguous time references (last year), or structural ambiguities (where grammar allows multiple readings)?
-2. **Resolve with Context:** Can the context clearly and confidently resolve all ambiguities?
-3. **Decide:**
-   - If the ambiguity CANNOT be confidently resolved, respond with "CANNOT_DISAMBIGUATE".
-   - If it CAN be resolved (or if there was no ambiguity), return the fully clarified and rewritten sentence.
+Disambiguation guidelines:
+1. Replace ambiguous pronouns (it, this, that, they) with specific entities
+2. Add missing subjects for sentences starting with verbs
+3. Clarify vague references ("the error", "the issue", "the problem")
+4. Make temporal and causal relationships explicit
+5. Preserve the original meaning and factual content
+6. Keep the sentence concise but complete
 
-**Your rewritten sentence or "CANNOT_DISAMBIGUATE":**"""
+Examples:
+- "It failed." → "[The system] failed."
+- "This caused problems." → "This [configuration change] caused problems."
+- "Reported an error." → "[The application] reported an error."
+- "The error occurred when..." → "The [authentication] error occurred when..."
+
+Respond with valid JSON only:
+{{
+  "disambiguated_text": "The rewritten sentence",
+  "changes_made": ["List of specific changes"],
+  "confidence": 0.0-1.0
+}}"""
 
         try:
             # Call the LLM with the prompt
@@ -318,26 +370,41 @@ class DisambiguationAgent(BaseClaimifyAgent):
                 max_tokens=self.config.max_tokens or 500
             ).strip()
             
-            # Parse the response
-            if response == "CANNOT_DISAMBIGUATE":
+            # Parse JSON response
+            try:
+                result_data = json.loads(response)
+                disambiguated_text = result_data.get("disambiguated_text", sentence.text)
+                changes_made = result_data.get("changes_made", [])
+                confidence = result_data.get("confidence", 0.8)
+                
                 return DisambiguationResult(
                     original_sentence=sentence,
-                    disambiguated_text=sentence.text,  # Keep original
-                    changes_made=["Could not resolve ambiguities"],
-                    confidence=0.0
-                )
-            else:
-                # The response is a disambiguated sentence
-                changes_made = []
-                if response != sentence.text:
-                    changes_made.append("Resolved pronouns and ambiguous references")
-                    
-                return DisambiguationResult(
-                    original_sentence=sentence,
-                    disambiguated_text=response,
+                    disambiguated_text=disambiguated_text,
                     changes_made=changes_made,
-                    confidence=0.8
+                    confidence=confidence
                 )
+                
+            except json.JSONDecodeError as json_err:
+                # Fallback: try to parse as legacy text format
+                if response == "CANNOT_DISAMBIGUATE":
+                    return DisambiguationResult(
+                        original_sentence=sentence,
+                        disambiguated_text=sentence.text,  # Keep original
+                        changes_made=["Could not resolve ambiguities (legacy format)"],
+                        confidence=0.0
+                    )
+                else:
+                    # Assume it's a disambiguated sentence
+                    changes_made = []
+                    if response != sentence.text:
+                        changes_made.append("Resolved pronouns and ambiguous references (legacy format)")
+                        
+                    return DisambiguationResult(
+                        original_sentence=sentence,
+                        disambiguated_text=response,
+                        changes_made=changes_made,
+                        confidence=0.8
+                    )
                 
         except Exception as e:
             # If LLM fails, we cannot perform disambiguation without heuristics
@@ -433,23 +500,52 @@ class DecompositionAgent(BaseClaimifyAgent):
         
         This implements Stage 3: Decomposition from the Claimify pipeline, which:
         1. Breaks the sentence into atomic, self-contained claims
-        2. Adds clarifying information in [square brackets] if needed
-        3. Ensures each claim meets quality criteria (atomic, self-contained, verifiable)
+        2. Uses JSON output format as specified in claimify_decomposition.yaml prompt
+        3. Gets quality criteria evaluation from the LLM rather than hardcoding
         """
         
-        # Prompt based on Claimify for Dummies Stage 3: Decomposition
-        prompt = f"""You are an expert fact-checker. Your task is to decompose the given sentence into a list of simple, atomic, and fully decontextualized factual claims.
+        # Use JSON prompt format matching claimify_decomposition.yaml
+        prompt = f"""You are an expert at extracting atomic claims from text. Your task is to break down sentences into individual, verifiable claims that meet strict quality criteria. Each claim must be atomic (single fact), self-contained (no ambiguous references), and verifiable (factually checkable).
 
-**Rules:**
-1. Each claim must be a complete, self-contained sentence.
-2. Break the sentence into the smallest possible pieces of verifiable information.
-3. If a claim needs context to be understood, add the clarifying information inside [square brackets].
-4. Only include factual, verifiable statements - no opinions or speculative content.
-5. Each claim should be atomic (single fact), self-contained (no ambiguous references), and verifiable (can be fact-checked).
+Analyze the following disambiguated sentence and extract atomic claims that meet the Claimify quality criteria.
 
-**Sentence to Decompose:** "{text}"
+Input sentence: "{text}"
 
-**List of Decomposed Claims (one per line, or write "NO_VALID_CLAIMS" if no verifiable claims can be extracted):**"""
+Quality Criteria for Claims:
+1. ATOMIC: Contains exactly one verifiable fact (no compound statements)
+2. SELF-CONTAINED: No ambiguous pronouns or references (all entities clearly identified)  
+3. VERIFIABLE: Contains specific, factual information that can be fact-checked
+
+Examples of VALID claims:
+- "The user received an error from Pylance."
+- "In Python, a slice cannot be assigned to a parameter of type int in __setitem__."
+- "The error rate increased to 25% after deployment."
+
+Examples of INVALID claims:
+- "The error occurred while calling __setitem__ with a slice." (vague reference "the error")
+- "The system worked but was slow." (compound statement - not atomic)
+- "Something went wrong." (not specific enough to verify)
+
+Instructions:
+1. Split compound sentences (connected by "and", "but", "or", "because", etc.)
+2. Evaluate each potential claim against the three criteria
+3. Only include claims that pass ALL criteria
+4. For claims that fail criteria, explain why they should become :Sentence nodes instead
+
+Respond with valid JSON only:
+{{
+  "claim_candidates": [
+    {{
+      "text": "The extracted claim text",
+      "is_atomic": true/false,
+      "is_self_contained": true/false, 
+      "is_verifiable": true/false,
+      "passes_criteria": true/false,
+      "reasoning": "Explanation of evaluation",
+      "node_type": "Claim" or "Sentence"
+    }}
+  ]
+}}"""
 
         try:
             # Call the LLM with the prompt
@@ -459,38 +555,80 @@ class DecompositionAgent(BaseClaimifyAgent):
                 max_tokens=self.config.max_tokens or 1000
             ).strip()
             
-            # Parse the response
-            if response == "NO_VALID_CLAIMS":
-                return DecompositionResult(
-                    original_text=text,
-                    claim_candidates=[]
-                )
-            
-            # Split response into individual claims
-            claim_lines = [line.strip() for line in response.split('\n') if line.strip()]
-            claim_candidates = []
-            
-            for claim_text in claim_lines:
-                # Remove bullet points or numbering if present
-                claim_text = claim_text.lstrip('- •*123456789.)')
-                claim_text = claim_text.strip()
+            # Parse JSON response
+            try:
+                result_data = json.loads(response)
+                claim_candidates = []
                 
-                if claim_text and claim_text != "NO_VALID_CLAIMS":
-                    # Evaluate the claim quality (simplified for now)
+                for candidate_data in result_data.get("claim_candidates", []):
+                    claim_text = candidate_data.get("text", "").strip()
+                    if not claim_text:
+                        continue
+                        
+                    # Get quality flags from LLM output
+                    is_atomic = candidate_data.get("is_atomic", False)
+                    is_self_contained = candidate_data.get("is_self_contained", False)
+                    is_verifiable = candidate_data.get("is_verifiable", False)
+                    passes_criteria = candidate_data.get("passes_criteria", False)
+                    reasoning = candidate_data.get("reasoning", "No reasoning provided")
+                    
+                    # Calculate confidence based on quality flags
+                    confidence = 0.0
+                    if passes_criteria and is_atomic and is_self_contained and is_verifiable:
+                        confidence = 0.9
+                    elif sum([is_atomic, is_self_contained, is_verifiable]) >= 2:
+                        confidence = 0.6
+                    else:
+                        confidence = 0.3
+                    
                     candidate = ClaimCandidate(
                         text=claim_text,
-                        is_atomic=True,  # Assume LLM followed instructions
-                        is_self_contained=True,  # Assume LLM followed instructions  
-                        is_verifiable=True,  # Assume LLM followed instructions
-                        confidence=0.8,
-                        reasoning="Extracted by LLM decomposition"
+                        is_atomic=is_atomic,
+                        is_self_contained=is_self_contained,
+                        is_verifiable=is_verifiable,
+                        confidence=confidence,
+                        reasoning=reasoning
                     )
                     claim_candidates.append(candidate)
-            
-            return DecompositionResult(
-                original_text=text,
-                claim_candidates=claim_candidates
-            )
+                
+                return DecompositionResult(
+                    original_text=text,
+                    claim_candidates=claim_candidates
+                )
+                
+            except json.JSONDecodeError as json_err:
+                # Fallback: try to parse as legacy text format
+                if response == "NO_VALID_CLAIMS":
+                    return DecompositionResult(
+                        original_text=text,
+                        claim_candidates=[]
+                    )
+                
+                # Split response into individual claims (legacy format)
+                claim_lines = [line.strip() for line in response.split('\n') if line.strip()]
+                claim_candidates = []
+                
+                for claim_text in claim_lines:
+                    # Remove bullet points or numbering if present
+                    claim_text = claim_text.lstrip('- •*123456789.)')
+                    claim_text = claim_text.strip()
+                    
+                    if claim_text and claim_text != "NO_VALID_CLAIMS":
+                        # Use legacy behavior with hardcoded values
+                        candidate = ClaimCandidate(
+                            text=claim_text,
+                            is_atomic=True,  # Legacy assumption
+                            is_self_contained=True,  # Legacy assumption 
+                            is_verifiable=True,  # Legacy assumption
+                            confidence=0.8,  # Legacy hardcoded value
+                            reasoning="Extracted by LLM decomposition (legacy format)"
+                        )
+                        claim_candidates.append(candidate)
+                
+                return DecompositionResult(
+                    original_text=text,
+                    claim_candidates=claim_candidates
+                )
                 
         except Exception as e:
             # If LLM fails, we cannot perform decomposition without heuristics

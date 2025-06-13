@@ -67,19 +67,22 @@ class TestSelectionAgent:
 
     def test_llm_selection_verifiable_content(self, config, test_context):
         """Test selection of sentence with verifiable content."""
-        mock_llm = MockLLM("The system reported an error when processing the request.")
+        json_response = '{"selected": true, "confidence": 0.8, "reasoning": "Contains verifiable technical information"}'
+        mock_llm = MockLLM(json_response)
         agent = SelectionAgent(llm=mock_llm, config=config)
 
         result = agent.process(test_context)
 
         assert result.is_selected
         assert result.sentence_chunk == test_context.current_sentence
-        assert result.reasoning is not None
+        assert result.confidence == 0.8
+        assert "verifiable technical information" in result.reasoning
         assert result.rewritten_text is not None
 
     def test_llm_selection_no_verifiable_content(self, config):
         """Test rejection of non-verifiable content."""
-        mock_llm = MockLLM("NO_VERIFIABLE_CONTENT")
+        json_response = '{"selected": false, "confidence": 0.9, "reasoning": "Question with no verifiable content"}'
+        mock_llm = MockLLM(json_response)
         agent = SelectionAgent(llm=mock_llm, config=config)
 
         question_sentence = SentenceChunk(
@@ -93,7 +96,18 @@ class TestSelectionAgent:
         result = agent.process(context)
 
         assert not result.is_selected
-        assert "No verifiable content found" in result.reasoning
+        assert result.confidence == 0.9
+        assert "Question with no verifiable content" in result.reasoning
+
+    def test_llm_selection_legacy_format(self, config, test_context):
+        """Test legacy text format fallback."""
+        mock_llm = MockLLM("NO_VERIFIABLE_CONTENT")
+        agent = SelectionAgent(llm=mock_llm, config=config)
+
+        result = agent.process(test_context)
+
+        assert not result.is_selected
+        assert "legacy format" in result.reasoning
 
     def test_selection_without_llm_fails(self, config, test_context):
         """Test that selection fails without LLM."""
@@ -144,7 +158,8 @@ class TestDisambiguationAgent:
 
     def test_llm_disambiguation_success(self, config):
         """Test successful disambiguation with LLM."""
-        mock_llm = MockLLM("The system reported an error when the system failed.")
+        json_response = '{"disambiguated_text": "The system reported an error when the system failed.", "changes_made": ["Replaced it with the system", "Replaced this with the system"], "confidence": 0.9}'
+        mock_llm = MockLLM(json_response)
         agent = DisambiguationAgent(llm=mock_llm, config=config)
 
         test_sentence = SentenceChunk(
@@ -157,15 +172,16 @@ class TestDisambiguationAgent:
 
         result = agent.process(test_sentence, context)
 
-        assert result.disambiguated_text != test_sentence.text
-        assert len(result.changes_made) > 0
-        assert "Resolved pronouns and ambiguous references" in result.changes_made
+        assert result.disambiguated_text == "The system reported an error when the system failed."
+        assert len(result.changes_made) == 2
+        assert "Replaced it with the system" in result.changes_made
+        assert result.confidence == 0.9
 
     def test_llm_disambiguation_no_changes_needed(self, config):
         """Test sentence that doesn't need disambiguation."""
-        # LLM returns the same text, indicating no changes needed
         original_text = "The system reported an error when the request failed."
-        mock_llm = MockLLM(original_text)
+        json_response = f'{{"disambiguated_text": "{original_text}", "changes_made": [], "confidence": 1.0}}'
+        mock_llm = MockLLM(json_response)
         agent = DisambiguationAgent(llm=mock_llm, config=config)
 
         clear_sentence = SentenceChunk(
@@ -180,9 +196,10 @@ class TestDisambiguationAgent:
 
         assert result.disambiguated_text == original_text
         assert len(result.changes_made) == 0
+        assert result.confidence == 1.0
 
     def test_disambiguation_cannot_resolve(self, config):
-        """Test LLM cannot resolve ambiguities."""
+        """Test LLM cannot resolve ambiguities using legacy format."""
         mock_llm = MockLLM("CANNOT_DISAMBIGUATE")
         agent = DisambiguationAgent(llm=mock_llm, config=config)
 
@@ -197,7 +214,7 @@ class TestDisambiguationAgent:
         result = agent.process(test_sentence, context)
 
         assert result.disambiguated_text == test_sentence.text  # Original kept
-        assert "Could not resolve ambiguities" in result.changes_made
+        assert "Could not resolve ambiguities (legacy format)" in result.changes_made
         assert result.confidence == 0.0
 
     def test_disambiguation_without_llm_fails(self, config):
@@ -225,7 +242,8 @@ class TestDecompositionAgent:
 
     def test_llm_decomposition_single_claim(self, config):
         """Test processing of a simple atomic claim."""
-        mock_llm = MockLLM("The system reported an error.")
+        json_response = '''{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Single atomic verifiable fact", "node_type": "Claim"}]}'''
+        mock_llm = MockLLM(json_response)
         agent = DecompositionAgent(llm=mock_llm, config=config)
 
         test_sentence = SentenceChunk(
@@ -241,12 +259,15 @@ class TestDecompositionAgent:
         assert len(result.claim_candidates) == 1
         claim = result.claim_candidates[0]
         assert claim.text == text
-        assert claim.passes_criteria
-        assert claim.node_type == NodeType.CLAIM
+        assert claim.is_atomic
+        assert claim.is_self_contained
+        assert claim.is_verifiable
+        assert claim.confidence == 0.9  # Based on all criteria passed
 
     def test_llm_decomposition_multiple_claims(self, config):
         """Test splitting of compound sentences."""
-        mock_llm = MockLLM("The system reported an error.\nThe user was notified.")
+        json_response = '''{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "First atomic claim", "node_type": "Claim"}, {"text": "The user was notified.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Second atomic claim", "node_type": "Claim"}]}'''
+        mock_llm = MockLLM(json_response)
         agent = DecompositionAgent(llm=mock_llm, config=config)
 
         test_sentence = SentenceChunk(
@@ -260,14 +281,59 @@ class TestDecompositionAgent:
         result = agent.process(text, test_sentence)
 
         # Should split into multiple candidates
-        assert len(result.claim_candidates) >= 1
+        assert len(result.claim_candidates) == 2
+        assert all(claim.is_atomic for claim in result.claim_candidates)
+        assert all(claim.is_self_contained for claim in result.claim_candidates)
+        assert all(claim.is_verifiable for claim in result.claim_candidates)
 
         # Check that we got some claims
         claim_texts = [claim.text for claim in result.claim_candidates]
         assert len(claim_texts) > 0
 
+    def test_llm_decomposition_legacy_format(self, config):
+        """Test legacy text format fallback."""
+        mock_llm = MockLLM("The system reported an error.\nThe user was notified.")
+        agent = DecompositionAgent(llm=mock_llm, config=config)
+
+        test_sentence = SentenceChunk(
+            text="compound sentence",
+            source_id="blk_001",
+            chunk_id="chunk_001",
+            sentence_index=1,
+        )
+
+        text = "The system reported an error and the user was notified."
+        result = agent.process(text, test_sentence)
+
+        # Should parse legacy format
+        assert len(result.claim_candidates) == 2
+        # All legacy format claims are hardcoded to True
+        assert all(claim.is_atomic for claim in result.claim_candidates)
+        assert all(claim.is_self_contained for claim in result.claim_candidates)
+        assert all(claim.is_verifiable for claim in result.claim_candidates)
+        assert all(claim.confidence == 0.8 for claim in result.claim_candidates)
+        assert all("legacy format" in claim.reasoning for claim in result.claim_candidates)
+
     def test_llm_decomposition_no_valid_claims(self, config):
         """Test when LLM finds no valid claims."""
+        json_response = '{"claim_candidates": []}'
+        mock_llm = MockLLM(json_response)
+        agent = DecompositionAgent(llm=mock_llm, config=config)
+
+        test_sentence = SentenceChunk(
+            text="test",
+            source_id="blk_001",
+            chunk_id="chunk_001",
+            sentence_index=1,
+        )
+
+        text = "It caused an error in the system."
+        result = agent.process(text, test_sentence)
+
+        assert len(result.claim_candidates) == 0
+
+    def test_llm_decomposition_legacy_no_valid_claims(self, config):
+        """Test legacy format no valid claims."""
         mock_llm = MockLLM("NO_VALID_CLAIMS")
         agent = DecompositionAgent(llm=mock_llm, config=config)
 
