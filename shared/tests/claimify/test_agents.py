@@ -17,7 +17,6 @@ from clarifai_shared.claimify.data_models import (
     SentenceChunk,
     ClaimifyContext,
     ClaimifyConfig,
-    NodeType,
 )
 
 from clarifai_shared.claimify.agents import (
@@ -172,7 +171,10 @@ class TestDisambiguationAgent:
 
         result = agent.process(test_sentence, context)
 
-        assert result.disambiguated_text == "The system reported an error when the system failed."
+        assert (
+            result.disambiguated_text
+            == "The system reported an error when the system failed."
+        )
         assert len(result.changes_made) == 2
         assert "Replaced it with the system" in result.changes_made
         assert result.confidence == 0.9
@@ -242,7 +244,7 @@ class TestDecompositionAgent:
 
     def test_llm_decomposition_single_claim(self, config):
         """Test processing of a simple atomic claim."""
-        json_response = '''{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Single atomic verifiable fact", "node_type": "Claim"}]}'''
+        json_response = """{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Single atomic verifiable fact", "node_type": "Claim"}]}"""
         mock_llm = MockLLM(json_response)
         agent = DecompositionAgent(llm=mock_llm, config=config)
 
@@ -266,7 +268,7 @@ class TestDecompositionAgent:
 
     def test_llm_decomposition_multiple_claims(self, config):
         """Test splitting of compound sentences."""
-        json_response = '''{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "First atomic claim", "node_type": "Claim"}, {"text": "The user was notified.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Second atomic claim", "node_type": "Claim"}]}'''
+        json_response = """{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "First atomic claim", "node_type": "Claim"}, {"text": "The user was notified.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Second atomic claim", "node_type": "Claim"}]}"""
         mock_llm = MockLLM(json_response)
         agent = DecompositionAgent(llm=mock_llm, config=config)
 
@@ -312,7 +314,9 @@ class TestDecompositionAgent:
         assert all(claim.is_self_contained for claim in result.claim_candidates)
         assert all(claim.is_verifiable for claim in result.claim_candidates)
         assert all(claim.confidence == 0.8 for claim in result.claim_candidates)
-        assert all("legacy format" in claim.reasoning for claim in result.claim_candidates)
+        assert all(
+            "legacy format" in claim.reasoning for claim in result.claim_candidates
+        )
 
     def test_llm_decomposition_no_valid_claims(self, config):
         """Test when LLM finds no valid claims."""

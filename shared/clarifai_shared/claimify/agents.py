@@ -150,14 +150,14 @@ class SelectionAgent(BaseClaimifyAgent):
     def _llm_selection(self, context: ClaimifyContext) -> SelectionResult:
         """
         LLM-based selection following the Claimify approach.
-        
+
         This implements Stage 1: Selection from the Claimify pipeline, which:
         1. Identifies if the sentence contains verifiable factual information
         2. Uses JSON output format as specified in claimify_selection.yaml prompt
         """
         sentence = context.current_sentence
         context_text = self._build_context_text(context)
-        
+
         # Use JSON prompt format matching claimify_selection.yaml
         prompt = f"""You are an expert at identifying verifiable factual content in text. Your task is to determine whether a given sentence contains information that could be extracted as verifiable claims.
 
@@ -201,32 +201,32 @@ Respond with valid JSON only:
             response = self.llm.complete(
                 prompt,
                 temperature=self.config.temperature,
-                max_tokens=self.config.max_tokens or 500
+                max_tokens=self.config.max_tokens or 500,
             ).strip()
-            
+
             # Parse JSON response
             try:
                 result_data = json.loads(response)
                 is_selected = result_data.get("selected", False)
                 confidence = result_data.get("confidence", 0.0)
                 reasoning = result_data.get("reasoning", "No reasoning provided")
-                
+
                 return SelectionResult(
                     sentence_chunk=sentence,
                     is_selected=is_selected,
                     reasoning=reasoning,
                     confidence=confidence,
-                    rewritten_text=sentence.text if is_selected else None
+                    rewritten_text=sentence.text if is_selected else None,
                 )
-                
-            except json.JSONDecodeError as json_err:
+
+            except json.JSONDecodeError:
                 # Fallback: try to parse as legacy text format
                 if response == "NO_VERIFIABLE_CONTENT":
                     return SelectionResult(
                         sentence_chunk=sentence,
                         is_selected=False,
                         reasoning="No verifiable content found (legacy format)",
-                        rewritten_text=None
+                        rewritten_text=None,
                     )
                 else:
                     # Assume it's verifiable content
@@ -234,9 +234,9 @@ Respond with valid JSON only:
                         sentence_chunk=sentence,
                         is_selected=True,
                         reasoning="Contains verifiable content (legacy format)",
-                        rewritten_text=response
+                        rewritten_text=response,
                     )
-                
+
         except Exception as e:
             # If LLM fails, we cannot perform selection without heuristics
             raise ValueError(f"LLM selection failed and no fallback available: {e}")
@@ -323,14 +323,14 @@ class DisambiguationAgent(BaseClaimifyAgent):
     ) -> DisambiguationResult:
         """
         LLM-based disambiguation following the Claimify approach.
-        
+
         This implements Stage 2: Disambiguation from the Claimify pipeline, which:
         1. Identifies ambiguities (pronouns, time references, structural ambiguities)
         2. Uses context to resolve ambiguities confidently
         3. Uses JSON output format as specified in claimify_disambiguation.yaml prompt
         """
         context_text = self._build_context_text(context)
-        
+
         # Use JSON prompt format matching claimify_disambiguation.yaml
         prompt = f"""You are an expert at disambiguating text by resolving pronouns, adding missing context, and making implicit information explicit. Your goal is to rewrite sentences to be clear and self-contained while preserving their original meaning.
 
@@ -367,49 +367,55 @@ Respond with valid JSON only:
             response = self.llm.complete(
                 prompt,
                 temperature=self.config.temperature,
-                max_tokens=self.config.max_tokens or 500
+                max_tokens=self.config.max_tokens or 500,
             ).strip()
-            
+
             # Parse JSON response
             try:
                 result_data = json.loads(response)
-                disambiguated_text = result_data.get("disambiguated_text", sentence.text)
+                disambiguated_text = result_data.get(
+                    "disambiguated_text", sentence.text
+                )
                 changes_made = result_data.get("changes_made", [])
                 confidence = result_data.get("confidence", 0.8)
-                
+
                 return DisambiguationResult(
                     original_sentence=sentence,
                     disambiguated_text=disambiguated_text,
                     changes_made=changes_made,
-                    confidence=confidence
+                    confidence=confidence,
                 )
-                
-            except json.JSONDecodeError as json_err:
+
+            except json.JSONDecodeError:
                 # Fallback: try to parse as legacy text format
                 if response == "CANNOT_DISAMBIGUATE":
                     return DisambiguationResult(
                         original_sentence=sentence,
                         disambiguated_text=sentence.text,  # Keep original
                         changes_made=["Could not resolve ambiguities (legacy format)"],
-                        confidence=0.0
+                        confidence=0.0,
                     )
                 else:
                     # Assume it's a disambiguated sentence
                     changes_made = []
                     if response != sentence.text:
-                        changes_made.append("Resolved pronouns and ambiguous references (legacy format)")
-                        
+                        changes_made.append(
+                            "Resolved pronouns and ambiguous references (legacy format)"
+                        )
+
                     return DisambiguationResult(
                         original_sentence=sentence,
                         disambiguated_text=response,
                         changes_made=changes_made,
-                        confidence=0.8
+                        confidence=0.8,
                     )
-                
+
         except Exception as e:
             # If LLM fails, we cannot perform disambiguation without heuristics
-            raise ValueError(f"LLM disambiguation failed and no fallback available: {e}")
-            
+            raise ValueError(
+                f"LLM disambiguation failed and no fallback available: {e}"
+            )
+
     def _build_context_text(self, context: ClaimifyContext) -> str:
         """Build context text from surrounding sentences."""
         parts = []
@@ -497,13 +503,13 @@ class DecompositionAgent(BaseClaimifyAgent):
     def _llm_decomposition(self, text: str) -> DecompositionResult:
         """
         LLM-based decomposition following the Claimify approach.
-        
+
         This implements Stage 3: Decomposition from the Claimify pipeline, which:
         1. Breaks the sentence into atomic, self-contained claims
         2. Uses JSON output format as specified in claimify_decomposition.yaml prompt
         3. Gets quality criteria evaluation from the LLM rather than hardcoding
         """
-        
+
         # Use JSON prompt format matching claimify_decomposition.yaml
         prompt = f"""You are an expert at extracting atomic claims from text. Your task is to break down sentences into individual, verifiable claims that meet strict quality criteria. Each claim must be atomic (single fact), self-contained (no ambiguous references), and verifiable (factually checkable).
 
@@ -552,84 +558,86 @@ Respond with valid JSON only:
             response = self.llm.complete(
                 prompt,
                 temperature=self.config.temperature,
-                max_tokens=self.config.max_tokens or 1000
+                max_tokens=self.config.max_tokens or 1000,
             ).strip()
-            
+
             # Parse JSON response
             try:
                 result_data = json.loads(response)
                 claim_candidates = []
-                
+
                 for candidate_data in result_data.get("claim_candidates", []):
                     claim_text = candidate_data.get("text", "").strip()
                     if not claim_text:
                         continue
-                        
+
                     # Get quality flags from LLM output
                     is_atomic = candidate_data.get("is_atomic", False)
                     is_self_contained = candidate_data.get("is_self_contained", False)
                     is_verifiable = candidate_data.get("is_verifiable", False)
                     passes_criteria = candidate_data.get("passes_criteria", False)
                     reasoning = candidate_data.get("reasoning", "No reasoning provided")
-                    
+
                     # Calculate confidence based on quality flags
                     confidence = 0.0
-                    if passes_criteria and is_atomic and is_self_contained and is_verifiable:
+                    if (
+                        passes_criteria
+                        and is_atomic
+                        and is_self_contained
+                        and is_verifiable
+                    ):
                         confidence = 0.9
                     elif sum([is_atomic, is_self_contained, is_verifiable]) >= 2:
                         confidence = 0.6
                     else:
                         confidence = 0.3
-                    
+
                     candidate = ClaimCandidate(
                         text=claim_text,
                         is_atomic=is_atomic,
                         is_self_contained=is_self_contained,
                         is_verifiable=is_verifiable,
                         confidence=confidence,
-                        reasoning=reasoning
+                        reasoning=reasoning,
                     )
                     claim_candidates.append(candidate)
-                
+
                 return DecompositionResult(
-                    original_text=text,
-                    claim_candidates=claim_candidates
+                    original_text=text, claim_candidates=claim_candidates
                 )
-                
-            except json.JSONDecodeError as json_err:
+
+            except json.JSONDecodeError:
                 # Fallback: try to parse as legacy text format
                 if response == "NO_VALID_CLAIMS":
-                    return DecompositionResult(
-                        original_text=text,
-                        claim_candidates=[]
-                    )
-                
+                    return DecompositionResult(original_text=text, claim_candidates=[])
+
                 # Split response into individual claims (legacy format)
-                claim_lines = [line.strip() for line in response.split('\n') if line.strip()]
+                claim_lines = [
+                    line.strip() for line in response.split("\n") if line.strip()
+                ]
                 claim_candidates = []
-                
+
                 for claim_text in claim_lines:
                     # Remove bullet points or numbering if present
-                    claim_text = claim_text.lstrip('- •*123456789.)')
+                    claim_text = claim_text.lstrip("- •*123456789.)")
                     claim_text = claim_text.strip()
-                    
+
                     if claim_text and claim_text != "NO_VALID_CLAIMS":
                         # Use legacy behavior with hardcoded values
                         candidate = ClaimCandidate(
                             text=claim_text,
                             is_atomic=True,  # Legacy assumption
-                            is_self_contained=True,  # Legacy assumption 
+                            is_self_contained=True,  # Legacy assumption
                             is_verifiable=True,  # Legacy assumption
                             confidence=0.8,  # Legacy hardcoded value
-                            reasoning="Extracted by LLM decomposition (legacy format)"
+                            reasoning="Extracted by LLM decomposition (legacy format)",
                         )
                         claim_candidates.append(candidate)
-                
+
                 return DecompositionResult(
-                    original_text=text,
-                    claim_candidates=claim_candidates
+                    original_text=text, claim_candidates=claim_candidates
                 )
-                
+
         except Exception as e:
             # If LLM fails, we cannot perform decomposition without heuristics
             raise ValueError(f"LLM decomposition failed and no fallback available: {e}")
