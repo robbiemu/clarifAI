@@ -351,6 +351,8 @@ class Neo4jGraphManager:
             s.text = data.text,
             s.ambiguous = data.ambiguous,
             s.verifiable = data.verifiable,
+            s.failed_decomposition = data.failed_decomposition,
+            s.rejection_reason = data.rejection_reason,
             s.version = data.version,
             s.timestamp = datetime(data.timestamp)
         MERGE (b:Block {id: data.block_id})
@@ -458,7 +460,8 @@ class Neo4jGraphManager:
         cypher_query = """
         MATCH (s:Sentence {id: $sentence_id})
         RETURN s.id as id, s.text as text, s.ambiguous as ambiguous,
-               s.verifiable as verifiable, s.version as version, s.timestamp as timestamp
+               s.verifiable as verifiable, s.failed_decomposition as failed_decomposition,
+               s.rejection_reason as rejection_reason, s.version as version, s.timestamp as timestamp
         """
 
         def _execute_get_sentence():
