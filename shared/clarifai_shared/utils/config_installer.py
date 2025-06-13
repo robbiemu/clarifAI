@@ -36,8 +36,9 @@ def install_default_config(force: bool = False) -> bool:
     """
     project_root = find_project_root()
     settings_dir = project_root / "settings"
+    shared_dir = project_root / "shared" / "clarifai_shared"
 
-    default_config_path = settings_dir / "clarifai.config.default.yaml"
+    default_config_path = shared_dir / "clarifai.config.default.yaml"
     user_config_path = settings_dir / "clarifai.config.yaml"
 
     # Check if default config exists

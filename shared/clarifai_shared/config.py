@@ -325,19 +325,19 @@ class ClarifAIConfig:
         if yaml is None:
             return {}
 
-        # Look for clarifai.config.default.yaml in settings directory
+        # Look for clarifai.config.default.yaml in shared package directory
         current_path = Path.cwd()
         search_paths = []
 
-        # Priority 1: settings directory in current and parent directories
-        for path in [current_path] + list(current_path.parents):
-            search_paths.append(path / "settings" / "clarifai.config.default.yaml")
-
-        # Priority 2: same directory as this module (for development)
+        # Priority 1: same directory as this module (shared package)
         module_path = Path(__file__).parent
-        search_paths.append(
-            module_path.parent.parent / "settings" / "clarifai.config.default.yaml"
-        )
+        search_paths.append(module_path / "clarifai.config.default.yaml")
+
+        # Priority 2: in shared/ directory relative to current working directory
+        for path in [current_path] + list(current_path.parents):
+            search_paths.append(
+                path / "shared" / "clarifai_shared" / "clarifai.config.default.yaml"
+            )
 
         for config_path in search_paths:
             if config_path.exists():

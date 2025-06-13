@@ -164,5 +164,5 @@ def get_model_config_for_stage(config_data: Dict[str, Any], stage: str) -> str:
         return claimify_default
 
     # Use global fallback_plugin model if no claimify-specific config
-    fallback_plugin = model_config.get("fallback_plugin", "gpt-3.5-turbo")
+    fallback_plugin = model_config.get("fallback_plugin")
     return fallback_plugin

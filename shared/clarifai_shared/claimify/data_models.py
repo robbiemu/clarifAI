@@ -175,9 +175,9 @@ class ClaimifyConfig:
     max_tokens: int = 1000
 
     # Quality thresholds (to be added when threshold evaluation is implemented)
-    # selection_confidence_threshold: float = 0.5
-    # disambiguation_confidence_threshold: float = 0.5
-    # decomposition_confidence_threshold: float = 0.5
+    selection_confidence_threshold: float = 0.5
+    disambiguation_confidence_threshold: float = 0.5
+    decomposition_confidence_threshold: float = 0.5
 
     # Logging configuration
     log_decisions: bool = True
