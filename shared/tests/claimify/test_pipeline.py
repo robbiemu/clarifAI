@@ -254,9 +254,15 @@ class TestClaimifyPipeline:
         ]
 
         # Create LLM mocks that will select and process content
-        selection_llm = MockLLM("The system reported an error with code 500.")
-        disambiguation_llm = MockLLM("The system reported an error with code 500.")
-        decomposition_llm = MockLLM("The system reported an error with code 500.")
+        selection_llm = MockLLM(
+            '{"selected": true, "confidence": 0.8, "reasoning": "Contains verifiable content"}'
+        )
+        disambiguation_llm = MockLLM(
+            '{"disambiguated_text": "The system reported an error with code 500.", "changes_made": ["No changes needed"], "confidence": 1.0}'
+        )
+        decomposition_llm = MockLLM(
+            '{"claim_candidates": [{"text": "The system reported an error with code 500.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Valid atomic claim", "node_type": "Claim"}]}'
+        )
 
         pipeline = ClaimifyPipeline(
             config=config,
@@ -363,9 +369,15 @@ class TestClaimifyPipelineIntegration:
     def test_example_from_documentation(self, config):
         """Test processing of the example from on-claim_generation.md."""
         # Create LLM mocks that will select and process content
-        selection_llm = MockLLM("Error detected in slice assignment.")
-        disambiguation_llm = MockLLM("Error detected in slice assignment.")
-        decomposition_llm = MockLLM("Error detected in slice assignment.")
+        selection_llm = MockLLM(
+            '{"selected": true, "confidence": 0.8, "reasoning": "Contains verifiable technical content"}'
+        )
+        disambiguation_llm = MockLLM(
+            '{"disambiguated_text": "Error detected in slice assignment.", "changes_made": ["No changes needed"], "confidence": 1.0}'
+        )
+        decomposition_llm = MockLLM(
+            '{"claim_candidates": [{"text": "Error detected in slice assignment.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Valid atomic claim", "node_type": "Claim"}]}'
+        )
 
         pipeline = ClaimifyPipeline(
             config=config,
@@ -411,9 +423,9 @@ class TestClaimifyPipelineIntegration:
         # Create LLM mocks - selection LLM returns content for some and NO_VERIFIABLE_CONTENT for others
         def mock_selection_response(prompt, **kwargs):
             # Extract the actual target sentence from the prompt
-            if '**Source Sentence:** "' in prompt:
-                start_idx = prompt.find('**Source Sentence:** "') + len(
-                    '**Source Sentence:** "'
+            if 'Target sentence: "' in prompt:
+                start_idx = prompt.find('Target sentence: "') + len(
+                    'Target sentence: "'
                 )
                 end_idx = prompt.find('"', start_idx)
                 target_sentence = prompt[start_idx:end_idx]
@@ -424,17 +436,21 @@ class TestClaimifyPipelineIntegration:
                     or "error rate" in target_sentence.lower()
                     or "deployment" in target_sentence.lower()
                 ):
-                    return "System error detected."
+                    return '{"selected": true, "confidence": 0.8, "reasoning": "Contains verifiable technical content"}'
                 else:
-                    return "NO_VERIFIABLE_CONTENT"
+                    return '{"selected": false, "confidence": 0.9, "reasoning": "No verifiable content found"}'
             else:
-                return "NO_VERIFIABLE_CONTENT"
+                return '{"selected": false, "confidence": 0.9, "reasoning": "No verifiable content found"}'
 
         selection_llm = Mock()
         selection_llm.complete = Mock(side_effect=mock_selection_response)
 
-        disambiguation_llm = MockLLM("System error detected.")
-        decomposition_llm = MockLLM("System error detected.")
+        disambiguation_llm = MockLLM(
+            '{"disambiguated_text": "System error detected.", "changes_made": ["Resolved pronouns"], "confidence": 0.8}'
+        )
+        decomposition_llm = MockLLM(
+            '{"claim_candidates": [{"text": "System error detected.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Valid atomic claim", "node_type": "Claim"}]}'
+        )
 
         pipeline = ClaimifyPipeline(
             config=config,

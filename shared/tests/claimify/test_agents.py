@@ -98,16 +98,6 @@ class TestSelectionAgent:
         assert result.confidence == 0.9
         assert "Question with no verifiable content" in result.reasoning
 
-    def test_llm_selection_legacy_format(self, config, test_context):
-        """Test legacy text format fallback."""
-        mock_llm = MockLLM("NO_VERIFIABLE_CONTENT")
-        agent = SelectionAgent(llm=mock_llm, config=config)
-
-        result = agent.process(test_context)
-
-        assert not result.is_selected
-        assert "legacy format" in result.reasoning
-
     def test_selection_without_llm_fails(self, config, test_context):
         """Test that selection fails without LLM."""
         agent = SelectionAgent(config=config)  # No LLM provided
@@ -200,9 +190,9 @@ class TestDisambiguationAgent:
         assert len(result.changes_made) == 0
         assert result.confidence == 1.0
 
-    def test_disambiguation_cannot_resolve(self, config):
-        """Test LLM cannot resolve ambiguities using legacy format."""
-        mock_llm = MockLLM("CANNOT_DISAMBIGUATE")
+    def test_disambiguation_invalid_json_fails(self, config):
+        """Test LLM invalid JSON response fails gracefully."""
+        mock_llm = MockLLM("INVALID_JSON_RESPONSE")
         agent = DisambiguationAgent(llm=mock_llm, config=config)
 
         test_sentence = SentenceChunk(
@@ -215,9 +205,11 @@ class TestDisambiguationAgent:
 
         result = agent.process(test_sentence, context)
 
-        assert result.disambiguated_text == test_sentence.text  # Original kept
-        assert "Could not resolve ambiguities (legacy format)" in result.changes_made
-        assert result.confidence == 0.0
+        # Should return original text on error
+        assert result.disambiguated_text == test_sentence.text
+        # Should have error in changes_made
+        assert len(result.changes_made) == 1
+        assert "Error during processing" in result.changes_made[0]
 
     def test_disambiguation_without_llm_fails(self, config):
         """Test that disambiguation fails without LLM."""
@@ -267,7 +259,7 @@ class TestDecompositionAgent:
         assert claim.confidence == 0.9  # Based on all criteria passed
 
     def test_llm_decomposition_multiple_claims(self, config):
-        """Test splitting of compound sentences."""
+        """Test splitting of compound sentences and JSON parsing."""
         json_response = """{"claim_candidates": [{"text": "The system reported an error.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "First atomic claim", "node_type": "Claim"}, {"text": "The user was notified.", "is_atomic": true, "is_self_contained": true, "is_verifiable": true, "passes_criteria": true, "reasoning": "Second atomic claim", "node_type": "Claim"}]}"""
         mock_llm = MockLLM(json_response)
         agent = DecompositionAgent(llm=mock_llm, config=config)
@@ -282,63 +274,76 @@ class TestDecompositionAgent:
         text = "The system reported an error and the user was notified."
         result = agent.process(text, test_sentence)
 
-        # Should split into multiple candidates
+        # Verify JSON parsing worked correctly
         assert len(result.claim_candidates) == 2
-        assert all(claim.is_atomic for claim in result.claim_candidates)
-        assert all(claim.is_self_contained for claim in result.claim_candidates)
-        assert all(claim.is_verifiable for claim in result.claim_candidates)
 
-        # Check that we got some claims
+        # Verify quality flags are correctly parsed from JSON
+        for claim in result.claim_candidates:
+            assert claim.is_atomic is True
+            assert claim.is_self_contained is True
+            assert claim.is_verifiable is True
+
+        # Verify specific claim content
         claim_texts = [claim.text for claim in result.claim_candidates]
-        assert len(claim_texts) > 0
+        assert "The system reported an error." in claim_texts
+        assert "The user was notified." in claim_texts
 
-    def test_llm_decomposition_legacy_format(self, config):
-        """Test legacy text format fallback."""
-        mock_llm = MockLLM("The system reported an error.\nThe user was notified.")
+    def test_claim_candidate_quality_flags_parsing(self, config):
+        """Test that quality flags are correctly parsed from LLM JSON output."""
+        # JSON with mixed quality flags
+        json_response = """{"claim_candidates": [
+            {
+                "text": "Valid atomic claim.",
+                "is_atomic": true,
+                "is_self_contained": true,
+                "is_verifiable": true,
+                "passes_criteria": true,
+                "reasoning": "Meets all criteria",
+                "node_type": "Claim"
+            },
+            {
+                "text": "This is not atomic and has multiple facts.",
+                "is_atomic": false,
+                "is_self_contained": true,
+                "is_verifiable": true,
+                "passes_criteria": false,
+                "reasoning": "Not atomic - compound statement",
+                "node_type": "Sentence"
+            }
+        ]}"""
+
+        mock_llm = MockLLM(json_response)
         agent = DecompositionAgent(llm=mock_llm, config=config)
 
         test_sentence = SentenceChunk(
-            text="compound sentence",
+            text="test sentence",
             source_id="blk_001",
             chunk_id="chunk_001",
             sentence_index=1,
         )
 
-        text = "The system reported an error and the user was notified."
-        result = agent.process(text, test_sentence)
+        result = agent.process("Test input text.", test_sentence)
 
-        # Should parse legacy format
         assert len(result.claim_candidates) == 2
-        # All legacy format claims are hardcoded to True
-        assert all(claim.is_atomic for claim in result.claim_candidates)
-        assert all(claim.is_self_contained for claim in result.claim_candidates)
-        assert all(claim.is_verifiable for claim in result.claim_candidates)
-        assert all(claim.confidence == 0.8 for claim in result.claim_candidates)
-        assert all(
-            "legacy format" in claim.reasoning for claim in result.claim_candidates
-        )
+
+        # First claim should pass all criteria
+        valid_claim = result.claim_candidates[0]
+        assert valid_claim.is_atomic is True
+        assert valid_claim.is_self_contained is True
+        assert valid_claim.is_verifiable is True
+        assert valid_claim.text == "Valid atomic claim."
+
+        # Second claim should fail atomicity
+        invalid_claim = result.claim_candidates[1]
+        assert invalid_claim.is_atomic is False
+        assert invalid_claim.is_self_contained is True
+        assert invalid_claim.is_verifiable is True
+        assert invalid_claim.text == "This is not atomic and has multiple facts."
 
     def test_llm_decomposition_no_valid_claims(self, config):
         """Test when LLM finds no valid claims."""
         json_response = '{"claim_candidates": []}'
         mock_llm = MockLLM(json_response)
-        agent = DecompositionAgent(llm=mock_llm, config=config)
-
-        test_sentence = SentenceChunk(
-            text="test",
-            source_id="blk_001",
-            chunk_id="chunk_001",
-            sentence_index=1,
-        )
-
-        text = "It caused an error in the system."
-        result = agent.process(text, test_sentence)
-
-        assert len(result.claim_candidates) == 0
-
-    def test_llm_decomposition_legacy_no_valid_claims(self, config):
-        """Test legacy format no valid claims."""
-        mock_llm = MockLLM("NO_VALID_CLAIMS")
         agent = DecompositionAgent(llm=mock_llm, config=config)
 
         test_sentence = SentenceChunk(

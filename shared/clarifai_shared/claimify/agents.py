@@ -219,23 +219,8 @@ Respond with valid JSON only:
                     rewritten_text=sentence.text if is_selected else None,
                 )
 
-            except json.JSONDecodeError:
-                # Fallback: try to parse as legacy text format
-                if response == "NO_VERIFIABLE_CONTENT":
-                    return SelectionResult(
-                        sentence_chunk=sentence,
-                        is_selected=False,
-                        reasoning="No verifiable content found (legacy format)",
-                        rewritten_text=None,
-                    )
-                else:
-                    # Assume it's verifiable content
-                    return SelectionResult(
-                        sentence_chunk=sentence,
-                        is_selected=True,
-                        reasoning="Contains verifiable content (legacy format)",
-                        rewritten_text=response,
-                    )
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON response from LLM: {e}") from e
 
         except Exception as e:
             # If LLM fails, we cannot perform selection without heuristics
@@ -386,29 +371,8 @@ Respond with valid JSON only:
                     confidence=confidence,
                 )
 
-            except json.JSONDecodeError:
-                # Fallback: try to parse as legacy text format
-                if response == "CANNOT_DISAMBIGUATE":
-                    return DisambiguationResult(
-                        original_sentence=sentence,
-                        disambiguated_text=sentence.text,  # Keep original
-                        changes_made=["Could not resolve ambiguities (legacy format)"],
-                        confidence=0.0,
-                    )
-                else:
-                    # Assume it's a disambiguated sentence
-                    changes_made = []
-                    if response != sentence.text:
-                        changes_made.append(
-                            "Resolved pronouns and ambiguous references (legacy format)"
-                        )
-
-                    return DisambiguationResult(
-                        original_sentence=sentence,
-                        disambiguated_text=response,
-                        changes_made=changes_made,
-                        confidence=0.8,
-                    )
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON response from LLM: {e}") from e
 
         except Exception as e:
             # If LLM fails, we cannot perform disambiguation without heuristics
@@ -606,37 +570,8 @@ Respond with valid JSON only:
                     original_text=text, claim_candidates=claim_candidates
                 )
 
-            except json.JSONDecodeError:
-                # Fallback: try to parse as legacy text format
-                if response == "NO_VALID_CLAIMS":
-                    return DecompositionResult(original_text=text, claim_candidates=[])
-
-                # Split response into individual claims (legacy format)
-                claim_lines = [
-                    line.strip() for line in response.split("\n") if line.strip()
-                ]
-                claim_candidates = []
-
-                for claim_text in claim_lines:
-                    # Remove bullet points or numbering if present
-                    claim_text = claim_text.lstrip("- •*123456789.)")
-                    claim_text = claim_text.strip()
-
-                    if claim_text and claim_text != "NO_VALID_CLAIMS":
-                        # Use legacy behavior with hardcoded values
-                        candidate = ClaimCandidate(
-                            text=claim_text,
-                            is_atomic=True,  # Legacy assumption
-                            is_self_contained=True,  # Legacy assumption
-                            is_verifiable=True,  # Legacy assumption
-                            confidence=0.8,  # Legacy hardcoded value
-                            reasoning="Extracted by LLM decomposition (legacy format)",
-                        )
-                        claim_candidates.append(candidate)
-
-                return DecompositionResult(
-                    original_text=text, claim_candidates=claim_candidates
-                )
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON response from LLM: {e}") from e
 
         except Exception as e:
             # If LLM fails, we cannot perform decomposition without heuristics

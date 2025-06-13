@@ -7,11 +7,15 @@ from .plugin_interface import Plugin, MarkdownOutput, UnknownFormatError
 
 try:
     from .plugins import ensure_defaults, convert_file_to_markdowns, DefaultPlugin
-    from .import_system import Tier1ImportSystem, DuplicateDetectionError, ImportSystemError
-    
+    from .import_system import (
+        Tier1ImportSystem,
+        DuplicateDetectionError,
+        ImportSystemError,
+    )
+
     __all__ = [
         "ClarifAIConfig",
-        "DatabaseConfig", 
+        "DatabaseConfig",
         "VaultPaths",
         "load_config",
         "Plugin",
@@ -29,7 +33,7 @@ except ImportError:
     __all__ = [
         "ClarifAIConfig",
         "DatabaseConfig",
-        "VaultPaths", 
+        "VaultPaths",
         "load_config",
         "Plugin",
         "MarkdownOutput",

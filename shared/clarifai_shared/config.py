@@ -303,7 +303,7 @@ class ClarifAIConfig:
             for path in [current_path] + list(current_path.parents):
                 search_paths.append(path / "settings" / "clarifai.config.yaml")
 
-            # Priority 2: root level in current and parent directories (legacy)
+            # Priority 2: root level in current and parent directories
             for path in [current_path] + list(current_path.parents):
                 search_paths.append(path / "clarifai.config.yaml")
 

@@ -38,7 +38,7 @@ def load_claimify_config_from_yaml(config_data: Dict[str, Any]) -> ClaimifyConfi
     decomposition_model = claimify_models.get("decomposition")
     claimify_default = claimify_models.get("default")
 
-    # Fall back to legacy LLM config if needed
+    # Fall back to global LLM config if needed
     if not claimify_default:
         llm_config = config_data.get("llm", {})
         llm_models = llm_config.get("models", {})
@@ -113,7 +113,7 @@ def load_claimify_config_from_file(config_file: Optional[str] = None) -> Claimif
         for path in [current_path] + list(current_path.parents):
             search_paths.append(path / "settings" / "clarifai.config.yaml")
 
-        # Priority 2: root level (legacy)
+        # Priority 2: root level in current and parent directories
         for path in [current_path] + list(current_path.parents):
             search_paths.append(path / "clarifai.config.yaml")
 
@@ -167,7 +167,7 @@ def get_model_config_for_stage(config_data: Dict[str, Any], stage: str) -> str:
     if claimify_default:
         return claimify_default
 
-    # Fall back to global default (legacy support)
+    # Fall back to global default
     llm_config = config_data.get("llm", {})
     llm_models = llm_config.get("models", {})
     return llm_models.get("default", "gpt-3.5-turbo")
