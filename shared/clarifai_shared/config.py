@@ -63,6 +63,20 @@ class ConceptsConfig:
 
 
 @dataclass
+class ThresholdConfig:
+    """Configuration for various similarity and processing thresholds."""
+
+    # Cosine similarity threshold for merging candidates
+    concept_merge: float = 0.90
+    
+    # Minimum link strength to create graph edge
+    claim_link_strength: float = 0.60
+    
+    # Cosine similarity for grouping utterances for Tier 2 summaries
+    summary_grouping_similarity: float = 0.80
+
+
+@dataclass
 class PathsConfig:
     """Configuration for vault and file paths."""
 
@@ -119,6 +133,7 @@ class ClarifAIConfig:
     # New configuration sections
     embedding: EmbeddingConfig = field(default_factory=EmbeddingConfig)
     concepts: ConceptsConfig = field(default_factory=ConceptsConfig)
+    threshold: ThresholdConfig = field(default_factory=ThresholdConfig)
 
     # Message broker configuration
     rabbitmq_host: str = "rabbitmq"
@@ -247,6 +262,14 @@ class ClarifAIConfig:
             ),
         )
 
+        # Load threshold configuration from YAML
+        threshold_config = yaml_config.get("threshold", {})
+        threshold = ThresholdConfig(
+            concept_merge=threshold_config.get("concept_merge", 0.90),
+            claim_link_strength=threshold_config.get("claim_link_strength", 0.60),
+            summary_grouping_similarity=threshold_config.get("summary_grouping_similarity", 0.80),
+        )
+
         # Load paths configuration from YAML
         paths_config = yaml_config.get("paths", {})
         vault_path = os.getenv("VAULT_PATH", paths_config.get("vault", "/vault"))
@@ -278,6 +301,7 @@ class ClarifAIConfig:
             neo4j=neo4j,
             embedding=embedding,
             concepts=concepts,
+            threshold=threshold,
             rabbitmq_host=os.getenv("RABBITMQ_HOST", "rabbitmq"),
             rabbitmq_port=int(os.getenv("RABBITMQ_PORT", "5672")),
             rabbitmq_user=os.getenv("RABBITMQ_USER", "user"),

@@ -1,0 +1,165 @@
+# ClarifAI Default Configuration File
+# This file contains system defaults for all configurable parameters
+# User overrides should be placed in settings/clarifai.config.yaml
+
+# Version and system info
+version: "0.1.0"
+config_version: 1
+
+# Database configurations
+databases:
+  postgres:
+    host: "postgres"
+    port: 5432
+    database: "clarifai"
+    
+  neo4j:
+    host: "neo4j"
+    port: 7687
+
+# Vault and path configurations
+paths:
+  vault: "/vault"
+  tier1: "conversations"
+  tier2: "summaries"
+  tier3: "concepts"
+  settings: "/settings"
+
+# Embedding configuration
+embedding:
+  models:
+    default: "sentence-transformers/all-MiniLM-L6-v2"
+  
+  device: "auto"
+  batch_size: 32
+  
+  pgvector:
+    collection_name: "utterances"
+    embed_dim: 384
+    index_type: "ivfflat"
+    index_lists: 100
+  
+  chunking:
+    chunk_size: 300
+    chunk_overlap: 30
+    keep_separator: true
+    merge_colon_endings: true
+    merge_short_prefixes: true
+    min_chunk_tokens: 5
+
+# LLM configuration
+llm:
+  models:
+    default: "gpt-3.5-turbo"
+    fallback_plugin: "gpt-3.5-turbo"
+    conversation_extraction: "gpt-3.5-turbo"
+  
+  temperature: 0.1
+  max_tokens: 1000
+  timeout: 30
+
+# Model configuration
+model:
+  claimify:
+    default: "gpt-3.5-turbo"
+    selection: null
+    disambiguation: null
+    decomposition: null
+  fallback_plugin: "gpt-3.5-turbo"
+
+# Threshold configuration (system defaults)
+threshold:
+  concept_merge: 0.90
+  claim_link_strength: 0.60
+  summary_grouping_similarity: 0.80
+
+# Window configuration
+window:
+  claimify:
+    p: 3
+    f: 1
+
+# Processing configuration
+processing:
+  claimify:
+    max_retries: 3
+    timeout_seconds: 30
+    temperature: 0.1
+    max_tokens: 1000
+    
+    thresholds:
+      selection_confidence: 0.5
+      disambiguation_confidence: 0.5
+      decomposition_confidence: 0.5
+    
+    logging:
+      log_decisions: true
+      log_transformations: true
+      log_timing: true
+      
+  batch_sizes:
+    embedding: 50
+    chunking: 100
+    
+  retries:
+    max_attempts: 3
+    backoff_factor: 2
+    max_wait_time: 60
+
+# Concept detection configuration  
+concepts:
+  candidates:
+    collection_name: "concept_candidates"
+    similarity_threshold: 0.9
+    
+  canonical:
+    collection_name: "concepts"
+    similarity_threshold: 0.95
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "structured"
+  service_name: "clarifai"
+  handlers:
+    - type: "console"
+      stream: "stdout"
+
+# Plugin configuration
+plugins:
+  auto_discover: true
+  plugin_directories:
+    - "shared/clarifai_shared/plugins"
+  
+  default_plugin:
+    enabled: true
+    llm_fallback: true
+
+# Scheduler configuration
+scheduler:
+  jobs:
+    concept_embedding_refresh:
+      enabled: true
+      cron: "0 3 * * *"
+      description: "Refresh concept embeddings from Tier 3 pages"
+    
+    vault_sync:
+      enabled: true
+      cron: "*/30 * * * *"
+      description: "Sync vault files with knowledge graph"
+
+# Feature flags (system defaults)
+features:
+  embedding_enabled: true
+  chunking_enabled: true
+  pgvector_enabled: true
+  evaluation_agents: false
+  concept_linking: false
+  tier2_generation: false
+
+# Development and testing
+development:
+  debug: false
+  test_mode: false
+  mock_llm: false
+  mock_embedding: false

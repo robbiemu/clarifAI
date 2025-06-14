@@ -195,6 +195,22 @@ class TestTier2SummaryAgent:
         config.paths.vault = "/test/vault"
         config.paths.tier2 = "summaries"
         
+        # Add features configuration
+        config.features = {"tier2_generation": True}
+        
+        # Add threshold configuration
+        config.threshold = Mock()
+        config.threshold.summary_grouping_similarity = 0.80
+        
+        # Add processing configuration for retries
+        config.processing = {
+            "retries": {
+                "max_attempts": 3,
+                "backoff_factor": 2,
+                "max_wait_time": 60
+            }
+        }
+        
         return config
 
     @pytest.fixture

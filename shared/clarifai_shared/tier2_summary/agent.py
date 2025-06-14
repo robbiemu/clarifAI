@@ -228,7 +228,7 @@ class Tier2SummaryAgent:
         
         # Use configured threshold if not provided
         if similarity_threshold is None:
-            similarity_threshold = self.config.threshold.get("summary_grouping_similarity", 0.80)
+            similarity_threshold = self.config.threshold.summary_grouping_similarity
         
         start_time = time.time()
         
