@@ -138,6 +138,9 @@ class ClarifAIConfig:
 
     # Vault structure configuration
     paths: VaultPaths = field(default_factory=VaultPaths)
+    
+    # Feature flags
+    features: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_env(
@@ -267,6 +270,9 @@ class ClarifAIConfig:
             ),
         )
 
+        # Load features configuration from YAML
+        features_config = yaml_config.get("features", {})
+
         return cls(
             postgres=postgres,
             neo4j=neo4j,
@@ -285,6 +291,7 @@ class ClarifAIConfig:
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
             paths=paths,
+            features=features_config,
         )
 
     @classmethod
