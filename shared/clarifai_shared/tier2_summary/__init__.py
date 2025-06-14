@@ -11,7 +11,7 @@ from .data_models import SummaryInput, SummaryBlock, SummaryResult, generate_sum
 
 __all__ = [
     "Tier2SummaryAgent",
-    "SummaryInput", 
+    "SummaryInput",
     "SummaryBlock",
     "SummaryResult",
     "generate_summary_id",

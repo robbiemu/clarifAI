@@ -68,10 +68,10 @@ class ThresholdConfig:
 
     # Cosine similarity threshold for merging candidates
     concept_merge: float = 0.90
-    
+
     # Minimum link strength to create graph edge
     claim_link_strength: float = 0.60
-    
+
     # Cosine similarity for grouping utterances for Tier 2 summaries
     summary_grouping_similarity: float = 0.80
 
@@ -153,7 +153,7 @@ class ClarifAIConfig:
 
     # Vault structure configuration
     paths: VaultPaths = field(default_factory=VaultPaths)
-    
+
     # Feature flags
     features: Dict[str, Any] = field(default_factory=dict)
 
@@ -267,7 +267,9 @@ class ClarifAIConfig:
         threshold = ThresholdConfig(
             concept_merge=threshold_config.get("concept_merge", 0.90),
             claim_link_strength=threshold_config.get("claim_link_strength", 0.60),
-            summary_grouping_similarity=threshold_config.get("summary_grouping_similarity", 0.80),
+            summary_grouping_similarity=threshold_config.get(
+                "summary_grouping_similarity", 0.80
+            ),
         )
 
         # Load paths configuration from YAML
