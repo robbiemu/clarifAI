@@ -42,14 +42,25 @@ class ConversationExtractorAgent:
     def __init__(self, llm: Optional[LLM] = None):
         """Initialize the agent with an LLM instance."""
         if llm is None:
-            # Use OpenAI as default, following the architecture docs
-            # Note: Future versions will support model.fallback_plugin configuration
-            # as specified in docs/arch/design_config_panel.md
+            # Load model configuration from YAML following design_config_panel.md
             config = load_config(validate=False)
+
+            # Try to load model configuration from YAML
+            fallback_model = self._get_fallback_model_from_config()
+
             api_key = getattr(config, "openai_api_key", None)
-            if api_key:
-                self.llm = OpenAI(api_key=api_key, model="gpt-3.5-turbo")
-                logger.info("Initialized ConversationExtractorAgent with OpenAI LLM")
+            if api_key and fallback_model:
+                # Use configured model if available
+                self.llm = OpenAI(api_key=api_key, model=fallback_model)
+                logger.info(
+                    f"Initialized ConversationExtractorAgent with configured model: {fallback_model}"
+                )
+            elif api_key:
+                # No specific model configuration found - this indicates a configuration issue
+                logger.warning(
+                    "No fallback_plugin model configured, initializing without LLM"
+                )
+                self.llm = None
             else:
                 # Graceful fallback for testing/development when no LLM is available
                 self.llm = None
@@ -61,6 +72,37 @@ class ConversationExtractorAgent:
             logger.info(
                 f"ConversationExtractorAgent initialized with provided LLM: {type(llm).__name__}"
             )
+
+    def _get_fallback_model_from_config(self) -> Optional[str]:
+        """
+        Get the fallback_plugin model configuration from YAML config.
+
+        Returns:
+            Model name for fallback plugin or None if not configured
+        """
+        try:
+            # Import here to avoid circular imports
+            from ..config import ClarifAIConfig
+
+            # Load YAML config using the existing utility
+            yaml_config = ClarifAIConfig._load_yaml_config()
+
+            # Get model.fallback_plugin configuration following design_config_panel.md
+            model_config = yaml_config.get("model", {})
+            fallback_model = model_config.get("fallback_plugin")
+
+            if fallback_model:
+                logger.debug(
+                    f"Found fallback_plugin model configuration: {fallback_model}"
+                )
+                return fallback_model
+            else:
+                logger.debug("No fallback_plugin model configuration found")
+                return None
+
+        except Exception as e:
+            logger.warning(f"Failed to load model configuration: {e}")
+            return None
 
     def extract_conversations(self, raw_input: str, path: Path) -> List[Dict[str, Any]]:
         """
@@ -176,7 +218,8 @@ INPUT TEXT:
         entry_pattern = r"^ENTRY\s*\[([^\]]+)\]\s*([^>]+)\s*>>\s*(.+)$"
 
         # Pattern 2: "speaker: message" format (but exclude metadata lines)
-        speaker_pattern = r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.+)$"
+        # Updated to handle speakers with spaces like "Dr. Smith"
+        speaker_pattern = r"^([a-zA-Z_][a-zA-Z0-9_\s\.]*[a-zA-Z0-9_])\s*:\s*(.+)$"
 
         # Metadata fields to exclude from speaker detection
         metadata_fields = {

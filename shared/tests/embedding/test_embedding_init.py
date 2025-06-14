@@ -3,6 +3,7 @@ Tests for embedding module __init__.py file.
 """
 
 import os
+import pytest
 from unittest.mock import Mock
 
 
@@ -66,60 +67,60 @@ class TestEmbeddingInitFile:
         assert result_data["metrics"] == mock_metrics
         assert result_data["errors"] == ["test error"]
 
-    def test_embedding_pipeline_init(self, integration_mode):
-        """Test EmbeddingPipeline initialization with configurable dependencies."""
-        if not integration_mode:
-            # Mock test - no real database connections
-            init_path = os.path.join(
-                os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
-            )
+    def test_embedding_pipeline_init(self):
+        """Test EmbeddingPipeline initialization with configurable dependencies (unit test)."""
+        # Mock test - no real database connections
+        init_path = os.path.join(
+            os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
+        )
 
-            with open(init_path, "r") as f:
-                content = f.read()
+        with open(init_path, "r") as f:
+            content = f.read()
 
-            # Check that EmbeddingPipeline class is defined
-            assert "class EmbeddingPipeline" in content
-        else:
-            # Integration test - requires real PostgreSQL service
-            import pytest
+        # Check that EmbeddingPipeline class is defined
+        assert "class EmbeddingPipeline" in content
 
-            pytest.skip("Integration tests require real database setup")
+    @pytest.mark.integration
+    def test_embedding_pipeline_init_integration(self):
+        """Test EmbeddingPipeline initialization with configurable dependencies (integration test)."""
+        # Integration test - requires real PostgreSQL service
+        pytest.skip("Integration tests require real database setup")
 
-    def test_embedding_pipeline_init_no_config(self, integration_mode):
-        """Test EmbeddingPipeline initialization without config."""
-        if not integration_mode:
-            # Mock test - verify class definition exists
-            init_path = os.path.join(
-                os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
-            )
+    def test_embedding_pipeline_init_no_config(self):
+        """Test EmbeddingPipeline initialization without config (unit test)."""
+        # Mock test - verify class definition exists
+        init_path = os.path.join(
+            os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
+        )
 
-            with open(init_path, "r") as f:
-                content = f.read()
+        with open(init_path, "r") as f:
+            content = f.read()
 
-            # Check that EmbeddingPipeline class is defined
-            assert "class EmbeddingPipeline" in content
-        else:
-            # Integration test - requires real PostgreSQL service
-            import pytest
+        # Check that EmbeddingPipeline class is defined
+        assert "class EmbeddingPipeline" in content
 
-            pytest.skip("Integration tests require real database setup")
+    @pytest.mark.integration
+    def test_embedding_pipeline_init_no_config_integration(self):
+        """Test EmbeddingPipeline initialization without config (integration test)."""
+        # Integration test - requires real PostgreSQL service
+        pytest.skip("Integration tests require real database setup")
 
-    def test_process_tier1_content_empty(self, integration_mode):
-        """Test processing empty tier1 content."""
-        if not integration_mode:
-            # Mock test - verify class definitions exist
-            init_path = os.path.join(
-                os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
-            )
+    def test_process_tier1_content_empty(self):
+        """Test processing empty tier1 content (unit test)."""
+        # Mock test - verify class definitions exist
+        init_path = os.path.join(
+            os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
+        )
 
-            with open(init_path, "r") as f:
-                content = f.read()
+        with open(init_path, "r") as f:
+            content = f.read()
 
-            # Check that both classes are defined
-            assert "class EmbeddingPipeline" in content
-            assert "class EmbeddingResult" in content
-        else:
-            # Integration test - requires real PostgreSQL service
-            import pytest
+        # Check that both classes are defined
+        assert "class EmbeddingPipeline" in content
+        assert "class EmbeddingResult" in content
 
-            pytest.skip("Integration tests require real database setup")
+    @pytest.mark.integration
+    def test_process_tier1_content_empty_integration(self):
+        """Test processing empty tier1 content (integration test)."""
+        # Integration test - requires real PostgreSQL service
+        pytest.skip("Integration tests require real database setup")

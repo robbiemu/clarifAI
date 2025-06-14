@@ -4,7 +4,13 @@ This document explains how ClarifAI services handle environment variable injecti
 
 ## Overview
 
-ClarifAI uses a shared configuration system that automatically loads environment variables from `.env` files and provides intelligent fallback handling for external database connections, particularly when using `host.docker.internal` for services running outside the Docker compose stack.
+ClarifAI uses a robust three-tier configuration system that ensures consistency and user customization:
+
+1. **Default YAML Configuration** - Base defaults from `clarifai.config.default.yaml` (maintained in shared package)
+2. **User YAML Configuration** - User customizations in `settings/clarifai.config.yaml` 
+3. **Environment Variables** - Runtime overrides from `.env` files
+
+The system automatically loads environment variables from `.env` files and provides intelligent fallback handling for external database connections, particularly when using `host.docker.internal` for services running outside the Docker compose stack.
 
 ## Configuration System Features
 
@@ -30,7 +36,7 @@ When running inside Docker containers, the system automatically applies `host.do
 
 ### 4. Centralized Configuration
 
-All services use the same configuration patterns through the `clarifai-shared` package:
+All services use the same configuration patterns through the `clarifai-shared` package with a three-tier loading hierarchy:
 
 ```python
 from clarifai_shared import load_config
@@ -41,6 +47,31 @@ config = load_config(validate=True)
 # Load without validation (for UI or optional services)
 config = load_config(validate=False)
 ```
+
+The configuration system follows this loading order:
+1. **Base defaults** from `clarifai.config.default.yaml` (in shared package)
+2. **User overrides** from `settings/clarifai.config.yaml` (deep merged)
+3. **Environment variables** for database connections and secrets
+
+### 5. Restoring Defaults
+
+ClarifAI provides an easy way to restore configuration to defaults:
+
+#### Automatic Restoration
+Simply delete your user configuration file and restart any service:
+```bash
+rm settings/clarifai.config.yaml
+# Configuration will be regenerated from default template on next service start
+```
+
+#### Manual Installation
+Use the configuration installer script:
+```bash
+cd services/clarifai-core
+python install/install_config.py --force
+```
+
+The `--force` flag will overwrite your existing `settings/clarifai.config.yaml` with a fresh copy of the default template, allowing you to start over with known-good settings.
 
 ## Configuration Variables
 

@@ -110,20 +110,22 @@ def test_install_script_structure_and_imports(install_script_path):
 
 
 def test_install_script_path_resolution(install_script_path):
-    """Test that the script correctly resolves paths to shared modules."""
+    """Test that the script correctly imports from the clarifai_shared package."""
     content = install_script_path.read_text()
 
-    # The script should be trying to add the shared directory to the path
-    assert "shared_dir" in content
-    assert "parent.parent.parent.parent" in content  # Should go up 4 levels
-    assert "sys.path.insert" in content
-
-    # Verify it uses importlib.util to load the prompt_installer module
-    assert "importlib.util" in content
-    assert "prompt_installer.py" in content
-    assert "spec_from_file_location" in content
+    # The script should use clean package imports instead of fragile path manipulation
+    assert "from clarifai_shared.utils.prompt_installer import" in content
     assert "install_all_default_prompts" in content
     assert "install_default_prompt" in content
+
+    # Should have proper error handling for missing packages
+    assert "ImportError" in content
+    assert "pip install -e shared/" in content
+
+    # Should NOT use fragile path traversal (this is the improvement)
+    assert "parent.parent.parent.parent" not in content
+    assert "sys.path.insert" not in content
+    assert "importlib.util" not in content
 
 
 def test_docker_file_location_structure():

@@ -6,6 +6,8 @@ This service is the main processing engine for the ClarifAI project. It handles 
 
 The `install/` directory contains scripts that are executed during the Docker build process to set up the service environment. This content is described here because its function is not immediately apparent from the service's primary source code.
 
+### Prompt Templates
+
 - `install/install_prompts.py`
 
   This command-line utility is responsible for installing the default LLM prompt templates into the user-configurable `/settings/prompts` directory.
@@ -20,4 +22,27 @@ The `install/` directory contains scripts that are executed during the Docker bu
   ```dockerfile
   # From services/clarifai-core/Dockerfile
   RUN mkdir -p /settings/prompts && python install/install_prompts.py --all --prompts-dir /settings/prompts
+  ```
+
+  **Usage:**
+  ```bash
+  python install/install_prompts.py --all
+  python install/install_prompts.py --template conversation_extraction --force
+  ```
+
+### Configuration Files
+
+- `install/install_config.py`
+
+  This command-line utility manages the installation and restoration of configuration files, following the same pattern as the prompt installer.
+
+  **Purpose:**
+
+  1.  **Default Configuration Setup:** It ensures that a user configuration file exists by copying from the default template when needed.
+  2.  **Configuration Restoration:** It provides a simple way for users to restore their configuration to default settings.
+
+  **Usage:**
+  ```bash
+  python install/install_config.py
+  python install/install_config.py --force  # Restore defaults
   ```

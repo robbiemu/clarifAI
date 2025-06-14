@@ -110,6 +110,8 @@ class Sentence:
     text: str
     ambiguous: Optional[bool]
     verifiable: Optional[bool]
+    failed_decomposition: bool
+    rejection_reason: Optional[str]
     version: int
     timestamp: datetime
 
@@ -121,6 +123,8 @@ class Sentence:
             text=sentence_input.text,
             ambiguous=sentence_input.ambiguous,
             verifiable=sentence_input.verifiable,
+            failed_decomposition=sentence_input.failed_decomposition,
+            rejection_reason=sentence_input.rejection_reason,
             version=version,
             timestamp=datetime.now(timezone.utc),
         )
@@ -132,6 +136,8 @@ class Sentence:
             "text": self.text,
             "ambiguous": self.ambiguous,
             "verifiable": self.verifiable,
+            "failed_decomposition": self.failed_decomposition,
+            "rejection_reason": self.rejection_reason,
             "version": self.version,
             "timestamp": self.timestamp.isoformat(),
         }
