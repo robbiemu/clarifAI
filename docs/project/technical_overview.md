@@ -25,6 +25,7 @@ ClarifAI's primary goal is to leverage LlamaIndex agents to achieve the followin
 ClarifAI's foundation relies on the following core elements:
 
 * **Obsidian Vault:** This is the user's primary interface, serving as the storage location for all generated Markdown documents.
+* **Robust Configuration System:** A file-based default configuration system that ensures consistency and user-customization. Uses a three-tier hierarchy (default template → user overrides → environment variables) with easy restoration capabilities.
 * **Vector Store (LlamaIndex Managed):** Powers semantic search, similarity detection, and Retrieval-Augmented Generation (RAG). It efficiently handles long conversations by chunking them into smaller segments for embedding, ensuring that even lengthy dialogues can be processed and queried effectively without hitting LLM context limits.
 * **Knowledge Graph (Neo4j via LlamaIndex):** This is the "brain" of ClarifAI, explicitly modeling relationships between different types of information (conversations, summaries, claims, sentences, and concepts).
     *   `Claim` nodes store quality evaluation scores for each extracted claim: `entailed_score`, `coverage_score`, and `decontextualization_score` (each ranging from 0.0 to 1.0).

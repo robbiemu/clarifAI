@@ -320,40 +320,124 @@ class ClarifAIConfig:
 
     @classmethod
     def _load_yaml_config(cls, config_file: Optional[str] = None) -> Dict[str, Any]:
-        """Load configuration from YAML file."""
+        """Load configuration from YAML file with default config merge."""
         if yaml is None:
             logger.warning("PyYAML not available, skipping YAML config loading")
             return {}
 
-        if config_file is None:
-            # Look for clarifai.config.yaml in settings directory first, then current directory or parent directories
-            current_path = Path.cwd()
-            search_paths = []
+        # Load default configuration first
+        default_config = cls._load_default_config()
 
-            # Priority 1: settings directory in current and parent directories
-            for path in [current_path] + list(current_path.parents):
-                search_paths.append(path / "settings" / "clarifai.config.yaml")
+        # Find user configuration file
+        user_config_file = config_file
+        if user_config_file is None:
+            user_config_file = cls._find_user_config_file()
 
-            # Priority 2: root level in current and parent directories
-            for path in [current_path] + list(current_path.parents):
-                search_paths.append(path / "clarifai.config.yaml")
-
-            for config_path in search_paths:
-                if config_path.exists():
-                    config_file = str(config_path)
-                    break
-
-        if config_file and Path(config_file).exists():
-            logger.info(f"Loading YAML configuration from {config_file}")
+        # Load user configuration if it exists
+        user_config = {}
+        if user_config_file and Path(user_config_file).exists():
+            logger.info(f"Loading YAML configuration from {user_config_file}")
             try:
-                with open(config_file, "r") as f:
-                    return yaml.safe_load(f) or {}
+                with open(user_config_file, "r") as f:
+                    user_config = yaml.safe_load(f) or {}
             except Exception as e:
-                logger.error(f"Failed to load YAML config from {config_file}: {e}")
-                return {}
+                logger.error(f"Failed to load YAML config from {user_config_file}: {e}")
+                user_config = {}
         else:
-            logger.info("No YAML configuration file found, using defaults")
+            logger.info("No user YAML configuration file found, using defaults only")
+
+        # Deep merge user config over default config
+        merged_config = cls._deep_merge_configs(default_config, user_config)
+        return merged_config
+
+    @classmethod
+    def _load_default_config(cls) -> Dict[str, Any]:
+        """Load the default configuration file."""
+        if yaml is None:
             return {}
+
+        # Look for clarifai.config.default.yaml in shared package directory
+        current_path = Path.cwd()
+        search_paths = []
+
+        # Priority 1: same directory as this module (shared package)
+        module_path = Path(__file__).parent
+        search_paths.append(module_path / "clarifai.config.default.yaml")
+
+        # Priority 2: in shared/ directory relative to current working directory
+        for path in [current_path] + list(current_path.parents):
+            search_paths.append(
+                path / "shared" / "clarifai_shared" / "clarifai.config.default.yaml"
+            )
+
+        for config_path in search_paths:
+            if config_path.exists():
+                logger.debug(f"Loading default configuration from {config_path}")
+                try:
+                    with open(config_path, "r") as f:
+                        return yaml.safe_load(f) or {}
+                except Exception as e:
+                    logger.error(
+                        f"Failed to load default config from {config_path}: {e}"
+                    )
+                    continue
+
+        logger.warning("No default configuration file found, using hardcoded defaults")
+        return {}
+
+    @classmethod
+    def _find_user_config_file(cls) -> Optional[str]:
+        """Find the user configuration file."""
+        current_path = Path.cwd()
+        search_paths = []
+
+        # Priority 1: settings directory in current and parent directories
+        for path in [current_path] + list(current_path.parents):
+            search_paths.append(path / "settings" / "clarifai.config.yaml")
+
+        # Priority 2: root level in current and parent directories
+        for path in [current_path] + list(current_path.parents):
+            search_paths.append(path / "clarifai.config.yaml")
+
+        for config_path in search_paths:
+            if config_path.exists():
+                return str(config_path)
+
+        return None
+
+    @staticmethod
+    def _deep_merge_configs(
+        default: Dict[str, Any], user: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Deep merge user configuration over default configuration.
+
+        Args:
+            default: Default configuration dictionary
+            user: User configuration dictionary
+
+        Returns:
+            Merged configuration dictionary
+        """
+        import copy
+
+        result = copy.deepcopy(default)
+
+        def _merge_recursive(
+            base_dict: Dict[str, Any], override_dict: Dict[str, Any]
+        ) -> None:
+            for key, value in override_dict.items():
+                if (
+                    key in base_dict
+                    and isinstance(base_dict[key], dict)
+                    and isinstance(value, dict)
+                ):
+                    _merge_recursive(base_dict[key], value)
+                else:
+                    base_dict[key] = value
+
+        _merge_recursive(result, user)
+        return result
 
     @staticmethod
     def _apply_host_fallback(host: str) -> str:

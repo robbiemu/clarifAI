@@ -3,12 +3,8 @@ Tests for embedding module pipeline and initialization.
 """
 
 import os
+import pytest
 from unittest.mock import Mock
-
-
-"""
-Tests for embedding module pipeline and initialization.
-"""
 
 
 class TestEmbeddingResult:
@@ -66,44 +62,38 @@ class TestEmbeddingResult:
 class TestEmbeddingPipeline:
     """Test cases for EmbeddingPipeline."""
 
-    def test_embedding_pipeline_init_with_config(self, integration_mode):
-        """Test EmbeddingPipeline initialization with config."""
-        if not integration_mode:
-            # Mock test - verify that the test would work with proper mocks
-            assert (
-                True
-            )  # Placeholder test that always passes when not in integration mode
-        else:
-            # Integration test - requires real PostgreSQL service
-            import pytest
+    def test_embedding_pipeline_init_with_config(self):
+        """Test EmbeddingPipeline initialization with config (unit test)."""
+        # Mock test - verify that the test would work with proper mocks
+        assert True  # Placeholder test that always passes when not in integration mode
 
-            pytest.skip("Integration tests require real database setup")
+    @pytest.mark.integration
+    def test_embedding_pipeline_init_with_config_integration(self):
+        """Test EmbeddingPipeline initialization with config (integration test)."""
+        # Integration test - requires real PostgreSQL service
+        pytest.skip("Integration tests require real database setup")
 
-    def test_embedding_pipeline_init_default_config(self, integration_mode):
-        """Test EmbeddingPipeline initialization with default config."""
-        if not integration_mode:
-            # Mock test - verify that the test would work with proper mocks
-            assert (
-                True
-            )  # Placeholder test that always passes when not in integration mode
-        else:
-            # Integration test - requires real PostgreSQL service
-            import pytest
+    def test_embedding_pipeline_init_default_config(self):
+        """Test EmbeddingPipeline initialization with default config (unit test)."""
+        # Mock test - verify that the test would work with proper mocks
+        assert True  # Placeholder test that always passes when not in integration mode
 
-            pytest.skip("Integration tests require real database setup")
+    @pytest.mark.integration
+    def test_embedding_pipeline_init_default_config_integration(self):
+        """Test EmbeddingPipeline initialization with default config (integration test)."""
+        # Integration test - requires real PostgreSQL service
+        pytest.skip("Integration tests require real database setup")
 
-    def test_process_tier1_content_empty(self, integration_mode):
-        """Test processing empty Tier 1 content."""
-        if not integration_mode:
-            # Mock test - verify that the test would work with proper mocks
-            assert (
-                True
-            )  # Placeholder test that always passes when not in integration mode
-        else:
-            # Integration test - requires real PostgreSQL service
-            import pytest
+    def test_process_tier1_content_empty(self):
+        """Test processing empty Tier 1 content (unit test)."""
+        # Mock test - verify that the test would work with proper mocks
+        assert True  # Placeholder test that always passes when not in integration mode
 
-            pytest.skip("Integration tests require real database setup")
+    @pytest.mark.integration
+    def test_process_tier1_content_empty_integration(self):
+        """Test processing empty Tier 1 content (integration test)."""
+        # Integration test - requires real PostgreSQL service
+        pytest.skip("Integration tests require real database setup")
 
 
 class TestEmbeddingModuleImports:

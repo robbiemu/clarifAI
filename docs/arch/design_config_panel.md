@@ -269,9 +269,16 @@ ClarifAI will always create missing folders when writing files, but never requir
 
 ## 🧪 UI Behavior Notes
 
+* The UI reads from and writes to the user's `settings/clarifai.config.yaml`, which overlays the base defaults from `clarifai.config.default.yaml`
 * Any change in the UI should write back to the YAML config file immediately (or on save)
 * Invalid configs (e.g., non-numeric thresholds) must be rejected by the UI inline
 * Pausing automation should be reflected in both:
 
   * this panel (`automation.pause`)
   * the Review Panel (“Automation Paused” banner or status indicator)
+### Configuration Discoverability
+
+The `clarifai.config.default.yaml` file serves as a complete reference for all available settings. Users can:
+* View all configurable parameters and their default values
+* Understand the expected structure for custom settings
+* Restore to defaults by deleting their user config file (it will be regenerated from the template)

@@ -7,22 +7,21 @@ default prompt files are available for user customization.
 """
 
 import argparse
-import importlib.util
 import sys
 from pathlib import Path
 
-# Add the shared package to the path
-shared_dir = Path(__file__).parent.parent.parent.parent / "shared"
-sys.path.insert(0, str(shared_dir))
-
-# Get the path to the prompt_installer module
-installer_path = shared_dir / "clarifai_shared" / "utils" / "prompt_installer.py"
-spec = importlib.util.spec_from_file_location("prompt_installer", installer_path)
-prompt_installer = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(prompt_installer)
-
-install_all_default_prompts = prompt_installer.install_all_default_prompts
-install_default_prompt = prompt_installer.install_default_prompt
+# Import the prompt installer from the installed clarifai_shared package
+# This assumes the workspace is set up correctly with `pip install -e shared/`
+try:
+    from clarifai_shared.utils.prompt_installer import (
+        install_all_default_prompts,
+        install_default_prompt,
+    )
+except ImportError as e:
+    print(f"Error: Could not import clarifai_shared package: {e}", file=sys.stderr)
+    print("Make sure you have installed the shared package with:", file=sys.stderr)
+    print("  pip install -e shared/", file=sys.stderr)
+    sys.exit(1)
 
 
 def main():
