@@ -109,6 +109,17 @@ class DatabaseConfig:
 
 
 @dataclass
+class VaultWatcherConfig:
+    """Configuration for vault watcher service."""
+
+    batch_interval: float = 2.0
+    max_batch_size: int = 50
+    queue_name: str = "clarifai_dirty_blocks"
+    exchange: str = ""
+    routing_key: str = "clarifai_dirty_blocks"
+
+
+@dataclass
 class VaultPaths:
     """Vault directory structure configuration."""
 
@@ -134,6 +145,7 @@ class ClarifAIConfig:
     embedding: EmbeddingConfig = field(default_factory=EmbeddingConfig)
     concepts: ConceptsConfig = field(default_factory=ConceptsConfig)
     threshold: ThresholdConfig = field(default_factory=ThresholdConfig)
+    vault_watcher: VaultWatcherConfig = field(default_factory=VaultWatcherConfig)
 
     # Message broker configuration
     rabbitmq_host: str = "rabbitmq"
@@ -298,12 +310,27 @@ class ClarifAIConfig:
         # Load features configuration from YAML
         features_config = yaml_config.get("features", {})
 
+        # Load vault watcher configuration from YAML
+        vault_watcher_config = yaml_config.get("vault_watcher", {})
+        vault_watcher = VaultWatcherConfig(
+            batch_interval=vault_watcher_config.get("batch_interval", 2.0),
+            max_batch_size=vault_watcher_config.get("max_batch_size", 50),
+            queue_name=vault_watcher_config.get("rabbitmq", {}).get(
+                "queue_name", "clarifai_dirty_blocks"
+            ),
+            exchange=vault_watcher_config.get("rabbitmq", {}).get("exchange", ""),
+            routing_key=vault_watcher_config.get("rabbitmq", {}).get(
+                "routing_key", "clarifai_dirty_blocks"
+            ),
+        )
+
         return cls(
             postgres=postgres,
             neo4j=neo4j,
             embedding=embedding,
             concepts=concepts,
             threshold=threshold,
+            vault_watcher=vault_watcher,
             rabbitmq_host=os.getenv("RABBITMQ_HOST", "rabbitmq"),
             rabbitmq_port=int(os.getenv("RABBITMQ_PORT", "5672")),
             rabbitmq_user=os.getenv("RABBITMQ_USER", "user"),

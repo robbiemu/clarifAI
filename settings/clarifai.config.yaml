@@ -22,6 +22,13 @@ databases:
     port: 7687        # NEO4J_BOLT_PORT
     # User and password come from environment variables only
     # NEO4J_USER, NEO4J_PASSWORD
+    
+  rabbitmq:
+    # Connection settings (can be overridden by environment variables)
+    host: "rabbitmq"  # RABBITMQ_HOST
+    port: 5672        # RABBITMQ_PORT
+    # User and password come from environment variables only
+    # RABBITMQ_USER, RABBITMQ_PASSWORD
 
 # Vault and path configurations
 paths:
@@ -148,6 +155,23 @@ plugins:
   default_plugin:
     enabled: true
     llm_fallback: true
+
+# Vault watcher configuration
+vault_watcher:
+  # File watching settings
+  batch_interval: 2.0      # Seconds to batch file events
+  max_batch_size: 50       # Maximum events per batch
+  
+  # RabbitMQ settings for dirty block notifications
+  rabbitmq:
+    queue_name: "clarifai_dirty_blocks"
+    exchange: ""           # Use default exchange
+    routing_key: "clarifai_dirty_blocks"
+    
+  # File filtering
+  file_patterns:
+    include: ["*.md"]      # Only monitor markdown files
+    exclude: [".*", "*.tmp", "*~"]  # Ignore temp/hidden files
 
 # Scheduler configuration
 scheduler:
