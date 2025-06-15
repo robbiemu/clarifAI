@@ -7,7 +7,7 @@ name = "clarifai-scheduler"
 version = "0.1.0"
 description = "Service for running scheduled background tasks."
 dependencies = [
-    "clarifai-shared = { workspace = true }",
+    "clarifai-shared",
     "apscheduler>=3.10.0",
     "python-dotenv>=1.0.0"
 ]

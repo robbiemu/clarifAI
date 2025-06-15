@@ -37,6 +37,11 @@ packages = [
   "services/vault-watcher/clarifai_vault_watcher",
 ]
 
+[tool.uv.sources]
+# This tells uv: "Any time any package asks for `clarifai-shared`,
+# don't go to PyPI. Instead, use the package from the local workspace."
+clarifai-shared = { workspace = true }
+
 [tool.uv.workspace]
 members = [
     "services/clarifai-core",
