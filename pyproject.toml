@@ -14,6 +14,8 @@ dependencies = [
     "sqlalchemy>=2.0.0",
     "pgvector>=0.3.0",
     "neo4j>=5.0.0",
+    "watchdog>=6.0.0",
+    "pika>=1.3.2",
 ]
 optional-dependencies = { dev = [
     "pytest>=8.0.0",
@@ -115,3 +117,12 @@ exclude_dirs = ["tests", "*/tests"]
 # Focus on medium and high severity issues
 severity = "medium"
 confidence = "medium"
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "mypy>=1.16.0",
+    "pytest>=8.4.0",
+    "pytest-cov>=6.1.1",
+    "ruff>=0.11.13",
+]
