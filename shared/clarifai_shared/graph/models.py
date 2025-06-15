@@ -1,7 +1,7 @@
 """
 Data models for ClarifAI knowledge graph nodes.
 
-This module defines the data structures for Claims, Sentences, and other
+This module defines the data structures for Claims, Sentences, Blocks, and other
 graph entities, following the schema from technical_overview.md and
 graph_schema.cypher.
 """
@@ -10,6 +10,22 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 import uuid
+
+
+@dataclass
+class BlockInput:
+    """Input data for creating a Block node."""
+
+    text: str
+    block_id: str  # clarifai:id from markdown
+    content_hash: str
+    source_file: str
+    version: int = 1
+
+    @property
+    def id(self) -> str:
+        """Alias for block_id for backward compatibility."""
+        return self.block_id
 
 
 @dataclass
@@ -62,6 +78,50 @@ class SentenceInput:
     def id(self) -> str:
         """Alias for sentence_id for backward compatibility."""
         return self.sentence_id
+
+
+@dataclass
+class Block:
+    """Represents a Block node in the knowledge graph."""
+
+    block_id: str
+    text: str
+    content_hash: str
+    source_file: str
+    version: int
+    timestamp: datetime
+    needs_reprocessing: bool = True
+    last_updated: Optional[datetime] = None
+
+    @classmethod
+    def from_input(cls, block_input: BlockInput) -> "Block":
+        """Create a Block from BlockInput."""
+        current_time = datetime.now(timezone.utc)
+        return cls(
+            block_id=block_input.block_id,
+            text=block_input.text,
+            content_hash=block_input.content_hash,
+            source_file=block_input.source_file,
+            version=block_input.version,
+            timestamp=current_time,
+            needs_reprocessing=True,
+            last_updated=current_time,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for Neo4j storage."""
+        return {
+            "id": self.block_id,  # Use 'id' as primary key in Neo4j
+            "text": self.text,
+            "hash": self.content_hash,
+            "source_file": self.source_file,
+            "version": self.version,
+            "timestamp": self.timestamp.isoformat(),
+            "needs_reprocessing": self.needs_reprocessing,
+            "last_updated": self.last_updated.isoformat()
+            if self.last_updated
+            else None,
+        }
 
 
 @dataclass

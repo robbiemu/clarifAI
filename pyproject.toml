@@ -64,10 +64,10 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 testpaths = ["tests", "shared/tests"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "--cov=clarifai_shared --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml"
+addopts = "--cov=clarifai_shared --cov=services --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml"
 
 [tool.coverage.run]
-source = ["clarifai_shared"]
+source = ["clarifai_shared", "services"]
 omit = [
     "*/tests/*",
     "*/test_*.py",
