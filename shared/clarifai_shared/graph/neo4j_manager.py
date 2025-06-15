@@ -178,9 +178,12 @@ class Neo4jGraphManager:
             # Constraints for unique IDs
             "CREATE CONSTRAINT claim_id_unique IF NOT EXISTS FOR (c:Claim) REQUIRE c.id IS UNIQUE",
             "CREATE CONSTRAINT sentence_id_unique IF NOT EXISTS FOR (s:Sentence) REQUIRE s.id IS UNIQUE",
+            "CREATE CONSTRAINT block_id_unique IF NOT EXISTS FOR (b:Block) REQUIRE b.id IS UNIQUE",
             # Indexes for performance (technical requirements specify clarifai:id and text)
             "CREATE INDEX claim_text_index IF NOT EXISTS FOR (c:Claim) ON (c.text)",
             "CREATE INDEX sentence_text_index IF NOT EXISTS FOR (s:Sentence) ON (s.text)",
+            "CREATE INDEX block_text_index IF NOT EXISTS FOR (b:Block) ON (b.text)",
+            "CREATE INDEX block_hash_index IF NOT EXISTS FOR (b:Block) ON (b.hash)",
             # Additional performance indexes from graph_schema.cypher
             "CREATE INDEX claim_entailed_score_index IF NOT EXISTS FOR (c:Claim) ON (c.entailed_score)",
             "CREATE INDEX claim_coverage_score_index IF NOT EXISTS FOR (c:Claim) ON (c.coverage_score)",

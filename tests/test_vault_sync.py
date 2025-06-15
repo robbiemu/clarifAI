@@ -1,0 +1,225 @@
+"""
+Tests for vault synchronization functionality.
+
+Tests the vault sync job implementation including markdown parsing,
+hash calculation, and Neo4j synchronization.
+"""
+
+import tempfile
+import os
+from pathlib import Path
+from unittest.mock import Mock, patch
+import hashlib
+
+# Note: These imports may fail without proper package installation
+# but the test structure demonstrates the intended functionality
+try:
+    from clarifai_scheduler.vault_sync import VaultSyncJob
+except ImportError:
+    # Define a mock VaultSyncJob for testing structure
+    class VaultSyncJob:
+        def __init__(self, config=None):
+            pass
+        
+        def _extract_clarifai_blocks(self, content):
+            return []
+        
+        def _calculate_content_hash(self, text):
+            return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+
+def test_extract_clarifai_blocks():
+    """Test extraction of clarifai:id blocks from markdown content."""
+    vault_sync = VaultSyncJob()
+    
+    # Test content with inline blocks
+    content = '''
+# Test Document
+
+Alice: This is the first utterance. <!-- clarifai:id=blk_abc123 ver=1 -->
+^blk_abc123
+
+Bob: This is the second utterance. <!-- clarifai:id=blk_def456 ver=2 -->
+^blk_def456
+
+Some text without clarifai:id.
+'''
+    
+    blocks = vault_sync._extract_clarifai_blocks(content)
+    
+    # Should extract 2 blocks
+    assert len(blocks) == 2
+    
+    # Check first block
+    block1 = blocks[0]
+    assert block1["clarifai_id"] == "blk_abc123"
+    assert block1["version"] == 1
+    assert "Alice: This is the first utterance." in block1["semantic_text"]
+    
+    # Check second block
+    block2 = blocks[1]
+    assert block2["clarifai_id"] == "blk_def456" 
+    assert block2["version"] == 2
+    assert "Bob: This is the second utterance." in block2["semantic_text"]
+
+
+def test_extract_file_level_block():
+    """Test extraction of file-level clarifai:id blocks."""
+    vault_sync = VaultSyncJob()
+    
+    # Test content with file-level block (comment at end)
+    content = '''
+# Top Concepts Report
+
+- Concept A: Important topic
+- Concept B: Another topic
+- Concept C: Third topic
+
+<!-- clarifai:id=file_top_concepts_20240615 ver=1 -->
+'''
+    
+    blocks = vault_sync._extract_clarifai_blocks(content)
+    
+    # Should extract 1 file-level block
+    assert len(blocks) == 1
+    
+    block = blocks[0]
+    assert block["clarifai_id"] == "file_top_concepts_20240615"
+    assert block["version"] == 1
+    # Semantic text should be the entire content excluding the comment
+    assert "# Top Concepts Report" in block["semantic_text"]
+    assert "clarifai:id" not in block["semantic_text"]
+
+
+def test_calculate_content_hash():
+    """Test content hash calculation."""
+    vault_sync = VaultSyncJob()
+    
+    # Test that same content produces same hash
+    text1 = "Alice: This is a test utterance."
+    text2 = "Alice: This is a test utterance."
+    
+    hash1 = vault_sync._calculate_content_hash(text1)
+    hash2 = vault_sync._calculate_content_hash(text2)
+    
+    assert hash1 == hash2
+    
+    # Test that different content produces different hash
+    text3 = "Bob: This is a different utterance."
+    hash3 = vault_sync._calculate_content_hash(text3)
+    
+    assert hash1 != hash3
+    
+    # Test whitespace normalization
+    text4 = "Alice:   This   is   a   test   utterance."
+    hash4 = vault_sync._calculate_content_hash(text4)
+    
+    assert hash1 == hash4  # Should be same after normalization
+
+
+def test_process_markdown_file_integration():
+    """Integration test for processing a markdown file."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Create test markdown file
+        test_file = Path(temp_dir) / "test_conversation.md"
+        test_content = '''
+# Test Conversation
+
+Alice: Hello there! <!-- clarifai:id=blk_greeting ver=1 -->
+^blk_greeting
+
+Bob: Hi Alice, how are you? <!-- clarifai:id=blk_response ver=1 -->
+^blk_response
+
+Alice: I'm doing well, thanks! <!-- clarifai:id=blk_followup ver=1 -->
+^blk_followup
+'''
+        test_file.write_text(test_content)
+        
+        # Mock the graph manager and config
+        with patch('clarifai_scheduler.vault_sync.load_config') as mock_config, \
+             patch('clarifai_scheduler.vault_sync.Neo4jGraphManager') as mock_graph:
+            
+            # Configure mocks
+            mock_config.return_value.vault_path = temp_dir
+            mock_config.return_value.paths.tier1 = "."
+            mock_config.return_value.paths.tier2 = "summaries" 
+            mock_config.return_value.paths.tier3 = "concepts"
+            
+            mock_graph_instance = Mock()
+            mock_graph.return_value = mock_graph_instance
+            
+            # Mock graph responses
+            mock_graph_instance._retry_with_backoff.return_value = None  # No existing blocks
+            
+            vault_sync = VaultSyncJob()
+            
+            # Process the file
+            stats = vault_sync._process_markdown_file(test_file, "tier1")
+            
+            # Should have processed 3 blocks
+            assert stats["blocks_processed"] == 3
+            assert stats["blocks_new"] == 3
+            assert stats["blocks_updated"] == 0
+            assert stats["errors"] == 0
+
+
+def test_vault_sync_job_stats_merging():
+    """Test that statistics are properly merged across files and tiers."""
+    vault_sync = VaultSyncJob()
+    
+    # Test stats merging
+    target = {
+        "files_processed": 1,
+        "blocks_processed": 2,
+        "blocks_new": 1,
+        "blocks_updated": 1,
+        "errors": 0
+    }
+    
+    source = {
+        "files_processed": 2,
+        "blocks_processed": 3,
+        "blocks_new": 2,
+        "blocks_updated": 0,
+        "errors": 1
+    }
+    
+    vault_sync._merge_stats(target, source)
+    
+    assert target["files_processed"] == 3
+    assert target["blocks_processed"] == 5
+    assert target["blocks_new"] == 3
+    assert target["blocks_updated"] == 1
+    assert target["errors"] == 1
+
+
+if __name__ == "__main__":
+    # Run basic tests
+    print("Running vault sync tests...")
+    
+    try:
+        test_extract_clarifai_blocks()
+        print("✓ test_extract_clarifai_blocks passed")
+    except Exception as e:
+        print(f"✗ test_extract_clarifai_blocks failed: {e}")
+    
+    try:
+        test_extract_file_level_block()
+        print("✓ test_extract_file_level_block passed")
+    except Exception as e:
+        print(f"✗ test_extract_file_level_block failed: {e}")
+    
+    try:
+        test_calculate_content_hash()
+        print("✓ test_calculate_content_hash passed")
+    except Exception as e:
+        print(f"✗ test_calculate_content_hash failed: {e}")
+    
+    try:
+        test_vault_sync_job_stats_merging()
+        print("✓ test_vault_sync_job_stats_merging passed")
+    except Exception as e:
+        print(f"✗ test_vault_sync_job_stats_merging failed: {e}")
+    
+    print("Basic tests completed.")
