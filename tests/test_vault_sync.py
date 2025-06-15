@@ -8,13 +8,14 @@ hash calculation, and Neo4j synchronization.
 import tempfile
 import os
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 import hashlib
 
 # Note: These imports may fail without proper package installation
 # but the test structure demonstrates the intended functionality
 try:
     from clarifai_scheduler.vault_sync import VaultSyncJob
+    VAULT_SYNC_AVAILABLE = True
 except ImportError:
     # Define a mock VaultSyncJob for testing structure
     class VaultSyncJob:
@@ -26,10 +27,28 @@ except ImportError:
         
         def _calculate_content_hash(self, text):
             return hashlib.sha256(text.encode('utf-8')).hexdigest()
+    
+    VAULT_SYNC_AVAILABLE = False
 
 
-def test_extract_clarifai_blocks():
+def _create_mock_config():
+    """Create a mock configuration for testing."""
+    mock_config = MagicMock()
+    mock_config.vault_path = "/test/vault"
+    mock_config.paths.tier1 = "tier1"
+    mock_config.paths.tier2 = "tier2"
+    mock_config.paths.tier3 = "tier3"
+    return mock_config
+
+
+@patch('clarifai_scheduler.vault_sync.load_config')
+@patch('clarifai_scheduler.vault_sync.Neo4jGraphManager')
+def test_extract_clarifai_blocks(mock_neo4j, mock_load_config):
     """Test extraction of clarifai:id blocks from markdown content."""
+    # Setup mocks to avoid database connection
+    mock_load_config.return_value = _create_mock_config()
+    mock_neo4j.return_value = MagicMock()
+    
     vault_sync = VaultSyncJob()
     
     # Test content with inline blocks
@@ -63,8 +82,14 @@ Some text without clarifai:id.
     assert "Bob: This is the second utterance." in block2["semantic_text"]
 
 
-def test_extract_file_level_block():
+@patch('clarifai_scheduler.vault_sync.load_config')
+@patch('clarifai_scheduler.vault_sync.Neo4jGraphManager')
+def test_extract_file_level_block(mock_neo4j, mock_load_config):
     """Test extraction of file-level clarifai:id blocks."""
+    # Setup mocks to avoid database connection
+    mock_load_config.return_value = _create_mock_config()
+    mock_neo4j.return_value = MagicMock()
+    
     vault_sync = VaultSyncJob()
     
     # Test content with file-level block (comment at end)
@@ -91,8 +116,14 @@ def test_extract_file_level_block():
     assert "clarifai:id" not in block["semantic_text"]
 
 
-def test_calculate_content_hash():
+@patch('clarifai_scheduler.vault_sync.load_config')
+@patch('clarifai_scheduler.vault_sync.Neo4jGraphManager')
+def test_calculate_content_hash(mock_neo4j, mock_load_config):
     """Test content hash calculation."""
+    # Setup mocks to avoid database connection
+    mock_load_config.return_value = _create_mock_config()
+    mock_neo4j.return_value = MagicMock()
+    
     vault_sync = VaultSyncJob()
     
     # Test that same content produces same hash
@@ -164,8 +195,14 @@ Alice: I'm doing well, thanks! <!-- clarifai:id=blk_followup ver=1 -->
             assert stats["errors"] == 0
 
 
-def test_vault_sync_job_stats_merging():
+@patch('clarifai_scheduler.vault_sync.load_config')
+@patch('clarifai_scheduler.vault_sync.Neo4jGraphManager')
+def test_vault_sync_job_stats_merging(mock_neo4j, mock_load_config):
     """Test that statistics are properly merged across files and tiers."""
+    # Setup mocks to avoid database connection
+    mock_load_config.return_value = _create_mock_config()
+    mock_neo4j.return_value = MagicMock()
+    
     vault_sync = VaultSyncJob()
     
     # Test stats merging
