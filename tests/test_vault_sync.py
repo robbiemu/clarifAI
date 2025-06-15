@@ -6,7 +6,6 @@ hash calculation, and Neo4j synchronization.
 """
 
 import tempfile
-import os
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 import hashlib
@@ -180,8 +179,8 @@ Alice: I'm doing well, thanks! <!-- clarifai:id=blk_followup ver=1 -->
             mock_graph_instance = Mock()
             mock_graph.return_value = mock_graph_instance
             
-            # Mock graph responses
-            mock_graph_instance._retry_with_backoff.return_value = None  # No existing blocks
+            # Mock graph responses (no existing blocks)
+            mock_graph_instance._retry_with_backoff.return_value = None
             
             vault_sync = VaultSyncJob()
             
