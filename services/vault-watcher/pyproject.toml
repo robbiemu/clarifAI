@@ -7,7 +7,7 @@ name = "clarifai-vault-watcher"
 version = "0.1.0"
 description = "Service to monitor vault file changes."
 dependencies = [
-    "clarifai-shared"
+    "clarifai-shared = { workspace = true }"
 ]
 
 [tool.ruff]
