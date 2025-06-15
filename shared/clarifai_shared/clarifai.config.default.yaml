@@ -78,6 +78,7 @@ embedding:
 threshold:
   concept_merge: 0.90
   claim_link_strength: 0.60
+  summary_grouping_similarity: 0.80  # Cosine similarity for grouping utterances for Tier 2 summaries
 
 # Window configuration (following design_config_panel.md structure)
 window:

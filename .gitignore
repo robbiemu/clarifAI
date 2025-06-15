@@ -222,3 +222,6 @@ cython_debug/
 
 # Version files from failed pip installs
 =*
+
+# Demo files - for development and testing only
+demo_*.py
