@@ -118,7 +118,9 @@ class Block:
             "version": self.version,
             "timestamp": self.timestamp.isoformat(),
             "needs_reprocessing": self.needs_reprocessing,
-            "last_updated": self.last_updated.isoformat() if self.last_updated else None,
+            "last_updated": self.last_updated.isoformat()
+            if self.last_updated
+            else None,
         }
 
 
