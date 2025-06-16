@@ -160,9 +160,16 @@ class BatchedFileWatcher:
             # Check if we should process the batch immediately
             if total_events >= self.max_batch_size:
                 self._cancel_timer()
-                self._process_batch()
+                # Don't process batch while holding the lock - schedule it to run
+                # after we release the lock to avoid deadlock
+                should_process = True
             else:
                 self._reset_timer()
+                should_process = False
+
+        # Process batch outside of lock to avoid deadlock
+        if should_process:
+            self._process_batch()
 
     def _reset_timer(self) -> None:
         """Reset the batch processing timer."""

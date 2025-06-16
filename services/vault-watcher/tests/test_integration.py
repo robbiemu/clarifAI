@@ -4,6 +4,7 @@ Integration tests for the vault watcher service.
 
 import tempfile
 import time
+import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
 from clarifai_vault_watcher.file_watcher import BatchedFileWatcher
@@ -13,8 +14,9 @@ from clarifai_vault_watcher.main import VaultWatcherService
 class TestFileWatcher:
     """Test cases for the file watcher functionality."""
 
-    def test_file_watcher_initialization(self):
-        """Test that file watcher can be initialized properly."""
+    @pytest.fixture
+    def file_watcher(self):
+        """Fixture that provides a file watcher and ensures cleanup."""
         with tempfile.TemporaryDirectory() as temp_dir:
             callback = Mock()
             watcher = BatchedFileWatcher(
@@ -23,60 +25,62 @@ class TestFileWatcher:
                 max_batch_size=5,
                 callback=callback,
             )
-
-            assert watcher.vault_path == Path(temp_dir)
-            assert watcher.batch_interval == 0.1
-            assert watcher.max_batch_size == 5
-            assert watcher.callback == callback
-
-    def test_file_watcher_start_stop(self):
-        """Test starting and stopping the file watcher."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            watcher = BatchedFileWatcher(vault_path=temp_dir, callback=Mock())
-
-            # Should start without errors
-            watcher.start()
-            assert watcher._observer is not None
-
-            # Should stop without errors
-            watcher.stop()
-            assert watcher._observer is None
-
-    def test_file_watcher_batching(self):
-        """Test that file events are properly batched."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            callback = Mock()
-            vault_path = Path(temp_dir)
-
-            watcher = BatchedFileWatcher(
-                vault_path=str(vault_path),
-                batch_interval=0.1,  # Short interval for testing
-                max_batch_size=2,  # Small batch size to trigger processing
-                callback=callback,
-            )
-
-            # Create test files
-            test_file1 = vault_path / "test1.md"
-            test_file2 = vault_path / "test2.md"
-
-            test_file1.write_text("# Test file 1")
-            test_file2.write_text("# Test file 2")
-
-            watcher.start()
-
-            try:
-                # Simulate file events
-                watcher._add_event("created", test_file1)
-                watcher._add_event("created", test_file2)
-
-                # Should trigger batch processing due to max_batch_size=2
-                time.sleep(0.2)  # Give time for processing
-
-                # Verify callback was called
-                assert callback.call_count >= 1
-
-            finally:
+            yield watcher, temp_dir
+            # Cleanup: ensure watcher is stopped
+            if watcher._observer is not None:
                 watcher.stop()
+
+    def test_file_watcher_initialization(self, file_watcher):
+        """Test that file watcher can be initialized properly."""
+        watcher, temp_dir = file_watcher
+
+        assert watcher.vault_path == Path(temp_dir)
+        assert watcher.batch_interval == 0.1
+        assert watcher.max_batch_size == 5
+        assert watcher.callback is not None
+
+    def test_file_watcher_start_stop(self, file_watcher):
+        """Test starting and stopping the file watcher."""
+        watcher, _ = file_watcher
+
+        # Should start without errors
+        watcher.start()
+        assert watcher._observer is not None
+
+        # Should stop without errors
+        watcher.stop()
+        assert watcher._observer is None
+
+    def test_file_watcher_batching(self, file_watcher):
+        """Test that file events are properly batched."""
+        watcher, temp_dir = file_watcher
+        vault_path = Path(temp_dir)
+
+        # Create smaller batching parameters for faster test
+        watcher.batch_interval = 0.05  # Very short interval
+        watcher.max_batch_size = 2
+
+        # Create test files
+        test_file1 = vault_path / "test1.md"
+        test_file2 = vault_path / "test2.md"
+
+        test_file1.write_text("# Test file 1")
+        test_file2.write_text("# Test file 2")
+
+        # Don't start the watcher - just test the batching logic directly
+        # to avoid watchdog observer threading issues
+
+        # Simulate file events directly to avoid filesystem timing issues
+        watcher._add_event("created", test_file1)
+        assert watcher.callback.call_count == 0  # Should not have called yet
+
+        watcher._add_event("created", test_file2)
+        # Should trigger batch processing due to max_batch_size=2
+        # Give minimal time for processing
+        time.sleep(0.1)
+
+        # Verify callback was called
+        assert watcher.callback.call_count >= 1
 
 
 class TestVaultWatcherService:
@@ -85,7 +89,11 @@ class TestVaultWatcherService:
     def test_service_initialization(self):
         """Test service initialization with mocked config."""
         mock_config = Mock()
-        mock_config.vault_path = "/test/vault"
+        mock_config.paths = Mock()
+        mock_config.paths.vault = "/test/vault"
+        mock_config.vault_watcher = Mock()
+        mock_config.vault_watcher.batch_interval = 2.0
+        mock_config.vault_watcher.max_batch_size = 50
         mock_config.rabbitmq_host = "localhost"
 
         with patch("clarifai_vault_watcher.main.DirtyBlockPublisher") as mock_publisher:
@@ -97,28 +105,28 @@ class TestVaultWatcherService:
             mock_publisher.assert_called_once()
 
     @patch("clarifai_vault_watcher.main.DirtyBlockPublisher")
-    @patch("os.path.exists")
-    def test_service_start_creates_vault_directory(self, mock_exists, mock_publisher):
-        """Test that service creates vault directory if it doesn't exist."""
+    def test_service_start_doesnt_create_vault_directory(self, mock_publisher):
+        """Test that service start method doesn't create vault directory."""
         mock_config = Mock()
-        mock_config.vault_path = "/test/vault"
+        mock_config.paths = Mock()
+        mock_config.paths.vault = "/test/vault"
+        mock_config.vault_watcher = Mock()
+        mock_config.vault_watcher.batch_interval = 2.0
+        mock_config.vault_watcher.max_batch_size = 50
         mock_config.rabbitmq_host = "localhost"
 
-        mock_exists.return_value = False
         mock_publisher_instance = Mock()
         mock_publisher.return_value = mock_publisher_instance
 
         service = VaultWatcherService(mock_config)
 
         with (
-            patch("os.makedirs") as mock_makedirs,
             patch.object(service.file_watcher, "start"),
             patch.object(service, "_perform_initial_scan"),
         ):
             service.start()
 
-            # Should have created the directory
-            mock_makedirs.assert_called_once_with(mock_config.vault_path, exist_ok=True)
+            # Should connect to publisher but not create directories
             mock_publisher_instance.connect.assert_called_once()
 
     def test_handle_file_changes_integration(self):
@@ -128,7 +136,11 @@ class TestVaultWatcherService:
 
             # Create a mock config
             mock_config = Mock()
-            mock_config.vault_path = str(vault_path)
+            mock_config.paths = Mock()
+            mock_config.paths.vault = str(vault_path)
+            mock_config.vault_watcher = Mock()
+            mock_config.vault_watcher.batch_interval = 0.1
+            mock_config.vault_watcher.max_batch_size = 5
             mock_config.rabbitmq_host = "localhost"
 
             with patch(

@@ -177,6 +177,30 @@ features:
   concept_linking: false
   tier2_generation: false
 
+# Vault Watcher service configuration
+vault_watcher:
+  # File watching configuration
+  watch:
+    batch_interval: 2.0  # seconds to wait before processing batched events
+    max_batch_size: 50   # maximum number of events to batch
+    file_patterns:
+      - "*.md"           # Only watch markdown files
+    ignore_patterns:
+      - ".*"             # Ignore hidden files
+      - "*~"             # Ignore temporary files
+      - "*.tmp"          # Ignore temp files
+      - ".obsidian/*"    # Ignore Obsidian metadata
+  
+  # RabbitMQ configuration
+  rabbitmq:
+    queue_name: "clarifai_dirty_blocks"
+    exchange: ""         # Use default exchange
+    routing_key: "clarifai_dirty_blocks"
+    durable: true        # Make queue persistent
+    connection_timeout: 30  # seconds
+    retry_attempts: 3
+    retry_delay: 5       # seconds between retries
+
 # Development and testing
 development:
   debug: false
