@@ -61,9 +61,12 @@ class PromptLoader:
 
                 config = load_config(validate=False)
                 settings_prompts_dir = Path(config.settings_path) / "prompts"
-                # Use settings/prompts if vault path exists, otherwise fallback to ./prompts
+                # Use settings/prompts if vault path exists, otherwise check relative path
                 if Path(config.settings_path).exists():
                     self.user_prompts_dir = settings_prompts_dir
+                elif (Path.cwd() / "settings" / "prompts").exists():
+                    # Fallback to relative settings path for local development
+                    self.user_prompts_dir = Path.cwd() / "settings" / "prompts"
                 else:
                     self.user_prompts_dir = Path.cwd() / "prompts"
             except (ImportError, ValueError):
@@ -83,9 +86,12 @@ class PromptLoader:
 
                         config = config_module.load_config(validate=False)
                         settings_prompts_dir = Path(config.settings_path) / "prompts"
-                        # Use settings/prompts if vault path exists, otherwise fallback to ./prompts
+                        # Use settings/prompts if vault path exists, otherwise check relative path
                         if Path(config.settings_path).exists():
                             self.user_prompts_dir = settings_prompts_dir
+                        elif (Path.cwd() / "settings" / "prompts").exists():
+                            # Fallback to relative settings path for local development
+                            self.user_prompts_dir = Path.cwd() / "settings" / "prompts"
                         else:
                             self.user_prompts_dir = Path.cwd() / "prompts"
                     else:
@@ -105,80 +111,129 @@ class PromptLoader:
         if self.user_prompts_dir.exists():
             logger.debug(f"User prompts directory found: {self.user_prompts_dir}")
 
-    def _find_template_file(self, template_name: str) -> Path:
+    def _find_template_files(self, template_name: str) -> tuple[Path, Path | None]:
         """
-        Find the template file, checking user directory first, then built-in directory.
+        Find the default and user template files for deep merging.
 
         Args:
             template_name: Name of the template file (without .yaml extension)
 
         Returns:
-            Path to the template file
+            Tuple of (default_path, user_path) where user_path may be None
 
         Raises:
-            FileNotFoundError: If template file doesn't exist in either location
+            FileNotFoundError: If default template file doesn't exist
         """
-        # Check user prompts directory first
+        # Default template must exist
+        builtin_template_path = self.prompts_dir / f"{template_name}.yaml"
+        if not builtin_template_path.exists():
+            raise FileNotFoundError(
+                f"Default prompt template '{template_name}' not found in built-in prompts ({builtin_template_path})"
+            )
+
+        # User template is optional for deep merge
         user_template_path = self.user_prompts_dir / f"{template_name}.yaml"
         if user_template_path.exists():
-            logger.debug(f"Using user-customized prompt: {user_template_path}")
-            return user_template_path
+            logger.debug(f"Found user customization: {user_template_path}")
+            return builtin_template_path, user_template_path
+        else:
+            logger.debug(f"Using default prompt only: {builtin_template_path}")
+            return builtin_template_path, None
 
-        # Fall back to built-in prompts directory
-        builtin_template_path = self.prompts_dir / f"{template_name}.yaml"
-        if builtin_template_path.exists():
-            logger.debug(f"Using built-in prompt: {builtin_template_path}")
-            return builtin_template_path
+    @staticmethod
+    def _deep_merge_configs(
+        default: Dict[str, Any], user: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Deep merge user configuration over default configuration.
+        
+        This reuses the same deep merge logic as the main config system.
 
-        # Neither location has the template
-        raise FileNotFoundError(
-            f"Prompt template '{template_name}' not found in user prompts ({user_template_path}) "
-            f"or built-in prompts ({builtin_template_path})"
-        )
+        Args:
+            default: Default configuration dictionary
+            user: User configuration dictionary
+
+        Returns:
+            Merged configuration dictionary
+        """
+        import copy
+
+        result = copy.deepcopy(default)
+
+        def _merge_recursive(
+            base_dict: Dict[str, Any], override_dict: Dict[str, Any]
+        ) -> None:
+            for key, value in override_dict.items():
+                if (
+                    key in base_dict
+                    and isinstance(base_dict[key], dict)
+                    and isinstance(value, dict)
+                ):
+                    _merge_recursive(base_dict[key], value)
+                else:
+                    base_dict[key] = value
+
+        _merge_recursive(result, user)
+        return result
 
     def load_template(self, template_name: str) -> PromptTemplate:
         """
-        Load a prompt template from a YAML file.
+        Load a prompt template from YAML files with deep merge support.
 
-        Checks user-customized prompts directory first, then falls back to built-in prompts.
+        Loads the default prompt and merges any user customizations over it.
+        This allows users to override specific keys without copying the entire file.
 
         Args:
             template_name: Name of the template file (without .yaml extension)
 
         Returns:
-            PromptTemplate instance with loaded data
+            PromptTemplate instance with merged data
 
         Raises:
-            FileNotFoundError: If template file doesn't exist
+            FileNotFoundError: If default template file doesn't exist
             ValueError: If template is malformed or missing required fields
         """
-        template_path = self._find_template_file(template_name)
+        default_path, user_path = self._find_template_files(template_name)
 
+        # Load default template
         try:
-            with open(template_path, "r", encoding="utf-8") as f:
-                data = yaml.safe_load(f)
+            with open(default_path, "r", encoding="utf-8") as f:
+                default_data = yaml.safe_load(f)
         except yaml.YAMLError as e:
-            raise ValueError(f"Invalid YAML in template {template_name}: {e}")
+            raise ValueError(f"Invalid YAML in default template {template_name}: {e}")
 
-        # Validate required fields
+        # Load user template if it exists
+        user_data = {}
+        if user_path:
+            try:
+                with open(user_path, "r", encoding="utf-8") as f:
+                    user_data = yaml.safe_load(f) or {}
+            except yaml.YAMLError as e:
+                raise ValueError(f"Invalid YAML in user template {template_name}: {e}")
+
+        # Deep merge user data over default data
+        merged_data = self._deep_merge_configs(default_data, user_data)
+
+        # Validate required fields in merged result
         required_fields = ["role", "description", "template", "variables"]
-        missing_fields = [field for field in required_fields if field not in data]
+        missing_fields = [field for field in required_fields if field not in merged_data]
         if missing_fields:
             raise ValueError(
-                f"Template {template_name} missing required fields: {missing_fields}"
+                f"Template {template_name} missing required fields after merge: {missing_fields}"
             )
 
-        logger.debug(f"Loaded prompt template: {template_name} from {template_path}")
+        logger.debug(f"Loaded prompt template: {template_name} from {default_path}" + 
+                     (f" with user customizations from {user_path}" if user_path else ""))
 
         return PromptTemplate(
-            role=data["role"],
-            description=data["description"],
-            template=data["template"],
-            variables=data["variables"],
-            system_prompt=data.get("system_prompt"),
-            instructions=data.get("instructions"),
-            output_format=data.get("output_format"),
-            rules=data.get("rules"),
+            role=merged_data["role"],
+            description=merged_data["description"],
+            template=merged_data["template"],
+            variables=merged_data["variables"],
+            system_prompt=merged_data.get("system_prompt"),
+            instructions=merged_data.get("instructions"),
+            output_format=merged_data.get("output_format"),
+            rules=merged_data.get("rules"),
         )
 
     def format_template(self, template: PromptTemplate, **kwargs) -> str:
