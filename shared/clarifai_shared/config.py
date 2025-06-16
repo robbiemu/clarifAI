@@ -85,6 +85,7 @@ class PathsConfig:
     tier2: str = "summaries"
     tier3: str = "concepts"
     settings: str = "/settings"
+    prompts: str = "/settings/prompts"
 
 
 @dataclass
@@ -125,6 +126,7 @@ class VaultPaths:
 
     vault: str = "/vault"
     settings: str = "/settings"
+    prompts: str = "/settings/prompts"
     tier1: str = "tier1"
     summaries: str = "."
     concepts: str = "."
@@ -295,6 +297,9 @@ class ClarifAIConfig:
         paths = VaultPaths(
             vault=vault_path,
             settings=settings_path,
+            prompts=os.getenv(
+                "PROMPTS_PATH", paths_config.get("prompts", "/settings/prompts")
+            ),
             tier1=os.getenv("VAULT_TIER1_PATH", paths_config.get("tier1", "tier1")),
             summaries=os.getenv(
                 "VAULT_SUMMARIES_PATH", paths_config.get("summaries", ".")
