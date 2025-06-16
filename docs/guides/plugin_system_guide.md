@@ -246,10 +246,10 @@ The default plugin uses externalized YAML prompt templates that can be customize
 
 #### Default Installation
 
-During installation or Docker container startup, default prompt templates are automatically installed to the `prompts/` directory:
+During installation or Docker container startup, default prompt templates are automatically installed to the `settings/prompts/` directory:
 
 ```bash
-# Automatically creates prompts/conversation_extraction.yaml
+# Automatically creates settings/prompts/conversation_extraction.yaml if it doesn't exist
 python install_prompts.py
 
 # Install all available prompts
@@ -261,7 +261,20 @@ python install_prompts.py --force
 
 #### Customizing Prompts
 
-The main prompt template is located at `prompts/conversation_extraction.yaml`:
+The system loads prompts by deep-merging the user's custom file from `settings/prompts/` over the built-in default. This allows you to override just the `system_prompt` or `template` without duplicating the entire file.
+
+The `settings/prompts/` directory provides a convenient way for users to override all prompt behavior or just specific parts, because of the deep-merge system. For example, you can create a file that only overrides the system prompt:
+
+```yaml
+# settings/prompts/conversation_extraction.yaml - Partial override example
+system_prompt: |
+  You are a specialized conversation analyst for technical discussions.
+  Focus on extracting code reviews, bug reports, and technical decisions.
+```
+
+This partial file will be merged with the complete default template, preserving all other fields like `role`, `description`, `variables`, etc.
+
+The main prompt template can be customized at `settings/prompts/conversation_extraction.yaml`:
 
 ```yaml
 role: "conversation_extraction_agent"
@@ -327,37 +340,36 @@ template: |
 
 #### Docker Configuration
 
-In Docker environments, prompt files are automatically installed and mounted as volumes for persistence:
+In Docker environments, the settings directory is mounted as a volume for persistence:
 
 ```dockerfile
-# Automatically installs prompts during build
-RUN python install_prompts.py --all
-
-# Mount prompts directory for user customization
-VOLUME ["/app/prompts"]
+# Mount settings directory for user customization
+VOLUME ["/settings"]
 ```
 
 Users can then:
-1. Copy prompt files from the container: `docker cp container:/app/prompts ./prompts`
-2. Edit the YAML files locally
-3. Mount the directory back: `docker run -v ./prompts:/app/prompts clarifai`
+1. Copy prompt files from the container: `docker cp container:/settings/prompts ./settings/prompts`
+2. Edit the YAML files locally (partial overrides are supported)
+3. Mount the directory back: `docker run -v ./settings:/settings clarifai`
+
+Since the system uses deep merge, users only need to override the specific keys they want to customize.
 
 #### Troubleshooting
 
 **Restore Default Prompts:**
 ```bash
-# Delete customized file and restart service
-rm prompts/conversation_extraction.yaml
-# Service will auto-install default on next run
+# Delete customized file and restart service - will use built-in defaults
+rm settings/prompts/conversation_extraction.yaml
+# Service will fall back to built-in defaults automatically
 
-# Or force reinstall
+# Or force reinstall user copy
 python install_prompts.py --force
 ```
 
 **Validate YAML Syntax:**
 ```bash
 # Check if your YAML is valid
-python -c "import yaml; yaml.safe_load(open('prompts/conversation_extraction.yaml'))"
+python -c "import yaml; yaml.safe_load(open('settings/prompts/conversation_extraction.yaml'))"
 ```
 
 ### LLM Configuration

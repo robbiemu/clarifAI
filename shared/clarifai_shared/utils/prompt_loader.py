@@ -146,7 +146,7 @@ class PromptLoader:
     ) -> Dict[str, Any]:
         """
         Deep merge user configuration over default configuration.
-        
+
         This reuses the same deep merge logic as the main config system.
 
         Args:
@@ -216,14 +216,18 @@ class PromptLoader:
 
         # Validate required fields in merged result
         required_fields = ["role", "description", "template", "variables"]
-        missing_fields = [field for field in required_fields if field not in merged_data]
+        missing_fields = [
+            field for field in required_fields if field not in merged_data
+        ]
         if missing_fields:
             raise ValueError(
                 f"Template {template_name} missing required fields after merge: {missing_fields}"
             )
 
-        logger.debug(f"Loaded prompt template: {template_name} from {default_path}" + 
-                     (f" with user customizations from {user_path}" if user_path else ""))
+        logger.debug(
+            f"Loaded prompt template: {template_name} from {default_path}"
+            + (f" with user customizations from {user_path}" if user_path else "")
+        )
 
         return PromptTemplate(
             role=merged_data["role"],
