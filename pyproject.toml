@@ -16,7 +16,6 @@ dependencies = [
     "neo4j>=5.0.0",
     "watchdog>=6.0.0",
     "pika>=1.3.2",
-    "pytest>=8.4.0",
 ]
 optional-dependencies = { dev = [
     "pytest>=8.0.0",

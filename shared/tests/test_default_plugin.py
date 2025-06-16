@@ -496,24 +496,13 @@ def test_default_plugin_uses_customized_prompt():
         prompts_dir = temp_path / "prompts"
         prompts_dir.mkdir()
 
-        # Create a custom prompt YAML file with distinctive content
+        # Create a custom prompt YAML file with only partial overrides to test deep merge
         custom_prompt_content = """
-role: "conversation_extractor"
-description: "Custom test prompt for extracting conversations"
+system_prompt: "You are a CUSTOM conversation extraction agent for testing."
 template: "CUSTOM PROMPT TEST: Extract conversations from the following text: {input_text}"
-variables:
-  input_text:
-    type: "string"
-    description: "The input text to process"
-    required: true
-system_prompt: "You are a custom conversation extraction agent for testing."
-instructions:
-  - "Look for custom conversation patterns"
-  - "Return test-specific format"
-output_format: "JSON with custom test fields"
 rules:
   - "This is a custom test prompt"
-  - "Should be used instead of built-in prompt"
+  - "Should be merged with default prompt"
 """
 
         custom_prompt_file = prompts_dir / "conversation_extraction.yaml"
@@ -524,20 +513,31 @@ rules:
 
         # Create prompt loader and verify it finds our custom prompt
         loader = PromptLoader()
-        template_path = loader._find_template_file("conversation_extraction")
+        default_path, user_path = loader._find_template_files("conversation_extraction")
 
-        # Verify we're using the custom prompt
-        assert template_path == custom_prompt_file
+        # Verify we found the user customization
+        assert user_path == custom_prompt_file
 
-        # Verify the template loads correctly
+        # Verify the template loads correctly with deep merge
         template = loader.load_template("conversation_extraction")
+
+        # Check that custom fields override defaults
         assert "CUSTOM PROMPT TEST" in template.template
-        assert "custom test prompt" in template.description.lower()
         assert (
-            "custom conversation extraction agent for testing"
-            in template.system_prompt.lower()
+            "CUSTOM conversation extraction agent for testing" in template.system_prompt
         )
-        assert "custom test fields" in template.output_format.lower()
+        assert len(template.rules) == 2
+        assert "This is a custom test prompt" in template.rules
+        assert "Should be merged with default prompt" in template.rules
+
+        # Check that default fields that weren't overridden are preserved
+        assert template.role == "conversation_analyst"  # From default
+        assert (
+            "expert conversation analyst" in template.description.lower()
+        )  # From default
+        assert template.variables["input_text"]["required"] is True  # From default
+        assert len(template.instructions) == 3  # From default
+        assert "conversations" in template.output_format  # From default
 
         # Verify the template can be formatted
         formatted_prompt = loader.load_and_format(
