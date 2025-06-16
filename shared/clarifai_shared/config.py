@@ -128,6 +128,7 @@ class VaultPaths:
     tier1: str = "tier1"
     summaries: str = "."
     concepts: str = "."
+    prompts: str = "settings/prompts"
     logs: str = ".clarifai/import_logs"
 
 
