@@ -57,6 +57,7 @@ class PromptLoader:
             try:
                 # Try relative import first (when imported as part of package)
                 from ..config import load_config
+
                 config = load_config(validate=False)
                 self.user_prompts_dir = Path(config.paths.prompts)
             except (ImportError, ValueError, AttributeError):

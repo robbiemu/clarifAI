@@ -43,6 +43,7 @@ def install_default_prompt(
         try:
             # Try relative import first (when imported as part of package)
             from ..config import load_config
+
             config = load_config(validate=False)
             prompts_dir = Path(config.paths.prompts)
         except (ImportError, ValueError, AttributeError):
@@ -101,6 +102,7 @@ def install_all_default_prompts(
         try:
             # Try relative import first (when imported as part of package)
             from ..config import load_config
+
             config = load_config(validate=False)
             prompts_dir = Path(config.paths.prompts)
         except (ImportError, ValueError, AttributeError):

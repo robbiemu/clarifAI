@@ -225,6 +225,3 @@ cython_debug/
 
 # Demo files - for development and testing only
 demo_*.py
-
-# User customizable prompts directory
-settings/prompts/
