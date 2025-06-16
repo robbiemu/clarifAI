@@ -85,6 +85,7 @@ class PathsConfig:
     tier2: str = "summaries"
     tier3: str = "concepts"
     settings: str = "/settings"
+    prompts: str = "/settings/prompts"
 
 
 @dataclass
@@ -129,6 +130,7 @@ class VaultPaths:
     summaries: str = "."
     concepts: str = "."
     logs: str = ".clarifai/import_logs"
+    prompts: str = "/settings/prompts"
 
 
 @dataclass
@@ -304,6 +306,9 @@ class ClarifAIConfig:
             ),
             logs=os.getenv(
                 "VAULT_LOGS_PATH", paths_config.get("logs", ".clarifai/import_logs")
+            ),
+            prompts=os.getenv(
+                "PROMPTS_PATH", paths_config.get("prompts", "/settings/prompts")
             ),
         )
 

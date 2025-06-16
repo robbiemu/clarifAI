@@ -52,6 +52,7 @@ def test_paths_config_defaults():
     assert config.tier2 == "summaries"
     assert config.tier3 == "concepts"
     assert config.settings == "/settings"
+    assert config.prompts == "/settings/prompts"
 
 
 def test_clarifai_config_with_yaml():
