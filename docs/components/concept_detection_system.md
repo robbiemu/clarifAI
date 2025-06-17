@@ -189,11 +189,7 @@ The system implements robust error handling:
 - **Models**: 7 tests for data structures
 - **ConceptProcessor**: 9 tests for integration logic
 
-### Test Coverage
 
-- ConceptDetector: 77% coverage
-- Models: 100% coverage  
-- ConceptProcessor: 88% coverage
 
 ### Running Tests
 
@@ -205,21 +201,7 @@ uv run pytest shared/tests/concept_detection/ -v
 uv run pytest services/clarifai-core/tests/test_concept_processor.py -v
 ```
 
-## Future Enhancements
 
-### Planned Improvements
-
-1. **Index Persistence**: Save/load HNSW index to disk for faster startup
-2. **Dynamic Thresholds**: Adjust similarity threshold based on domain
-3. **Hierarchical Concepts**: Support for concept hierarchies and relationships
-4. **Performance Tuning**: Optimize HNSW parameters for specific embedding models
-
-### Monitoring and Analytics
-
-1. **Similarity Distribution**: Track distribution of similarity scores
-2. **Concept Growth**: Monitor rate of new concept creation
-3. **False Positives**: Detect and analyze incorrect merge decisions
-4. **Performance Metrics**: Track processing time and resource usage
 
 ## Dependencies
 
@@ -232,5 +214,4 @@ uv run pytest services/clarifai-core/tests/test_concept_processor.py -v
 
 - [HNSW Algorithm Paper](https://arxiv.org/abs/1603.09320)
 - [hnswlib Library](https://github.com/nmslib/hnswlib)
-- [Sprint 4 Task Document](docs/project/epic_1/sprint_4-hnswlib.md)
 - [Concept Architecture](docs/arch/on-concepts.md)

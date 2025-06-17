@@ -15,7 +15,7 @@ from neo4j import GraphDatabase, Driver
 from neo4j.exceptions import ServiceUnavailable, AuthError, TransientError
 
 from ..config import ClarifAIConfig
-from .models import Claim, Sentence, ClaimInput, SentenceInput
+from .models import Claim, Sentence, ClaimInput, SentenceInput, Concept, ConceptInput
 
 logger = logging.getLogger(__name__)
 
@@ -558,6 +558,89 @@ class Neo4jGraphManager:
                 },
             )
             raise
+
+    def create_concepts(self, concept_inputs: List[ConceptInput]) -> List[Concept]:
+        """
+        Create Concept nodes in the knowledge graph with proper indexing.
+
+        Args:
+            concept_inputs: List of ConceptInput objects to create
+
+        Returns:
+            List of created Concept objects
+
+        Raises:
+            Neo4jError: If concept creation fails
+        """
+        if not concept_inputs:
+            logger.warning(
+                "create_concepts: No concept inputs provided",
+                extra={
+                    "service": "clarifai-core",
+                    "filename.function_name": "neo4j_manager.create_concepts",
+                },
+            )
+            return []
+
+        logger.info(
+            f"create_concepts: Creating {len(concept_inputs)} Concept nodes",
+            extra={
+                "service": "clarifai-core",
+                "filename.function_name": "neo4j_manager.create_concepts",
+                "concept_count": len(concept_inputs),
+            },
+        )
+
+        def _execute_concept_creation():
+            with self.session() as session:
+                concepts = []
+
+                for concept_input in concept_inputs:
+                    concept = Concept.from_input(concept_input)
+                    concept_data = concept.to_dict()
+
+                    # Create Concept node with proper indexing
+                    cypher = """
+                    CREATE (c:Concept $concept_data)
+                    RETURN c
+                    """
+
+                    result = session.run(cypher, concept_data=concept_data)
+                    record = result.single()
+
+                    if record:
+                        concepts.append(concept)
+                        logger.debug(
+                            f"create_concepts: Created Concept node: {concept.concept_id}",
+                            extra={
+                                "service": "clarifai-core",
+                                "filename.function_name": "neo4j_manager.create_concepts",
+                                "concept_id": concept.concept_id,
+                                "concept_text": concept.text,
+                            },
+                        )
+                    else:
+                        logger.error(
+                            f"create_concepts: Failed to create Concept node: {concept.concept_id}",
+                            extra={
+                                "service": "clarifai-core",
+                                "filename.function_name": "neo4j_manager.create_concepts",
+                                "concept_id": concept.concept_id,
+                            },
+                        )
+
+                logger.info(
+                    f"create_concepts: Successfully created {len(concepts)} Concept nodes",
+                    extra={
+                        "service": "clarifai-core",
+                        "filename.function_name": "neo4j_manager.create_concepts",
+                        "created_count": len(concepts),
+                    },
+                )
+
+                return concepts
+
+        return self._retry_with_backoff(_execute_concept_creation)
 
     def __enter__(self):
         """Context manager entry."""

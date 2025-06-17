@@ -201,3 +201,66 @@ class Sentence:
             "version": self.version,
             "timestamp": self.timestamp.isoformat(),
         }
+
+
+@dataclass
+class ConceptInput:
+    """Input data for creating a Concept node."""
+
+    text: str  # The canonical concept text
+    source_candidate_id: str  # ID of the concept candidate that was promoted
+    source_node_id: str  # ID of the source node (Claim/Summary)
+    source_node_type: str  # Type of source node
+    clarifai_id: str  # clarifai_id of the source document
+    concept_id: Optional[str] = None  # Will generate if not provided
+
+    def __post_init__(self):
+        """Generate concept_id if not provided."""
+        if self.concept_id is None:
+            self.concept_id = f"concept_{uuid.uuid4().hex[:12]}"
+
+    @property
+    def id(self) -> str:
+        """Alias for concept_id for backward compatibility."""
+        return self.concept_id
+
+
+@dataclass
+class Concept:
+    """Represents a Concept node in the knowledge graph."""
+
+    concept_id: str
+    text: str
+    source_candidate_id: str
+    source_node_id: str
+    source_node_type: str
+    clarifai_id: str
+    version: int
+    timestamp: datetime
+
+    @classmethod
+    def from_input(cls, concept_input: ConceptInput, version: int = 1) -> "Concept":
+        """Create a Concept from ConceptInput."""
+        return cls(
+            concept_id=concept_input.concept_id,
+            text=concept_input.text,
+            source_candidate_id=concept_input.source_candidate_id,
+            source_node_id=concept_input.source_node_id,
+            source_node_type=concept_input.source_node_type,
+            clarifai_id=concept_input.clarifai_id,
+            version=version,
+            timestamp=datetime.now(timezone.utc),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for Neo4j storage."""
+        return {
+            "id": self.concept_id,  # Use 'id' as primary key in Neo4j
+            "text": self.text,
+            "source_candidate_id": self.source_candidate_id,
+            "source_node_id": self.source_node_id,
+            "source_node_type": self.source_node_type,
+            "clarifai_id": self.clarifai_id,
+            "version": self.version,
+            "timestamp": self.timestamp.isoformat(),
+        }

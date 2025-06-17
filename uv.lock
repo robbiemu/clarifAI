@@ -525,7 +525,6 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "sentence-transformers" },
-    { name = "spacy" },
     { name = "sqlalchemy" },
 ]
 
@@ -541,7 +540,6 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "sentence-transformers", specifier = ">=3.0.0" },
-    { name = "spacy", specifier = ">=3.7.0" },
     { name = "sqlalchemy", specifier = ">=2.0.0" },
 ]
 

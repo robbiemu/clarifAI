@@ -1,19 +1,26 @@
 """
 Concept processing integration for clarifai-core.
 
-This module integrates concept detection and processing with the main 
-clarifai-core pipeline, handling noun phrase extraction and concept 
+This module integrates concept detection and processing with the main
+clarifai-core pipeline, handling noun phrase extraction and concept
 candidate management.
 """
 
 import logging
 from typing import Dict, Any, List, Optional
+from datetime import datetime
 
 from clarifai_shared.config import ClarifAIConfig
 from clarifai_shared.concept_detection import ConceptDetector
 from clarifai_shared.noun_phrase_extraction import NounPhraseExtractor
-from clarifai_shared.noun_phrase_extraction.concept_candidates_store import ConceptCandidatesVectorStore
-from clarifai_shared.concept_detection.models import ConceptAction, ConceptDetectionBatch
+from clarifai_shared.noun_phrase_extraction.concept_candidates_store import (
+    ConceptCandidatesVectorStore,
+)
+from clarifai_shared.concept_detection.models import (
+    ConceptAction,
+    ConceptDetectionBatch,
+)
+from clarifai_shared.graph.models import ConceptInput
 
 logger = logging.getLogger(__name__)
 
@@ -21,21 +28,21 @@ logger = logging.getLogger(__name__)
 class ConceptProcessor:
     """
     Processes concept candidates and performs similarity-based concept detection.
-    
+
     This class integrates noun phrase extraction, concept candidate storage,
     and hnswlib-based similarity detection to determine whether candidates
     should be merged or promoted.
     """
-    
+
     def __init__(self, config: Optional[ClarifAIConfig] = None):
         """Initialize the concept processor."""
         self.config = config
-        
+
         # Initialize components
         self.noun_phrase_extractor = NounPhraseExtractor(config)
         self.candidates_store = ConceptCandidatesVectorStore(config)
         self.concept_detector = ConceptDetector(config)
-        
+
         logger.info(
             "Initialized ConceptProcessor",
             extra={
@@ -43,25 +50,23 @@ class ConceptProcessor:
                 "filename.function_name": "concept_processor.ConceptProcessor.__init__",
             },
         )
-    
+
     def process_block_for_concepts(
-        self, 
-        block: Dict[str, Any], 
-        block_type: str = "claim"
+        self, block: Dict[str, Any], block_type: str = "claim"
     ) -> Dict[str, Any]:
         """
         Process a block to extract and analyze concept candidates.
-        
+
         Args:
             block: The block dictionary with clarifai_id, semantic_text, etc.
             block_type: Type of block ("claim" or "summary")
-            
+
         Returns:
             Dictionary with processing results and recommendations
         """
         clarifai_id = block.get("clarifai_id", "")
         semantic_text = block.get("semantic_text", "")
-        
+
         logger.debug(
             f"Processing block for concepts: {clarifai_id}",
             extra={
@@ -72,16 +77,16 @@ class ConceptProcessor:
                 "text_length": len(semantic_text),
             },
         )
-        
+
         try:
             # Step 1: Extract noun phrases from the block
             extraction_result = self.noun_phrase_extractor.extract_from_text(
                 text=semantic_text,
                 source_node_id=clarifai_id,
                 source_node_type=block_type,
-                clarifai_id=clarifai_id
+                clarifai_id=clarifai_id,
             )
-            
+
             if not extraction_result.is_successful or not extraction_result.candidates:
                 logger.debug(
                     f"No noun phrases extracted from block {clarifai_id}",
@@ -98,20 +103,22 @@ class ConceptProcessor:
                     "candidates_extracted": 0,
                     "candidates_stored": 0,
                     "concept_actions": [],
-                    "message": "No noun phrases extracted"
+                    "message": "No noun phrases extracted",
                 }
-            
+
             # Step 2: Store candidates in vector store
-            stored_count = self.candidates_store.store_candidates(extraction_result.candidates)
-            
+            stored_count = self.candidates_store.store_candidates(
+                extraction_result.candidates
+            )
+
             # Step 3: Perform concept detection on the extracted candidates
             detection_batch = self.concept_detector.process_candidates_batch(
                 extraction_result.candidates
             )
-            
+
             # Step 4: Update candidate statuses based on detection results
             updated_candidates = self._update_candidate_statuses(detection_batch)
-            
+
             # Prepare results summary
             results = {
                 "success": True,
@@ -123,9 +130,9 @@ class ConceptProcessor:
                 "merged_count": detection_batch.merged_count,
                 "promoted_count": detection_batch.promoted_count,
                 "processing_time": detection_batch.processing_time,
-                "updated_candidates": updated_candidates
+                "updated_candidates": updated_candidates,
             }
-            
+
             # Add concept action recommendations
             for result in detection_batch.results:
                 action_info = {
@@ -133,17 +140,17 @@ class ConceptProcessor:
                     "action": result.action.value,
                     "confidence": result.confidence,
                     "reason": result.reason,
-                    "best_match": None
+                    "best_match": None,
                 }
-                
+
                 if result.best_match:
                     action_info["best_match"] = {
                         "text": result.best_match.matched_text,
-                        "similarity": result.best_match.similarity_score
+                        "similarity": result.best_match.similarity_score,
                     }
-                
+
                 results["concept_actions"].append(action_info)
-            
+
             logger.info(
                 f"Processed {len(extraction_result.candidates)} concept candidates from block {clarifai_id}: "
                 f"{detection_batch.merged_count} merged, {detection_batch.promoted_count} promoted",
@@ -156,9 +163,9 @@ class ConceptProcessor:
                     "promoted_count": detection_batch.promoted_count,
                 },
             )
-            
+
             return results
-            
+
         except Exception as e:
             logger.error(
                 f"Error processing block for concepts: {e}",
@@ -175,61 +182,185 @@ class ConceptProcessor:
                 "error": str(e),
                 "candidates_extracted": 0,
                 "candidates_stored": 0,
-                "concept_actions": []
+                "concept_actions": [],
             }
-    
-    def _update_candidate_statuses(self, detection_batch: ConceptDetectionBatch) -> List[Dict[str, Any]]:
+
+    def _update_candidate_statuses(
+        self, detection_batch: ConceptDetectionBatch
+    ) -> List[Dict[str, Any]]:
         """
-        Update the status of candidates based on detection results.
-        
-        In a full implementation, this would update the concept_candidates
-        table to mark items as "merged" or "promoted". For now, we just
-        prepare the update information.
-        
+        Update the status of candidates based on detection results and create Concept nodes for promoted candidates.
+
         Args:
             detection_batch: Results from concept detection
-            
+
         Returns:
-            List of candidate updates to be applied
+            List of candidate updates that were applied
         """
         updates = []
-        
+        promoted_concepts = []
+
         for result in detection_batch.results:
             update = {
                 "candidate_id": result.candidate_id,
                 "candidate_text": result.candidate_text,
                 "new_status": result.action.value,
                 "confidence": result.confidence,
-                "reason": result.reason
+                "reason": result.reason,
             }
-            
+
+            # Update candidate status in vector store
+            metadata_updates = {
+                "confidence": result.confidence,
+                "reason": result.reason,
+                "updated_at": datetime.now().isoformat(),
+            }
+
             if result.action == ConceptAction.MERGED and result.best_match:
                 update["merged_with"] = {
                     "matched_id": result.best_match.matched_candidate_id,
                     "matched_text": result.best_match.matched_text,
-                    "similarity_score": result.best_match.similarity_score
+                    "similarity_score": result.best_match.similarity_score,
                 }
-            
-            updates.append(update)
-        
-        logger.debug(
-            f"Prepared {len(updates)} candidate status updates",
+                metadata_updates["merged_with_id"] = (
+                    result.best_match.matched_candidate_id
+                )
+                metadata_updates["similarity_score"] = (
+                    result.best_match.similarity_score
+                )
+
+            # Update the candidate status in the vector store
+            success = self.candidates_store.update_candidate_status(
+                result.candidate_id, result.action.value, metadata_updates
+            )
+
+            if success:
+                updates.append(update)
+
+                # If promoted, prepare for Concept node creation
+                if result.action == ConceptAction.PROMOTED:
+                    # Get candidate details for Concept creation
+                    candidate_metadata = self._get_candidate_metadata(
+                        result.candidate_id
+                    )
+                    if candidate_metadata:
+                        concept_input = ConceptInput(
+                            text=result.candidate_text,
+                            source_candidate_id=result.candidate_id,
+                            source_node_id=candidate_metadata.get("source_node_id", ""),
+                            source_node_type=candidate_metadata.get(
+                                "source_node_type", ""
+                            ),
+                            clarifai_id=candidate_metadata.get("clarifai_id", ""),
+                        )
+                        promoted_concepts.append(concept_input)
+            else:
+                logger.warning(
+                    f"Failed to update candidate status for {result.candidate_id}",
+                    extra={
+                        "service": "clarifai-core",
+                        "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                        "candidate_id": result.candidate_id,
+                        "action": result.action.value,
+                    },
+                )
+
+        # Create Concept nodes for promoted candidates
+        if promoted_concepts:
+            try:
+                from clarifai_shared.graph import Neo4jGraphManager
+
+                neo4j_manager = Neo4jGraphManager(self.config)
+                created_concepts = neo4j_manager.create_concepts(promoted_concepts)
+
+                logger.info(
+                    f"Created {len(created_concepts)} Concept nodes from promoted candidates",
+                    extra={
+                        "service": "clarifai-core",
+                        "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                        "concepts_created": len(created_concepts),
+                    },
+                )
+
+                # Update the results to include concept creation info
+                for i, update in enumerate(updates):
+                    if update["new_status"] == "promoted" and i < len(created_concepts):
+                        update["concept_id"] = created_concepts[i].concept_id
+
+            except Exception as e:
+                logger.error(
+                    f"Failed to create Concept nodes for promoted candidates: {e}",
+                    extra={
+                        "service": "clarifai-core",
+                        "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                        "error": str(e),
+                        "promoted_count": len(promoted_concepts),
+                    },
+                )
+
+        logger.info(
+            f"Applied {len(updates)} candidate status updates",
             extra={
                 "service": "clarifai-core",
                 "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
                 "updates_count": len(updates),
+                "promoted_concepts": len(promoted_concepts),
             },
         )
-        
+
         return updates
-    
+
+    def _get_candidate_metadata(self, candidate_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get metadata for a specific candidate by ID.
+
+        Args:
+            candidate_id: ID of the candidate to retrieve
+
+        Returns:
+            Candidate metadata or None if not found
+        """
+        try:
+            # Search for the specific candidate in the vector store
+            # Note: This is a workaround since we don't have direct ID lookup
+            all_candidates = self.candidates_store.get_candidates_by_status("promoted")
+            all_candidates.extend(
+                self.candidates_store.get_candidates_by_status("pending")
+            )
+
+            for candidate in all_candidates:
+                if candidate.get("candidate_id") == candidate_id:
+                    return candidate
+
+            logger.warning(
+                f"Candidate metadata not found for ID: {candidate_id}",
+                extra={
+                    "service": "clarifai-core",
+                    "filename.function_name": "concept_processor.ConceptProcessor._get_candidate_metadata",
+                    "candidate_id": candidate_id,
+                },
+            )
+            return None
+
+        except Exception as e:
+            logger.error(
+                f"Error retrieving candidate metadata for {candidate_id}: {e}",
+                extra={
+                    "service": "clarifai-core",
+                    "filename.function_name": "concept_processor.ConceptProcessor._get_candidate_metadata",
+                    "candidate_id": candidate_id,
+                    "error": str(e),
+                },
+            )
+            return None
+
     def build_concept_index(self, force_rebuild: bool = False) -> int:
         """
         Build or rebuild the concept detection index.
-        
+
         Args:
             force_rebuild: Whether to force rebuild even if index exists
-            
+
         Returns:
             Number of items added to the index
         """
@@ -241,10 +372,12 @@ class ConceptProcessor:
                 "force_rebuild": force_rebuild,
             },
         )
-        
+
         try:
-            items_added = self.concept_detector.build_index_from_candidates(force_rebuild)
-            
+            items_added = self.concept_detector.build_index_from_candidates(
+                force_rebuild
+            )
+
             logger.info(
                 f"Built concept detection index with {items_added} items",
                 extra={
@@ -253,9 +386,9 @@ class ConceptProcessor:
                     "items_added": items_added,
                 },
             )
-            
+
             return items_added
-            
+
         except Exception as e:
             logger.error(
                 f"Error building concept index: {e}",
@@ -266,40 +399,46 @@ class ConceptProcessor:
                 },
             )
             raise
-    
+
     def get_concept_statistics(self) -> Dict[str, Any]:
         """
         Get statistics about concept candidates and detection.
-        
+
         Returns:
             Dictionary with various statistics
         """
         try:
             # Get candidates by status
-            pending_candidates = self.candidates_store.get_candidates_by_status("pending")
+            pending_candidates = self.candidates_store.get_candidates_by_status(
+                "pending"
+            )
             merged_candidates = self.candidates_store.get_candidates_by_status("merged")
-            promoted_candidates = self.candidates_store.get_candidates_by_status("promoted")
-            
+            promoted_candidates = self.candidates_store.get_candidates_by_status(
+                "promoted"
+            )
+
             stats = {
-                "total_candidates": len(pending_candidates) + len(merged_candidates) + len(promoted_candidates),
+                "total_candidates": len(pending_candidates)
+                + len(merged_candidates)
+                + len(promoted_candidates),
                 "pending_candidates": len(pending_candidates),
                 "merged_candidates": len(merged_candidates),
                 "promoted_candidates": len(promoted_candidates),
                 "index_size": len(self.concept_detector.id_to_metadata),
-                "similarity_threshold": self.concept_detector.similarity_threshold
+                "similarity_threshold": self.concept_detector.similarity_threshold,
             }
-            
+
             logger.debug(
                 f"Concept statistics: {stats}",
                 extra={
                     "service": "clarifai-core",
                     "filename.function_name": "concept_processor.ConceptProcessor.get_concept_statistics",
-                    **stats
+                    **stats,
                 },
             )
-            
+
             return stats
-            
+
         except Exception as e:
             logger.error(
                 f"Error getting concept statistics: {e}",
@@ -315,5 +454,5 @@ class ConceptProcessor:
                 "pending_candidates": 0,
                 "merged_candidates": 0,
                 "promoted_candidates": 0,
-                "index_size": 0
+                "index_size": 0,
             }
