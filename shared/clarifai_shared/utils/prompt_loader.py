@@ -43,7 +43,7 @@ class PromptLoader:
             prompts_dir: Directory containing built-in prompt YAML files.
                         Defaults to shared/clarifai_shared/prompts/
             user_prompts_dir: Directory containing user-customized prompt files.
-                             Defaults to ./prompts/ relative to current working directory
+                             Defaults to settings/prompts/
         """
         if prompts_dir is None:
             # Default to the prompts directory in clarifai_shared
@@ -54,21 +54,19 @@ class PromptLoader:
 
         if user_prompts_dir is None:
             # Default to prompts directory in settings (accessible to users in Docker)
-            # Fallback to project root for local development
+            # Fallback to relative settings path for local development
             try:
                 # Try relative import first (when imported as part of package)
                 from ..config import load_config
 
                 config = load_config(validate=False)
                 settings_prompts_dir = Path(config.settings_path) / "prompts"
-                # Use settings/prompts if vault path exists, otherwise check relative path
+                # Use settings/prompts if vault path exists, otherwise fallback to relative path
                 if Path(config.settings_path).exists():
                     self.user_prompts_dir = settings_prompts_dir
-                elif (Path.cwd() / "settings" / "prompts").exists():
+                else:
                     # Fallback to relative settings path for local development
                     self.user_prompts_dir = Path.cwd() / "settings" / "prompts"
-                else:
-                    self.user_prompts_dir = Path.cwd() / "prompts"
             except (ImportError, ValueError):
                 # Try absolute import (when imported directly)
                 try:
@@ -86,19 +84,17 @@ class PromptLoader:
 
                         config = config_module.load_config(validate=False)
                         settings_prompts_dir = Path(config.settings_path) / "prompts"
-                        # Use settings/prompts if vault path exists, otherwise check relative path
+                        # Use settings/prompts if vault path exists, otherwise fallback to relative path
                         if Path(config.settings_path).exists():
                             self.user_prompts_dir = settings_prompts_dir
-                        elif (Path.cwd() / "settings" / "prompts").exists():
+                        else:
                             # Fallback to relative settings path for local development
                             self.user_prompts_dir = Path.cwd() / "settings" / "prompts"
-                        else:
-                            self.user_prompts_dir = Path.cwd() / "prompts"
                     else:
                         raise ImportError("Config module not found")
                 except Exception:
-                    # Fallback to original behavior if config loading fails
-                    self.user_prompts_dir = Path.cwd() / "prompts"
+                    # Fallback to relative settings path if config loading fails
+                    self.user_prompts_dir = Path.cwd() / "settings" / "prompts"
         else:
             self.user_prompts_dir = Path(user_prompts_dir)
 

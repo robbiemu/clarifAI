@@ -483,7 +483,7 @@ def test_default_plugin_uses_customized_prompt():
     import tempfile
     from pathlib import Path
 
-    # Create a temporary prompts directory
+    # Create a temporary directory structure
     original_cwd = Path.cwd()
     temp_dir = tempfile.mkdtemp()
     temp_path = Path(temp_dir)
@@ -492,8 +492,10 @@ def test_default_plugin_uses_customized_prompt():
         # Change to temp directory to control where prompts are loaded from
         os.chdir(temp_path)
 
-        # Create prompts directory with custom prompt template
-        prompts_dir = temp_path / "prompts"
+        # Create settings/prompts directory with custom prompt template
+        settings_dir = temp_path / "settings"
+        settings_dir.mkdir()
+        prompts_dir = settings_dir / "prompts"
         prompts_dir.mkdir()
 
         # Create a custom prompt YAML file with only partial overrides to test deep merge
