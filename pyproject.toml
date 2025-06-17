@@ -118,8 +118,8 @@ exclude_lines = [
 # B104: Hardcoded bind all interfaces - Intentional for containerized web apps
 skips = ["B101", "B104"]
 
-# Exclude test directories to avoid assert-related warnings
-exclude_dirs = ["tests", "*/tests"]
+# Exclude test directories and virtual environment to avoid false positives
+exclude_dirs = ["tests", "*/tests", ".venv", "*/.*", "vault", "docs"]
 
 # Focus on medium and high severity issues
 severity = "medium"
