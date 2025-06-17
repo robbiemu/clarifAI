@@ -64,7 +64,7 @@ Bob: This is the second utterance. <!-- clarifai:id=blk_def456 ver=2 -->
 Some text without clarifai:id.
 """
 
-    blocks = vault_sync._extract_clarifai_blocks(content)
+    blocks = vault_sync.block_parser.extract_clarifai_blocks(content)
 
     # Should extract 2 blocks
     assert len(blocks) == 2
@@ -103,7 +103,7 @@ def test_extract_file_level_block(mock_neo4j, mock_load_config):
 <!-- clarifai:id=file_top_concepts_20240615 ver=1 -->
 """
 
-    blocks = vault_sync._extract_clarifai_blocks(content)
+    blocks = vault_sync.block_parser.extract_clarifai_blocks(content)
 
     # Should extract 1 file-level block
     assert len(blocks) == 1
@@ -130,20 +130,20 @@ def test_calculate_content_hash(mock_neo4j, mock_load_config):
     text1 = "Alice: This is a test utterance."
     text2 = "Alice: This is a test utterance."
 
-    hash1 = vault_sync._calculate_content_hash(text1)
-    hash2 = vault_sync._calculate_content_hash(text2)
+    hash1 = vault_sync.block_parser.calculate_content_hash(text1)
+    hash2 = vault_sync.block_parser.calculate_content_hash(text2)
 
     assert hash1 == hash2
 
     # Test that different content produces different hash
     text3 = "Bob: This is a different utterance."
-    hash3 = vault_sync._calculate_content_hash(text3)
+    hash3 = vault_sync.block_parser.calculate_content_hash(text3)
 
     assert hash1 != hash3
 
     # Test whitespace normalization
     text4 = "Alice:   This   is   a   test   utterance."
-    hash4 = vault_sync._calculate_content_hash(text4)
+    hash4 = vault_sync.block_parser.calculate_content_hash(text4)
 
     assert hash1 == hash4  # Should be same after normalization
 

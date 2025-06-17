@@ -66,7 +66,7 @@ Some content for the whole file.
 <!-- clarifai:id=file_summary ver=3 -->
 """
 
-        blocks = consumer._extract_clarifai_blocks(content)
+        blocks = consumer.block_parser.extract_clarifai_blocks(content)
 
         assert len(blocks) == 3
 
@@ -92,9 +92,9 @@ Some content for the whole file.
         text2 = "This   is    some   text."  # Different whitespace
         text3 = "This is some other text."
 
-        hash1 = consumer._calculate_content_hash(text1)
-        hash2 = consumer._calculate_content_hash(text2)
-        hash3 = consumer._calculate_content_hash(text3)
+        hash1 = consumer.block_parser.calculate_content_hash(text1)
+        hash2 = consumer.block_parser.calculate_content_hash(text2)
+        hash3 = consumer.block_parser.calculate_content_hash(text3)
 
         # Same content with different whitespace should have same hash
         assert hash1 == hash2

@@ -7,10 +7,8 @@ from vault-watcher and updates graph nodes with proper version checking.
 
 import json
 import logging
-import hashlib
-import re
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 import pika
@@ -18,6 +16,7 @@ from pika.exceptions import AMQPConnectionError
 
 from clarifai_shared import load_config
 from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
+from clarifai_shared.vault import BlockParser
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +34,7 @@ class DirtyBlockConsumer:
         """Initialize the dirty block consumer."""
         self.config = config or load_config(validate=True)
         self.graph_manager = Neo4jGraphManager(self.config)
+        self.block_parser = BlockParser()
 
         # RabbitMQ connection parameters
         self.rabbitmq_host = self.config.rabbitmq_host
@@ -333,21 +333,8 @@ class DirtyBlockConsumer:
                 content = f.read()
 
             # Extract the specific block
-            blocks = self._extract_clarifai_blocks(content)
-            for block in blocks:
-                if block["clarifai_id"] == clarifai_id:
-                    return block
-
-            logger.warning(
-                "DirtyBlockConsumer: Block not found in file",
-                extra={
-                    "service": "clarifai-core",
-                    "filename.function_name": "dirty_block_consumer._read_block_from_file",
-                    "file_path": str(file_path),
-                    "clarifai_id": clarifai_id,
-                },
-            )
-            return None
+            block = self.block_parser.find_block_by_id(content, clarifai_id)
+            return block
 
         except Exception as e:
             logger.error(
@@ -361,79 +348,6 @@ class DirtyBlockConsumer:
                 },
             )
             return None
-
-    def _extract_clarifai_blocks(self, content: str) -> List[Dict[str, Any]]:
-        """
-        Extract all clarifai:id blocks from Markdown content.
-
-        This method is adapted from the VaultSyncJob implementation.
-        """
-        blocks = []
-
-        # Pattern to match clarifai:id comments
-        pattern = r"<!--\s*clarifai:id=([a-zA-Z0-9_]+)\s+ver=(\d+)\s*-->"
-
-        for match in re.finditer(pattern, content):
-            clarifai_id = match.group(1)
-            version = int(match.group(2))
-
-            # Extract semantic text for this block
-            semantic_text = self._extract_semantic_text_for_block(content, match)
-            if not semantic_text:
-                continue
-
-            # Calculate hash of semantic text
-            content_hash = self._calculate_content_hash(semantic_text)
-
-            block = {
-                "clarifai_id": clarifai_id,
-                "version": version,
-                "semantic_text": semantic_text,
-                "content_hash": content_hash,
-                "comment_position": match.start(),
-            }
-
-            blocks.append(block)
-
-        return blocks
-
-    def _extract_semantic_text_for_block(self, content: str, id_match: re.Match) -> str:
-        """
-        Extract the semantic text (visible content) for a clarifai:id block.
-
-        This implements the semantic_text concept by extracting the visible text
-        while excluding metadata comments.
-        """
-        comment_pos = id_match.start()
-
-        # Check if this is a file-level block (comment near end of file)
-        remaining_content = content[comment_pos:].strip()
-        if (
-            len(remaining_content) <= len(id_match.group(0)) + 10
-        ):  # Small buffer for whitespace
-            # File-level block - hash entire file content excluding the comment
-            semantic_text = content[:comment_pos].strip()
-        else:
-            # Inline block - find the text before the comment
-            # Look backwards to find the start of the block
-            lines_before_comment = content[:comment_pos].split("\n")
-
-            # Find the actual content line (skip empty lines)
-            content_line = None
-            for line in reversed(lines_before_comment):
-                if line.strip():
-                    content_line = line.strip()
-                    break
-
-            semantic_text = content_line or ""
-
-        return semantic_text
-
-    def _calculate_content_hash(self, semantic_text: str) -> str:
-        """Calculate SHA-256 hash of semantic text content."""
-        # Normalize whitespace and encoding for consistent hashing
-        normalized_text = " ".join(semantic_text.split())
-        return hashlib.sha256(normalized_text.encode("utf-8")).hexdigest()
 
     def _sync_block_with_graph(self, block: Dict[str, Any], file_path: Path) -> bool:
         """
