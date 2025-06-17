@@ -84,6 +84,9 @@ disallow_untyped_defs = true
 testpaths = ["tests", "shared/tests"]
 python_files = ["test_*.py", "*_test.py"]
 addopts = "--cov=clarifai_shared --cov=services --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml"
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+]
 
 [tool.coverage.run]
 source = ["clarifai_shared", "services"]

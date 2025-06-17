@@ -116,8 +116,22 @@ class ConceptProcessor:
                 extraction_result.candidates
             )
 
+            # Build candidate metadata mapping for efficient lookup
+            candidate_metadata_map = {}
+            for candidate in extraction_result.candidates:
+                candidate_id = f"{candidate.source_node_type}_{candidate.source_node_id}_{candidate.text[:50]}"
+                candidate_metadata_map[candidate_id] = {
+                    "source_node_id": candidate.source_node_id,
+                    "source_node_type": candidate.source_node_type,
+                    "clarifai_id": candidate.clarifai_id,
+                    "text": candidate.text,
+                    "pos_tag": candidate.pos_tag,
+                }
+
             # Step 4: Update candidate statuses based on detection results
-            updated_candidates = self._update_candidate_statuses(detection_batch)
+            updated_candidates = self._update_candidate_statuses(
+                detection_batch, candidate_metadata_map
+            )
 
             # Prepare results summary
             results = {
@@ -186,13 +200,16 @@ class ConceptProcessor:
             }
 
     def _update_candidate_statuses(
-        self, detection_batch: ConceptDetectionBatch
+        self,
+        detection_batch: ConceptDetectionBatch,
+        candidate_metadata_map: Dict[str, Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
         """
         Update the status of candidates based on detection results and create Concept nodes for promoted candidates.
 
         Args:
             detection_batch: Results from concept detection
+            candidate_metadata_map: Mapping of candidate IDs to their metadata for efficient lookup
 
         Returns:
             List of candidate updates that were applied
@@ -239,10 +256,8 @@ class ConceptProcessor:
 
                 # If promoted, prepare for Concept node creation
                 if result.action == ConceptAction.PROMOTED:
-                    # Get candidate details for Concept creation
-                    candidate_metadata = self._get_candidate_metadata(
-                        result.candidate_id
-                    )
+                    # Get candidate details for Concept creation from metadata map
+                    candidate_metadata = candidate_metadata_map.get(result.candidate_id)
                     if candidate_metadata:
                         concept_input = ConceptInput(
                             text=result.candidate_text,
@@ -254,6 +269,15 @@ class ConceptProcessor:
                             clarifai_id=candidate_metadata.get("clarifai_id", ""),
                         )
                         promoted_concepts.append(concept_input)
+                    else:
+                        logger.warning(
+                            f"Missing metadata for promoted candidate {result.candidate_id}",
+                            extra={
+                                "service": "clarifai-core",
+                                "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                                "candidate_id": result.candidate_id,
+                            },
+                        )
             else:
                 logger.warning(
                     f"Failed to update candidate status for {result.candidate_id}",
@@ -309,50 +333,6 @@ class ConceptProcessor:
         )
 
         return updates
-
-    def _get_candidate_metadata(self, candidate_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Get metadata for a specific candidate by ID.
-
-        Args:
-            candidate_id: ID of the candidate to retrieve
-
-        Returns:
-            Candidate metadata or None if not found
-        """
-        try:
-            # Search for the specific candidate in the vector store
-            # Note: This is a workaround since we don't have direct ID lookup
-            all_candidates = self.candidates_store.get_candidates_by_status("promoted")
-            all_candidates.extend(
-                self.candidates_store.get_candidates_by_status("pending")
-            )
-
-            for candidate in all_candidates:
-                if candidate.get("candidate_id") == candidate_id:
-                    return candidate
-
-            logger.warning(
-                f"Candidate metadata not found for ID: {candidate_id}",
-                extra={
-                    "service": "clarifai-core",
-                    "filename.function_name": "concept_processor.ConceptProcessor._get_candidate_metadata",
-                    "candidate_id": candidate_id,
-                },
-            )
-            return None
-
-        except Exception as e:
-            logger.error(
-                f"Error retrieving candidate metadata for {candidate_id}: {e}",
-                extra={
-                    "service": "clarifai-core",
-                    "filename.function_name": "concept_processor.ConceptProcessor._get_candidate_metadata",
-                    "candidate_id": candidate_id,
-                    "error": str(e),
-                },
-            )
-            return None
 
     def build_concept_index(self, force_rebuild: bool = False) -> int:
         """

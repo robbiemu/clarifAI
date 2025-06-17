@@ -219,14 +219,15 @@ class DirtyBlockConsumer:
 
             # Sync block with graph using proper version checking
             sync_success = self._sync_block_with_graph(current_block, file_path)
-            
+
             # If sync was successful and this is a new or updated block, process for concepts
             if sync_success and change_type in ("created", "modified"):
                 try:
                     concept_result = self.concept_processor.process_block_for_concepts(
-                        current_block, block_type="claim"  # Assume claim type for now
+                        current_block,
+                        block_type="claim",  # Assume claim type for now
                     )
-                    
+
                     logger.debug(
                         f"Concept processing completed for block {clarifai_id}: "
                         f"{concept_result.get('merged_count', 0)} merged, "
@@ -235,7 +236,9 @@ class DirtyBlockConsumer:
                             "service": "clarifai-core",
                             "filename.function_name": "dirty_block_consumer._process_dirty_block",
                             "clarifai_id": clarifai_id,
-                            "concept_processing_success": concept_result.get("success", False),
+                            "concept_processing_success": concept_result.get(
+                                "success", False
+                            ),
                         },
                     )
                 except Exception as e:
@@ -249,7 +252,7 @@ class DirtyBlockConsumer:
                             "concept_processing_error": str(e),
                         },
                     )
-            
+
             return sync_success
 
         except KeyError as e:
