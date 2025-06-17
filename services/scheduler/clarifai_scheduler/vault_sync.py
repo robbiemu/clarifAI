@@ -6,16 +6,15 @@ between Markdown files and the Neo4j knowledge graph by detecting changes
 through content hashing and updating graph nodes accordingly.
 """
 
-import hashlib
 import logging
-import re
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, Optional, Any
 from datetime import datetime
 
 from clarifai_shared import load_config
 from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
+from clarifai_shared.vault import BlockParser
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +32,7 @@ class VaultSyncJob:
         """Initialize vault sync job."""
         self.config = config or load_config(validate=True)
         self.graph_manager = Neo4jGraphManager(self.config)
+        self.block_parser = BlockParser()
 
         # Vault paths from config
         self.vault_path = Path(self.config.vault_path)
@@ -207,7 +207,7 @@ class VaultSyncJob:
             content = file_path.read_text(encoding="utf-8")
 
             # Extract clarifai:id blocks
-            blocks = self._extract_clarifai_blocks(content)
+            blocks = self.block_parser.extract_clarifai_blocks(content)
 
             if not blocks:
                 logger.debug(
@@ -265,88 +265,6 @@ class VaultSyncJob:
             stats["errors"] += 1
 
         return stats
-
-    def _extract_clarifai_blocks(self, content: str) -> List[Dict[str, Any]]:
-        """
-        Extract blocks with clarifai:id from Markdown content.
-
-        Handles both inline blocks and file-level blocks following
-        docs/arch/on-graph_vault_synchronization.md patterns.
-        """
-        blocks = []
-
-        # Pattern for clarifai:id comments with optional version
-        # Matches: <!-- clarifai:id=xxx ver=N --> or <!-- clarifai:id=xxx -->
-        id_pattern = r"<!--\s*clarifai:id=([^-\s]+)(?:\s+ver=(\d+))?\s*-->"
-
-        # Find all clarifai:id comments
-        for match in re.finditer(id_pattern, content):
-            clarifai_id = match.group(1)
-            version = int(match.group(2)) if match.group(2) else 1
-            comment_pos = match.start()
-
-            # Extract semantic text for this block
-            semantic_text = self._extract_semantic_text_for_block(content, match)
-
-            # Calculate hash of semantic text
-            content_hash = self._calculate_content_hash(semantic_text)
-
-            block = {
-                "clarifai_id": clarifai_id,
-                "version": version,
-                "semantic_text": semantic_text,
-                "content_hash": content_hash,
-                "comment_position": comment_pos,
-            }
-
-            blocks.append(block)
-
-        return blocks
-
-    def _extract_semantic_text_for_block(self, content: str, id_match: re.Match) -> str:
-        """
-        Extract the semantic text (visible content) for a clarifai:id block.
-
-        This implements the semantic_text concept from on-refreshing_concept_embeddings.md
-        by extracting the visible text while excluding metadata comments.
-        """
-        comment_pos = id_match.start()
-
-        # Check if this is a file-level block (comment near end of file)
-        remaining_content = content[comment_pos:].strip()
-        if (
-            len(remaining_content) <= len(id_match.group(0)) + 10
-        ):  # Small buffer for whitespace
-            # File-level block - hash entire file content excluding the comment
-            semantic_text = content[:comment_pos].strip()
-        else:
-            # Inline block - find the text before the comment
-            # Look backwards to find the start of the block
-            lines_before_comment = content[:comment_pos].split("\n")
-
-            # For inline blocks, typically the semantic text is the content on the same line
-            # or the paragraph/block that precedes the comment
-            if lines_before_comment:
-                # Take the last non-empty line before the comment as the semantic text
-                semantic_text = lines_before_comment[-1].strip()
-
-                # If the comment is on its own line, look for preceding content
-                if not semantic_text:
-                    # Find the last non-empty line
-                    for line in reversed(lines_before_comment[:-1]):
-                        if line.strip():
-                            semantic_text = line.strip()
-                            break
-            else:
-                semantic_text = ""
-
-        return semantic_text
-
-    def _calculate_content_hash(self, semantic_text: str) -> str:
-        """Calculate SHA-256 hash of semantic text content."""
-        # Normalize whitespace and encoding for consistent hashing
-        normalized_text = " ".join(semantic_text.split())
-        return hashlib.sha256(normalized_text.encode("utf-8")).hexdigest()
 
     def _sync_block_with_graph(
         self, block: Dict[str, Any], file_path: Path

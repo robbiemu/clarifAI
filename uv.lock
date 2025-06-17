@@ -359,10 +359,14 @@ version = "0.1.0"
 source = { editable = "services/clarifai-core" }
 dependencies = [
     { name = "clarifai-shared" },
+    { name = "pika" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "clarifai-shared", editable = "shared" }]
+requires-dist = [
+    { name = "clarifai-shared", editable = "shared" },
+    { name = "pika", specifier = ">=1.3.0" },
+]
 
 [[package]]
 name = "clarifai-monorepo"

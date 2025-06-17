@@ -11,7 +11,10 @@ import time
 from typing import Dict, Any, Optional
 from pathlib import Path
 import pika
-from pika.exceptions import AMQPConnectionError, AMQPChannelError
+from pika.exceptions import AMQPChannelError
+
+from clarifai_shared.config import ClarifAIConfig
+from clarifai_shared.mq import RabbitMQManager
 
 
 logger = logging.getLogger(__name__)
@@ -43,87 +46,37 @@ class DirtyBlockPublisher:
             rabbitmq_password: Password for authentication (optional)
             queue_name: Name of the queue to publish to
         """
-        self.rabbitmq_host = rabbitmq_host
-        self.rabbitmq_port = rabbitmq_port
-        self.rabbitmq_user = rabbitmq_user
-        self.rabbitmq_password = rabbitmq_password
         self.queue_name = queue_name
 
-        self._connection: Optional[pika.BlockingConnection] = None
-        self._channel: Optional[pika.channel.Channel] = None
+        # Create a minimal config object for the RabbitMQ manager
+        # This preserves the existing interface while using the shared manager
+        config = ClarifAIConfig()
+        config.rabbitmq_host = rabbitmq_host
+        config.rabbitmq_port = rabbitmq_port
+        config.rabbitmq_user = rabbitmq_user
+        config.rabbitmq_password = rabbitmq_password
+
+        self.rabbitmq_manager = RabbitMQManager(config, "vault-watcher")
 
         logger.info(
             "vault_watcher.DirtyBlockPublisher: Initialized RabbitMQ publisher",
             extra={
                 "service": "vault-watcher",
                 "filename.function_name": "rabbitmq_publisher.__init__",
-                "rabbitmq_host": self.rabbitmq_host,
-                "rabbitmq_port": self.rabbitmq_port,
-                "queue_name": self.queue_name,
+                "rabbitmq_host": rabbitmq_host,
+                "rabbitmq_port": rabbitmq_port,
+                "queue_name": queue_name,
             },
         )
 
     def connect(self) -> None:
         """Establish connection to RabbitMQ."""
-        try:
-            # Set up connection parameters
-            if self.rabbitmq_user and self.rabbitmq_password:
-                credentials = pika.PlainCredentials(
-                    self.rabbitmq_user, self.rabbitmq_password
-                )
-                parameters = pika.ConnectionParameters(
-                    host=self.rabbitmq_host,
-                    port=self.rabbitmq_port,
-                    credentials=credentials,
-                )
-            else:
-                parameters = pika.ConnectionParameters(
-                    host=self.rabbitmq_host, port=self.rabbitmq_port
-                )
-
-            # Establish connection
-            self._connection = pika.BlockingConnection(parameters)
-            self._channel = self._connection.channel()
-
-            # Declare the queue (creates it if it doesn't exist)
-            self._channel.queue_declare(queue=self.queue_name, durable=True)
-
-            logger.info(
-                "vault_watcher.DirtyBlockPublisher: Connected to RabbitMQ",
-                extra={
-                    "service": "vault-watcher",
-                    "filename.function_name": "rabbitmq_publisher.connect",
-                    "rabbitmq_host": self.rabbitmq_host,
-                    "queue_name": self.queue_name,
-                },
-            )
-
-        except AMQPConnectionError as e:
-            logger.error(
-                f"vault_watcher.DirtyBlockPublisher: Failed to connect to RabbitMQ: {e}",
-                extra={
-                    "service": "vault-watcher",
-                    "filename.function_name": "rabbitmq_publisher.connect",
-                    "error": str(e),
-                    "rabbitmq_host": self.rabbitmq_host,
-                },
-            )
-            raise
+        self.rabbitmq_manager.connect()
+        self.rabbitmq_manager.ensure_queue(self.queue_name, durable=True)
 
     def disconnect(self) -> None:
         """Close the RabbitMQ connection."""
-        if self._connection and not self._connection.is_closed:
-            self._connection.close()
-            self._connection = None
-            self._channel = None
-
-            logger.info(
-                "vault_watcher.DirtyBlockPublisher: Disconnected from RabbitMQ",
-                extra={
-                    "service": "vault-watcher",
-                    "filename.function_name": "rabbitmq_publisher.disconnect",
-                },
-            )
+        self.rabbitmq_manager.close()
 
     def publish_dirty_blocks(
         self, file_path: Path, dirty_blocks: Dict[str, Any]
@@ -135,7 +88,7 @@ class DirtyBlockPublisher:
             file_path: Path to the file containing dirty blocks
             dirty_blocks: Dictionary with 'added', 'modified', 'deleted' block lists
         """
-        if not self._is_connected():
+        if not self.rabbitmq_manager.is_connected():
             logger.warning(
                 "vault_watcher.DirtyBlockPublisher: Not connected to RabbitMQ, attempting to reconnect",
                 extra={
@@ -206,8 +159,9 @@ class DirtyBlockPublisher:
         """
         try:
             message_json = json.dumps(message)
+            channel = self.rabbitmq_manager.get_channel()
 
-            self._channel.basic_publish(
+            channel.basic_publish(
                 exchange="",  # Use default exchange
                 routing_key=self.queue_name,
                 body=message_json,
@@ -262,12 +216,3 @@ class DirtyBlockPublisher:
                     "change_type": message.get("change_type"),
                 },
             )
-
-    def _is_connected(self) -> bool:
-        """Check if the RabbitMQ connection is active."""
-        return (
-            self._connection is not None
-            and not self._connection.is_closed
-            and self._channel is not None
-            and self._channel.is_open
-        )
