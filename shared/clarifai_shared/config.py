@@ -65,14 +65,14 @@ class ConceptsConfig:
 @dataclass
 class NounPhraseExtractionConfig:
     """Configuration for noun phrase extraction from Claims and Summaries."""
-    
+
     # spaCy model configuration
     spacy_model: str = "en_core_web_sm"
-    
+
     # Normalization settings
     min_phrase_length: int = 2
     filter_digits_only: bool = True
-    
+
     # Vector storage settings for concept_candidates
     concept_candidates_collection: str = "concept_candidates"
     status_field: str = "status"
@@ -161,7 +161,9 @@ class ClarifAIConfig:
     # New configuration sections
     embedding: EmbeddingConfig = field(default_factory=EmbeddingConfig)
     concepts: ConceptsConfig = field(default_factory=ConceptsConfig)
-    noun_phrase_extraction: NounPhraseExtractionConfig = field(default_factory=NounPhraseExtractionConfig)
+    noun_phrase_extraction: NounPhraseExtractionConfig = field(
+        default_factory=NounPhraseExtractionConfig
+    )
     threshold: ThresholdConfig = field(default_factory=ThresholdConfig)
     vault_watcher: VaultWatcherConfig = field(default_factory=VaultWatcherConfig)
 
@@ -298,9 +300,9 @@ class ClarifAIConfig:
             spacy_model=noun_phrase_config.get("spacy_model", "en_core_web_sm"),
             min_phrase_length=noun_phrase_config.get("min_phrase_length", 2),
             filter_digits_only=noun_phrase_config.get("filter_digits_only", True),
-            concept_candidates_collection=noun_phrase_config.get("concept_candidates", {}).get(
-                "collection_name", "concept_candidates"
-            ),
+            concept_candidates_collection=noun_phrase_config.get(
+                "concept_candidates", {}
+            ).get("collection_name", "concept_candidates"),
             status_field=noun_phrase_config.get("concept_candidates", {}).get(
                 "status_field", "status"
             ),

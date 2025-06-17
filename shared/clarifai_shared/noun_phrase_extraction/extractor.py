@@ -29,10 +29,10 @@ class NounPhraseExtractor:
     Extracts noun phrases from Claims and Summary nodes and stores them
     in the concept_candidates vector table for future concept detection.
 
-    This class implements the requirements from:
-    - docs/project/epic_1/sprint_4-Create_noun_phrase_extractor.md
-    - docs/arch/on-noun_phrase_extraction.md
-    - docs/arch/on-concepts.md
+    This class orchestrates the noun phrase extraction workflow by:
+    - Fetching (:Claim) and (:Summary) nodes from the Neo4j graph
+    - Using spaCy to extract and normalize noun phrases
+    - Storing candidates in the concept_candidates vector table with "pending" status
     """
 
     def __init__(
