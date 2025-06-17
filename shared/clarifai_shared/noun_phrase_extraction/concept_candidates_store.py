@@ -257,6 +257,113 @@ class ConceptCandidatesVectorStore:
             )
             return []
 
+    def update_candidate_status(
+        self,
+        candidate_id: str,
+        new_status: str,
+        metadata_updates: Optional[Dict[str, Any]] = None,
+    ) -> bool:
+        """
+        Update the status of a concept candidate.
+
+        Args:
+            candidate_id: ID of the candidate to update
+            new_status: New status ("merged", "promoted", etc.)
+            metadata_updates: Additional metadata to update
+
+        Returns:
+            True if update was successful, False otherwise
+        """
+        logger.debug(
+            f"Updating candidate status: {candidate_id} -> {new_status}",
+            extra={
+                "service": "clarifai",
+                "filename.function_name": "concept_candidates_vector_store.ConceptCandidatesVectorStore.update_candidate_status",
+                "candidate_id": candidate_id,
+                "new_status": new_status,
+            },
+        )
+
+        try:
+            # For PostgreSQL vector store, we need to update via SQL
+            from sqlalchemy import text
+            from llama_index.vector_stores.postgres.base import ITEMS_TABLE
+
+            # Build the update query
+            metadata_updates = metadata_updates or {}
+            metadata_updates["status"] = new_status
+
+            # Update metadata column by merging with existing metadata
+            with self.engine.connect() as conn:
+                # First get the current record
+                select_stmt = text(f"""
+                    SELECT metadata FROM {ITEMS_TABLE} 
+                    WHERE metadata->>'candidate_id' = :candidate_id
+                """)  # nosec B608 - ITEMS_TABLE is a constant from LlamaIndex, not user input
+                result = conn.execute(select_stmt, {"candidate_id": candidate_id})
+                row = result.fetchone()
+
+                if not row:
+                    logger.warning(
+                        f"Candidate not found for status update: {candidate_id}",
+                        extra={
+                            "service": "clarifai",
+                            "filename.function_name": "concept_candidates_vector_store.ConceptCandidatesVectorStore.update_candidate_status",
+                            "candidate_id": candidate_id,
+                        },
+                    )
+                    return False
+
+                # Merge metadata
+                import json
+
+                current_metadata = row[0] if row[0] else {}
+                if isinstance(current_metadata, str):
+                    current_metadata = json.loads(current_metadata)
+
+                current_metadata.update(metadata_updates)
+
+                # Update the record
+                update_stmt = text(f"""
+                    UPDATE {ITEMS_TABLE} 
+                    SET metadata = :metadata
+                    WHERE metadata->>'candidate_id' = :candidate_id
+                """)  # nosec B608 - ITEMS_TABLE is a constant from LlamaIndex, not user input
+
+                conn.execute(
+                    update_stmt,
+                    {
+                        "candidate_id": candidate_id,
+                        "metadata": json.dumps(current_metadata),
+                    },
+                )
+                conn.commit()
+
+            logger.info(
+                f"Successfully updated candidate status: {candidate_id} -> {new_status}",
+                extra={
+                    "service": "clarifai",
+                    "filename.function_name": "concept_candidates_vector_store.ConceptCandidatesVectorStore.update_candidate_status",
+                    "candidate_id": candidate_id,
+                    "new_status": new_status,
+                },
+            )
+
+            return True
+
+        except Exception as e:
+            logger.error(
+                f"Failed to update candidate status for {candidate_id}: {e}",
+                extra={
+                    "service": "clarifai",
+                    "filename.function_name": "concept_candidates_vector_store.ConceptCandidatesVectorStore.update_candidate_status",
+                    "candidate_id": candidate_id,
+                    "new_status": new_status,
+                    "error": str(e),
+                },
+            )
+            return False
+
     def get_candidates_by_status(self, status: str) -> List[Dict[str, Any]]:
         """
         Retrieve all candidates with a specific status (e.g., "pending").

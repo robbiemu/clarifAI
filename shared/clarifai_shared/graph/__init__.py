@@ -5,7 +5,7 @@ This module provides data models and utilities for managing the knowledge graph
 structure including Claims, Sentences, and their relationships.
 """
 
-from .models import Claim, Sentence, ClaimInput, SentenceInput
+from .models import Claim, Sentence, ClaimInput, SentenceInput, Concept, ConceptInput
 from .neo4j_manager import Neo4jGraphManager
 
 __all__ = [
@@ -13,5 +13,7 @@ __all__ = [
     "Sentence",
     "ClaimInput",
     "SentenceInput",
+    "Concept",
+    "ConceptInput",
     "Neo4jGraphManager",
 ]
