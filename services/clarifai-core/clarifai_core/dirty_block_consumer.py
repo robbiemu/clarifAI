@@ -15,6 +15,7 @@ from clarifai_shared import load_config
 from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
 from clarifai_shared.mq import RabbitMQManager
 from clarifai_shared.vault import BlockParser
+from .concept_processor import ConceptProcessor
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class DirtyBlockConsumer:
         self.config = config or load_config(validate=True)
         self.graph_manager = Neo4jGraphManager(self.config)
         self.block_parser = BlockParser()
+        self.concept_processor = ConceptProcessor(self.config)
 
         # Initialize RabbitMQ manager
         self.rabbitmq_manager = RabbitMQManager(self.config, "clarifai-core")
@@ -216,7 +218,39 @@ class DirtyBlockConsumer:
                 return False
 
             # Sync block with graph using proper version checking
-            return self._sync_block_with_graph(current_block, file_path)
+            sync_success = self._sync_block_with_graph(current_block, file_path)
+            
+            # If sync was successful and this is a new or updated block, process for concepts
+            if sync_success and change_type in ("created", "modified"):
+                try:
+                    concept_result = self.concept_processor.process_block_for_concepts(
+                        current_block, block_type="claim"  # Assume claim type for now
+                    )
+                    
+                    logger.debug(
+                        f"Concept processing completed for block {clarifai_id}: "
+                        f"{concept_result.get('merged_count', 0)} merged, "
+                        f"{concept_result.get('promoted_count', 0)} promoted",
+                        extra={
+                            "service": "clarifai-core",
+                            "filename.function_name": "dirty_block_consumer._process_dirty_block",
+                            "clarifai_id": clarifai_id,
+                            "concept_processing_success": concept_result.get("success", False),
+                        },
+                    )
+                except Exception as e:
+                    # Don't fail the whole message if concept processing fails
+                    logger.warning(
+                        f"Concept processing failed for block {clarifai_id}: {e}",
+                        extra={
+                            "service": "clarifai-core",
+                            "filename.function_name": "dirty_block_consumer._process_dirty_block",
+                            "clarifai_id": clarifai_id,
+                            "concept_processing_error": str(e),
+                        },
+                    )
+            
+            return sync_success
 
         except KeyError as e:
             logger.error(

@@ -7,7 +7,7 @@ using hnswlib and determining whether candidates should be merged or promoted.
 
 import logging
 import time
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any
 import numpy as np
 import hnswlib
 
