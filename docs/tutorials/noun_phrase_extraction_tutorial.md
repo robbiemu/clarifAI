@@ -1,6 +1,6 @@
 # Tutorial: Using the Noun Phrase Extractor
 
-This tutorial provides a step-by-step guide to using the `NounPhraseExtractor` to process nodes from your knowledge graph.
+In this tutorial, you'll learn how to extract noun phrases from your knowledge graph nodes using the `NounPhraseExtractor`. By the end, you'll have successfully processed `(:Claim)` and `(:Summary)` nodes and stored the extracted phrases as concept candidates.
 
 ## Prerequisites
 

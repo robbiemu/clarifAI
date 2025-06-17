@@ -2,8 +2,7 @@
 Noun phrase extraction module for ClarifAI.
 
 This module implements noun phrase extraction from Claims and Summary nodes,
-following the specifications in docs/project/epic_1/sprint_4-Create_noun_phrase_extractor.md
-and architecture guidelines in docs/arch/on-noun_phrase_extraction.md.
+providing the foundation for concept detection and deduplication workflows.
 """
 
 from .extractor import NounPhraseExtractor
@@ -12,7 +11,7 @@ from .concept_candidates_store import ConceptCandidatesVectorStore
 
 __all__ = [
     "NounPhraseExtractor",
-    "NounPhraseCandidate", 
+    "NounPhraseCandidate",
     "ExtractionResult",
     "ConceptCandidatesVectorStore",
 ]

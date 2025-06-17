@@ -29,7 +29,7 @@ graph TD
 
 ### Dynamic Embedding Dimensions
 
-Unlike previous implementations, this system dynamically determines the correct embedding dimension from the configured model rather than relying on static configuration. This ensures compatibility when users change embedding models and prevents dimension mismatch errors.
+This system dynamically determines the correct embedding dimension from the configured model rather than relying on static configuration. This ensures compatibility when users change embedding models and prevents dimension mismatch errors.
 
 ### Batch Processing
 
