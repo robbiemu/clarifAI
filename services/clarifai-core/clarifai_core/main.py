@@ -2,15 +2,16 @@
 ClarifAI Core Service - Main Processing Engine
 
 This service handles:
+- Reactive block synchronization via RabbitMQ
 - Claim extraction from text
 - Summarization
 - Concept linking
 - Integration with Neo4j and PostgreSQL
 """
 
-import time
 import logging
 from clarifai_shared import load_config
+from .dirty_block_consumer import DirtyBlockConsumer
 
 
 def main():
@@ -33,12 +34,12 @@ def main():
         logger.info(f"  PostgreSQL URL: {config.postgres.get_connection_url()}")
         logger.info(f"  Neo4j Bolt URL: {config.neo4j.get_neo4j_bolt_url()}")
 
-        # Main service loop (placeholder)
-        logger.info("ClarifAI Core service is running...")
-        while True:
-            # TODO: Implement actual claim extraction, summarization, and concept linking logic
-            # This will be implemented in future tasks as per the sprint plan
-            time.sleep(30)  # Keep the service alive
+        # Start the dirty block consumer for reactive sync
+        logger.info("Starting dirty block consumer...")
+        consumer = DirtyBlockConsumer(config)
+
+        # This will block and process messages until interrupted
+        consumer.start_consuming()
 
     except ValueError as e:
         # Configuration validation error

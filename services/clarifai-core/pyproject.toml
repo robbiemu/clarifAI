@@ -7,7 +7,8 @@ name = "clarifai-core"
 version = "0.1.0"
 description = "Core processing engine for ClarifAI, including agentic capabilities."
 dependencies = [
-    "clarifai-shared"
+    "clarifai-shared",
+    "pika>=1.3.0"
 ]
 
 [tool.ruff]
