@@ -21,11 +21,12 @@ dependencies = [
     "spacy>=3.7.0",
 ]
 optional-dependencies = { dev = [
-    "pytest>=8.0.0",
-    "pytest-cov>=4.0.0",
-    "black>=24.0.0",
-    "ruff>=0.4.0",
-    "mypy>=1.10.0",
+    "bandit>=1.8.0",
+    "black>=25.1.0",
+    "mypy>=1.16.0",
+    "pytest>=8.4.0",
+    "pytest-cov>=6.1.1",
+    "ruff>=0.11.13",
     "pre-commit>=3.7.0",
 ]}
 
@@ -123,12 +124,3 @@ exclude_dirs = ["tests", "*/tests"]
 # Focus on medium and high severity issues
 severity = "medium"
 confidence = "medium"
-
-[dependency-groups]
-dev = [
-    "black>=25.1.0",
-    "mypy>=1.16.0",
-    "pytest>=8.4.0",
-    "pytest-cov>=6.1.1",
-    "ruff>=0.11.13",
-]
