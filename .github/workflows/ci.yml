@@ -41,6 +41,7 @@ jobs:
       run: |
         uv venv
         uv pip install -e ".[dev]"
+        uv pip install -e ./shared -e ./services/clarifai-core -e ./services/clarifai-ui -e ./services/scheduler -e ./services/vault-watcher
         
     - name: Run Ruff linter
       run: |
@@ -87,6 +88,7 @@ jobs:
       run: |
         uv venv
         uv pip install -e ".[dev]"
+        uv pip install -e ./shared -e ./services/clarifai-core -e ./services/clarifai-ui -e ./services/scheduler -e ./services/vault-watcher
         
     - name: Run Bandit security check
       run: |
@@ -125,6 +127,7 @@ jobs:
       run: |
         uv venv
         uv pip install -e ".[dev]"
+        uv pip install -e ./shared -e ./services/clarifai-core -e ./services/clarifai-ui -e ./services/scheduler -e ./services/vault-watcher
         
     - name: Run tests
       run: |
