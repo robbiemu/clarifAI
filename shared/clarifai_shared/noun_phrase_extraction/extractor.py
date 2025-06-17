@@ -23,8 +23,9 @@ except ImportError:
 
 from ..config import ClarifAIConfig, load_config
 from ..graph import Neo4jGraphManager
-from ..embedding import ClarifAIVectorStore, EmbeddingGenerator
+from ..embedding import EmbeddingGenerator
 from .models import NounPhraseCandidate, ExtractionResult
+from .concept_candidates_store import ConceptCandidatesVectorStore
 
 logger = logging.getLogger(__name__)
 
@@ -66,10 +67,8 @@ class NounPhraseExtractor:
         self._nlp = None
         self._initialize_spacy()
         
-        # Initialize vector store for concept_candidates
-        # We'll create a separate vector store instance configured for concept_candidates
-        self._concept_candidates_store = None
-        self._initialize_concept_candidates_store()
+        # Initialize concept candidates vector store
+        self.concept_candidates_store = ConceptCandidatesVectorStore(config)
         
         logger.info(
             f"Initialized NounPhraseExtractor with spaCy model: {self.spacy_model_name}",
@@ -421,24 +420,16 @@ class NounPhraseExtractor:
         )
         
         try:
-            # Generate embeddings for all candidates
-            texts = [candidate.normalized_text for candidate in candidates]
-            embeddings = self.embedding_generator.generate_embeddings(texts)
-            
-            # Attach embeddings to candidates
-            for candidate, embedding in zip(candidates, embeddings):
-                candidate.embedding = embedding
-            
-            # TODO: Store in concept_candidates vector table
-            # This will be implemented when we extend the vector store to support multiple tables
-            # For now, we'll log that the candidates are ready for storage
+            # Store using the specialized concept candidates vector store
+            successful_count = self.concept_candidates_store.store_candidates(candidates)
             
             logger.info(
-                f"Generated embeddings for {len(candidates)} candidates",
+                f"Successfully stored {successful_count}/{len(candidates)} concept candidates",
                 extra={
                     "service": "clarifai",
                     "filename.function_name": "noun_phrase_extraction.NounPhraseExtractor._store_candidates",
-                    "candidates_count": len(candidates),
+                    "successful_count": successful_count,
+                    "total_count": len(candidates),
                 }
             )
             
@@ -483,17 +474,3 @@ class NounPhraseExtractor:
                 f"spaCy model '{self.spacy_model_name}' not found. "
                 f"Please install it with: python -m spacy download {self.spacy_model_name}"
             )
-    
-    def _initialize_concept_candidates_store(self) -> None:
-        """Initialize vector store for concept_candidates table."""
-        # TODO: Extend ClarifAIVectorStore to support concept_candidates table
-        # For now, we'll prepare for this integration
-        self._concept_candidates_store = None
-        
-        logger.debug(
-            "Concept candidates vector store initialization deferred",
-            extra={
-                "service": "clarifai",
-                "filename.function_name": "noun_phrase_extraction.NounPhraseExtractor._initialize_concept_candidates_store",
-            }
-        )

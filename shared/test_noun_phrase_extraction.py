@@ -65,8 +65,9 @@ class TestNounPhraseExtractor:
     @patch('clarifai_shared.noun_phrase_extraction.extractor.spacy')
     @patch('clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager')
     @patch('clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator')
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore')
     @patch('clarifai_shared.noun_phrase_extraction.extractor.load_config')
-    def test_extractor_initialization(self, mock_load_config, mock_embedding_gen, mock_neo4j, mock_spacy):
+    def test_extractor_initialization(self, mock_load_config, mock_vector_store, mock_embedding_gen, mock_neo4j, mock_spacy):
         """Test that NounPhraseExtractor initializes properly."""
         # Mock spaCy model
         mock_nlp = Mock()
@@ -84,7 +85,11 @@ class TestNounPhraseExtractor:
         mock_spacy.load.assert_called_once_with("en_core_web_sm")
     
     @patch('clarifai_shared.noun_phrase_extraction.extractor.spacy')
-    def test_extract_noun_phrases(self, mock_spacy):
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager')
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator')
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore')
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.load_config')
+    def test_extract_noun_phrases(self, mock_load_config, mock_vector_store, mock_embedding_gen, mock_neo4j, mock_spacy):
         """Test extracting noun phrases from text using spaCy."""
         # Mock spaCy components
         mock_doc = Mock()
@@ -100,22 +105,25 @@ class TestNounPhraseExtractor:
         mock_nlp.return_value = mock_doc
         mock_spacy.load.return_value = mock_nlp
         
-        # Create extractor with mocked dependencies
-        with patch('clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager'), \
-             patch('clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator'), \
-             patch('clarifai_shared.noun_phrase_extraction.extractor.load_config'):
-            
-            extractor = NounPhraseExtractor()
-            
-            # Test extraction
-            phrases = extractor._extract_noun_phrases("Some text with noun phrases")
-            
-            # Should exclude the digit-only phrase "5"
-            expected_phrases = ["natural language processing", "machine learning algorithms"]
-            assert phrases == expected_phrases
+        # Mock config
+        mock_config = Mock()
+        mock_load_config.return_value = mock_config
+        
+        extractor = NounPhraseExtractor()
+        
+        # Test extraction
+        phrases = extractor._extract_noun_phrases("Some text with noun phrases")
+        
+        # Should exclude the digit-only phrase "5"
+        expected_phrases = ["natural language processing", "machine learning algorithms"]
+        assert phrases == expected_phrases
     
     @patch('clarifai_shared.noun_phrase_extraction.extractor.spacy')
-    def test_normalize_phrase(self, mock_spacy):
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager')
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator')
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore')
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.load_config')
+    def test_normalize_phrase(self, mock_load_config, mock_vector_store, mock_embedding_gen, mock_neo4j, mock_spacy):
         """Test phrase normalization (lowercase, lemmatize, strip punctuation)."""
         # Mock spaCy token processing
         mock_token1 = Mock()
@@ -144,20 +152,23 @@ class TestNounPhraseExtractor:
         mock_nlp.return_value = mock_doc
         mock_spacy.load.return_value = mock_nlp
         
-        # Create extractor with mocked dependencies
-        with patch('clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager'), \
-             patch('clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator'), \
-             patch('clarifai_shared.noun_phrase_extraction.extractor.load_config'):
-            
-            extractor = NounPhraseExtractor()
-            
-            # Test normalization
-            normalized = extractor._normalize_phrase("Natural Language Processing!")
-            
-            assert normalized == "natural language processing"
+        # Mock config
+        mock_config = Mock()
+        mock_load_config.return_value = mock_config
+        
+        extractor = NounPhraseExtractor()
+        
+        # Test normalization
+        normalized = extractor._normalize_phrase("Natural Language Processing!")
+        
+        assert normalized == "natural language processing"
     
     @patch('clarifai_shared.noun_phrase_extraction.extractor.spacy')
-    def test_extract_from_node(self, mock_spacy):
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager')
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator')
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore')
+    @patch('clarifai_shared.noun_phrase_extraction.extractor.load_config')
+    def test_extract_from_node(self, mock_load_config, mock_vector_store, mock_embedding_gen, mock_neo4j, mock_spacy):
         """Test extracting noun phrases from a single node."""
         # Mock spaCy processing for extraction
         mock_chunk = Mock()
@@ -184,29 +195,28 @@ class TestNounPhraseExtractor:
         mock_nlp.side_effect = [mock_doc_extract, mock_doc_normalize]
         mock_spacy.load.return_value = mock_nlp
         
-        # Create extractor with mocked dependencies
-        with patch('clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager'), \
-             patch('clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator'), \
-             patch('clarifai_shared.noun_phrase_extraction.extractor.load_config'):
-            
-            extractor = NounPhraseExtractor()
-            
-            # Test node data
-            node = {
-                'id': 'claim_123',
-                'text': 'This claim discusses machine learning techniques.',
-                'node_type': 'claim'
-            }
-            
-            candidates = extractor._extract_from_node(node)
-            
-            assert len(candidates) == 1
-            candidate = candidates[0]
-            assert candidate.text == "machine learning"
-            assert candidate.normalized_text == "machine learning"
-            assert candidate.source_node_id == "claim_123"
-            assert candidate.source_node_type == "claim"
-            assert candidate.status == "pending"
+        # Mock config
+        mock_config = Mock()
+        mock_load_config.return_value = mock_config
+        
+        extractor = NounPhraseExtractor()
+        
+        # Test node data
+        node = {
+            'id': 'claim_123',
+            'text': 'This claim discusses machine learning techniques.',
+            'node_type': 'claim'
+        }
+        
+        candidates = extractor._extract_from_node(node)
+        
+        assert len(candidates) == 1
+        candidate = candidates[0]
+        assert candidate.text == "machine learning"
+        assert candidate.normalized_text == "machine learning"
+        assert candidate.source_node_id == "claim_123"
+        assert candidate.source_node_type == "claim"
+        assert candidate.status == "pending"
 
 
 if __name__ == "__main__":

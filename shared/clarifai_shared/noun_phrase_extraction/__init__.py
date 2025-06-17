@@ -8,9 +8,11 @@ and architecture guidelines in docs/arch/on-noun_phrase_extraction.md.
 
 from .extractor import NounPhraseExtractor
 from .models import NounPhraseCandidate, ExtractionResult
+from .concept_candidates_store import ConceptCandidatesVectorStore
 
 __all__ = [
     "NounPhraseExtractor",
     "NounPhraseCandidate", 
     "ExtractionResult",
+    "ConceptCandidatesVectorStore",
 ]
