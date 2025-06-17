@@ -42,13 +42,15 @@ class TestGraphInit:
 
         assert hasattr(graph_module, "__all__")
         assert isinstance(graph_module.__all__, list)
-        assert len(graph_module.__all__) == 5
+        assert len(graph_module.__all__) == 7
 
         expected_exports = [
             "Claim",
             "Sentence",
             "ClaimInput",
             "SentenceInput",
+            "Concept",
+            "ConceptInput",
             "Neo4jGraphManager",
         ]
         for item in expected_exports:

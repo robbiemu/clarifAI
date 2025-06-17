@@ -29,7 +29,10 @@ class TestDirtyBlockConsumer:
     @pytest.fixture
     def consumer(self, mock_config):
         """Create a DirtyBlockConsumer instance for testing."""
-        with patch("clarifai_core.dirty_block_consumer.Neo4jGraphManager"):
+        with (
+            patch("clarifai_core.dirty_block_consumer.Neo4jGraphManager"),
+            patch("clarifai_core.dirty_block_consumer.ConceptProcessor"),
+        ):
             return DirtyBlockConsumer(mock_config)
 
     @pytest.fixture

@@ -93,14 +93,14 @@ class TestConceptProcessor:
         # Mock the detection batch result
         mock_detection_results = [
             ConceptDetectionResult(
-                candidate_id="test_1",
+                candidate_id="claim_blk_test_123_machine learning",
                 candidate_text="machine learning",
                 action=ConceptAction.PROMOTED,
                 confidence=1.0,
                 reason="No similar candidates found",
             ),
             ConceptDetectionResult(
-                candidate_id="test_2",
+                candidate_id="claim_blk_test_123_artificial intelligence",
                 candidate_text="artificial intelligence",
                 action=ConceptAction.MERGED,
                 confidence=0.95,
@@ -287,8 +287,26 @@ class TestConceptProcessor:
             results=mock_results, total_processed=2, merged_count=1, promoted_count=1
         )
 
+        # Create mock candidate metadata map
+        mock_candidate_metadata_map = {
+            "test_1": {
+                "candidate_id": "test_1",
+                "text": "machine learning",
+                "embedding": [0.1] * 384,
+                "status": "pending",
+            },
+            "test_2": {
+                "candidate_id": "test_2",
+                "text": "artificial intelligence",
+                "embedding": [0.2] * 384,
+                "status": "pending",
+            },
+        }
+
         # Execute the method
-        updates = concept_processor._update_candidate_statuses(mock_batch)
+        updates = concept_processor._update_candidate_statuses(
+            mock_batch, mock_candidate_metadata_map
+        )
 
         # Verify the updates
         assert len(updates) == 2

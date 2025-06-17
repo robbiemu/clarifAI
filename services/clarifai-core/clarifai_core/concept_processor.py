@@ -125,7 +125,6 @@ class ConceptProcessor:
                     "source_node_type": candidate.source_node_type,
                     "clarifai_id": candidate.clarifai_id,
                     "text": candidate.text,
-                    "pos_tag": candidate.pos_tag,
                 }
 
             # Step 4: Update candidate statuses based on detection results
