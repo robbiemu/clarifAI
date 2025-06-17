@@ -11,11 +11,9 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
 
-import pika
-from pika.exceptions import AMQPConnectionError
-
 from clarifai_shared import load_config
 from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
+from clarifai_shared.mq import RabbitMQManager
 from clarifai_shared.vault import BlockParser
 
 
@@ -36,99 +34,43 @@ class DirtyBlockConsumer:
         self.graph_manager = Neo4jGraphManager(self.config)
         self.block_parser = BlockParser()
 
-        # RabbitMQ connection parameters
-        self.rabbitmq_host = self.config.rabbitmq_host
-        self.rabbitmq_port = getattr(self.config, "rabbitmq_port", 5672)
-        self.rabbitmq_user = getattr(self.config, "rabbitmq_user", None)
-        self.rabbitmq_password = getattr(self.config, "rabbitmq_password", None)
+        # Initialize RabbitMQ manager
+        self.rabbitmq_manager = RabbitMQManager(self.config, "clarifai-core")
         self.queue_name = "clarifai_dirty_blocks"
 
         # Vault paths from config
         self.vault_path = Path(self.config.vault_path)
-
-        self._connection: Optional[pika.BlockingConnection] = None
-        self._channel: Optional[pika.channel.Channel] = None
 
         logger.info(
             "DirtyBlockConsumer: Initialized consumer",
             extra={
                 "service": "clarifai-core",
                 "filename.function_name": "dirty_block_consumer.__init__",
-                "rabbitmq_host": self.rabbitmq_host,
+                "rabbitmq_host": self.config.rabbitmq_host,
                 "queue_name": self.queue_name,
             },
         )
 
     def connect(self) -> None:
         """Establish connection to RabbitMQ."""
-        try:
-            # Set up connection parameters
-            if self.rabbitmq_user and self.rabbitmq_password:
-                credentials = pika.PlainCredentials(
-                    self.rabbitmq_user, self.rabbitmq_password
-                )
-                parameters = pika.ConnectionParameters(
-                    host=self.rabbitmq_host,
-                    port=self.rabbitmq_port,
-                    credentials=credentials,
-                )
-            else:
-                parameters = pika.ConnectionParameters(
-                    host=self.rabbitmq_host, port=self.rabbitmq_port
-                )
-
-            # Establish connection
-            self._connection = pika.BlockingConnection(parameters)
-            self._channel = self._connection.channel()
-
-            # Declare the queue (creates it if it doesn't exist)
-            self._channel.queue_declare(queue=self.queue_name, durable=True)
-
-            logger.info(
-                "DirtyBlockConsumer: Connected to RabbitMQ",
-                extra={
-                    "service": "clarifai-core",
-                    "filename.function_name": "dirty_block_consumer.connect",
-                    "rabbitmq_host": self.rabbitmq_host,
-                    "queue_name": self.queue_name,
-                },
-            )
-
-        except AMQPConnectionError as e:
-            logger.error(
-                f"DirtyBlockConsumer: Failed to connect to RabbitMQ: {e}",
-                extra={
-                    "service": "clarifai-core",
-                    "filename.function_name": "dirty_block_consumer.connect",
-                    "error": str(e),
-                    "rabbitmq_host": self.rabbitmq_host,
-                },
-            )
-            raise
+        self.rabbitmq_manager.connect()
+        self.rabbitmq_manager.ensure_queue(self.queue_name, durable=True)
 
     def disconnect(self) -> None:
         """Close the RabbitMQ connection."""
-        if self._connection and not self._connection.is_closed:
-            self._connection.close()
-            self._connection = None
-            self._channel = None
-
-            logger.info(
-                "DirtyBlockConsumer: Disconnected from RabbitMQ",
-                extra={
-                    "service": "clarifai-core",
-                    "filename.function_name": "dirty_block_consumer.disconnect",
-                },
-            )
+        self.rabbitmq_manager.close()
 
     def start_consuming(self) -> None:
         """Start consuming messages from the dirty blocks queue."""
-        if not self._is_connected():
+        if not self.rabbitmq_manager.is_connected():
             self.connect()
 
+        # Get channel from manager
+        channel = self.rabbitmq_manager.get_channel()
+
         # Set up message consumer
-        self._channel.basic_qos(prefetch_count=1)  # Process one message at a time
-        self._channel.basic_consume(
+        channel.basic_qos(prefetch_count=1)  # Process one message at a time
+        channel.basic_consume(
             queue=self.queue_name,
             on_message_callback=self._on_message_received,
             auto_ack=False,  # Manual acknowledgment for reliability
@@ -144,7 +86,7 @@ class DirtyBlockConsumer:
         )
 
         try:
-            self._channel.start_consuming()
+            channel.start_consuming()
         except KeyboardInterrupt:
             logger.info(
                 "DirtyBlockConsumer: Stopping consumption due to interrupt",
@@ -153,7 +95,7 @@ class DirtyBlockConsumer:
                     "filename.function_name": "dirty_block_consumer.start_consuming",
                 },
             )
-            self._channel.stop_consuming()
+            channel.stop_consuming()
             self.disconnect()
 
     def _on_message_received(self, channel, method, properties, body) -> None:
@@ -540,12 +482,3 @@ class DirtyBlockConsumer:
                 )
 
         self.graph_manager._retry_with_backoff(_execute_update_block)
-
-    def _is_connected(self) -> bool:
-        """Check if the RabbitMQ connection is active."""
-        return (
-            self._connection is not None
-            and not self._connection.is_closed
-            and self._channel is not None
-            and self._channel.is_open
-        )
