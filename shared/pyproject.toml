@@ -18,6 +18,7 @@ dependencies = [
     "sqlalchemy>=2.0.0",
     "pgvector>=0.3.0",
     "neo4j>=5.0.0",
+    "spacy>=3.7.0",
 ]
 
 [tool.ruff]

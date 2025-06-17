@@ -86,7 +86,6 @@ noun_phrase_extraction:
   # Vector storage settings for concept_candidates
   concept_candidates:
     collection_name: "concept_candidates"
-    embed_dim: 384  # Must match embedding model dimension
     status_field: "status"      # Field name for tracking candidate status
     default_status: "pending"   # Initial status for new candidates
 

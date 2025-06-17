@@ -75,7 +75,6 @@ class NounPhraseExtractionConfig:
     
     # Vector storage settings for concept_candidates
     concept_candidates_collection: str = "concept_candidates"
-    embed_dim: int = 384
     status_field: str = "status"
     default_status: str = "pending"
 
@@ -301,9 +300,6 @@ class ClarifAIConfig:
             filter_digits_only=noun_phrase_config.get("filter_digits_only", True),
             concept_candidates_collection=noun_phrase_config.get("concept_candidates", {}).get(
                 "collection_name", "concept_candidates"
-            ),
-            embed_dim=noun_phrase_config.get("concept_candidates", {}).get(
-                "embed_dim", 384
             ),
             status_field=noun_phrase_config.get("concept_candidates", {}).get(
                 "status_field", "status"

@@ -55,7 +55,12 @@ class ConceptCandidatesVectorStore:
         
         # Use the concept_candidates collection configuration
         self.collection_name = config.noun_phrase_extraction.concept_candidates_collection
-        self.embed_dim = config.noun_phrase_extraction.embed_dim
+        
+        # Initialize embedding generator first
+        self.embedding_generator = EmbeddingGenerator(config=config)
+        
+        # Get the embedding dimension dynamically from the model
+        self.embed_dim = self.embedding_generator.get_embedding_dimension()
         
         # Build connection string
         self.connection_string = config.postgres.get_connection_url(
@@ -72,9 +77,6 @@ class ConceptCandidatesVectorStore:
         
         # Initialize PGVectorStore for concept_candidates
         self.vector_store = self._initialize_pgvector_store()
-        
-        # Initialize embedding generator
-        self.embedding_generator = EmbeddingGenerator(config=config)
         
         # Set LlamaIndex embedding model
         Settings.embed_model = self.embedding_generator.embedding_model
@@ -97,7 +99,7 @@ class ConceptCandidatesVectorStore:
     
     def store_candidates(self, candidates: List[NounPhraseCandidate]) -> int:
         """
-        Store noun phrase candidates in the vector database.
+        Store noun phrase candidates in the vector database using batch insertion.
         
         Args:
             candidates: List of NounPhraseCandidate objects to store
@@ -128,32 +130,33 @@ class ConceptCandidatesVectorStore:
             # Convert candidates to documents
             documents = self._convert_candidates_to_documents(candidates)
             
-            # Generate embeddings if not already present
+            # Generate embeddings for candidates that don't have them
+            texts_to_embed = []
+            indices_to_embed = []
+            
             for i, candidate in enumerate(candidates):
                 if candidate.embedding is None:
-                    # Generate embedding for normalized text
-                    embedding = self.embedding_generator.generate_embeddings([candidate.normalized_text])[0]
-                    candidate.embedding = embedding
-                    documents[i].embedding = embedding
+                    texts_to_embed.append(candidate.normalized_text)
+                    indices_to_embed.append(i)
                 else:
                     documents[i].embedding = candidate.embedding
             
-            # Store documents in vector index
-            successful_count = 0
-            for doc in documents:
-                try:
-                    self.vector_index.insert(doc)
-                    successful_count += 1
-                except Exception as e:
-                    logger.error(
-                        f"Failed to insert candidate document {doc.doc_id}",
-                        extra={
-                            "service": "clarifai",
-                            "filename.function_name": "concept_candidates_vector_store.ConceptCandidatesVectorStore.store_candidates",
-                            "doc_id": doc.doc_id,
-                            "error": str(e),
-                        }
-                    )
+            # Batch generate embeddings if needed
+            if texts_to_embed:
+                logger.debug(f"Generating embeddings for {len(texts_to_embed)} candidates")
+                embeddings = self.embedding_generator.generate_embeddings(texts_to_embed)
+                
+                for idx, embedding in zip(indices_to_embed, embeddings):
+                    candidates[idx].embedding = embedding
+                    documents[idx].embedding = embedding
+            
+            # Use batch insertion via LlamaIndex
+            logger.debug("Performing batch insertion of documents")
+            
+            # Insert all documents at once using LlamaIndex's batch capability
+            self.vector_index.insert_nodes(documents)
+            
+            successful_count = len(candidates)
             
             logger.info(
                 f"Successfully stored {successful_count}/{len(candidates)} concept candidates",

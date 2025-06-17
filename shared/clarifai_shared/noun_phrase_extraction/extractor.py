@@ -14,12 +14,8 @@ import time
 from typing import List, Dict, Any, Optional, Set
 from dataclasses import dataclass
 
-try:
-    import spacy
-    from spacy.tokens import Doc
-except ImportError:
-    spacy = None
-    Doc = None
+import spacy
+from spacy.tokens import Doc
 
 from ..config import ClarifAIConfig, load_config
 from ..graph import Neo4jGraphManager
