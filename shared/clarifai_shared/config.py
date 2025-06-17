@@ -63,6 +63,24 @@ class ConceptsConfig:
 
 
 @dataclass
+class NounPhraseExtractionConfig:
+    """Configuration for noun phrase extraction from Claims and Summaries."""
+    
+    # spaCy model configuration
+    spacy_model: str = "en_core_web_sm"
+    
+    # Normalization settings
+    min_phrase_length: int = 2
+    filter_digits_only: bool = True
+    
+    # Vector storage settings for concept_candidates
+    concept_candidates_collection: str = "concept_candidates"
+    embed_dim: int = 384
+    status_field: str = "status"
+    default_status: str = "pending"
+
+
+@dataclass
 class ThresholdConfig:
     """Configuration for various similarity and processing thresholds."""
 
@@ -144,6 +162,7 @@ class ClarifAIConfig:
     # New configuration sections
     embedding: EmbeddingConfig = field(default_factory=EmbeddingConfig)
     concepts: ConceptsConfig = field(default_factory=ConceptsConfig)
+    noun_phrase_extraction: NounPhraseExtractionConfig = field(default_factory=NounPhraseExtractionConfig)
     threshold: ThresholdConfig = field(default_factory=ThresholdConfig)
     vault_watcher: VaultWatcherConfig = field(default_factory=VaultWatcherConfig)
 
@@ -274,6 +293,26 @@ class ClarifAIConfig:
             ),
         )
 
+        # Load noun phrase extraction configuration from YAML
+        noun_phrase_config = yaml_config.get("noun_phrase_extraction", {})
+        noun_phrase_extraction = NounPhraseExtractionConfig(
+            spacy_model=noun_phrase_config.get("spacy_model", "en_core_web_sm"),
+            min_phrase_length=noun_phrase_config.get("min_phrase_length", 2),
+            filter_digits_only=noun_phrase_config.get("filter_digits_only", True),
+            concept_candidates_collection=noun_phrase_config.get("concept_candidates", {}).get(
+                "collection_name", "concept_candidates"
+            ),
+            embed_dim=noun_phrase_config.get("concept_candidates", {}).get(
+                "embed_dim", 384
+            ),
+            status_field=noun_phrase_config.get("concept_candidates", {}).get(
+                "status_field", "status"
+            ),
+            default_status=noun_phrase_config.get("concept_candidates", {}).get(
+                "default_status", "pending"
+            ),
+        )
+
         # Load threshold configuration from YAML
         threshold_config = yaml_config.get("threshold", {})
         threshold = ThresholdConfig(
@@ -329,6 +368,7 @@ class ClarifAIConfig:
             neo4j=neo4j,
             embedding=embedding,
             concepts=concepts,
+            noun_phrase_extraction=noun_phrase_extraction,
             threshold=threshold,
             vault_watcher=vault_watcher,
             rabbitmq_host=os.getenv("RABBITMQ_HOST", "rabbitmq"),

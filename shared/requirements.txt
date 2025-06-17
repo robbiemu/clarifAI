@@ -13,6 +13,7 @@ pyyaml>=6.0
 
 # Embedding and NLP models
 sentence-transformers>=3.0.0
+spacy>=3.7.0
 
 # Database dependencies
 psycopg2-binary>=2.9.0
