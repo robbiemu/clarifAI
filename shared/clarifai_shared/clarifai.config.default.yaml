@@ -74,6 +74,21 @@ embedding:
     merge_short_prefixes: true   # Merge fragments < 5 tokens
     min_chunk_tokens: 5          # Minimum tokens per chunk
 
+# Noun phrase extraction configuration
+noun_phrase_extraction:
+  # spaCy model to use for extraction
+  spacy_model: "en_core_web_sm"  # or "en_core_web_trf" for better accuracy
+  
+  # Normalization settings
+  min_phrase_length: 2        # Minimum characters after normalization
+  filter_digits_only: true   # Skip phrases that are only digits
+  
+  # Vector storage settings for concept_candidates
+  concept_candidates:
+    collection_name: "concept_candidates"
+    status_field: "status"      # Field name for tracking candidate status
+    default_status: "pending"   # Initial status for new candidates
+
 # Threshold configuration (following design_config_panel.md structure)
 threshold:
   concept_merge: 0.90
