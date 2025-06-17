@@ -40,6 +40,7 @@ class TestConceptProcessor:
             patch("clarifai_core.concept_processor.NounPhraseExtractor"),
             patch("clarifai_core.concept_processor.ConceptCandidatesVectorStore"),
             patch("clarifai_core.concept_processor.ConceptDetector"),
+            patch("clarifai_core.concept_processor.ConceptFileWriter"),
         ):
             processor = ConceptProcessor(mock_config)
             return processor

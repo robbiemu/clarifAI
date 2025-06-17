@@ -21,6 +21,7 @@ from clarifai_shared.concept_detection.models import (
     ConceptDetectionBatch,
 )
 from clarifai_shared.graph.models import ConceptInput
+from clarifai_shared.tier3_concept import ConceptFileWriter
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class ConceptProcessor:
         self.noun_phrase_extractor = NounPhraseExtractor(config)
         self.candidates_store = ConceptCandidatesVectorStore(config)
         self.concept_detector = ConceptDetector(config)
+        self.concept_file_writer = ConceptFileWriter(config)
 
         logger.info(
             "Initialized ConceptProcessor",
@@ -301,6 +303,22 @@ class ConceptProcessor:
                     extra={
                         "service": "clarifai-core",
                         "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                        "concepts_created": len(created_concepts),
+                    },
+                )
+
+                # Write Tier 3 Markdown files for created concepts
+                files_written = 0
+                for concept in created_concepts:
+                    if self.concept_file_writer.write_concept_file(concept):
+                        files_written += 1
+
+                logger.info(
+                    f"Created {files_written} Tier 3 Markdown files for promoted concepts",
+                    extra={
+                        "service": "clarifai-core",
+                        "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                        "files_written": files_written,
                         "concepts_created": len(created_concepts),
                     },
                 )
