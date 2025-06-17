@@ -76,6 +76,8 @@ When you receive a sprint task file, follow this precise workflow to plan and ex
     -   "concepts," "vector store," `hnswlib` → `docs/arch/on-concepts.md` & `docs/arch/on-vector_stores.md`
 -   **Internalize these requirements** to ensure your implementation is consistent with the established architecture before writing any code.
 
+Note: This project has substantial documentation, it may be helpful to read the docs/README.md guide to orient yourself to the project documentation structure.
+
 ### 4. **Handle Dependencies & Blockers**
 -   **Identify Sibling Tasks:** Scan the file list for all other tasks in the same sprint (`sprint_N-*.md`).
 -   **Analyze Prerequisites:** Read their descriptions. Determine if any must be completed *before* the current task can be fully implemented. (e.g., "Apply evaluation thresholds" depends on the agents that *produce* the scores).
