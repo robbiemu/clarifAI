@@ -12,7 +12,7 @@ By the end of this tutorial, you will be able to:
 
 ## Prerequisites
 
-- ClarifAI development environment set up
+- aclarai development environment set up
 - Neo4j database running (local or remote)
 - LLM access configured (OpenAI, Azure OpenAI, or local models)
 - Basic understanding of Neo4j and graph databases
@@ -21,7 +21,7 @@ By the end of this tutorial, you will be able to:
 
 ### 1.1 Configuration Setup
 
-Create or update your `settings/clarifai.config.yaml`:
+Create or update your `settings/aclarai.config.yaml`:
 
 ```yaml
 # Database configuration
@@ -30,7 +30,7 @@ database:
   port: 7687
   user: "neo4j"
   password: "your_password"
-  name: "clarifai"
+  name: "aclarai"
 
 # Claimify pipeline configuration
 claimify:
@@ -55,8 +55,8 @@ claimify:
 ### 1.2 Verify Neo4j Connection
 
 ```python
-from clarifai_shared.claimify.integration import create_graph_manager_from_config
-from clarifai_shared.config import load_config
+from aclarai_shared.claimify.integration import create_graph_manager_from_config
+from aclarai_shared.config import load_config
 
 # Load configuration
 config = load_config()
@@ -78,10 +78,10 @@ except Exception as e:
 ### 1.3 Test LLM Configuration
 
 ```python
-from clarifai_shared.claimify import ClaimifyPipeline, load_claimify_config_from_file
+from aclarai_shared.claimify import ClaimifyPipeline, load_claimify_config_from_file
 
 # Load Claimify configuration
-claimify_config = load_claimify_config_from_file("settings/clarifai.config.yaml")
+claimify_config = load_claimify_config_from_file("settings/aclarai.config.yaml")
 
 # Test pipeline creation
 try:
@@ -97,21 +97,21 @@ except Exception as e:
 ### 2.1 Complete Integration Setup
 
 ```python
-from clarifai_shared.claimify import (
+from aclarai_shared.claimify import (
     ClaimifyPipeline,
     SentenceChunk,
     ClaimifyContext,
     load_claimify_config_from_file
 )
-from clarifai_shared.claimify.integration import (
+from aclarai_shared.claimify.integration import (
     ClaimifyGraphIntegration,
     create_graph_manager_from_config
 )
-from clarifai_shared.config import load_config
+from aclarai_shared.config import load_config
 
 # Load configurations
 main_config = load_config()
-claimify_config = load_claimify_config_from_file("settings/clarifai.config.yaml")
+claimify_config = load_claimify_config_from_file("settings/aclarai.config.yaml")
 
 # Initialize components
 pipeline = ClaimifyPipeline(config=claimify_config)

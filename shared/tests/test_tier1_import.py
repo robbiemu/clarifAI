@@ -5,7 +5,7 @@ Test suite for the Tier 1 import system.
 import tempfile
 from pathlib import Path
 
-from clarifai_shared.import_system import (
+from aclarai_shared.import_system import (
     Tier1ImportSystem,
     calculate_file_hash,
     is_duplicate_import,
@@ -15,8 +15,8 @@ from clarifai_shared.import_system import (
     format_tier1_markdown,
     generate_output_filename,
 )
-from clarifai_shared.config import ClarifAIConfig, VaultPaths
-from clarifai_shared.plugin_interface import MarkdownOutput
+from aclarai_shared.config import aclaraiConfig, VaultPaths
+from aclarai_shared.plugin_interface import MarkdownOutput
 
 
 class TestTier1ImportSystem:
@@ -74,7 +74,7 @@ class TestTier1ImportSystem:
         """Test Tier 1 Markdown formatting."""
         md = MarkdownOutput(
             title="Test Chat",
-            markdown_text="alice: hello\n<!-- clarifai:id=blk_abc123 ver=1 -->\n^blk_abc123",
+            markdown_text="alice: hello\n<!-- aclarai:id=blk_abc123 ver=1 -->\n^blk_abc123",
             metadata={
                 "created_at": "2024-01-01T10:00:00",
                 "participants": ["alice", "bob"],
@@ -87,18 +87,18 @@ class TestTier1ImportSystem:
 
         # Should have metadata comments at top
         lines = result.split("\n")
-        assert lines[0].startswith("<!-- clarifai:title=")
-        assert lines[1].startswith("<!-- clarifai:created_at=")
-        assert lines[2].startswith("<!-- clarifai:participants=")
-        assert lines[3].startswith("<!-- clarifai:message_count=")
-        assert lines[4].startswith("<!-- clarifai:plugin_metadata=")
+        assert lines[0].startswith("<!-- aclarai:title=")
+        assert lines[1].startswith("<!-- aclarai:created_at=")
+        assert lines[2].startswith("<!-- aclarai:participants=")
+        assert lines[3].startswith("<!-- aclarai:message_count=")
+        assert lines[4].startswith("<!-- aclarai:plugin_metadata=")
 
         # Should have empty line after metadata
         assert lines[5] == ""
 
         # Should have original content
         assert "alice: hello" in result
-        assert "clarifai:id=blk_abc123" in result
+        assert "aclarai:id=blk_abc123" in result
 
     def test_generate_output_filename(self):
         """Test output filename generation."""
@@ -135,7 +135,7 @@ class TestTier1ImportSystem:
 
     def test_import_system_initialization(self):
         """Test import system initialization."""
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path="/test/vault",
             paths=VaultPaths(tier1="conversations", logs="logs"),
         )
@@ -152,7 +152,7 @@ def test_integration_simple_conversation():
     with tempfile.TemporaryDirectory() as temp_dir:
         # Setup
         vault_dir = Path(temp_dir) / "vault"
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path=str(vault_dir), paths=VaultPaths(tier1="tier1", logs="logs")
         )
 
@@ -180,15 +180,15 @@ alice: That's wonderful to hear.
             content = output_file.read_text()
 
             # Should have metadata comments
-            assert "<!-- clarifai:title=" in content
-            assert "<!-- clarifai:participants=" in content
+            assert "<!-- aclarai:title=" in content
+            assert "<!-- aclarai:participants=" in content
 
             # Should have conversation content
             assert "alice: Hello, how are you doing today?" in content
             assert "bob: I'm doing great, thanks for asking!" in content
 
             # Should have block annotations
-            assert "<!-- clarifai:id=blk_" in content
+            assert "<!-- aclarai:id=blk_" in content
             assert "^blk_" in content
 
             # Test duplicate detection

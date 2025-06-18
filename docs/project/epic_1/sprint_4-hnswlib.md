@@ -13,7 +13,7 @@ Implementar um sistema de detecção de conceitos baseado em embeddings utilizan
 - Desenvolvimento de sistema para **determinar o status de promoção ou fusão de candidatos:**
     - **Se uma correspondência (`match`) for encontrada** acima do `threshold` de similaridade: A lógica deve identificar o conceito `(:Concept)` existente no Neo4j ao qual o candidato se vincula e/ou determinar que o candidato na tabela `concept_candidates` deve ser marcado como `"merged"`.
     - **Se nenhuma correspondência for encontrada** acima do `threshold`: A lógica deve determinar que o candidato é um novo conceito potencial e deve ser marcado para **"promoção"** (`"promoted"`).
-- Integração da lógica de detecção com o pipeline de processamento de conceitos (`clarifai-core`), onde os candidatos serão eventualmente gerados e processados por este sistema.
+- Integração da lógica de detecção com o pipeline de processamento de conceitos (`aclarai-core`), onde os candidatos serão eventualmente gerados e processados por este sistema.
 - Documentação do sistema `hnswlib`, da lógica de detecção de similaridade e de como as decisões de promoção/fusão são tomadas.
 - Implementação de testes unitários e de integração para verificar a **correta funcionalidade da lógica de detecção e classificação de similaridade**, utilizando um conjunto de dados de teste **mock ou pre-populado minimamente** na tabela `concept_candidates`.
 
@@ -30,18 +30,18 @@ Implementar um sistema de detecção de conceitos baseado em embeddings utilizan
 - O índice `hnswlib` é inicializado corretamente com os vetores disponíveis no armazenamento `concept_candidates` (mesmo que minimamente populado para testes).
 - O sistema implementa e testa a lógica de detecção de candidatos a duplicatas de conceitos com precisão, utilizando o `threshold` de similaridade configurável.
 - A lógica para determinar se um candidato é "merged" (se similaridade > threshold) ou "promoted" (se não há similaridade suficiente) é implementada e testada.
-- A integração da lógica de detecção com o pipeline de processamento de conceitos (`clarifai-core`) funciona corretamente.
+- A integração da lógica de detecção com o pipeline de processamento de conceitos (`aclarai-core`) funciona corretamente.
 - Documentação clara e precisa do sistema de detecção de conceitos baseado em `hnswlib` e da lógica de decisão.
 - Testes automatizados demonstram a **correta funcionalidade da lógica de similaridade e classificação de status**, cobrindo cenários de duplicação exata, similaridade próxima e conceitos totalmente novos, utilizando um conjunto de dados de teste controlado.
 
 ## Dependências
 - Armazenamento de vetores `concept_candidates` implementado (de Sprint 4, onde a tabela é criada).
 - Sistema de embeddings configurado e funcional (de Sprint 2), para gerar os vetores que estarão na tabela `concept_candidates`.
-- Pipeline de processamento de conceitos (dentro de `clarifai-core`) que eventualmente usará este módulo.
+- Pipeline de processamento de conceitos (dentro de `aclarai-core`) que eventualmente usará este módulo.
 - Definição da estratégia de conceitos em `on-concepts.md` (especialmente 1.3 e 1.4).
 
 ## Entregáveis
-- Código-fonte do componente de detecção de conceitos baseado em `hnswlib` (dentro de `clarifai-core`).
+- Código-fonte do componente de detecção de conceitos baseado em `hnswlib` (dentro de `aclarai-core`).
 - Implementação da inicialização e da lógica de consulta do índice `hnswlib`.
 - Lógica para determinar o status "merged" ou "promoted" de candidatos a conceitos.
 - Documentação técnica do sistema `hnswlib` e da lógica de detecção.

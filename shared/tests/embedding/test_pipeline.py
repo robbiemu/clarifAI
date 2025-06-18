@@ -1,5 +1,5 @@
 """
-Tests for ClarifAI embedding pipeline functionality.
+Tests for aclarai embedding pipeline functionality.
 
 These tests verify the complete embedding pipeline including chunking,
 embedding generation, and vector storage.
@@ -7,23 +7,23 @@ embedding generation, and vector storage.
 
 import pytest
 from unittest.mock import Mock, patch
-from clarifai_shared.embedding import (
+from aclarai_shared.embedding import (
     EmbeddingPipeline,
     EmbeddingResult,
 )
-from clarifai_shared.embedding.chunking import ChunkMetadata
+from aclarai_shared.embedding.chunking import ChunkMetadata
 
-from clarifai_shared.embedding import VectorStoreMetrics
+from aclarai_shared.embedding import VectorStoreMetrics
 
 
-from clarifai_shared.embedding.models import EmbeddedChunk
-from clarifai_shared.config import ClarifAIConfig, EmbeddingConfig
+from aclarai_shared.embedding.models import EmbeddedChunk
+from aclarai_shared.config import aclaraiConfig, EmbeddingConfig
 
 
 @pytest.fixture
 def mock_config():
     """Create a mock configuration for testing."""
-    config = ClarifAIConfig()
+    config = aclaraiConfig()
     config.embedding = EmbeddingConfig(
         chunk_size=300,
         chunk_overlap=30,
@@ -46,9 +46,9 @@ def mock_pipeline_components():
 def test_embedding_pipeline_initialization(mock_config):
     """Test that pipeline initializes with all components."""
     with (
-        patch("clarifai_shared.embedding.UtteranceChunker") as mock_chunker_class,
-        patch("clarifai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
-        patch("clarifai_shared.embedding.ClarifAIVectorStore") as mock_store_class,
+        patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
+        patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
+        patch("aclarai_shared.embedding.aclaraiVectorStore") as mock_store_class,
     ):
         pipeline = EmbeddingPipeline(mock_config)
 
@@ -76,9 +76,9 @@ def test_process_tier1_content_success(mock_config):
     )
 
     with (
-        patch("clarifai_shared.embedding.UtteranceChunker") as mock_chunker_class,
-        patch("clarifai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
-        patch("clarifai_shared.embedding.ClarifAIVectorStore") as mock_store_class,
+        patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
+        patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
+        patch("aclarai_shared.embedding.aclaraiVectorStore") as mock_store_class,
     ):
         # Setup mock methods
         mock_chunker = mock_chunker_class.return_value
@@ -107,9 +107,9 @@ def test_process_tier1_content_success(mock_config):
 def test_process_tier1_content_no_chunks(mock_config):
     """Test processing when no chunks are generated."""
     with (
-        patch("clarifai_shared.embedding.UtteranceChunker") as mock_chunker_class,
-        patch("clarifai_shared.embedding.EmbeddingGenerator"),
-        patch("clarifai_shared.embedding.ClarifAIVectorStore"),
+        patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
+        patch("aclarai_shared.embedding.EmbeddingGenerator"),
+        patch("aclarai_shared.embedding.aclaraiVectorStore"),
     ):
         # Setup chunker to return no chunks
         mock_chunker = mock_chunker_class.return_value
@@ -129,9 +129,9 @@ def test_process_tier1_content_embedding_failure(mock_config):
     mock_chunks = [ChunkMetadata("blk_001", 0, "Original", "Chunk")]
 
     with (
-        patch("clarifai_shared.embedding.UtteranceChunker") as mock_chunker_class,
-        patch("clarifai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
-        patch("clarifai_shared.embedding.ClarifAIVectorStore"),
+        patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
+        patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
+        patch("aclarai_shared.embedding.aclaraiVectorStore"),
     ):
         # Setup chunker to return chunks but generator to fail
         mock_chunker = mock_chunker_class.return_value
@@ -159,9 +159,9 @@ def test_process_single_block_success(mock_config):
     mock_metrics = VectorStoreMetrics(1, 1, 0)
 
     with (
-        patch("clarifai_shared.embedding.UtteranceChunker") as mock_chunker_class,
-        patch("clarifai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
-        patch("clarifai_shared.embedding.ClarifAIVectorStore") as mock_store_class,
+        patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
+        patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
+        patch("aclarai_shared.embedding.aclaraiVectorStore") as mock_store_class,
     ):
         # Setup mocks
         mock_chunker = mock_chunker_class.return_value
@@ -195,9 +195,9 @@ def test_process_single_block_with_replacement(mock_config):
     mock_metrics = VectorStoreMetrics(1, 1, 0)
 
     with (
-        patch("clarifai_shared.embedding.UtteranceChunker") as mock_chunker_class,
-        patch("clarifai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
-        patch("clarifai_shared.embedding.ClarifAIVectorStore") as mock_store_class,
+        patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
+        patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
+        patch("aclarai_shared.embedding.aclaraiVectorStore") as mock_store_class,
     ):
         mock_chunker = mock_chunker_class.return_value
         mock_chunker.chunk_utterance_block.return_value = mock_chunks
@@ -225,7 +225,7 @@ def test_search_similar_chunks(mock_config):
     mock_search_results = [
         (
             {
-                "clarifai_block_id": "blk_001",
+                "aclarai_block_id": "blk_001",
                 "chunk_index": 0,
                 "text": "Similar text 1",
             },
@@ -233,7 +233,7 @@ def test_search_similar_chunks(mock_config):
         ),
         (
             {
-                "clarifai_block_id": "blk_002",
+                "aclarai_block_id": "blk_002",
                 "chunk_index": 0,
                 "text": "Similar text 2",
             },
@@ -242,9 +242,9 @@ def test_search_similar_chunks(mock_config):
     ]
 
     with (
-        patch("clarifai_shared.embedding.UtteranceChunker"),
-        patch("clarifai_shared.embedding.EmbeddingGenerator"),
-        patch("clarifai_shared.embedding.ClarifAIVectorStore") as mock_store_class,
+        patch("aclarai_shared.embedding.UtteranceChunker"),
+        patch("aclarai_shared.embedding.EmbeddingGenerator"),
+        patch("aclarai_shared.embedding.aclaraiVectorStore") as mock_store_class,
     ):
         mock_store = mock_store_class.return_value
         mock_store.similarity_search.return_value = mock_search_results
@@ -254,7 +254,7 @@ def test_search_similar_chunks(mock_config):
 
         assert len(results) == 2
         assert results[0]["similarity_score"] == 0.95
-        assert results[0]["clarifai_block_id"] == "blk_001"
+        assert results[0]["aclarai_block_id"] == "blk_001"
         assert results[1]["similarity_score"] == 0.87
 
         mock_store.similarity_search.assert_called_once_with(
@@ -267,9 +267,9 @@ def test_get_pipeline_status(mock_config):
     mock_metrics = VectorStoreMetrics(100, 100, 0)
 
     with (
-        patch("clarifai_shared.embedding.UtteranceChunker"),
-        patch("clarifai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
-        patch("clarifai_shared.embedding.ClarifAIVectorStore") as mock_store_class,
+        patch("aclarai_shared.embedding.UtteranceChunker"),
+        patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
+        patch("aclarai_shared.embedding.aclaraiVectorStore") as mock_store_class,
     ):
         mock_store = mock_store_class.return_value
         mock_store.get_store_metrics.return_value = mock_metrics
@@ -292,9 +292,9 @@ def test_get_pipeline_status(mock_config):
 def test_pipeline_exception_handling(mock_config):
     """Test that pipeline handles exceptions gracefully."""
     with (
-        patch("clarifai_shared.embedding.UtteranceChunker") as mock_chunker_class,
-        patch("clarifai_shared.embedding.EmbeddingGenerator"),
-        patch("clarifai_shared.embedding.ClarifAIVectorStore"),
+        patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
+        patch("aclarai_shared.embedding.EmbeddingGenerator"),
+        patch("aclarai_shared.embedding.aclaraiVectorStore"),
     ):
         # Setup chunker to raise an exception
         mock_chunker = mock_chunker_class.return_value

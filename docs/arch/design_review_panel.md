@@ -1,8 +1,8 @@
-# 📊 ClarifAI Review & Automation Status Panel Design
+# 📊 aclarai Review & Automation Status Panel Design
 
 ## 🎯 Purpose
 
-This panel provides a central place to review what ClarifAI has done — or is scheduled to do — across all tiers. It shows claim metadata, automation state, file-level job status, and lets the user pause/resume processing.
+This panel provides a central place to review what aclarai has done — or is scheduled to do — across all tiers. It shows claim metadata, automation state, file-level job status, and lets the user pause/resume processing.
 
 It does **not** replace Obsidian’s Markdown views — it overlays structure and status without interfering with editing workflows.
 
@@ -59,7 +59,7 @@ When a block is selected, show:
 * Metadata:
 
   * `entailed_score`, `coverage_score`, `decontextualization_score`
-  * `clarifai:id` and `ver=`
+  * `aclarai:id` and `ver=`
   * Linked concepts
 * Link status:
 
@@ -76,7 +76,7 @@ When a block is selected, show:
 
 ### 3. **⚙️ Automation Status + Controls**
 
-Shows whether ClarifAI is running in live mode, paused, or selectively disabled.
+Shows whether aclarai is running in live mode, paused, or selectively disabled.
 
 | Setting         | State     | Source       |
 | --------------- | --------- | ------------ |
@@ -92,7 +92,7 @@ Shows whether ClarifAI is running in live mode, paused, or selectively disabled.
 [ ⏸️ Pause Automation ]
 ```
 
-* Sets `.clarifai_pause` flag in vault root
+* Sets `.aclarai_pause` flag in vault root
 * Disables all job scheduling except manual actions
 * Button toggles to:
 
@@ -116,7 +116,7 @@ Each scheduled job shows last run time and next scheduled run:
 
 ## 🔧 Developer Notes
 
-* Pulls state from `.clarifai_pause`, `settings/clarifai.config.yaml`, and runtime job registry
+* Pulls state from `.aclarai_pause`, `settings/aclarai.config.yaml`, and runtime job registry
 * Should support job-specific pause overrides (e.g., `scheduler.claim_linking.enabled: false`)
 * Displays Vault-relative paths for links to Markdown blocks
 

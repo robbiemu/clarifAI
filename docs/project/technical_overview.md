@@ -1,12 +1,12 @@
-# ClarifAI: Technical Overview
+# aclarai: Technical Overview
 
-This document outlines the technical architecture and workflow of **ClarifAI**, an AI-powered system designed to transform your digital conversations into a structured, interconnected knowledge base within Obsidian.
+This document outlines the technical architecture and workflow of **aclarai**, an AI-powered system designed to transform your digital conversations into a structured, interconnected knowledge base within Obsidian.
 
 ---
 
 ## I. Core Objectives
 
-ClarifAI's primary goal is to leverage LlamaIndex agents to achieve the following:
+aclarai's primary goal is to leverage LlamaIndex agents to achieve the following:
 
 * **Ingest and Standardize Conversations:** Take various conversation formats (like JSON exports) and convert them into a consistent Markdown format.
 * **Manage Duplicates:** Effectively detect and handle duplicate conversations to maintain a clean knowledge base.
@@ -22,12 +22,12 @@ ClarifAI's primary goal is to leverage LlamaIndex agents to achieve the followin
 
 ## II. Key Components & Technologies
 
-ClarifAI's foundation relies on the following core elements:
+aclarai's foundation relies on the following core elements:
 
 * **Obsidian Vault:** This is the user's primary interface, serving as the storage location for all generated Markdown documents.
 * **Robust Configuration System:** A file-based default configuration system that ensures consistency and user-customization. Uses a three-tier hierarchy (default template → user overrides → environment variables) with easy restoration capabilities.
 * **Vector Store (LlamaIndex Managed):** Powers semantic search, similarity detection, and Retrieval-Augmented Generation (RAG). It efficiently handles long conversations by chunking them into smaller segments for embedding, ensuring that even lengthy dialogues can be processed and queried effectively without hitting LLM context limits.
-* **Knowledge Graph (Neo4j via LlamaIndex):** This is the "brain" of ClarifAI, explicitly modeling relationships between different types of information (conversations, summaries, claims, sentences, and concepts).
+* **Knowledge Graph (Neo4j via LlamaIndex):** This is the "brain" of aclarai, explicitly modeling relationships between different types of information (conversations, summaries, claims, sentences, and concepts).
     *   `Claim` nodes store quality evaluation scores for each extracted claim: `entailed_score`, `coverage_score`, and `decontextualization_score` (each ranging from 0.0 to 1.0).
     *   Relationships are defined with specific semantics (e.g., `ORIGINATES_FROM`, `SUPPORTS_CONCEPT`, `CONTRADICTS_CONCEPT`, `ENTAILS_CLAIM`) to create a precise and queryable graph.
     It provides a structured understanding of your vault's interconnectedness.
@@ -42,7 +42,7 @@ ClarifAI's foundation relies on the following core elements:
 
 ## III. Agents & Workflow
 
-ClarifAI's operations are orchestrated through a series of intelligent agents across distinct phases:
+aclarai's operations are orchestrated through a series of intelligent agents across distinct phases:
 
 ### Phase A: Ingestion & Pre-processing
 
@@ -55,7 +55,7 @@ ClarifAI's operations are orchestrated through a series of intelligent agents ac
     * **Purpose:** Prevents redundant data and integrates unique conversations into Obsidian.
     * **Process:**
       * Each pre-processed file is hashed and embedded.
-      * **ClarifAI** checks for exact hash duplicates and uses vector similarity to detect near-duplicates against a **Manifest & Database** of already processed conversations.
+      * **aclarai** checks for exact hash duplicates and uses vector similarity to detect near-duplicates against a **Manifest & Database** of already processed conversations.
       * Unique conversations are given a canonical filename, moved into the Tier 1 directory within your Obsidian vault, and their details (including embeddings) are added to the Vector Store and manifest.
 
 ### Phase B: Vault Synchronization & Knowledge Graph Update
@@ -64,7 +64,7 @@ This phase ensures the knowledge graph accurately reflects your Obsidian vault, 
 
 3.  **Vault & Graph Synchronization:**
     * **Purpose:** Maintains consistency between the Knowledge Graph and your Obsidian vault.
-    * **Process:** **ClarifAI** scans specified Obsidian directories (Tiers 1, 2, 3). It compares file checksums/timestamps with the graph's records. It creates new basic graph nodes for files found in Obsidian but not the graph, and flags or removes nodes for files deleted from Obsidian. This establishes the correct "canvas" for detailed processing.
+    * **Process:** **aclarai** scans specified Obsidian directories (Tiers 1, 2, 3). It compares file checksums/timestamps with the graph's records. It creates new basic graph nodes for files found in Obsidian but not the graph, and flags or removes nodes for files deleted from Obsidian. This establishes the correct "canvas" for detailed processing.
 
 ### Phase C: Claim Extraction, Summarization, and Linking
 
@@ -74,7 +74,7 @@ This phase ensures the knowledge graph accurately reflects your Obsidian vault, 
 
 5.  **Claimify-Powered Claim Extraction & Quality Assessment:**
     * **Purpose:** Extracts claims from conversations and assesses their quality based on Claimify principles.
-    * **Process:** **ClarifAI** employs a Claimify-inspired methodology for each sentence/utterance identified in Step 4:
+    * **Process:** **aclarai** employs a Claimify-inspired methodology for each sentence/utterance identified in Step 4:
         * **5a. Claim Generation & Quality Scoring (Claimify Run):** For each sentence, a process inspired by Claimify generates 0-N simple candidate claims. Each candidate claim is then assessed against three quality principles, resulting in quality scores:
             * `entailed_score: Float` (Source sentence logically implies the claim, e.g., NLI score ≥ 0.9)
             * `coverage_score: Float` (Claim retains all crucial facts from the source sentence)
@@ -104,14 +104,14 @@ This phase ensures the knowledge graph accurately reflects your Obsidian vault, 
           * `(:Claim)-[:CONTRADICTS_CONCEPT {strength: Float, entailed_score: Float, coverage_score: Float}]->(:Concept)`: Created if the LLM detects semantic negation or refutation and the claim meets quality standards.
           * `(:Claim)-[:MENTIONS_CONCEPT]->(:Concept)`: Used as a fallback if a claim mentions a concept but doesn't meet the strict quality criteria for `SUPPORTS_CONCEPT` or `CONTRADICTS_CONCEPT` (e.g., lower decontextualization or coverage scores).
         * Other claim-to-claim relationships like `(:Claim)-[:ENTAILS_CLAIM]->(:Claim)` or `(:Claim)-[:REFINES_CLAIM]->(:Claim)` can be identified using NLI or other LLM tasks.
-      * **(Advanced): Cross-Concept Linking:** Periodically, **ClarifAI** can analyze the Knowledge Graph for relationships between concepts (e.g., via shared claims, semantic similarity). It can suggest or automatically add "Related Concepts" sections to Tier 3 pages, creating `(:Concept)-[:RELATED_TO]->(:Concept)` edges in the graph.
+      * **(Advanced): Cross-Concept Linking:** Periodically, **aclarai** can analyze the Knowledge Graph for relationships between concepts (e.g., via shared claims, semantic similarity). It can suggest or automatically add "Related Concepts" sections to Tier 3 pages, creating `(:Concept)-[:RELATED_TO]->(:Concept)` edges in the graph.
     * **LlamaIndex `KnowledgeGraphIndex`:** This serves as the underlying structure, with agents adding/updating nodes (files, blocks, claims with quality attributes, sentences, concepts) and edges using the rich semantic relationships defined in the Claim Quality Schema & Knowledge Graph Ontology (see section IV). The Knowledge Graph also facilitates complex structural queries to guide the linking process.
 
 ---
 
 ## IV. Claim Quality Schema & Knowledge Graph Ontology
 
-To ensure the "well-foundedness" of claims is explicit and machine-verifiable, ClarifAI adopts a schema inspired by Claimify.
+To ensure the "well-foundedness" of claims is explicit and machine-verifiable, aclarai adopts a schema inspired by Claimify.
 
 ### A. `Claim` Node Properties
 
@@ -151,14 +151,14 @@ The following relationship types define how nodes are interconnected in the Know
 *   **Quality-Based Filtering:**
     *   Claims that fail to meet minimum quality thresholds are not promoted to the user-facing knowledge base, though they may be retained internally for debugging. This ensures that only well-founded, decontextualized claims with adequate coverage contribute to the structured knowledge graph and Obsidian vault.
 
-This explicit schema for claims and relationships ensures that the "well-founded" nature of information is not a subjective label but a set of machine-verifiable metadata, making ClarifAI's knowledge graph more robust, auditable, and easier for downstream AI agents or human users to trust and consume.
+This explicit schema for claims and relationships ensures that the "well-founded" nature of information is not a subjective label but a set of machine-verifiable metadata, making aclarai's knowledge graph more robust, auditable, and easier for downstream AI agents or human users to trust and consume.
 
 ---
 
 ## V. Obsidian Integration Philosophy
 
-**ClarifAI** is designed to be a seamless extension of your Obsidian workflow:
+**aclarai** is designed to be a seamless extension of your Obsidian workflow:
 
 * All connections between Tiers (1 to 2, 2 to 3, 3 to 3, 3 to 2) are explicitly created as standard `[[wikilinks]]` in your Markdown files.
 * The internal Knowledge Graph acts as the intelligent "backend" that understands and manages these relationships, while Obsidian provides the intuitive, user-facing navigation and visualization.
-* **ClarifAI** does not impose its own query interface; it empowers you to use Obsidian's native search, linking, and graph view to explore your newly organized knowledge base.
+* **aclarai** does not impose its own query interface; it empowers you to use Obsidian's native search, linking, and graph view to explore your newly organized knowledge base.

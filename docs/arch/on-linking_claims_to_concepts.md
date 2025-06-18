@@ -1,6 +1,6 @@
 ## 🧠 Purpose
 
-This document defines how ClarifAI links extracted `(:Claim)` nodes to existing `(:Concept)` nodes using LLM-based classification. These links represent semantic relationships such as `SUPPORTS_CONCEPT`, `MENTIONS_CONCEPT`, and `CONTRADICTS_CONCEPT`. Each link carries metadata scores that capture the confidence, entailment, and informational coverage of the connection.
+This document defines how aclarai links extracted `(:Claim)` nodes to existing `(:Concept)` nodes using LLM-based classification. These links represent semantic relationships such as `SUPPORTS_CONCEPT`, `MENTIONS_CONCEPT`, and `CONTRADICTS_CONCEPT`. Each link carries metadata scores that capture the confidence, entailment, and informational coverage of the connection.
 
 ---
 
@@ -104,7 +104,7 @@ Edge type (`MENTIONS_CONCEPT`) must match the `relation` output.
 ## 📁 Vault Update
 
 * For each successful link, update the corresponding Tier 2 Markdown block to include the concept as a `[[wikilink]]`
-* Use `clarifai:id` anchors to find and patch Markdown blocks in-place
+* Use `aclarai:id` anchors to find and patch Markdown blocks in-place
 * Perform atomic writeback using temp file + rename
 
 ---

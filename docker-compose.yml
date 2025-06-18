@@ -1,4 +1,4 @@
-# ClarifAI Docker Compose Stack
+# aclarai Docker Compose Stack
 # no version: this is officially deprecated now
 
 services:
@@ -8,13 +8,13 @@ services:
     env_file:
       - .env
     environment:
-      POSTGRES_DB: clarifai
+      POSTGRES_DB: aclarai
     volumes:
       - pg_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
-      - clarifai_net
+      - aclarai_net
 
   neo4j:  # Knowledge graph for claims, summaries, and concepts
     image: neo4j:5
@@ -27,9 +27,9 @@ services:
       - "7474:7474"
       - "7687:7687"
     networks:
-      - clarifai_net
+      - aclarai_net
 
-  rabbitmq: # Message broker for inter-service communication (e.g., vault-watcher -> clarifai-core)
+  rabbitmq: # Message broker for inter-service communication (e.g., vault-watcher -> aclarai-core)
     image: rabbitmq:3-management # Includes management UI on port 15672
     restart: unless-stopped
     environment:
@@ -39,15 +39,15 @@ services:
       - "5672:5672" # Standard AMQP port
       - "15672:15672" # Management UI
     networks:
-      - clarifai_net
+      - aclarai_net
     healthcheck: # Basic health check
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  clarifai-core:  # Main processing pipeline: claim extraction, summarization, linking
-    build: ./services/clarifai-core
+  aclarai-core:  # Main processing pipeline: claim extraction, summarization, linking
+    build: ./services/aclarai-core
     depends_on:
       - postgres
       - neo4j
@@ -57,7 +57,7 @@ services:
     env_file:
       - .env
     networks:
-      - clarifai_net
+      - aclarai_net
     environment:
       - VAULT_PATH=/vault
       - SETTINGS_PATH=/settings
@@ -66,14 +66,14 @@ services:
   vault-watcher:  # Watches vault for Markdown edits and emits dirty blocks
     build: ./services/vault-watcher
     depends_on:
-      - clarifai-core
+      - aclarai-core
     volumes:
       - ./vault:/vault
       - ./settings:/settings
     env_file:
       - .env
     networks:
-      - clarifai_net
+      - aclarai_net
     environment:
       - VAULT_PATH=/vault
       - SETTINGS_PATH=/settings
@@ -82,22 +82,22 @@ services:
   scheduler:  # Runs periodic jobs: concept hygiene, vault sync, reprocessing
     build: ./services/scheduler
     depends_on:
-      - clarifai-core
+      - aclarai-core
     volumes:
       - ./vault:/vault
       - ./settings:/settings
     env_file:
       - .env
     networks:
-      - clarifai_net
+      - aclarai_net
     environment:
       - VAULT_PATH=/vault
       - SETTINGS_PATH=/settings
 
-  clarifai-ui:  # Web interface for ClarifAI
-    build: ./services/clarifai-ui
+  aclarai-ui:  # Web interface for aclarai
+    build: ./services/aclarai-ui
     depends_on:
-      - clarifai-core
+      - aclarai-core
     volumes:
       - ./vault:/vault
       - ./settings:/settings
@@ -106,7 +106,7 @@ services:
     ports:
       - "7860:7860"
     networks:
-      - clarifai_net
+      - aclarai_net
     environment:
       - VAULT_PATH=/vault
       - SETTINGS_PATH=/settings
@@ -116,4 +116,4 @@ volumes:
   neo4j_data:
 
 networks:
-  clarifai_net:
+  aclarai_net:

@@ -1,12 +1,12 @@
-# ⚙️ ClarifAI Configuration Panel Design
+# ⚙️ aclarai Configuration Panel Design
 
 ## 🎯 Purpose
 
 This panel allows the user to configure key system behaviors and agent parameters. It serves as an interface for tuning the AI's sensitivity, selecting models, enabling/disabling features, and controlling job scheduling.
 
-ClarifAI may expose this configuration via:
+aclarai may expose this configuration via:
 
-* a YAML file (`settings/clarifai.config.yaml`)
+* a YAML file (`settings/aclarai.config.yaml`)
 * a lightweight UI panel
 * both, with UI always reflecting current YAML state
 
@@ -30,7 +30,7 @@ graph TB
 
 ### 1. 🤖 Model & Embedding Settings
 
-ClarifAI lets users specify LLMs and embedding models per agent. This section defines all model roles and content-type-specific embeddings in use.
+aclarai lets users specify LLMs and embedding models per agent. This section defines all model roles and content-type-specific embeddings in use.
 
 ---
 
@@ -98,7 +98,7 @@ embedding:
 
 ### 3. 🧠 Agent Toggles
 
-Users can disable specific ClarifAI agents to speed up processing or isolate behavior.
+Users can disable specific aclarai agents to speed up processing or isolate behavior.
 
 ```yaml
 agents:
@@ -112,7 +112,7 @@ agents:
 
 ### 4. 🧠 Concept Highlight & Summary Jobs
 
-ClarifAI periodically generates global summary pages that reflect the evolving structure of your knowledge graph. These are scheduled jobs that produce Markdown content using internal signals and LLM-based writing agents.
+aclarai periodically generates global summary pages that reflect the evolving structure of your knowledge graph. These are scheduled jobs that produce Markdown content using internal signals and LLM-based writing agents.
 
 ---
 
@@ -229,14 +229,14 @@ scheduler:
 
 ### 6. 📁 Vault Paths and Document Type Detection
 
-ClarifAI lets you configure where to store different tiers of content. Folder paths are **optional**, and document types are **inferred from metadata**, so you can flatten or restructure your vault freely.
+aclarai lets you configure where to store different tiers of content. Folder paths are **optional**, and document types are **inferred from metadata**, so you can flatten or restructure your vault freely.
 
 ```yaml
 paths:
   tier1: "tier1"
   summaries: "."
   concepts: "."
-  logs: ".clarifai/import_logs"
+  logs: ".aclarai/import_logs"
 ```
 
 | Key         | Description                                  | Default                 |
@@ -244,18 +244,18 @@ paths:
 | `tier1`     | Folder to write Tier 1 conversation Markdown | `tier1`                 |
 | `summaries` | Folder to write Tier 2 summaries             | Vault root (`"."`)      |
 | `concepts`  | Folder to write Tier 3 concept pages         | Vault root (`"."`)      |
-| `logs`      | Diagnostic and import logs                   | `.clarifai/import_logs` |
+| `logs`      | Diagnostic and import logs                   | `.aclarai/import_logs` |
 
-## 🔍 How ClarifAI Detects Document Types
+## 🔍 How aclarai Detects Document Types
 
-ClarifAI identifies files by their **content**, not their location:
+aclarai identifies files by their **content**, not their location:
 
 | Document Type | Detected By                                                                 |
 | ------------- | --------------------------------------------------------------------------- |
-| Tier 1        | Presence of `clarifai:id=blk_*` and `^blk_*`                                |
-| Tier 2        | Presence of `clarifai:id=clm_*`, with summaries referencing Tier 1 blocks   |
-| Tier 3        | Presence of `clarifai:id=concept_*` and a `# Concept:` header or definition |
-| Optional      | `<!-- clarifai:type=tier2 -->` comment overrides automatic detection        |
+| Tier 1        | Presence of `aclarai:id=blk_*` and `^blk_*`                                |
+| Tier 2        | Presence of `aclarai:id=clm_*`, with summaries referencing Tier 1 blocks   |
+| Tier 3        | Presence of `aclarai:id=concept_*` and a `# Concept:` header or definition |
+| Optional      | `<!-- aclarai:type=tier2 -->` comment overrides automatic detection        |
 
 This hybrid approach allows:
 
@@ -263,13 +263,13 @@ This hybrid approach allows:
 * Fully flattened vaults for Obsidian minimalists
 * Mixed structures across team workflows
 
-ClarifAI will always create missing folders when writing files, but never requires a fixed layout.
+aclarai will always create missing folders when writing files, but never requires a fixed layout.
 
 ---
 
 ## 🧪 UI Behavior Notes
 
-* The UI reads from and writes to the user's `settings/clarifai.config.yaml`, which overlays the base defaults from `clarifai.config.default.yaml`
+* The UI reads from and writes to the user's `settings/aclarai.config.yaml`, which overlays the base defaults from `aclarai.config.default.yaml`
 * Any change in the UI should write back to the YAML config file immediately (or on save)
 * Invalid configs (e.g., non-numeric thresholds) must be rejected by the UI inline
 * Pausing automation should be reflected in both:
@@ -278,7 +278,7 @@ ClarifAI will always create missing folders when writing files, but never requir
   * the Review Panel (“Automation Paused” banner or status indicator)
 ### Configuration Discoverability
 
-The `clarifai.config.default.yaml` file serves as a complete reference for all available settings. Users can:
+The `aclarai.config.default.yaml` file serves as a complete reference for all available settings. Users can:
 * View all configurable parameters and their default values
 * Understand the expected structure for custom settings
 * Restore to defaults by deleting their user config file (it will be regenerated from the template)

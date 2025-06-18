@@ -2,8 +2,8 @@
 Comprehensive tests for graph module initialization.
 """
 
-from clarifai_shared.graph import models, neo4j_manager
-import clarifai_shared.graph as graph_module
+from aclarai_shared.graph import models, neo4j_manager
+import aclarai_shared.graph as graph_module
 
 
 class TestGraphModuleInit:
@@ -29,8 +29,8 @@ class TestGraphModuleInit:
     def test_graph_module_functionality(self):
         """Test basic functionality of graph modules."""
         # Test that we can create instances of the models
-        from clarifai_shared.graph.models import ClaimInput, SentenceInput
-        from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
+        from aclarai_shared.graph.models import ClaimInput, SentenceInput
+        from aclarai_shared.graph.neo4j_manager import Neo4jGraphManager
 
         # Test model creation
         claim_input = ClaimInput(text="Test claim", block_id="blk_123")
@@ -51,7 +51,7 @@ class TestGraphModuleInit:
         import os
 
         init_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/graph/__init__.py"
+            os.path.dirname(__file__), "../../aclarai_shared/graph/__init__.py"
         )
         assert os.path.exists(init_path)
 

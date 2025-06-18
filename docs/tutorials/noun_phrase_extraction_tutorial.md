@@ -13,11 +13,11 @@ In this tutorial, you'll learn how to extract noun phrases from your knowledge g
 The `NounPhraseExtractor` is designed to be self-contained. It initializes its own database connections and models based on the central configuration.
 
 ```python
-from clarifai_shared.noun_phrase_extraction import NounPhraseExtractor
-from clarifai_shared.config import load_config
+from aclarai_shared.noun_phrase_extraction import NounPhraseExtractor
+from aclarai_shared.config import load_config
 
 # Ensure your configuration is loaded
-# This will pick up settings from your .env and clarifai.config.yaml
+# This will pick up settings from your .env and aclarai.config.yaml
 config = load_config()
 
 # Initialize the extractor
@@ -57,7 +57,7 @@ for candidate in extraction_result.candidates[:5]:
 
 After running the extractor, you can verify the results in your PostgreSQL database.
 
-Connect to your `clarifai` database and run:
+Connect to your `aclarai` database and run:
 ```sql
 SELECT
     metadata_->>'normalized_text' as phrase,

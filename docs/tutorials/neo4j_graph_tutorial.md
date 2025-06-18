@@ -1,6 +1,6 @@
 # Neo4j Graph Management Tutorial
 
-This tutorial shows you how to use the ClarifAI Neo4j graph system to create and manage (:Claim) and (:Sentence) nodes in your knowledge graph. We'll walk through everything from basic data models to real-world integration patterns.
+This tutorial shows you how to use the aclarai Neo4j graph system to create and manage (:Claim) and (:Sentence) nodes in your knowledge graph. We'll walk through everything from basic data models to real-world integration patterns.
 
 ## What You'll Learn
 
@@ -14,7 +14,7 @@ This tutorial shows you how to use the ClarifAI Neo4j graph system to create and
 
 Before starting this tutorial, make sure you have:
 - A running Neo4j database
-- ClarifAI shared library installed
+- aclarai shared library installed
 - Neo4j connection credentials (NEO4J_HOST, NEO4J_USER, NEO4J_PASSWORD)
 
 ## Part 1: Understanding the Data Models
@@ -26,7 +26,7 @@ Let's start by exploring the data models that represent Claims and Sentences.
 ClaimInput objects represent claims that will be stored in the knowledge graph. They contain the claim text, evaluation scores from the Claimify pipeline, and metadata:
 
 ```python
-from clarifai_shared.graph import ClaimInput
+from aclarai_shared.graph import ClaimInput
 
 # Create a high-quality claim with all scores
 claim_input = ClaimInput(
@@ -65,7 +65,7 @@ print(f"Coverage score: {claim_with_null_score.coverage_score}")  # None
 SentenceInput objects represent utterances that didn't produce high-quality claims but should still be stored:
 
 ```python
-from clarifai_shared.graph import SentenceInput
+from aclarai_shared.graph import SentenceInput
 
 # Ambiguous sentence that can't be verified
 sentence_input = SentenceInput(
@@ -85,7 +85,7 @@ print(f"Verifiable: {sentence_input.verifiable}")
 Input objects can be converted to full Claim and Sentence objects with metadata:
 
 ```python
-from clarifai_shared.graph import Claim, Sentence
+from aclarai_shared.graph import Claim, Sentence
 
 # Convert to full objects
 claim = Claim.from_input(claim_input)
@@ -103,11 +103,11 @@ Now let's connect to Neo4j and create nodes in the database.
 ### Setting Up the Connection
 
 ```python
-from clarifai_shared.graph import Neo4jGraphManager
-from clarifai_shared.config import ClarifAIConfig
+from aclarai_shared.graph import Neo4jGraphManager
+from aclarai_shared.config import aclaraiConfig
 
 # Load configuration (uses environment variables)
-config = ClarifAIConfig.from_env()
+config = aclaraiConfig.from_env()
 
 # Create graph manager with context management for automatic cleanup
 with Neo4jGraphManager(config) as graph:
@@ -385,7 +385,7 @@ def process_claimify_batch(raw_results, config):
         }
 
 # Usage
-config = ClarifAIConfig.from_env()
+config = aclaraiConfig.from_env()
 results = process_claimify_batch(your_claimify_results, config)
 print(f"Processed {results['total_processed']} items: {results['claims_created']} claims, {results['sentences_created']} sentences")
 ```

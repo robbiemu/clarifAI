@@ -7,8 +7,8 @@ import time
 import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
-from clarifai_vault_watcher.file_watcher import BatchedFileWatcher
-from clarifai_vault_watcher.main import VaultWatcherService
+from aclarai_vault_watcher.file_watcher import BatchedFileWatcher
+from aclarai_vault_watcher.main import VaultWatcherService
 
 
 class TestFileWatcher:
@@ -96,7 +96,7 @@ class TestVaultWatcherService:
         mock_config.vault_watcher.max_batch_size = 50
         mock_config.rabbitmq_host = "localhost"
 
-        with patch("clarifai_vault_watcher.main.DirtyBlockPublisher") as mock_publisher:
+        with patch("aclarai_vault_watcher.main.DirtyBlockPublisher") as mock_publisher:
             service = VaultWatcherService(mock_config)
 
             assert service.config == mock_config
@@ -104,7 +104,7 @@ class TestVaultWatcherService:
             assert service.file_watcher is not None
             mock_publisher.assert_called_once()
 
-    @patch("clarifai_vault_watcher.main.DirtyBlockPublisher")
+    @patch("aclarai_vault_watcher.main.DirtyBlockPublisher")
     def test_service_start_doesnt_create_vault_directory(self, mock_publisher):
         """Test that service start method doesn't create vault directory."""
         mock_config = Mock()
@@ -144,19 +144,19 @@ class TestVaultWatcherService:
             mock_config.rabbitmq_host = "localhost"
 
             with patch(
-                "clarifai_vault_watcher.main.DirtyBlockPublisher"
+                "aclarai_vault_watcher.main.DirtyBlockPublisher"
             ) as mock_publisher:
                 mock_publisher_instance = Mock()
                 mock_publisher.return_value = mock_publisher_instance
 
                 service = VaultWatcherService(mock_config)
 
-                # Create a test file with ClarifAI blocks
+                # Create a test file with aclarai blocks
                 test_file = vault_path / "test.md"
                 test_content = """
 # Test Document
 
-This is a test claim. <!-- clarifai:id=clm_test123 ver=1 -->
+This is a test claim. <!-- aclarai:id=clm_test123 ver=1 -->
 ^clm_test123
                 """.strip()
 
@@ -174,6 +174,6 @@ This is a test claim. <!-- clarifai:id=clm_test123 ver=1 -->
 
                 assert file_path == test_file
                 assert len(dirty_blocks["added"]) == 1
-                assert dirty_blocks["added"][0]["clarifai_id"] == "clm_test123"
+                assert dirty_blocks["added"][0]["aclarai_id"] == "clm_test123"
                 assert len(dirty_blocks["modified"]) == 0
                 assert len(dirty_blocks["deleted"]) == 0

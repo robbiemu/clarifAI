@@ -1,17 +1,17 @@
 # Tarefa: Implementar observador de arquivos do vault com detecção de blocos modificados
 
 ## Descrição
-Desenvolver um sistema de observação de arquivos (`vault-watcher`) que monitore alterações nos arquivos Markdown do vault e detecte blocos modificados (com base em `clarifai:id` e `ver=`), permitindo a sinalização para sincronização eficiente entre o vault e o grafo de conhecimento.
+Desenvolver um sistema de observação de arquivos (`vault-watcher`) que monitore alterações nos arquivos Markdown do vault e detecte blocos modificados (com base em `aclarai:id` e `ver=`), permitindo a sinalização para sincronização eficiente entre o vault e o grafo de conhecimento.
 
 ## Escopo
 
 ### Incluído
 - Implementação de um sistema de observação de arquivos (usando uma biblioteca como `watchdog` para Python) que monitore alterações em arquivos `.md` nos diretórios configurados do vault (Tier 1, 2, 3).
 - Desenvolvimento de lógica para detectar blocos modificados (dirty blocks) por meio de `Block Diffing` (`on-graph_vault_synchronization.md`):
-    - Parsing do conteúdo dos arquivos Markdown para identificar `clarifai:id` e `ver=` dos blocos.
+    - Parsing do conteúdo dos arquivos Markdown para identificar `aclarai:id` e `ver=` dos blocos.
     - Comparação do conteúdo (hash do texto visível) e da versão (`ver=`) dos blocos entre o estado anterior (em memória ou no grafo) e o novo estado.
-- Implementação de um mecanismo de notificação baseado em mensagens: O vault-watcher atuará como um publisher, enviando mensagens para uma fila RabbitMQ (e.g., clarifai_dirty_blocks) sempre que um bloco modificado for detectado. As mensagens incluirão o clarifai:id do bloco, o file_path do arquivo modificado, a new_version detectada e o change_type (e.g., modified, deleted).
-- Implementação de parsing de Markdown para identificação precisa de blocos e seus metadados `clarifai:id`.
+- Implementação de um mecanismo de notificação baseado em mensagens: O vault-watcher atuará como um publisher, enviando mensagens para uma fila RabbitMQ (e.g., aclarai_dirty_blocks) sempre que um bloco modificado for detectado. As mensagens incluirão o aclarai:id do bloco, o file_path do arquivo modificado, a new_version detectada e o change_type (e.g., modified, deleted).
+- Implementação de parsing de Markdown para identificação precisa de blocos e seus metadados `aclarai:id`.
 - Criação de um sistema de notificação (e.g., uma fila interna ou um evento de pub/sub) para alterações detectadas, indicando quais blocos foram modificados.
 - Integração com o sistema de sincronização existente (o job `sync_vault_to_graph` de Sprint 3) para sinalizar a necessidade de reprocessamento para blocos dirty.
 - Documentação do sistema `vault-watcher` e seu funcionamento.
@@ -25,15 +25,15 @@ Desenvolver um sistema de observação de arquivos (`vault-watcher`) que monitor
 
 ## Critérios de Aceitação
 - Sistema `vault-watcher` observa corretamente alterações em arquivos `.md` nas pastas configuradas do vault.
-- Blocos modificados são detectados com precisão com base no `clarifai:id` e no hash do conteúdo visível.
-- O parsing de Markdown funciona corretamente para identificação e extração de `clarifai:id` e `ver=` dos blocos.
+- Blocos modificados são detectados com precisão com base no `aclarai:id` e no hash do conteúdo visível.
+- O parsing de Markdown funciona corretamente para identificação e extração de `aclarai:id` e `ver=` dos blocos.
 - O sistema de notificação informa adequadamente sobre as alterações detectadas (quais blocos são dirty).
 - A integração com o job de sincronização sinaliza corretamente quais blocos precisam ser reprocessados.
 - Documentação clara do sistema `vault-watcher` e seu funcionamento interno.
 - Testes automatizados demonstrando a funcionalidade e robustez do watcher em cenários de criação, modificação e exclusão de arquivos e blocos.
 
 ## Dependências
-- Estrutura de arquivos Markdown com comentários `clarifai:id` e `ver=` definida e presente no vault (`idea-creating_tier1_documents.md`, `on-graph_vault_synchronization.md`).
+- Estrutura de arquivos Markdown com comentários `aclarai:id` e `ver=` definida e presente no vault (`idea-creating_tier1_documents.md`, `on-graph_vault_synchronization.md`).
 - Job de sincronização `sync_vault_to_graph()` implementado (de Sprint 3), que consumirá as notificações do watcher.
 - Acesso ao sistema de arquivos para monitoramento (`vault-watcher` roda como um serviço separado).
 - O monorepo já configurado com o serviço `vault-watcher` (de Sprint 1).
@@ -61,5 +61,5 @@ Desenvolver um sistema de observação de arquivos (`vault-watcher`) que monitor
 - Implementar *batching* de eventos para evitar a sobrecarga de processamento quando muitas alterações ocorrem rapidamente.
 - A detecção de alterações deve se basear na comparação do hash do conteúdo visível do bloco e na propriedade `ver=` (versão) para identificar `dirty blocks` com precisão.
 - Estruturar o `vault-watcher` como um serviço de longa duração, rodando em seu próprio contêiner Docker.
-- A notificação de blocos `dirty` deve ser uma comunicação eficiente com o `clarifai-core` ou diretamente com o job `sync_vault_to_graph`.
+- A notificação de blocos `dirty` deve ser uma comunicação eficiente com o `aclarai-core` ou diretamente com o job `sync_vault_to_graph`.
 - Implementar logging detalhado para diagnóstico de problemas, incluindo quais arquivos e blocos estão sendo monitorados e quais alterações foram detectadas.

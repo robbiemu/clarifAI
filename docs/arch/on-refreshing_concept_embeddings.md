@@ -6,7 +6,7 @@ This job ensures that each `(:Concept)` node and its corresponding entry in the 
 
 ## 📁 Motivation
 
-Concept files in the vault may be edited by users or ClarifAI agents. These changes can alter the concept’s meaning, requiring a refreshed embedding to:
+Concept files in the vault may be edited by users or aclarai agents. These changes can alter the concept’s meaning, requiring a refreshed embedding to:
 
 * Maintain accurate vector search results
 * Detect similarity collisions
@@ -21,7 +21,7 @@ Concept files in the vault may be edited by users or ClarifAI agents. These chan
 
   * Markdown text with semantic content
   * Embedded metadata block:
-    `<!-- clarifai:id=concept_<slug> ver=3 -->`
+    `<!-- aclarai:id=concept_<slug> ver=3 -->`
 
 ---
 
@@ -47,7 +47,7 @@ for file in os.listdir("vault/concepts"):
 def strip_metadata(md):
     return "\n".join([
         line for line in md.splitlines()
-        if not line.startswith("<!-- clarifai:")
+        if not line.startswith("<!-- aclarai:")
     ])
 
 semantic_text = strip_metadata(text)
@@ -97,7 +97,7 @@ Suppose the user edits:
 
 Common issue with PyTorch on Linux when using incompatible CUDA versions like 12.3 or 12.4. These may trigger “out of memory” or “invalid device function”.
 
-<!-- clarifai:id=concept_cuda_error ver=4 -->
+<!-- aclarai:id=concept_cuda_error ver=4 -->
 ^concept_cuda_error
 ```
 

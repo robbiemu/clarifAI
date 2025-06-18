@@ -1,13 +1,13 @@
 # Environment Variable Configuration Guide
 
-This document explains how ClarifAI services handle environment variable injection and external database connections.
+This document explains how aclarai services handle environment variable injection and external database connections.
 
 ## Overview
 
-ClarifAI uses a robust three-tier configuration system that ensures consistency and user customization:
+aclarai uses a robust three-tier configuration system that ensures consistency and user customization:
 
-1. **Default YAML Configuration** - Base defaults from `clarifai.config.default.yaml` (maintained in shared package)
-2. **User YAML Configuration** - User customizations in `settings/clarifai.config.yaml` 
+1. **Default YAML Configuration** - Base defaults from `aclarai.config.default.yaml` (maintained in shared package)
+2. **User YAML Configuration** - User customizations in `settings/aclarai.config.yaml` 
 3. **Environment Variables** - Runtime overrides from `.env` files
 
 The system automatically loads environment variables from `.env` files and provides intelligent fallback handling for external database connections, particularly when using `host.docker.internal` for services running outside the Docker compose stack.
@@ -36,10 +36,10 @@ When running inside Docker containers, the system automatically applies `host.do
 
 ### 4. Centralized Configuration
 
-All services use the same configuration patterns through the `clarifai-shared` package with a three-tier loading hierarchy:
+All services use the same configuration patterns through the `aclarai-shared` package with a three-tier loading hierarchy:
 
 ```python
-from clarifai_shared import load_config
+from aclarai_shared import load_config
 
 # Load with validation (recommended for core services)
 config = load_config(validate=True)
@@ -49,29 +49,29 @@ config = load_config(validate=False)
 ```
 
 The configuration system follows this loading order:
-1. **Base defaults** from `clarifai.config.default.yaml` (in shared package)
-2. **User overrides** from `settings/clarifai.config.yaml` (deep merged)
+1. **Base defaults** from `aclarai.config.default.yaml` (in shared package)
+2. **User overrides** from `settings/aclarai.config.yaml` (deep merged)
 3. **Environment variables** for database connections and secrets
 
 ### 5. Restoring Defaults
 
-ClarifAI provides an easy way to restore configuration to defaults:
+aclarai provides an easy way to restore configuration to defaults:
 
 #### Automatic Restoration
 Simply delete your user configuration file and restart any service:
 ```bash
-rm settings/clarifai.config.yaml
+rm settings/aclarai.config.yaml
 # Configuration will be regenerated from default template on next service start
 ```
 
 #### Manual Installation
 Use the configuration installer script:
 ```bash
-cd services/clarifai-core
+cd services/aclarai-core
 python install/install_config.py --force
 ```
 
-The `--force` flag will overwrite your existing `settings/clarifai.config.yaml` with a fresh copy of the default template, allowing you to start over with known-good settings.
+The `--force` flag will overwrite your existing `settings/aclarai.config.yaml` with a fresh copy of the default template, allowing you to start over with known-good settings.
 
 ## Configuration Variables
 
@@ -88,9 +88,9 @@ These variables must be set for services to start:
 ```bash
 POSTGRES_HOST=postgres              # or external hostname/IP
 POSTGRES_PORT=5432
-POSTGRES_USER=clarifai
+POSTGRES_USER=aclarai
 POSTGRES_PASSWORD=your_password_here
-POSTGRES_DB=clarifai
+POSTGRES_DB=aclarai
 ```
 
 #### Neo4j (Knowledge Graph)
@@ -135,9 +135,9 @@ FALLBACK_PLUGIN=ollama:gemma:2b     # Fallback model
    ```bash
    POSTGRES_HOST=192.168.1.100        # Your PostgreSQL server IP
    POSTGRES_PORT=5432
-   POSTGRES_USER=clarifai
+   POSTGRES_USER=aclarai
    POSTGRES_PASSWORD=secure_password
-   POSTGRES_DB=clarifai
+   POSTGRES_DB=aclarai
    ```
 
 2. Comment out or remove the `postgres` service from `docker-compose.yml`
@@ -206,7 +206,7 @@ if missing:
 
 ### Test External Database Connection
 ```python
-from clarifai_shared import load_config
+from aclarai_shared import load_config
 
 config = load_config(validate=False)
 
@@ -217,7 +217,7 @@ print(f"Running in Docker: {os.path.exists('/.dockerenv')}")
 
 ### Validate Configuration
 ```python
-from clarifai_shared import load_config
+from aclarai_shared import load_config
 
 try:
     config = load_config(validate=True)
@@ -290,9 +290,9 @@ openssl rand -base64 64  # For JWT secrets
 
 Each service can extend the base configuration with service-specific settings:
 
-### ClarifAI UI Service
+### aclarai UI Service
 ```python
-from clarifai_ui.config import UIConfig
+from aclarai_ui.config import UIConfig
 
 ui_config = UIConfig.from_env()
 shared_config = ui_config.shared_config  # Access to database config
@@ -300,7 +300,7 @@ shared_config = ui_config.shared_config  # Access to database config
 
 ### Service Integration
 ```python
-from clarifai_shared import load_config
+from aclarai_shared import load_config
 
 def main():
     config = load_config(validate=True)

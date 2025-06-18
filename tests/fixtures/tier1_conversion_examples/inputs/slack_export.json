@@ -2,7 +2,7 @@
   {
     "type": "message",
     "user": "U123456",
-    "text": "Hey team, I just reviewed the ClarifAI architecture docs. The vault synchronization design looks solid.",
+    "text": "Hey team, I just reviewed the aclarai architecture docs. The vault synchronization design looks solid.",
     "ts": "1703261400.123456"
   },
   {
@@ -21,7 +21,7 @@
   {
     "type": "message",
     "user": "U345678",
-    "text": "Question about the clarifai:id format - are we using UUIDs or content hashes?",
+    "text": "Question about the aclarai:id format - are we using UUIDs or content hashes?",
     "ts": "1703261550.345678"
   },
   {

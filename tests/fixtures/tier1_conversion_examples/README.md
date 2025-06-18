@@ -7,7 +7,7 @@ This directory contains golden standard test data for Tier 1 conversion tasks, p
 These examples serve as consistent test data for verifying the correctness and robustness of:
 
 - **Default Plugin Implementation**: Ensuring the LLM agent converts arbitrary input correctly
-- **Tier 1 Markdown Creation**: Ensuring it correctly writes and annotates Markdown files with proper `clarifai:id` and `^anchor` format
+- **Tier 1 Markdown Creation**: Ensuring it correctly writes and annotates Markdown files with proper `aclarai:id` and `^anchor` format
 - **Utterance Embedding**: Ensuring it correctly segments and embeds the generated Tier 1 Markdown
 
 ## Directory Structure
@@ -96,15 +96,15 @@ All Tier 1 Markdown outputs follow the standardized format:
 2. **Speaker utterance blocks** in format:
    ```markdown
    Speaker: Message text here
-   <!-- clarifai:id=blk_abc123 ver=1 -->
+   <!-- aclarai:id=blk_abc123 ver=1 -->
    ^blk_abc123
    ```
 
 3. **Evaluation scores** (for testing evaluation integration):
    ```markdown
-   <!-- clarifai:entailed_score=0.91 -->
-   <!-- clarifai:coverage_score=0.77 -->
-   <!-- clarifai:decontextualization_score=0.88 -->
+   <!-- aclarai:entailed_score=0.91 -->
+   <!-- aclarai:coverage_score=0.77 -->
+   <!-- aclarai:decontextualization_score=0.88 -->
    ```
 
 ## Usage in Tests
@@ -113,7 +113,7 @@ These examples should be used to validate:
 
 1. **Plugin Detection**: Input files trigger correct plugin selection
 2. **Format Conversion**: Raw inputs convert to expected Markdown structure
-3. **ID Generation**: Each utterance gets unique `clarifai:id` and `^anchor`
+3. **ID Generation**: Each utterance gets unique `aclarai:id` and `^anchor`
 4. **Metadata Handling**: File-level metadata is properly formatted
 5. **Atomic Writing**: Output files match expected format exactly
 6. **Embedding Preparation**: Generated Markdown is suitable for chunking and embedding

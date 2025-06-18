@@ -1,19 +1,19 @@
 """
-Tests for ClarifAI embedding chunking functionality.
+Tests for aclarai embedding chunking functionality.
 
 These tests verify the UtteranceChunker implementation following the
 specifications from docs/arch/on-sentence_splitting.md
 """
 
 import pytest
-from clarifai_shared.embedding.chunking import UtteranceChunker, ChunkMetadata
-from clarifai_shared.config import ClarifAIConfig, EmbeddingConfig
+from aclarai_shared.embedding.chunking import UtteranceChunker, ChunkMetadata
+from aclarai_shared.config import aclaraiConfig, EmbeddingConfig
 
 
 @pytest.fixture
 def mock_config():
     """Create a mock configuration for testing."""
-    config = ClarifAIConfig()
+    config = aclaraiConfig()
     config.embedding = EmbeddingConfig(
         chunk_size=300,
         chunk_overlap=30,
@@ -41,15 +41,15 @@ def test_chunker_initialization(mock_config):
 def test_parse_tier1_blocks_basic(chunker):
     """Test parsing basic Tier 1 Markdown format."""
     tier1_content = """
-<!-- clarifai:title=Test Conversation -->
-<!-- clarifai:created_at=2024-01-01T10:00:00Z -->
+<!-- aclarai:title=Test Conversation -->
+<!-- aclarai:created_at=2024-01-01T10:00:00Z -->
 
 Alice: Hello, how are you doing today?
-<!-- clarifai:id=blk_abc123 ver=1 -->
+<!-- aclarai:id=blk_abc123 ver=1 -->
 ^blk_abc123
 
 Bob: I'm doing great, thanks for asking!
-<!-- clarifai:id=blk_def456 ver=1 -->
+<!-- aclarai:id=blk_def456 ver=1 -->
 ^blk_def456
 """
 
@@ -58,12 +58,12 @@ Bob: I'm doing great, thanks for asking!
     assert len(blocks) == 2
 
     # Check first block
-    assert blocks[0]["clarifai_id"] == "blk_abc123"
+    assert blocks[0]["aclarai_id"] == "blk_abc123"
     assert blocks[0]["speaker"] == "Alice"
     assert blocks[0]["text"] == "Hello, how are you doing today?"
 
     # Check second block
-    assert blocks[1]["clarifai_id"] == "blk_def456"
+    assert blocks[1]["aclarai_id"] == "blk_def456"
     assert blocks[1]["speaker"] == "Bob"
     assert blocks[1]["text"] == "I'm doing great, thanks for asking!"
 
@@ -73,14 +73,14 @@ def test_parse_tier1_blocks_multiline(chunker):
     tier1_content = """
 Alice: This is a longer message that spans
 multiple lines and should be combined together.
-<!-- clarifai:id=blk_xyz789 ver=1 -->
+<!-- aclarai:id=blk_xyz789 ver=1 -->
 ^blk_xyz789
 """
 
     blocks = chunker._parse_tier1_blocks(tier1_content)
 
     assert len(blocks) == 1
-    assert blocks[0]["clarifai_id"] == "blk_xyz789"
+    assert blocks[0]["aclarai_id"] == "blk_xyz789"
     assert blocks[0]["speaker"] == "Alice"
     assert "multiple lines and should be combined" in blocks[0]["text"]
 
@@ -88,13 +88,13 @@ multiple lines and should be combined together.
 def test_chunk_utterance_block_simple(chunker):
     """Test chunking a simple utterance block."""
     text = "This is a simple utterance that should be chunked."
-    clarifai_block_id = "blk_test123"
+    aclarai_block_id = "blk_test123"
 
-    chunks = chunker.chunk_utterance_block(text, clarifai_block_id)
+    chunks = chunker.chunk_utterance_block(text, aclarai_block_id)
 
     assert len(chunks) >= 1
     assert all(isinstance(chunk, ChunkMetadata) for chunk in chunks)
-    assert all(chunk.clarifai_block_id == clarifai_block_id for chunk in chunks)
+    assert all(chunk.aclarai_block_id == aclarai_block_id for chunk in chunks)
     assert all(chunk.original_text == text for chunk in chunks)
 
     # Check chunk indices are sequential
@@ -108,16 +108,16 @@ def test_chunk_utterance_block_long_text(chunker):
     long_text = " ".join(
         [f"Sentence {i} with some content to make it longer." for i in range(50)]
     )
-    clarifai_block_id = "blk_long123"
+    aclarai_block_id = "blk_long123"
 
-    chunks = chunker.chunk_utterance_block(long_text, clarifai_block_id)
+    chunks = chunker.chunk_utterance_block(long_text, aclarai_block_id)
 
     # Should create multiple chunks
     assert len(chunks) > 1
 
     # All chunks should have the same metadata structure
     for chunk in chunks:
-        assert chunk.clarifai_block_id == clarifai_block_id
+        assert chunk.aclarai_block_id == aclarai_block_id
         assert chunk.original_text == long_text
         assert len(chunk.text) > 0
 
@@ -125,7 +125,7 @@ def test_chunk_utterance_block_long_text(chunker):
 def test_postprocessing_merge_colon_endings(chunker):
     """Test that colon-ended lead-ins are merged with continuations."""
     # Mock the base chunks to simulate colon-ending scenario
-    from clarifai_shared.embedding.chunking import TextNode
+    from aclarai_shared.embedding.chunking import TextNode
 
     base_chunks = [
         TextNode(text="In the example we see:", metadata={}),
@@ -141,7 +141,7 @@ def test_postprocessing_merge_colon_endings(chunker):
 
 def test_postprocessing_merge_short_prefixes(chunker):
     """Test that short prefixes are merged with next chunks."""
-    from clarifai_shared.embedding.chunking import TextNode
+    from aclarai_shared.embedding.chunking import TextNode
 
     base_chunks = [
         TextNode(text="Example:", metadata={}),  # Short prefix
@@ -166,14 +166,14 @@ def test_count_tokens(chunker):
 def test_chunk_tier1_blocks_integration(chunker):
     """Test the complete tier1 blocks chunking workflow."""
     tier1_content = """
-<!-- clarifai:title=Test Integration -->
+<!-- aclarai:title=Test Integration -->
 
 Alice: This is a test message for integration testing.
-<!-- clarifai:id=blk_int001 ver=1 -->
+<!-- aclarai:id=blk_int001 ver=1 -->
 ^blk_int001
 
 Bob: And this is another message to verify the workflow.
-<!-- clarifai:id=blk_int002 ver=1 -->
+<!-- aclarai:id=blk_int002 ver=1 -->
 ^blk_int002
 """
 
@@ -183,13 +183,13 @@ Bob: And this is another message to verify the workflow.
     assert len(chunks) >= 2
 
     # Check that we have chunks from both block IDs
-    block_ids = {chunk.clarifai_block_id for chunk in chunks}
+    block_ids = {chunk.aclarai_block_id for chunk in chunks}
     assert "blk_int001" in block_ids
     assert "blk_int002" in block_ids
 
     # All chunks should have valid metadata
     for chunk in chunks:
-        assert chunk.clarifai_block_id.startswith("blk_")
+        assert chunk.aclarai_block_id.startswith("blk_")
         assert chunk.chunk_index >= 0
         assert len(chunk.text) > 0
         assert len(chunk.original_text) > 0
@@ -204,7 +204,7 @@ def test_chunk_tier1_blocks_empty_content(chunker):
     # Content with no valid blocks
     invalid_content = """
     This is just some text without proper formatting.
-    No clarifai:id blocks here.
+    No aclarai:id blocks here.
     """
     chunks = chunker.chunk_tier1_blocks(invalid_content)
     assert len(chunks) == 0
@@ -212,7 +212,7 @@ def test_chunk_tier1_blocks_empty_content(chunker):
 
 def test_chunker_with_default_config():
     """Test chunker initialization with default config loading."""
-    mock_config = ClarifAIConfig()
+    mock_config = aclaraiConfig()
     mock_config.embedding = EmbeddingConfig()
 
     chunker = UtteranceChunker(mock_config)  # Pass config explicitly
@@ -224,17 +224,17 @@ def test_parse_tier1_blocks_edge_cases(chunker):
     # Block without final anchor
     content_no_anchor = """
 Alice: Message without anchor
-<!-- clarifai:id=blk_noanchor ver=1 -->
+<!-- aclarai:id=blk_noanchor ver=1 -->
 """
 
     blocks = chunker._parse_tier1_blocks(content_no_anchor)
     assert len(blocks) == 1
-    assert blocks[0]["clarifai_id"] == "blk_noanchor"
+    assert blocks[0]["aclarai_id"] == "blk_noanchor"
 
     # Block with speaker containing special characters
     content_special_speaker = """
 User_123: Message from user with underscore
-<!-- clarifai:id=blk_special ver=1 -->
+<!-- aclarai:id=blk_special ver=1 -->
 ^blk_special
 """
 

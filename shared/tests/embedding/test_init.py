@@ -2,7 +2,7 @@
 Tests for embedding module initialization and basic imports.
 """
 
-from clarifai_shared.embedding import chunking, models, storage
+from aclarai_shared.embedding import chunking, models, storage
 
 
 class TestEmbeddingInit:
@@ -23,21 +23,21 @@ class TestEmbeddingInit:
     def test_storage_module_loads(self):
         """Test storage module can be loaded."""
         # Check expected classes exist
-        assert hasattr(storage, "ClarifAIVectorStore")
+        assert hasattr(storage, "aclaraiVectorStore")
         assert hasattr(storage, "VectorStoreMetrics")
 
     def test_chunk_metadata_creation(self):
         """Test ChunkMetadata can be instantiated."""
         # Provide all required fields for ChunkMetadata
         metadata = chunking.ChunkMetadata(
-            clarifai_block_id="block_test_001",  # Required
+            aclarai_block_id="block_test_001",  # Required
             chunk_index=0,
             original_text="This is the original full text for testing.",  # Required
             text="This is the chunked text part.",  # Required
         )
 
         # Assert the fields that were actually set and exist
-        assert metadata.clarifai_block_id == "block_test_001"
+        assert metadata.aclarai_block_id == "block_test_001"
         assert metadata.chunk_index == 0
         assert metadata.original_text == "This is the original full text for testing."
         assert metadata.text == "This is the chunked text part."
@@ -50,7 +50,7 @@ class TestEmbeddingInit:
         # definition. If this information is crucial, it would need to be stored within
         # `ChunkMetadata` (e.g., as part of `original_text` or if `ChunkMetadata` had a generic dict field).
         test_meta = chunking.ChunkMetadata(
-            clarifai_block_id="block_embed_002",
+            aclarai_block_id="block_embed_002",
             chunk_index=1,
             original_text="Original text before chunking for embedding test.",
             text="Test content",  # This corresponds to the old "content"

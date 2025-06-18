@@ -1,14 +1,14 @@
 
 ### 🟢 **Implement Fallback Plugin (LLM Agent)**
 
-**Goal:** Ensure that ClarifAI can handle any unrecognized or irregular input file by using a last-resort plugin that invokes an LLM agent to convert the content into Tier 1 Markdown format.
+**Goal:** Ensure that aclarai can handle any unrecognized or irregular input file by using a last-resort plugin that invokes an LLM agent to convert the content into Tier 1 Markdown format.
 
 ---
 
 #### **Task: Implement Fallback Plugin as a Conversion Agent**
 
 **Description:**
-Create a default plugin that always accepts the input, but delegates interpretation and formatting to an LLM-powered agent. This agent analyzes unstructured input and attempts to extract one or more conversations, converting each to standard ClarifAI Tier 1 Markdown format.
+Create a default plugin that always accepts the input, but delegates interpretation and formatting to an LLM-powered agent. This agent analyzes unstructured input and attempts to extract one or more conversations, converting each to standard aclarai Tier 1 Markdown format.
 
 **Agent Responsibilities:**
 
@@ -30,4 +30,4 @@ Create a default plugin that always accepts the input, but delegates interpretat
 * Skips file if agent returns `None`
 
 **Why this matters:**
-This ensures ClarifAI can gracefully handle unstructured input, pre-formatted Markdown, or obscure chat logs without needing a format-specific plugin. It also provides robust onboarding for messy data during early experimentation.
+This ensures aclarai can gracefully handle unstructured input, pre-formatted Markdown, or obscure chat logs without needing a format-specific plugin. It also provides robust onboarding for messy data during early experimentation.

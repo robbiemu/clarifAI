@@ -1,8 +1,8 @@
-# 📄 ClarifAI Graph–Vault Sync Design
+# 📄 aclarai Graph–Vault Sync Design
 
 ### Overview
 
-ClarifAI maintains a **bidirectional sync** between Obsidian Markdown files and a Neo4j knowledge graph. To do this reliably, each atomic unit of content—called a **block**—must be:
+aclarai maintains a **bidirectional sync** between Obsidian Markdown files and a Neo4j knowledge graph. To do this reliably, each atomic unit of content—called a **block**—must be:
 
 *   Uniquely identifiable
 *   Versioned
@@ -27,27 +27,27 @@ A **block** is the smallest unit of content that is tracked individually in the 
 
 ## 🌿 How Blocks Are Marked in Markdown
 
-ClarifAI tracks content at different granularities, and each tracked unit (a "block" in ClarifAI's terminology) is marked with unique identifiers and versioning information using **invisible HTML comments**. These comments are placed either *inline* within a file for smaller content units, or *at the file level* for entire agent-generated documents.
+aclarai tracks content at different granularities, and each tracked unit (a "block" in aclarai's terminology) is marked with unique identifiers and versioning information using **invisible HTML comments**. These comments are placed either *inline* within a file for smaller content units, or *at the file level* for entire agent-generated documents.
 
 ### 1. Inline Block-Level Marking
 
 For individual sentences, paragraphs, or claims within a Markdown file, markers are embedded directly after the content.
 
 ```markdown
-Some text of the claim or summary. <!-- clarifai:id=clm_abc123 ver=2 -->
+Some text of the claim or summary. <!-- aclarai:id=clm_abc123 ver=2 -->
 ^clm_abc123
 ```
 
 | Marker                                  | Purpose                                                                     |
 | :-------------------------------------- | :-------------------------------------------------------------------------- |
-| `<!-- clarifai:id=clm_abc123 ver=2 -->` | Hidden HTML comment for sync logic. Holds the unique ID and version number. |
+| `<!-- aclarai:id=clm_abc123 ver=2 -->` | Hidden HTML comment for sync logic. Holds the unique ID and version number. |
 | `^clm_abc123`                           | Obsidian block anchor. Enables links like `[[file#^clm_abc123]]`.           |
 
 These markers travel with the text. If a user moves or reorders content, the ID and version stay intact.
 
 ### 2. File-Level Marking for Agent-Generated Pages
 
-For pages that are generated entirely by ClarifAI agents (e.g., `Top Concepts.md`, `Trending Topics - {date}.md`, `[[Subject:XYZ]].md`), the `clarifai:id` and `ver=` markers apply to the **entire file content**. These markers are placed as an invisible HTML comment at the **very end of the file**.
+For pages that are generated entirely by aclarai agents (e.g., `Top Concepts.md`, `Trending Topics - {date}.md`, `[[Subject:XYZ]].md`), the `aclarai:id` and `ver=` markers apply to the **entire file content**. These markers are placed as an invisible HTML comment at the **very end of the file**.
 
 ```markdown
 ## Trending This Week
@@ -55,14 +55,14 @@ For pages that are generated entirely by ClarifAI agents (e.g., `Top Concepts.md
 - [[Concept X]]
 - [[Concept Y]]
 
-<!-- clarifai:id=file_trending_20240522 ver=1 -->
+<!-- aclarai:id=file_trending_20240522 ver=1 -->
 ```
 
-*   The `clarifai:id` (e.g., `file_trending_20240522`, `subject_gpu_errors`) provides a unique ID for the entire file.
+*   The `aclarai:id` (e.g., `file_trending_20240522`, `subject_gpu_errors`) provides a unique ID for the entire file.
 *   The `ver=` (e.g., `ver=1`) is the version number for the entire file content, which increments on any semantic change.
 *   The ID format (e.g., `file_`, `subject_`, `concept_`) will indicate the type of generated page.
 
-This consistent HTML comment approach ensures robust tracking while maintaining compatibility with Obsidian and other Markdown parsers. When ClarifAI processes these files, it hashes the *entire semantic content* (excluding these markers) to detect changes for versioning.
+This consistent HTML comment approach ensures robust tracking while maintaining compatibility with Obsidian and other Markdown parsers. When aclarai processes these files, it hashes the *entire semantic content* (excluding these markers) to detect changes for versioning.
 
 ---
 
@@ -77,7 +77,7 @@ This consistent HTML comment approach ensures robust tracking while maintaining 
 ### 🧠 Block Diffing
 
 1.  Parse old and new versions of a file into a Markdown Abstract Syntax Tree (AST).
-2.  Scan for `clarifai:id` comments.
+2.  Scan for `aclarai:id` comments.
 3.  Build a mapping: `{id: (version, content)}`.
 
 ### ✏️ Change Types
@@ -91,9 +91,9 @@ This consistent HTML comment approach ensures robust tracking while maintaining 
 
 ### 🧷 Atomic Writeback
 
-When ClarifAI modifies a `.md` file:
+When aclarai modifies a `.md` file:
 
-1.  Generate updated Markdown with inserted/updated `clarifai:id` comments.
+1.  Generate updated Markdown with inserted/updated `aclarai:id` comments.
 2.  Write to `.filename.md.tmp`.
 3.  `fsync()`.
 4.  `rename(tmp, filename.md)`.
@@ -111,7 +111,7 @@ Each block’s `ver=N` (within its HTML comment) lets the system detect concurre
 *   Graph increments to `N+1`.
 *   If graph already had `N+1`, the update is rejected—vault was stale.
 
-Fallback: log it, surface a `<!-- clarifai:conflict ... -->` comment, or queue it for review.
+Fallback: log it, surface a `<!-- aclarai:conflict ... -->` comment, or queue it for review.
 
 ---
 
@@ -154,7 +154,7 @@ If you later adjust `p` or `f`, run a single full‑vault migration that reproce
 A daily job should:
 
 *   Walk the vault
-*   Parse all known `clarifai:id` blocks (including file-level IDs)
+*   Parse all known `aclarai:id` blocks (including file-level IDs)
 *   Hash the visible text
 *   Compare to graph values
 *   Queue any drifted blocks for reprocessing

@@ -10,7 +10,7 @@ def test_service_structure():
     repo_root = Path(__file__).parent.parent
     services_dir = repo_root / "services"
 
-    expected_services = ["clarifai-core", "vault-watcher", "scheduler", "clarifai-ui"]
+    expected_services = ["aclarai-core", "vault-watcher", "scheduler", "aclarai-ui"]
 
     for service_name in expected_services:
         service_dir = services_dir / service_name
@@ -31,10 +31,10 @@ def test_service_modules_exist():
     services_dir = repo_root / "services"
 
     service_modules = {
-        "clarifai-core": "clarifai_core",
-        "vault-watcher": "clarifai_vault_watcher",
-        "scheduler": "clarifai_scheduler",
-        "clarifai-ui": "clarifai_ui",
+        "aclarai-core": "aclarai_core",
+        "vault-watcher": "aclarai_vault_watcher",
+        "scheduler": "aclarai_scheduler",
+        "aclarai-ui": "aclarai_ui",
     }
 
     for service_name, module_name in service_modules.items():
@@ -62,10 +62,10 @@ def test_shared_package():
         sys.path.insert(0, str(shared_dir))
 
     try:
-        import clarifai_shared  # noqa: F401
+        import aclarai_shared  # noqa: F401
     except ImportError as e:
         # This is likely a structural issue with the package
-        pytest.fail(f"Failed to import clarifai_shared package: {e}")
+        pytest.fail(f"Failed to import aclarai_shared package: {e}")
 
 
 def test_project_structure():

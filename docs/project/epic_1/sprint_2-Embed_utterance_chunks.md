@@ -9,7 +9,7 @@ Implementar um sistema para segmentar blocos Markdown Tier 1 em chunks coerentes
 - Implementação de segmentação de blocos Markdown Tier 1 usando **`SentenceSplitter` do LlamaIndex** para criar chunks coerentes, seguindo a estratégia definida em `on-sentence_splitting.md`.
 - Configuração e uso de modelos de embedding configuráveis (definidos via `.env`, por exemplo, modelos BERT-based como Sentence Transformers).
 - Armazenamento de vetores resultantes no Postgres usando a integração `PGVectorStore` do LlamaIndex, na tabela `utterances`.
-- Inclusão de metadados essenciais no armazenamento de vetores: `clarifai:id` (referência ao bloco Markdown pai), `chunk_index` (índice ordinal do chunk dentro do bloco), e o texto original do chunk.
+- Inclusão de metadados essenciais no armazenamento de vetores: `aclarai:id` (referência ao bloco Markdown pai), `chunk_index` (índice ordinal do chunk dentro do bloco), e o texto original do chunk.
 - Implementação de indexação eficiente para consultas de similaridade no Postgres, utilizando o índice `ivfflat` do `pgvector`.
 - Documentação do processo de embedding e armazenamento.
 - Testes de funcionalidade e desempenho.
@@ -25,7 +25,7 @@ Implementar um sistema para segmentar blocos Markdown Tier 1 em chunks coerentes
 - TextSplitter do LlamaIndex configurado e segmentando blocos Markdown em chunks coerentes
 - Modelo de embedding configurável gerando vetores de qualidade
 - Vetores armazenados corretamente no Postgres com extensão pgvector
-- Metadados essenciais (clarifai:id, chunk_index, texto original) preservados
+- Metadados essenciais (aclarai:id, chunk_index, texto original) preservados
 - Consultas de similaridade funcionando com desempenho aceitável
 - Documentação clara sobre o processo e configuração
 - Testes demonstrando funcionalidade e desempenho

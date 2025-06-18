@@ -1,5 +1,5 @@
 """
-Pytest configuration and fixtures for ClarifAI tests.
+Pytest configuration and fixtures for aclarai tests.
 """
 
 import pytest

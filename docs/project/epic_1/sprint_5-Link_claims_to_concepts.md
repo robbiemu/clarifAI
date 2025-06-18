@@ -24,7 +24,7 @@ Implementar um sistema para vincular `(:Claim)` nodes a `(:Concept)` nodes no gr
     - Utilizar a lógica de **escrita atômica para arquivos Markdown** (já implementada em Sprint 3, detalhada em `on-filehandle_conflicts.md`).
 - Documentação detalhada do sistema de vinculação e seu funcionamento.
 - Implementação de testes para verificar a correta vinculação e a robustez do processo.
-- Garantia de que, ao atualizar arquivos Markdown Tier 2, os marcadores clarifai:id e ver= existentes nos blocos modificados sejam preservados e que a propriedade ver= seja incrementada, para compatibilidade com o sistema de sincronização do vault (docs/arch/on-graph_vault_synchronization.md).
+- Garantia de que, ao atualizar arquivos Markdown Tier 2, os marcadores aclarai:id e ver= existentes nos blocos modificados sejam preservados e que a propriedade ver= seja incrementada, para compatibilidade com o sistema de sincronização do vault (docs/arch/on-graph_vault_synchronization.md).
 
 ### Excluído
 - Interface de usuário para visualização ou gerenciamento de vinculações.
@@ -44,7 +44,7 @@ Implementar um sistema para vincular `(:Claim)` nodes a `(:Concept)` nodes no gr
 - Arquivos Markdown Tier 2 são atualizados com `[[wikilinks]]` para os conceitos, utilizando a escrita atômica.
 - Documentação clara e precisa do sistema de vinculação e seu funcionamento, incluindo as limitações temporárias dos scores de qualidade.
 - Testes automatizados demonstram a funcionalidade e robustez, cobrindo cenários de diferentes tipos de relacionamento e a correta atualização do grafo e dos arquivos Markdown.
-- Arquivos Markdown Tier 2 são atualizados com [[wikilinks]] para os conceitos, e os marcadores clarifai:id e ver= dos blocos modificados são preservados e o ver= incrementado.
+- Arquivos Markdown Tier 2 são atualizados com [[wikilinks]] para os conceitos, e os marcadores aclarai:id e ver= dos blocos modificados são preservados e o ver= incrementado.
 
 ## Dependências
 - `(:Claim)` nodes extraídos e armazenados no grafo (de Sprint 3), com propriedades de score (mesmo que `null`).
@@ -79,6 +79,6 @@ Implementar um sistema para vincular `(:Claim)` nodes a `(:Concept)` nodes no gr
 ## Notas Técnicas
 - O Agente LLM deve ser configurável, permitindo a seleção de diferentes modelos (conforme `design_config_panel.md`).
 - A recuperação de conceitos candidatos deve utilizar a busca de similaridade no `concepts` vector store, que será populado por outra tarefa desta sprint.
-- A lógica de patching de Markdown deve ser robusta para inserir wikilinks sem corromper o conteúdo existente ou os `clarifai:id` anchors.
+- A lógica de patching de Markdown deve ser robusta para inserir wikilinks sem corromper o conteúdo existente ou os `aclarai:id` anchors.
 - Assegurar que as transações do Neo4j sejam utilizadas para garantir a atomicidade das operações de criação de edges.
 - O logging detalhado de cada classificação e criação de edge será crucial para depuração e monitoramento da qualidade.

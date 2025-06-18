@@ -10,7 +10,7 @@ Desenvolver e implementar um agente inteligente para gerar arquivos Markdown `[[
 - Desenvolvimento de lógica para extrair claims de suporte, resumos, enunciados e conceitos relacionados, utilizando as fontes de recuperação detalhadas em `on-RAG_workflow.md`.
 - Criação de estrutura padronizada para páginas de conceito, incluindo:
     - Cabeçalho `## Concept: <concept name>`
-    - Exemplos em bullet-point com `^clarifai:id` (conforme `docs/arch/idea-creating_tier1_documents.md`)
+    - Exemplos em bullet-point com `^aclarai:id` (conforme `docs/arch/idea-creating_tier1_documents.md`)
     - Seção "See Also" com conceitos relacionados
     (Esta estrutura segue `on-writing_vault_documents.md`).
 - Implementação de critérios para pular conceitos com links de claim insuficientes, conforme a configuração `skip_if_no_claims` em `docs/arch/design_config_panel.md` (Seção 4: "Concept Summary Agent").
@@ -44,7 +44,7 @@ Desenvolver e implementar um agente inteligente para gerar arquivos Markdown `[[
 - Lógica de escrita atômica para arquivos Markdown implementada (de `docs/project/epic_1/sprint_3-Create_agent_and_integration_for_Tier_2.md`).
 
 ## Entregáveis
-- Código-fonte do agente de resumo de conceito (dentro do serviço `clarifai-core` ou `scheduler`).
+- Código-fonte do agente de resumo de conceito (dentro do serviço `aclarai-core` ou `scheduler`).
 - Implementação de extração de informações relevantes do grafo e vector stores.
 - Geração de arquivos Markdown com estrutura padronizada.
 - Documentação técnica do processo e formato.

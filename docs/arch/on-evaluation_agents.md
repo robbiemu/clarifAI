@@ -1,14 +1,14 @@
 # 🔍 Evaluation Roles
 
-This document defines the evaluation agents in ClarifAI’s Claimify pipeline. These agents assess the quality of extracted claims — judging whether they are verifiable, complete, and independent. These evaluations help determine whether claims should be linked to concepts, retained in summaries, promoted into Tier 2 or 3 vault pages, or subjected to further evidence enrichment.
+This document defines the evaluation agents in aclarai’s Claimify pipeline. These agents assess the quality of extracted claims — judging whether they are verifiable, complete, and independent. These evaluations help determine whether claims should be linked to concepts, retained in summaries, promoted into Tier 2 or 3 vault pages, or subjected to further evidence enrichment.
 
-The evaluation agents are part of **Phase 2** of the pipeline, after claims have been extracted through ClarifAI’s implementation of Claimify’s four-stage process.
+The evaluation agents are part of **Phase 2** of the pipeline, after claims have been extracted through aclarai’s implementation of Claimify’s four-stage process.
 
 ---
 
 ## 🧠 Evaluation Agents Overview
 
-ClarifAI currently defines three evaluation agents:
+aclarai currently defines three evaluation agents:
 
 | Role                  | Purpose                                                          | Output                             |
 | --------------------- | ---------------------------------------------------------------- | ---------------------------------- |
@@ -30,7 +30,7 @@ Each score is recorded in both the Markdown and graph layers of the system and i
 
 Each evaluation agent receives:
 
-* A candidate claim (text, with `clarifai:id`)
+* A candidate claim (text, with `aclarai:id`)
 * Its source block (Markdown block or structured sentence context)
 * Linked concept metadata (if applicable)
 
@@ -40,7 +40,7 @@ Example:
 {
   "claim": "The EU approved €7.5 billion in climate funding in 2023.",
   "source": "In 2023, the EU finalized several funding agreements related to climate policy.",
-  "clarifai_id": "blk_abc123",
+  "aclarai_id": "blk_abc123",
   "concepts": ["climate policy", "EU funding"]
 }
 ```
@@ -69,7 +69,7 @@ Hypothesis: {claim}
 * Markdown:
 
   ```markdown
-  <!-- clarifai:entailed_score=0.91 -->
+  <!-- aclarai:entailed_score=0.91 -->
   ```
 
 ---
@@ -90,7 +90,7 @@ Measures how completely the claim captures the verifiable information in its sou
 * Markdown:
 
   ```markdown
-  <!-- clarifai:coverage_score=0.77 -->
+  <!-- aclarai:coverage_score=0.77 -->
   ```
 
 **Missed Elements:**
@@ -131,7 +131,7 @@ Evaluates whether a generated claim is understandable and meaningful **without r
 | Location          | Format                                                           |
 | ----------------- | ---------------------------------------------------------------- |
 | Graph edge        | `decontextualization_score` (float or null)                      |
-| Markdown (Tier 1) | `<!-- clarifai:decontextualization_score=0.88 -->` (if included) |
+| Markdown (Tier 1) | `<!-- aclarai:decontextualization_score=0.88 -->` (if included) |
 
 Only claims that pass the quality threshold (see pipeline) are written to Markdown or used in summaries.
 
@@ -185,7 +185,7 @@ Consumers must check for `null`. Claims with missing scores are:
 Example metadata:
 
 ```yaml
-clarifai:entailed_score: null
+aclarai:entailed_score: null
 ```
 
 ---
@@ -203,7 +203,7 @@ The evaluation agents (`entailed`, `coverage`, `decontextualization`) produce sc
 
 #### ✅ Scoring Interpretation
 
-Instead of applying individual thresholds per score, ClarifAI uses a **geometric mean** of the three:
+Instead of applying individual thresholds per score, aclarai uses a **geometric mean** of the three:
 
 ```python
 geomean = (entailed_score * coverage_score * decontextualization_score) ** (1/3)

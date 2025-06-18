@@ -1,7 +1,7 @@
 [project]
-name = "clarifai-monorepo"
+name = "aclarai-monorepo"
 version = "0.1.0"
-description = "Monorepo for the ClarifAI project."
+description = "Monorepo for the aclarai project."
 dependencies = [
     "python-dotenv>=1.0.0",
     "llama-index-core>=0.12.0",
@@ -36,24 +36,24 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = [
-  "shared/clarifai_shared",
-  "services/clarifai-core/clarifai_core",
-  "services/clarifai-ui/clarifai_ui",
-  "services/scheduler/clarifai_scheduler",
-  "services/vault-watcher/clarifai_vault_watcher",
+  "shared/aclarai_shared",
+  "services/aclarai-core/aclarai_core",
+  "services/aclarai-ui/aclarai_ui",
+  "services/scheduler/aclarai_scheduler",
+  "services/vault-watcher/aclarai_vault_watcher",
 ]
 
 [tool.uv.sources]
-# This tells uv: "Any time any package asks for `clarifai-shared`,
+# This tells uv: "Any time any package asks for `aclarai-shared`,
 # don't go to PyPI. Instead, use the package from the local workspace."
-clarifai-shared = { workspace = true }
+aclarai-shared = { workspace = true }
 
 [tool.uv.workspace]
 members = [
-    "services/clarifai-core",
+    "services/aclarai-core",
     "services/vault-watcher",
     "services/scheduler",
-    "services/clarifai-ui",
+    "services/aclarai-ui",
     "shared"
 ]
 
@@ -84,13 +84,13 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 testpaths = ["tests", "shared/tests"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "--cov=clarifai_shared --cov=services --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml"
+addopts = "--cov=aclarai_shared --cov=services --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
 ]
 
 [tool.coverage.run]
-source = ["clarifai_shared", "services"]
+source = ["aclarai_shared", "services"]
 omit = [
     "*/tests/*",
     "*/test_*.py",
@@ -110,7 +110,7 @@ exclude_lines = [
     "if __name__ == .__main__.:"
 ]
 
-# Bandit configuration for ClarifAI monorepo
+# Bandit configuration for aclarai monorepo
 # Configuration to reduce false positives for containerized applications
 [tool.bandit]
 # Skip specific checks that are false positives for our use case:

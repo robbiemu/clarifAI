@@ -1,6 +1,6 @@
 # 💡 Vault Layout and Document Type Inference
 
-Early ClarifAI design inferred document types (Tier 1, 2, 3) by folder path. While convenient for structured vaults, this breaks down when:
+Early aclarai design inferred document types (Tier 1, 2, 3) by folder path. While convenient for structured vaults, this breaks down when:
 
 - Users flatten their vault (common Obsidian practice)
 - Files are moved across folders
@@ -27,7 +27,7 @@ paths:
   concepts: "."
 ````
 
-Each path is **where ClarifAI prefers to write**, but detection is **metadata-based**.
+Each path is **where aclarai prefers to write**, but detection is **metadata-based**.
 
 ---
 
@@ -35,14 +35,14 @@ Each path is **where ClarifAI prefers to write**, but detection is **metadata-ba
 
 | Type     | Required Marker                              |
 | -------- | -------------------------------------------- |
-| Tier 1   | `clarifai:id=blk_*` + `^blk_*` anchors       |
-| Tier 2   | `clarifai:id=clm_*` + summary references     |
-| Tier 3   | `clarifai:id=concept_*` + concept header/def |
-| Override | `<!-- clarifai:type=tier2 -->` (optional)    |
+| Tier 1   | `aclarai:id=blk_*` + `^blk_*` anchors       |
+| Tier 2   | `aclarai:id=clm_*` + summary references     |
+| Tier 3   | `aclarai:id=concept_*` + concept header/def |
+| Override | `<!-- aclarai:type=tier2 -->` (optional)    |
 
 ---
 
-### 3. ClarifAI Behaviors
+### 3. aclarai Behaviors
 
 * Writes files into configured folders.
 * Scans all `.md` files when syncing.
@@ -55,7 +55,7 @@ Each path is **where ClarifAI prefers to write**, but detection is **metadata-ba
 
 * Supports flat vaults, traditional tiered layouts, or hybrids.
 * Prevents misclassification when files are moved manually.
-* Matches Obsidian’s flexibility without breaking ClarifAI’s automation.
+* Matches Obsidian’s flexibility without breaking aclarai’s automation.
 
 ---
 
@@ -63,12 +63,12 @@ Each path is **where ClarifAI prefers to write**, but detection is **metadata-ba
 
 * Update `design_config_panel.md`
 * Adjust sync layer to rely on ID-based classification
-* Optionally add `clarifai:type` in new files for clarity and robustness
+* Optionally add `aclarai:type` in new files for clarity and robustness
 
 ---
 
 ## What Belongs in the Vault (and What Doesn't)
 
-The ClarifAI vault is intended exclusively for user-facing knowledge content: Tier 1, 2, and 3 Markdown files.
+The aclarai vault is intended exclusively for user-facing knowledge content: Tier 1, 2, and 3 Markdown files.
 
-System-level configuration files, such as the main `settings/clarifai.config.yaml` and LLM prompt templates, are stored separately in the `./settings` directory. This separation ensures that your vault remains a clean, portable collection of your knowledge, while system configurations can be managed and versioned independently.
+System-level configuration files, such as the main `settings/aclarai.config.yaml` and LLM prompt templates, are stored separately in the `./settings` directory. This separation ensures that your vault remains a clean, portable collection of your knowledge, while system configurations can be managed and versioned independently.

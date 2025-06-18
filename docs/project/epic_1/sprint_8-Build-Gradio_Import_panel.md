@@ -39,7 +39,7 @@ Desenvolver um Painel de Importação completo utilizando Gradio, fornecendo uma
 - Plugin de fallback implementado e funcional (de Sprint 2, conforme `docs/arch/idea-default_plugin_task.md`).
 
 ## Entregáveis
-- Código-fonte do Painel de Importação Gradio (dentro de `services/clarifai-ui`).
+- Código-fonte do Painel de Importação Gradio (dentro de `services/aclarai-ui`).
 - Implementação da "Live Import Queue" e da "Post-import Summary" na UI.
 - Lógica de integração com o orquestrador de plugins.
 - Documentação do uso e extensão do painel.

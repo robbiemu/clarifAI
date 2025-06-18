@@ -11,14 +11,14 @@ class TestBlockIdGeneration:
     def test_block_id_module_exists(self):
         """Test that the block_id module file exists."""
         block_id_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/utils/block_id.py"
+            os.path.dirname(__file__), "../../aclarai_shared/utils/block_id.py"
         )
         assert os.path.exists(block_id_path)
 
     def test_block_id_module_structure(self):
         """Test that the block_id module has expected structure."""
         block_id_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/utils/block_id.py"
+            os.path.dirname(__file__), "../../aclarai_shared/utils/block_id.py"
         )
 
         with open(block_id_path, "r") as f:

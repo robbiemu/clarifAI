@@ -1,7 +1,7 @@
 # Tarefa: Implementar plugin padrão para sistema de conversão de formato plugável
 
 ## Descrição
-Desenvolver um plugin padrão para o sistema de conversão de formato plugável do ClarifAI, permitindo a importação e conversão de formatos de arquivo não reconhecidos por plugins específicos, garantindo que o sistema possa processar uma ampla variedade de formatos de entrada.
+Desenvolver um plugin padrão para o sistema de conversão de formato plugável do aclarai, permitindo a importação e conversão de formatos de arquivo não reconhecidos por plugins específicos, garantindo que o sistema possa processar uma ampla variedade de formatos de entrada.
 
 ## Escopo
 
@@ -9,7 +9,7 @@ Desenvolver um plugin padrão para o sistema de conversão de formato plugável 
 - Implementação de um plugin de fallback que sempre aceita a entrada
 - Desenvolvimento de um agente baseado em LLM para interpretar e formatar conteúdo não estruturado
 - Criação de lógica para detectar e extrair conversas de texto não estruturado
-- Implementação de formatação para saída em Markdown padrão do ClarifAI
+- Implementação de formatação para saída em Markdown padrão do aclarai
 - Adição de metadados apropriados (título, participantes, contagem de mensagens)
 - **Assegurar que o plugin se conforme integralmente à interface `Plugin` (métodos `can_accept` e `convert`) e que seja configurado para ser descoberto e utilizado pelo orquestrador central de conversão.**
 - Documentação de uso e extensão do plugin
@@ -32,7 +32,7 @@ Desenvolver um plugin padrão para o sistema de conversão de formato plugável 
 ## Dependências
 - Sistema de plugins base implementado
 - Acesso a modelos LLM para processamento de texto
-- Definição da estrutura de saída Markdown padrão do ClarifAI
+- Definição da estrutura de saída Markdown padrão do aclarai
 
 ## Entregáveis
 - Código-fonte do plugin de fallback

@@ -6,21 +6,21 @@ This document will live under `docs/arch/on-neo4j_interaction.md`.
 
 ## `docs/arch/on-neo4j_interaction.md`
 
-# 🌐 Neo4j Interaction Strategy for ClarifAI
+# 🌐 Neo4j Interaction Strategy for aclarai
 
-This document outlines the various methods ClarifAI will use to interact with the Neo4j knowledge graph. It details the choices between using the native Neo4j Python Driver for direct Cypher queries and the LlamaIndex `Neo4jGraphStore` abstraction, mapping these choices to specific tasks identified in the sprint plan.
+This document outlines the various methods aclarai will use to interact with the Neo4j knowledge graph. It details the choices between using the native Neo4j Python Driver for direct Cypher queries and the LlamaIndex `Neo4jGraphStore` abstraction, mapping these choices to specific tasks identified in the sprint plan.
 
 ---
 
 ## 🎯 Purpose
 
-To define clear guidelines and technical approaches for all Neo4j operations, ensuring performance, data integrity, and alignment with ClarifAI's graph-based knowledge management.
+To define clear guidelines and technical approaches for all Neo4j operations, ensuring performance, data integrity, and alignment with aclarai's graph-based knowledge management.
 
 ---
 
 ## I. Overview of Interaction Methods
 
-ClarifAI will primarily employ two main methods for interacting with Neo4j:
+aclarai will primarily employ two main methods for interacting with Neo4j:
 
 1.  **Neo4j Python Driver (Direct Cypher & GDS):** For fine-grained control, complex graph traversals, batch operations, and direct access to Neo4j's Graph Data Science (GDS) library. This offers maximum flexibility and performance optimization.
 2.  **LlamaIndex `Neo4jGraphStore`:** A higher-level abstraction provided by LlamaIndex, ideal for simpler node and triplet (subject-predicate-object) management, aligning with LlamaIndex's data ingestion and querying patterns.
@@ -55,7 +55,7 @@ class Neo4jDriver:
             result = session.run(cypher_query, parameters)
             return [record for record in result]
 
-# Example usage (in ClarifAI-Core or Scheduler)
+# Example usage (in aclarai-Core or Scheduler)
 # neo4j_conn = Neo4jDriver(URI, AUTH)
 # records = neo4j_conn.query("MATCH (n:Concept) RETURN n.name LIMIT 5")
 # neo4j_conn.close()
@@ -120,7 +120,7 @@ LIMIT $limit;
 """
 ```
 
-**Note:** GDS algorithms run in a separate process space within Neo4j and are highly optimized for graph computation. ClarifAI will manage graph projection, algorithm execution, and result retrieval.
+**Note:** GDS algorithms run in a separate process space within Neo4j and are highly optimized for graph computation. aclarai will manage graph projection, algorithm execution, and result retrieval.
 
 ---
 
@@ -135,7 +135,7 @@ from llama_index.graph_stores import Neo4jGraphStore
 from llama_index import KnowledgeGraphIndex, ServiceContext
 from llama_index.llms import OpenAI # Example LLM
 
-# Configuration (from .env or settings/clarifai.config.yaml)
+# Configuration (from .env or settings/aclarai.config.yaml)
 NEO4J_URI = "bolt://localhost:7687"
 NEO4J_USERNAME = "neo4j"
 NEO4J_PASSWORD = "password"
@@ -175,7 +175,7 @@ graph_store.add_triplets(triplets_to_add)
 
 ---
 
-## IV. Application to ClarifAI Tasks
+## IV. Application to aclarai Tasks
 
 ### 1. `sprint_3-Create_nodes_in_neo4j.md` (Criar nós (:Claim) e (:Sentence))
 

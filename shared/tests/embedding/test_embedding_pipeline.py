@@ -103,7 +103,7 @@ class TestEmbeddingModuleImports:
         """Test importing UtteranceChunker."""
         # Test that the chunking module file exists
         chunking_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/chunking.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/chunking.py"
         )
         assert os.path.exists(chunking_path)
 
@@ -111,7 +111,7 @@ class TestEmbeddingModuleImports:
         """Test importing ChunkMetadata."""
         # Test that the chunking module file exists and contains ChunkMetadata
         chunking_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/chunking.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/chunking.py"
         )
         assert os.path.exists(chunking_path)
         with open(chunking_path, "r") as f:
@@ -122,7 +122,7 @@ class TestEmbeddingModuleImports:
         """Test importing EmbeddingGenerator."""
         # Test that the models module file exists
         models_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/models.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/models.py"
         )
         assert os.path.exists(models_path)
 
@@ -130,7 +130,7 @@ class TestEmbeddingModuleImports:
         """Test importing EmbeddedChunk."""
         # Test that the models module file exists and contains EmbeddedChunk
         models_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/models.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/models.py"
         )
         assert os.path.exists(models_path)
         with open(models_path, "r") as f:
@@ -138,10 +138,10 @@ class TestEmbeddingModuleImports:
             assert "class EmbeddedChunk" in content
 
     def test_import_vector_store(self):
-        """Test importing ClarifAIVectorStore."""
+        """Test importing aclaraiVectorStore."""
         # Test that the storage module file exists
         storage_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/storage.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/storage.py"
         )
         assert os.path.exists(storage_path)
 
@@ -149,7 +149,7 @@ class TestEmbeddingModuleImports:
         """Test importing VectorStoreMetrics."""
         # Test that the storage module file exists and contains VectorStoreMetrics
         storage_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/storage.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/storage.py"
         )
         assert os.path.exists(storage_path)
         with open(storage_path, "r") as f:
@@ -160,7 +160,7 @@ class TestEmbeddingModuleImports:
         """Test importing EmbeddingResult."""
         # Test that the init module file exists and contains EmbeddingResult
         init_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/__init__.py"
         )
         assert os.path.exists(init_path)
         with open(init_path, "r") as f:
@@ -171,7 +171,7 @@ class TestEmbeddingModuleImports:
         """Test ChunkMetadata dataclass creation."""
         # Test that we can simulate ChunkMetadata creation
         metadata_data = {
-            "clarifai_block_id": "blk_456",
+            "aclarai_block_id": "blk_456",
             "chunk_index": 0,
             "original_text": "Original test text",
             "text": "Test chunk text",
@@ -180,7 +180,7 @@ class TestEmbeddingModuleImports:
             "offset_end": 100,
         }
 
-        assert metadata_data["clarifai_block_id"] == "blk_456"
+        assert metadata_data["aclarai_block_id"] == "blk_456"
         assert metadata_data["chunk_index"] == 0
         assert metadata_data["original_text"] == "Original test text"
         assert metadata_data["text"] == "Test chunk text"
@@ -192,7 +192,7 @@ class TestEmbeddingModuleImports:
         """Test EmbeddedChunk dataclass creation."""
         # Test that we can simulate EmbeddedChunk creation
         metadata_data = {
-            "clarifai_block_id": "blk_456",
+            "aclarai_block_id": "blk_456",
             "chunk_index": 0,
             "original_text": "Original test text",
             "text": "Test chunk text",

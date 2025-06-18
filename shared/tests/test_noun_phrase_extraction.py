@@ -15,11 +15,11 @@ import os
 # Add the parent directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from clarifai_shared.noun_phrase_extraction.models import (
+from aclarai_shared.noun_phrase_extraction.models import (
     NounPhraseCandidate,
     ExtractionResult,
 )
-from clarifai_shared.noun_phrase_extraction.extractor import NounPhraseExtractor
+from aclarai_shared.noun_phrase_extraction.extractor import NounPhraseExtractor
 
 
 class TestNounPhraseModels:
@@ -32,14 +32,14 @@ class TestNounPhraseModels:
             normalized_text="natural language processing",
             source_node_id="claim_123",
             source_node_type="claim",
-            clarifai_id="clarifai_123",
+            aclarai_id="aclarai_123",
         )
 
         assert candidate.text == "natural language processing"
         assert candidate.normalized_text == "natural language processing"
         assert candidate.source_node_id == "claim_123"
         assert candidate.source_node_type == "claim"
-        assert candidate.clarifai_id == "clarifai_123"
+        assert candidate.aclarai_id == "aclarai_123"
         assert candidate.status == "pending"
         assert candidate.timestamp is not None
 
@@ -63,13 +63,13 @@ class TestNounPhraseModels:
 class TestNounPhraseExtractor:
     """Test the main NounPhraseExtractor functionality."""
 
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.spacy")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.spacy")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
     @patch(
-        "clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
+        "aclarai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
     )
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.load_config")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.load_config")
     def test_extractor_initialization(
         self,
         mock_load_config,
@@ -94,13 +94,13 @@ class TestNounPhraseExtractor:
         assert extractor._nlp == mock_nlp
         mock_spacy.load.assert_called_once_with("en_core_web_sm")
 
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.spacy")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.spacy")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
     @patch(
-        "clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
+        "aclarai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
     )
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.load_config")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.load_config")
     def test_extract_noun_phrases(
         self,
         mock_load_config,
@@ -140,13 +140,13 @@ class TestNounPhraseExtractor:
         ]
         assert phrases == expected_phrases
 
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.spacy")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.spacy")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
     @patch(
-        "clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
+        "aclarai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
     )
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.load_config")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.load_config")
     def test_normalize_phrase(
         self,
         mock_load_config,
@@ -196,13 +196,13 @@ class TestNounPhraseExtractor:
 
         assert normalized == "natural language processing"
 
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.spacy")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.spacy")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
     @patch(
-        "clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
+        "aclarai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
     )
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.load_config")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.load_config")
     def test_extract_from_node(
         self,
         mock_load_config,
@@ -277,7 +277,7 @@ class TestNounPhraseExtractionRealIntegration:
     def test_extractor_with_real_spacy_model(self):
         """Test that the extractor can work with a real spaCy model."""
         try:
-            from clarifai_shared.config import load_config
+            from aclarai_shared.config import load_config
 
             config = load_config()
 
@@ -303,7 +303,7 @@ class TestNounPhraseExtractionRealIntegration:
     def test_extractor_with_real_databases(self):
         """Test extractor initialization with real database connections."""
         try:
-            from clarifai_shared.config import load_config
+            from aclarai_shared.config import load_config
 
             config = load_config()
 
@@ -325,7 +325,7 @@ class TestNounPhraseExtractionRealIntegration:
     def test_normalization_with_real_spacy(self):
         """Test phrase normalization with real spaCy model."""
         try:
-            from clarifai_shared.config import load_config
+            from aclarai_shared.config import load_config
 
             config = load_config()
             extractor = NounPhraseExtractor(config)

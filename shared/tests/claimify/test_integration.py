@@ -9,7 +9,7 @@ import pytest
 import os
 from unittest.mock import Mock
 
-from clarifai_shared.claimify.data_models import (
+from aclarai_shared.claimify.data_models import (
     SentenceChunk,
     ClaimifyContext,
     ClaimifyResult,
@@ -18,10 +18,10 @@ from clarifai_shared.claimify.data_models import (
     DisambiguationResult,
     DecompositionResult,
 )
-from clarifai_shared.claimify.integration import (
+from aclarai_shared.claimify.integration import (
     ClaimifyGraphIntegration,
 )
-from clarifai_shared.graph.models import ClaimInput, SentenceInput
+from aclarai_shared.graph.models import ClaimInput, SentenceInput
 
 
 class MockNeo4jGraphManager:
@@ -327,7 +327,7 @@ class TestCreateGraphManagerFromConfigStructure:
         # Mock test - verify module structure exists
         manager_path = os.path.join(
             os.path.dirname(__file__),
-            "../../clarifai_shared/claimify/integration.py",
+            "../../aclarai_shared/claimify/integration.py",
         )
         assert os.path.exists(manager_path)
 
@@ -340,7 +340,7 @@ class TestCreateGraphManagerFromConfigStructure:
         # Mock test - verify module structure exists
         integration_path = os.path.join(
             os.path.dirname(__file__),
-            "../../clarifai_shared/claimify/integration.py",
+            "../../aclarai_shared/claimify/integration.py",
         )
         assert os.path.exists(integration_path)
 

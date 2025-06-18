@@ -13,14 +13,14 @@ class TestEmbeddingInitFile:
     def test_init_file_exists(self):
         """Test that the embedding __init__.py file exists."""
         init_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/__init__.py"
         )
         assert os.path.exists(init_path)
 
     def test_init_file_loads(self):
         """Test that the embedding __init__.py file can be loaded directly."""
         init_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/__init__.py"
         )
 
         # Check for expected attributes in the file content
@@ -32,7 +32,7 @@ class TestEmbeddingInitFile:
             "ChunkMetadata",
             "EmbeddingGenerator",
             "EmbeddedChunk",
-            "ClarifAIVectorStore",
+            "aclaraiVectorStore",
             "VectorStoreMetrics",
             "EmbeddingPipeline",
         ]
@@ -71,7 +71,7 @@ class TestEmbeddingInitFile:
         """Test EmbeddingPipeline initialization with configurable dependencies (unit test)."""
         # Mock test - no real database connections
         init_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/__init__.py"
         )
 
         with open(init_path, "r") as f:
@@ -90,7 +90,7 @@ class TestEmbeddingInitFile:
         """Test EmbeddingPipeline initialization without config (unit test)."""
         # Mock test - verify class definition exists
         init_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/__init__.py"
         )
 
         with open(init_path, "r") as f:
@@ -109,7 +109,7 @@ class TestEmbeddingInitFile:
         """Test processing empty tier1 content (unit test)."""
         # Mock test - verify class definitions exist
         init_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/embedding/__init__.py"
+            os.path.dirname(__file__), "../../aclarai_shared/embedding/__init__.py"
         )
 
         with open(init_path, "r") as f:

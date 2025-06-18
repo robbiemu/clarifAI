@@ -1,6 +1,6 @@
-# ClarifAI Deployment Architecture (Docker Compose Edition)
+# aclarai Deployment Architecture (Docker Compose Edition)
 
-This document outlines a containerized architecture for **ClarifAI**, leveraging Docker Compose to manage heavy backend components such as Neo4j (graph DB), Postgres (vector DB), and scheduled automation jobs. This approach supports local and small-team deployments with strong isolation, observability, and development ergonomics.
+This document outlines a containerized architecture for **aclarai**, leveraging Docker Compose to manage heavy backend components such as Neo4j (graph DB), Postgres (vector DB), and scheduled automation jobs. This approach supports local and small-team deployments with strong isolation, observability, and development ergonomics.
 
 ---
 
@@ -9,7 +9,7 @@ This document outlines a containerized architecture for **ClarifAI**, leveraging
 | Service         | Purpose                                                                  |
 | --------------- | ------------------------------------------------------------------------ |
 | `vault-watcher` | Scans the Obsidian vault for Markdown changes, emits dirty block IDs     |
-| `clarifai-core` | Main processing engine: claim extraction, summarization, concept linking |
+| `aclarai-core` | Main processing engine: claim extraction, summarization, concept linking |
 | `postgres`      | Stores sentence/chunk embeddings via pgvector for vector search          |
 | `neo4j`         | Holds the structured knowledge graph (claims, concepts, summaries, etc.) |
 | `scheduler`     | Triggers nightly jobs (concept hygiene, vault sync, reprocessing)        |
@@ -20,7 +20,7 @@ This document outlines a containerized architecture for **ClarifAI**, leveraging
 ## 🐳 Docker Compose Services
 
 ```yaml
-# ClarifAI Docker Compose Stack
+# aclarai Docker Compose Stack
 # no version: this is officially deprecated now
 
 services:
@@ -30,13 +30,13 @@ services:
     env_file:
       - .env
     environment:
-      POSTGRES_DB: clarifai
+      POSTGRES_DB: aclarai
     volumes:
       - pg_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
-      - clarifai_net
+      - aclarai_net
 
   neo4j:  # Knowledge graph for claims, summaries, and concepts
     image: neo4j:5
@@ -51,9 +51,9 @@ services:
       - "7474:7474"
       - "7687:7687"
     networks:
-      - clarifai_net
+      - aclarai_net
 
-  rabbitmq: # Message broker for inter-service communication (e.g., vault-watcher -> clarifai-core)
+  rabbitmq: # Message broker for inter-service communication (e.g., vault-watcher -> aclarai-core)
     image: rabbitmq:3-management # Includes management UI on port 15672
     restart: unless-stopped
     environment:
@@ -63,15 +63,15 @@ services:
       - "5672:5672" # Standard AMQP port
       - "15672:15672" # Management UI
     networks:
-      - clarifai_net
+      - aclarai_net
     healthcheck: # Basic health check
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  clarifai-core:  # Main processing pipeline: claim extraction, summarization, linking
-    build: ./clarifai-core
+  aclarai-core:  # Main processing pipeline: claim extraction, summarization, linking
+    build: ./aclarai-core
     depends_on:
       - rabbitmq
       - postgres
@@ -82,7 +82,7 @@ services:
     env_file:
       - .env
     networks:
-      - clarifai_net
+      - aclarai_net
     environment:
       - VAULT_PATH=/vault
       - SETTINGS_PATH=/settings
@@ -92,14 +92,14 @@ services:
     build: ./vault-watcher
     depends_on:
       - rabbitmq
-      - clarifai-core
+      - aclarai-core
     volumes:
       - ../vault:/vault
       - ./settings:/settings
     env_file:
       - .env
     networks:
-      - clarifai_net
+      - aclarai_net
     environment:
       - VAULT_PATH=/vault
       - SETTINGS_PATH=/settings
@@ -108,14 +108,14 @@ services:
   scheduler:  # Runs periodic jobs: concept hygiene, vault sync, reprocessing
     build: ./scheduler
     depends_on:
-      - clarifai-core
+      - aclarai-core
     volumes:
       - ../vault:/vault
       - ./settings:/settings
     env_file:
       - .env
     networks:
-      - clarifai_net
+      - aclarai_net
     environment:
       - VAULT_PATH=/vault
       - SETTINGS_PATH=/settings
@@ -125,7 +125,7 @@ volumes:
   neo4j_data:
 
 networks:
-  clarifai_net:
+  aclarai_net:
 ```
 
 ---
@@ -148,7 +148,7 @@ The scheduler uses `cron`, `celery beat`, or a lightweight alternative like [`wa
 As described in \[on\_graph\_vault\_synchronization.md], the sync system must:
 
 * Watch for changes in `.md` files
-* Parse `clarifai:id` and `ver=` markers
+* Parse `aclarai:id` and `ver=` markers
 * Update Neo4j nodes or queue jobs if blocks have changed
 * Perform atomic writes (`.tmp` → `rename`) to ensure file safety
 
@@ -194,4 +194,4 @@ Concept creation and drift merging (from \[on\_concepts.md]) runs in two modes:
 
 ## ✅ Summary
 
-This Docker Compose setup cleanly separates ClarifAI’s data storage (Neo4j, Postgres), processing agents ([claimify](https://arxiv.org/pdf/2502.10855), summarizer, concept linker), and scheduling logic. It offers a reproducible local deployment and a strong base for small-team or remote usage.
+This Docker Compose setup cleanly separates aclarai’s data storage (Neo4j, Postgres), processing agents ([claimify](https://arxiv.org/pdf/2502.10855), summarizer, concept linker), and scheduling logic. It offers a reproducible local deployment and a strong base for small-team or remote usage.

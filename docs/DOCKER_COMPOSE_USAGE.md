@@ -1,6 +1,6 @@
-# ClarifAI Docker Compose Stack
+# aclarai Docker Compose Stack
 
-This guide provides instructions for running the ClarifAI Docker Compose stack locally.
+This guide provides instructions for running the aclarai Docker Compose stack locally.
 
 ## Overview
 
@@ -9,7 +9,7 @@ The Docker Compose stack includes the following services:
 - **PostgreSQL with pgvector** (port 5432) - Vector database for sentence embeddings
 - **Neo4j** (ports 7474, 7687) - Knowledge graph database for claims, concepts, and summaries
 - **RabbitMQ** (ports 5672, 15672) - Message broker for inter-service communication
-- **clarifai-core** - Main processing engine for claim extraction and concept linking
+- **aclarai-core** - Main processing engine for claim extraction and concept linking
 - **vault-watcher** - Monitors the vault directory for file changes
 - **scheduler** - Runs periodic background jobs and maintenance tasks
 
@@ -25,7 +25,7 @@ The Docker Compose stack includes the following services:
 1. **Clone the repository and navigate to the project root:**
    ```bash
    git clone <repository-url>
-   cd clarifAI
+   cd aclarai
    ```
 
 2. **Copy the environment file:**
@@ -35,11 +35,11 @@ The Docker Compose stack includes the following services:
 
 3. **Install default configuration (optional):**
    ```bash
-   cd services/clarifai-core
+   cd services/aclarai-core
    python install/install_config.py
    cd ../..
    ```
-   This creates `settings/clarifai.config.yaml` with default settings that you can customize.
+   This creates `settings/aclarai.config.yaml` with default settings that you can customize.
 
 4. **Edit configuration files (optional):**
    ```bash
@@ -47,7 +47,7 @@ The Docker Compose stack includes the following services:
    nano .env
    
    # Edit configuration settings
-   nano settings/clarifai.config.yaml
+   nano settings/aclarai.config.yaml
    ```
 
 5. **Start the entire stack:**
@@ -69,12 +69,12 @@ docker compose up postgres neo4j rabbitmq -d
 
 ### Start only application services:
 ```bash
-docker compose up clarifai-core vault-watcher scheduler -d
+docker compose up aclarai-core vault-watcher scheduler -d
 ```
 
 ### View logs for a specific service:
 ```bash
-docker compose logs clarifai-core
+docker compose logs aclarai-core
 docker compose logs vault-watcher
 docker compose logs scheduler
 ```
@@ -105,8 +105,8 @@ docker compose down -v
 ### PostgreSQL
 - **Host:** localhost
 - **Port:** 5432
-- **Database:** clarifai
-- **Username:** clarifai
+- **Database:** aclarai
+- **Username:** aclarai
 - **Password:** (configured in .env file)
 
 ### RabbitMQ
@@ -122,25 +122,25 @@ The `vault` directory in the project root is mounted to all services at `/vault`
 ```bash
 # Example: Add a markdown file to the vault
 echo "# Sample Document" > vault/sample.md
-echo "This is a test document for ClarifAI processing." >> vault/sample.md
+echo "This is a test document for aclarai processing." >> vault/sample.md
 ```
 
 The vault-watcher service will automatically detect changes to files in this directory.
 
 ## Configuration System
 
-ClarifAI uses a three-tier configuration system:
+aclarai uses a three-tier configuration system:
 
 ### Initial Setup
-On first startup, ClarifAI will automatically create `settings/clarifai.config.yaml` from the default template if it doesn't exist. You can also manually install it:
+On first startup, aclarai will automatically create `settings/aclarai.config.yaml` from the default template if it doesn't exist. You can also manually install it:
 
 ```bash
-cd services/clarifai-core
+cd services/aclarai-core
 python install/install_config.py
 ```
 
 ### Configuration Files
-- **`settings/clarifai.config.yaml`** - Your customizable settings (created from template)
+- **`settings/aclarai.config.yaml`** - Your customizable settings (created from template)
 - **Default template** - Built-in defaults in the shared package (not user-visible)
 - **`.env`** - Environment variables for database connections and secrets
 
@@ -149,10 +149,10 @@ If you need to reset your configuration:
 
 ```bash
 # Delete user config (will be regenerated on next startup)
-rm settings/clarifai.config.yaml
+rm settings/aclarai.config.yaml
 
 # Or force reinstall
-cd services/clarifai-core
+cd services/aclarai-core
 python install/install_config.py --force
 ```
 
@@ -162,9 +162,9 @@ Key environment variables that can be configured in `.env`:
 
 ```bash
 # Database Configuration
-POSTGRES_USER=clarifai
+POSTGRES_USER=aclarai
 POSTGRES_PASSWORD=your_postgres_password
-POSTGRES_DB=clarifai
+POSTGRES_DB=aclarai
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=your_neo4j_password
 
@@ -228,19 +228,19 @@ docker compose up -d
 
 ### Building individual services
 ```bash
-docker compose build clarifai-core
+docker compose build aclarai-core
 docker compose build vault-watcher
 docker compose build scheduler
 ```
 
 ### Viewing real-time logs
 ```bash
-docker compose logs -f clarifai-core
+docker compose logs -f aclarai-core
 ```
 
 ### Running commands in containers
 ```bash
-docker compose exec clarifai-core python -c "import clarifai_core; print('OK')"
+docker compose exec aclarai-core python -c "import aclarai_core; print('OK')"
 ```
 
 ## Data Persistence

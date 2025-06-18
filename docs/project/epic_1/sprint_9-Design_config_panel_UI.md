@@ -18,7 +18,7 @@ Desenvolver a interface de usuário do painel de configuração para jobs de des
 - Inclusão de inputs de toggle para `min_mentions`.
 - Adição de campo de preview para nomes de arquivo de saída.
 - Exibição do modelo de agente selecionado (`model.trending_concepts_agent`) como somente leitura ou dropdown, conforme `design_config_panel.md` (Seção 1: "Inference Models").
-- **Garantia de que a UI reflita o estado atual do `settings/clarifai.config.yaml` e que qualquer alteração na UI seja persistida imediatamente no arquivo**, conforme o comportamento estabelecido em `docs/project/epic_1/sprint_6-Implment_ClarifAIs_core_config.md` e `design_config_panel.md` (Seção "UI Behavior Notes").
+- **Garantia de que a UI reflita o estado atual do `settings/aclarai.config.yaml` e que qualquer alteração na UI seja persistida imediatamente no arquivo**, conforme o comportamento estabelecido em `docs/project/epic_1/sprint_6-Implment_aclarais_core_config.md` e `design_config_panel.md` (Seção "UI Behavior Notes").
 - Documentação clara da interface e seus componentes.
 
 ### Excluído
@@ -35,18 +35,18 @@ Desenvolver a interface de usuário do painel de configuração para jobs de des
 - Inputs de toggle para `min_mentions` funcionais.
 - Campo de preview para nomes de arquivo de saída implementado.
 - Exibição do modelo de agente selecionado (`model.trending_concepts_agent`) funcional.
-- **A UI carrega corretamente as configurações do `settings/clarifai.config.yaml` e salva as alterações de volta no arquivo.**
+- **A UI carrega corretamente as configurações do `settings/aclarai.config.yaml` e salva as alterações de volta no arquivo.**
 - **Validação de configurações funciona corretamente, rejeitando entradas inválidas e fornecendo feedback ao usuário**, conforme `design_config_panel.md` (Seção "UI Behavior Notes").
 - Documentação clara da interface e seus componentes está disponível.
 - Interface responsiva e acessível.
 
 ## Dependências
-- Sistema de configuração base implementado (`docs/project/epic_1/sprint_6-Implment_ClarifAIs_core_config.md`).
+- Sistema de configuração base implementado (`docs/project/epic_1/sprint_6-Implment_aclarais_core_config.md`).
 - Definição clara dos parâmetros configuráveis em `docs/arch/design_config_panel.md`.
-- Framework de UI Gradio escolhido e configurado (`docs/project/epic_1/sprint_1-Scaffold_ClarifAI_frontend.md`).
+- Framework de UI Gradio escolhido e configurado (`docs/project/epic_1/sprint_1-Scaffold_aclarai_frontend.md`).
 
 ## Entregáveis
-- Código-fonte da UI do painel de configuração (dentro do serviço `clarifai-ui`).
+- Código-fonte da UI do painel de configuração (dentro do serviço `aclarai-ui`).
 - Implementação de todos os campos e controles na UI.
 - Documentação da interface e seus componentes.
 - Testes de usabilidade e funcionalidade.

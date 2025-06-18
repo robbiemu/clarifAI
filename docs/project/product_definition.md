@@ -1,6 +1,6 @@
-# ClarifAI: Your AI for Conversational Clarity
+# aclarai: Your AI for Conversational Clarity
 
-**ClarifAI** is an AI-powered knowledge system that transforms your scattered digital conversations (from chats, meeting transcripts, AI interactions, etc.) into a deeply interconnected and organized knowledge base directly within your Obsidian vault. It acts as an intelligent assistant that reads, understands, and links your conversational data, making it instantly accessible and actionable.
+**aclarai** is an AI-powered knowledge system that transforms your scattered digital conversations (from chats, meeting transcripts, AI interactions, etc.) into a deeply interconnected and organized knowledge base directly within your Obsidian vault. It acts as an intelligent assistant that reads, understands, and links your conversational data, making it instantly accessible and actionable.
 
 Think of it as turning your transient dialogues into a lasting, explorable library of insights, facts, and ideas, all seamlessly woven into your existing Obsidian workflow.
 
@@ -14,7 +14,7 @@ Think of it as turning your transient dialogues into a lasting, explorable libra
   * Smartly detects and prevents the addition of duplicate conversation histories, keeping your vault tidy.
 
 ### AI-Powered Claim & Summary Generation:
-  * **Automated Factual Claim Extraction:** Intelligently identifies and extracts key factual statements from lengthy conversations – claims that meet ClarifAI's claim-quality criteria (each claim is logically supported by the source, captures all important details, and stands on its own without extra context). This ensures we capture robust signal and filter out noise through automated evaluation of support, completeness, and independence.
+  * **Automated Factual Claim Extraction:** Intelligently identifies and extracts key factual statements from lengthy conversations – claims that meet aclarai's claim-quality criteria (each claim is logically supported by the source, captures all important details, and stands on its own without extra context). This ensures we capture robust signal and filter out noise through automated evaluation of support, completeness, and independence.
   * **Structured Conversation Summaries (Tier 2 Documents):** Generates concise, organized summaries for each conversation, outlining the flow of dialogue and presenting the extracted claims in context. These summaries act as your go-to for understanding "what happened" and "what was stated."
 
 ### Automatic Key Concept Identification & Linking (Tier 3 Documents):
@@ -39,7 +39,7 @@ Think of it as turning your transient dialogues into a lasting, explorable libra
 
 ## Claim Quality Evaluation
 
-ClarifAI's claim extraction is powered by a sophisticated three-factor evaluation system that ensures only high-quality, actionable information makes it into your knowledge base:
+aclarai's claim extraction is powered by a sophisticated three-factor evaluation system that ensures only high-quality, actionable information makes it into your knowledge base:
 
 * **Entailment:** Verifies that each claim is logically supported by and flows from the source conversation
 * **Coverage:** Ensures claims capture all important details and omit no critical elements  
@@ -49,18 +49,18 @@ This evaluation framework (inspired by the [Claimify](https://arxiv.org/pdf/2502
 
 ---
 
-## Why Would You Want ClarifAI? (The Value Proposition)
+## Why Would You Want aclarai? (The Value Proposition)
 
-* **Unlock Hidden Insights from Your Conversations:** Stop valuable information from being lost in endless chat logs or forgotten meetings. **ClarifAI** surfaces critically evaluated facts and ideas automatically.
+* **Unlock Hidden Insights from Your Conversations:** Stop valuable information from being lost in endless chat logs or forgotten meetings. **aclarai** surfaces critically evaluated facts and ideas automatically.
 
 * **Save Significant Time & Boost Productivity:** Drastically reduce the time spent manually reviewing, summarizing, and trying to find specific information within past conversations. Get to the point, faster.
 
 * **Build a Powerful, Evolving Personal or Team Knowledge Graph:** Transform ephemeral discussions into a permanent, interconnected, and growing knowledge asset. Every new conversation enriches the existing network with quality-assessed information.
 
-* **Discover Unexpected Connections & Foster Deeper Understanding:** By automatically linking related ideas and conversations, **ClarifAI** helps you see patterns, connections, and relationships you might have otherwise missed.
+* **Discover Unexpected Connections & Foster Deeper Understanding:** By automatically linking related ideas and conversations, **aclarai** helps you see patterns, connections, and relationships you might have otherwise missed.
 
-* **Supercharge Your Obsidian Workflow:** If you're an Obsidian user, **ClarifAI** amplifies its power by automating the creation of a highly structured and interlinked knowledge base from a typically unstructured data source. It does the heavy lifting of organizing, quality-assessing, and connecting, so you can focus on thinking and creating.
+* **Supercharge Your Obsidian Workflow:** If you're an Obsidian user, **aclarai** amplifies its power by automating the creation of a highly structured and interlinked knowledge base from a typically unstructured data source. It does the heavy lifting of organizing, quality-assessing, and connecting, so you can focus on thinking and creating.
 
 * **Improve Decision Making & Recall:** With clearly extracted, quality-rated claims and easy access to conversation context, make more informed decisions and easily recall what was discussed and agreed upon.
 
-In essence, **ClarifAI** helps you turn the "noise" of your daily digital dialogues into a structured, searchable, and deeply insightful "signal" within the tool you already use for knowledge management – Obsidian.
+In essence, **aclarai** helps you turn the "noise" of your daily digital dialogues into a structured, searchable, and deeply insightful "signal" within the tool you already use for knowledge management – Obsidian.

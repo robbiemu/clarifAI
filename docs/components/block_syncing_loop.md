@@ -4,9 +4,9 @@ This document describes the implementation of the reactive block synchronization
 
 ## Overview
 
-The block syncing loop is implemented in `services/clarifai-core/clarifai_core/dirty_block_consumer.py` as the `DirtyBlockConsumer` class. This service:
+The block syncing loop is implemented in `services/aclarai-core/aclarai_core/dirty_block_consumer.py` as the `DirtyBlockConsumer` class. This service:
 
-1. Consumes RabbitMQ messages from the `clarifai_dirty_blocks` queue
+1. Consumes RabbitMQ messages from the `aclarai_dirty_blocks` queue
 2. Processes individual dirty block notifications
 3. Implements proper version checking with optimistic locking
 4. Updates graph nodes with incremented versions
@@ -17,7 +17,7 @@ The block syncing loop is implemented in `services/clarifai-core/clarifai_core/d
 ### Message Flow
 
 1. **vault-watcher** detects file changes and publishes dirty block messages to RabbitMQ
-2. **clarifai-core** consumes these messages via `DirtyBlockConsumer`
+2. **aclarai-core** consumes these messages via `DirtyBlockConsumer`
 3. For each message, the consumer:
    - Reads the current block content from the vault file
    - Compares version with the graph version  
@@ -53,7 +53,7 @@ Main class that handles:
 Each RabbitMQ message contains:
 ```json
 {
-  "clarifai_id": "clm_abc123",
+  "aclarai_id": "clm_abc123",
   "file_path": "tier1/conversation.md", 
   "change_type": "modified",
   "timestamp": 1234567890,
@@ -66,7 +66,7 @@ Each RabbitMQ message contains:
 
 For each dirty block notification:
 1. Read the markdown file from the vault
-2. Parse all `<!-- clarifai:id=xxx ver=N -->` comments
+2. Parse all `<!-- aclarai:id=xxx ver=N -->` comments
 3. Extract the semantic text for the specific block
 4. Calculate content hash for change detection
 
@@ -89,7 +89,7 @@ The consumer uses the shared configuration system:
 ### With vault-watcher
 
 - Consumes messages published by `DirtyBlockPublisher`
-- Uses the same queue name: `clarifai_dirty_blocks`
+- Uses the same queue name: `aclarai_dirty_blocks`
 - Handles message format from vault-watcher
 
 ### With Neo4j Graph
@@ -115,8 +115,8 @@ Comprehensive test suite covers:
 
 ## Deployment
 
-The consumer runs as part of the `clarifai-core` service:
-1. Start the service via `docker-compose up clarifai-core`
+The consumer runs as part of the `aclarai-core` service:
+1. Start the service via `docker-compose up aclarai-core`
 2. Consumer automatically begins processing messages
 3. Graceful shutdown on SIGINT/SIGTERM
 

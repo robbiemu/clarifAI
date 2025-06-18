@@ -1,5 +1,5 @@
 
-# 📥ClarifAI Import Panel Design
+# 📥aclarai Import Panel Design
 
 ## 🎯 Purpose
 
@@ -55,7 +55,7 @@ Each component is visually separate and stackable vertically in a minimal UI.
 
 * Original filename
 * Detector used (e.g., `chatgpt_json`, `fallback_llm`)
-* ClarifAI import ID
+* aclarai import ID
 * Outcome (success, skipped, failed)
 
 ---
@@ -118,5 +118,5 @@ Appears after all files are processed:
 ## 🔧 Developer Notes
 
 * Import queue should be driven by an event stream (not polling)
-* Logs should be stashed in a subfolder like `.clarifai/import_logs/`
+* Logs should be stashed in a subfolder like `.aclarai/import_logs/`
 * This panel should remain usable even if automation is paused

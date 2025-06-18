@@ -1,17 +1,17 @@
 # Tarefa: Configurar Monorepo e Serviços Iniciais do Projeto
 
 ## Descrição
-Criar e configurar a estrutura de monorepo inicial para o projeto ClarifAI, estabelecendo a base para o desenvolvimento colaborativo de todos os serviços componentes.
+Criar e configurar a estrutura de monorepo inicial para o projeto aclarai, estabelecendo a base para o desenvolvimento colaborativo de todos os serviços componentes.
 
 ## Escopo
 
 ### Incluído
-- Criação de um único repositório GitHub para o projeto ClarifAI.
+- Criação de um único repositório GitHub para o projeto aclarai.
 - Configuração da estrutura de monorepo, incluindo diretórios para cada serviço:
-  - `services/clarifai-core/` (serviço principal)
+  - `services/aclarai-core/` (serviço principal)
   - `services/vault-watcher/` (observador de arquivos)
   - `services/scheduler/` (agendador de tarefas)
-  - `services/clarifai-ui/` (interface de usuário Gradio)
+  - `services/aclarai-ui/` (interface de usuário Gradio)
   - `shared/` (para módulos Python compartilhados, como modelos de dados e utilitários)
 - Configuração de um ambiente Python unificado (e.g., com Poetry Workspaces ou `pyproject.toml` para `src` layout) para gerenciar as dependências de todos os serviços.
 - Adição de arquivos essenciais na raiz do monorepo e em cada serviço: README.md, .gitignore, LICENSE.

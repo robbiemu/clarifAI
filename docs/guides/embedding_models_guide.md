@@ -1,16 +1,16 @@
 # Embedding Models Guide
 
-This document describes the embedding model system for ClarifAI's semantic vector generation functionality, providing configurable support for multiple embedding providers.
+This document describes the embedding model system for aclarai's semantic vector generation functionality, providing configurable support for multiple embedding providers.
 
 ## Overview
 
-The embedding models system enables ClarifAI to generate semantic vector representations of text content using various provider backends. It supports multiple embedding providers through a unified interface, allowing flexible model selection based on performance requirements, cost considerations, and deployment constraints.
+The embedding models system enables aclarai to generate semantic vector representations of text content using various provider backends. It supports multiple embedding providers through a unified interface, allowing flexible model selection based on performance requirements, cost considerations, and deployment constraints.
 
 ## Architecture
 
 ### Embedding Model Components
 
-The embedding system consists of several key components in the `clarifai_shared.embedding` package:
+The embedding system consists of several key components in the `aclarai_shared.embedding` package:
 
 #### 1. Embedding Interface (`models.py`)
 - `EmbeddingGenerator` main class for generating embeddings
@@ -19,7 +19,7 @@ The embedding system consists of several key components in the `clarifai_shared.
 - Automatic model caching and optimization
 
 #### 2. Model Configuration
-- Centralized configuration via `settings/clarifai.config.yaml`
+- Centralized configuration via `settings/aclarai.config.yaml`
 - Environment variable overrides for API keys
 - Per-model parameter customization
 - Fallback model selection
@@ -34,8 +34,8 @@ The embedding system consists of several key components in the `clarifai_shared.
 ### Basic Usage
 
 ```python
-from clarifai_shared.embedding.models import EmbeddingGenerator
-from clarifai_shared.config import load_config
+from aclarai_shared.embedding.models import EmbeddingGenerator
+from aclarai_shared.config import load_config
 
 # Load configuration
 config = load_config()
@@ -73,7 +73,7 @@ for i, emb in enumerate(embeddings):
 
 ### Model Selection
 
-Configure your preferred embedding model in `settings/clarifai.config.yaml`:
+Configure your preferred embedding model in `settings/aclarai.config.yaml`:
 
 ```yaml
 embedding:
@@ -235,7 +235,7 @@ Embedding operations are logged with structured context:
 
 ```python
 # Logging includes:
-# - service: "clarifai-core"  
+# - service: "aclarai-core"  
 # - filename.function_name: "models.embed_text"
 # - model_name: "all-MiniLM-L6-v2"
 # - text_length: 156

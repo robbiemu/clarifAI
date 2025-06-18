@@ -10,14 +10,14 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from clarifai_shared.tier2_summary import (
+from aclarai_shared.tier2_summary import (
     Tier2SummaryAgent,
     SummaryInput,
     SummaryBlock,
     SummaryResult,
     generate_summary_id,
 )
-from clarifai_shared.config import ClarifAIConfig
+from aclarai_shared.config import aclaraiConfig
 
 
 class TestSummaryDataModels:
@@ -74,7 +74,7 @@ class TestSummaryDataModels:
         """Test SummaryBlock object creation and markdown generation."""
         summary_block = SummaryBlock(
             summary_text="This is a test summary\nWith multiple lines",
-            clarifai_id="clm_test123",
+            aclarai_id="clm_test123",
             version=2,
             source_block_ids=["blk_001", "blk_002"],
         )
@@ -82,7 +82,7 @@ class TestSummaryDataModels:
         assert (
             summary_block.summary_text == "This is a test summary\nWith multiple lines"
         )
-        assert summary_block.clarifai_id == "clm_test123"
+        assert summary_block.aclarai_id == "clm_test123"
         assert summary_block.version == 2
         assert summary_block.source_block_ids == ["blk_001", "blk_002"]
         assert summary_block.timestamp is not None
@@ -91,7 +91,7 @@ class TestSummaryDataModels:
         """Test markdown generation from SummaryBlock."""
         summary_block = SummaryBlock(
             summary_text="First point\nSecond point",
-            clarifai_id="clm_abc123",
+            aclarai_id="clm_abc123",
             version=1,
         )
 
@@ -100,7 +100,7 @@ class TestSummaryDataModels:
         # Check structure
         assert "- First point" in markdown
         assert "- Second point ^clm_abc123" in markdown  # Last line gets anchor
-        assert "<!-- clarifai:id=clm_abc123 ver=1 -->" in markdown
+        assert "<!-- aclarai:id=clm_abc123 ver=1 -->" in markdown
         assert "^clm_abc123" in markdown
 
         # Check it ends with anchor
@@ -109,8 +109,8 @@ class TestSummaryDataModels:
 
     def test_summary_result_creation(self):
         """Test SummaryResult object creation and properties."""
-        block1 = SummaryBlock(summary_text="First summary", clarifai_id="clm_001")
-        block2 = SummaryBlock(summary_text="Second summary", clarifai_id="clm_002")
+        block1 = SummaryBlock(summary_text="First summary", aclarai_id="clm_001")
+        block2 = SummaryBlock(summary_text="Second summary", aclarai_id="clm_002")
 
         result = SummaryResult(
             summary_blocks=[block1, block2],
@@ -136,9 +136,9 @@ class TestSummaryDataModels:
 
     def test_summary_result_markdown_generation(self):
         """Test full markdown file generation from SummaryResult."""
-        block1 = SummaryBlock(summary_text="First summary point", clarifai_id="clm_001")
+        block1 = SummaryBlock(summary_text="First summary point", aclarai_id="clm_001")
         block2 = SummaryBlock(
-            summary_text="Second summary point", clarifai_id="clm_002"
+            summary_text="Second summary point", aclarai_id="clm_002"
         )
 
         result = SummaryResult(
@@ -151,7 +151,7 @@ class TestSummaryDataModels:
         assert "# Test Summary" in markdown
 
         # Check context metadata
-        assert "<!-- clarifai:source_context=test_context -->" in markdown
+        assert "<!-- aclarai:source_context=test_context -->" in markdown
 
         # Check both blocks are present
         assert "clm_001" in markdown
@@ -183,7 +183,7 @@ class TestTier2SummaryAgent:
     @pytest.fixture
     def mock_config(self):
         """Create a mock configuration for testing."""
-        config = Mock(spec=ClarifAIConfig)
+        config = Mock(spec=aclaraiConfig)
 
         # Create nested mock structure for llm and paths
         config.llm = Mock()
@@ -262,9 +262,9 @@ class TestTier2SummaryAgent:
 
     def test_agent_initialization_defaults(self):
         """Test agent initialization with defaults."""
-        # Mock ClarifAIConfig to avoid loading actual config file
+        # Mock aclaraiConfig to avoid loading actual config file
         with patch(
-            "clarifai_shared.tier2_summary.agent.ClarifAIConfig"
+            "aclarai_shared.tier2_summary.agent.aclaraiConfig"
         ) as mock_config_class:
             mock_config = Mock()
             mock_config.llm.models = {"default": "gpt-3.5-turbo"}
@@ -272,7 +272,7 @@ class TestTier2SummaryAgent:
             mock_config.llm.max_tokens = 1000
             mock_config_class.return_value = mock_config
 
-            with patch("clarifai_shared.tier2_summary.agent.OpenAI") as mock_openai:
+            with patch("aclarai_shared.tier2_summary.agent.OpenAI") as mock_openai:
                 mock_llm = Mock()
                 mock_openai.return_value = mock_llm
 
@@ -367,7 +367,7 @@ class TestTier2SummaryAgent:
         # Check summary block content
         block = result.summary_blocks[0]
         assert "Key finding from analysis" in block.summary_text
-        assert block.clarifai_id.startswith("clm_")
+        assert block.aclarai_id.startswith("clm_")
 
         # Verify LLM was called
         mock_llm.complete.assert_called_once()
@@ -428,7 +428,7 @@ class TestTier2SummaryAgent:
         assert "1. First claim" in prompt
         assert "2. Second sentence" in prompt
 
-    @patch("clarifai_shared.tier2_summary.agent.write_file_atomically")
+    @patch("aclarai_shared.tier2_summary.agent.write_file_atomically")
     def test_write_summary_file_success(
         self, mock_write, mock_config, mock_neo4j_manager, mock_llm
     ):
@@ -438,7 +438,7 @@ class TestTier2SummaryAgent:
         )
 
         summary_block = SummaryBlock(
-            summary_text="Test summary", clarifai_id="clm_test123"
+            summary_text="Test summary", aclarai_id="clm_test123"
         )
 
         result = SummaryResult(summary_blocks=[summary_block])
@@ -457,7 +457,7 @@ class TestTier2SummaryAgent:
         assert "# Test Title" in content_arg
         assert "clm_test123" in content_arg
 
-    @patch("clarifai_shared.tier2_summary.agent.write_file_atomically")
+    @patch("aclarai_shared.tier2_summary.agent.write_file_atomically")
     def test_write_summary_file_failed_result(
         self, mock_write, mock_config, mock_neo4j_manager, mock_llm
     ):
@@ -473,7 +473,7 @@ class TestTier2SummaryAgent:
         assert success is False
         mock_write.assert_not_called()
 
-    @patch("clarifai_shared.tier2_summary.agent.write_file_atomically")
+    @patch("aclarai_shared.tier2_summary.agent.write_file_atomically")
     def test_write_summary_file_write_error(
         self, mock_write, mock_config, mock_neo4j_manager, mock_llm
     ):
@@ -485,7 +485,7 @@ class TestTier2SummaryAgent:
         )
 
         summary_block = SummaryBlock(
-            summary_text="Test summary", clarifai_id="clm_test123"
+            summary_text="Test summary", aclarai_id="clm_test123"
         )
         result = SummaryResult(summary_blocks=[summary_block])
 
@@ -544,7 +544,7 @@ class TestTier2SummaryAgent:
         mock_embedding_storage.similarity_search.assert_not_called()
 
     @patch(
-        "clarifai_shared.tier2_summary.agent.Tier2SummaryAgent._build_semantic_neighborhoods"
+        "aclarai_shared.tier2_summary.agent.Tier2SummaryAgent._build_semantic_neighborhoods"
     )
     def test_retrieve_grouped_content_success(
         self, mock_build_neighborhoods, mock_config, mock_neo4j_manager, mock_llm
@@ -604,13 +604,13 @@ class TestAtomicFileWriting:
             test_file = Path(temp_dir) / "test_summary.md"
 
             summary_block = SummaryBlock(
-                summary_text="Test summary content", clarifai_id="clm_integration"
+                summary_text="Test summary content", aclarai_id="clm_integration"
             )
             result = SummaryResult(summary_blocks=[summary_block])
 
             # Create agent with minimal mocking
             with patch(
-                "clarifai_shared.tier2_summary.agent.ClarifAIConfig"
+                "aclarai_shared.tier2_summary.agent.aclaraiConfig"
             ) as mock_config_class:
                 mock_config = Mock()
                 mock_config.llm.models = {"default": "gpt-3.5-turbo"}
@@ -618,7 +618,7 @@ class TestAtomicFileWriting:
                 mock_config.llm.max_tokens = 1000
                 mock_config_class.return_value = mock_config
 
-                with patch("clarifai_shared.tier2_summary.agent.OpenAI") as mock_openai:
+                with patch("aclarai_shared.tier2_summary.agent.OpenAI") as mock_openai:
                     mock_llm = Mock()
                     mock_openai.return_value = mock_llm
 
@@ -637,7 +637,7 @@ class TestAtomicFileWriting:
                     assert "# Integration Test" in content
                     assert "Test summary content" in content
                     assert "clm_integration" in content
-                    assert "<!-- clarifai:id=clm_integration ver=1 -->" in content
+                    assert "<!-- aclarai:id=clm_integration ver=1 -->" in content
                     assert "^clm_integration" in content
 
 

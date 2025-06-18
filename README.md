@@ -1,20 +1,20 @@
-# ClarifAI
+# aclarai
 
-[![CI](https://github.com/robbiemu/clarifAI/workflows/CI/badge.svg)](https://github.com/robbiemu/clarifAI/actions/workflows/ci.yml)
+[![CI](https://github.com/robbiemu/aclarai/workflows/CI/badge.svg)](https://github.com/robbiemu/aclarai/actions/workflows/ci.yml)
 
-ClarifAI is an AI-powered knowledge system designed to transform your scattered digital conversations (from chats, meeting transcripts, AI interactions, etc.) into a deeply interconnected and organized knowledge base directly within your Obsidian vault. It acts as an intelligent assistant that reads, understands, and links your conversational data, making it instantly accessible and actionable.
+aclarai is an AI-powered knowledge system designed to transform your scattered digital conversations (from chats, meeting transcripts, AI interactions, etc.) into a deeply interconnected and organized knowledge base directly within your Obsidian vault. It acts as an intelligent assistant that reads, understands, and links your conversational data, making it instantly accessible and actionable.
 
 ## Monorepo Structure
 
-This repository is a monorepo containing the various services and shared libraries that constitute the ClarifAI system. This structure helps in managing dependencies and streamlining the development process across different components.
+This repository is a monorepo containing the various services and shared libraries that constitute the aclarai system. This structure helps in managing dependencies and streamlining the development process across different components.
 
 The main components are:
 
-*   **`services/`**: Contains the individual microservices that make up ClarifAI's backend and UI.
-    *   **`clarifai-core/`**: The main processing engine for ingestion, claim extraction, summarization, concept linking, and interaction with databases (vector store and knowledge graph).
+*   **`services/`**: Contains the individual microservices that make up aclarai's backend and UI.
+    *   **`aclarai-core/`**: The main processing engine for ingestion, claim extraction, summarization, concept linking, and interaction with databases (vector store and knowledge graph).
     *   **`vault-watcher/`**: Monitors the Obsidian vault for Markdown file changes, emitting notifications to keep the system synchronized with the vault content.
     *   **`scheduler/`**: Runs periodic background jobs like concept hygiene, embedding refreshes, reprocessing dirty blocks, and vault-graph synchronization.
-    *   **`clarifai-ui/`**: The user interface for ClarifAI, likely for importing data, managing configurations, and viewing system status/outputs.
+    *   **`aclarai-ui/`**: The user interface for aclarai, likely for importing data, managing configurations, and viewing system status/outputs.
 *   **`shared/`**: Contains shared Python modules, data models, and utilities for use across different services.
 *   **`docs/`**: Contains all project documentation, including technical overviews, architecture decision records, and product definitions.
 
@@ -34,8 +34,8 @@ The main components are:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/robbiemu/clarifAI.git
-   cd clarifAI
+   git clone https://github.com/robbiemu/aclarai.git
+   cd aclarai
    ```
 
 2. **Set up the environment:**

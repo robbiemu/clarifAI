@@ -101,38 +101,38 @@ def test_expected_output_format():
             content = f.read()
 
             # Check for required metadata comments at the start
-            assert "<!-- clarifai:title=" in content, (
+            assert "<!-- aclarai:title=" in content, (
                 f"{filename} should have title metadata"
             )
-            assert "<!-- clarifai:created_at=" in content, (
+            assert "<!-- aclarai:created_at=" in content, (
                 f"{filename} should have created_at metadata"
             )
-            assert "<!-- clarifai:participants=" in content, (
+            assert "<!-- aclarai:participants=" in content, (
                 f"{filename} should have participants metadata"
             )
-            assert "<!-- clarifai:message_count=" in content, (
+            assert "<!-- aclarai:message_count=" in content, (
                 f"{filename} should have message_count metadata"
             )
-            assert "<!-- clarifai:plugin_metadata=" in content, (
+            assert "<!-- aclarai:plugin_metadata=" in content, (
                 f"{filename} should have plugin_metadata"
             )
 
             # Check for block IDs and anchors
-            assert "<!-- clarifai:id=blk_" in content, (
-                f"{filename} should have clarifai:id comments"
+            assert "<!-- aclarai:id=blk_" in content, (
+                f"{filename} should have aclarai:id comments"
             )
             assert "^blk_" in content, f"{filename} should have anchor references"
             assert " ver=1 -->" in content, f"{filename} should have version numbers"
 
             # Check for evaluation scores (at least one file should have them)
             if "entailed_score" in content:
-                assert "<!-- clarifai:entailed_score=" in content, (
+                assert "<!-- aclarai:entailed_score=" in content, (
                     f"{filename} should have properly formatted entailed_score"
                 )
-                assert "<!-- clarifai:coverage_score=" in content, (
+                assert "<!-- aclarai:coverage_score=" in content, (
                     f"{filename} should have properly formatted coverage_score"
                 )
-                assert "<!-- clarifai:decontextualization_score=" in content, (
+                assert "<!-- aclarai:decontextualization_score=" in content, (
                     f"{filename} should have properly formatted decontextualization_score"
                 )
 
@@ -155,8 +155,8 @@ def test_consistent_block_id_format():
 
     import re
 
-    # Pattern for clarifai:id - should be blk_ followed by 6 alphanumeric characters
-    id_pattern = r"<!-- clarifai:id=blk_([a-z0-9]{6}) ver=1 -->"
+    # Pattern for aclarai:id - should be blk_ followed by 6 alphanumeric characters
+    id_pattern = r"<!-- aclarai:id=blk_([a-z0-9]{6}) ver=1 -->"
     anchor_pattern = r"\^blk_([a-z0-9]{6})"
 
     for md_file in outputs_dir.glob("*.md"):
@@ -189,11 +189,11 @@ def test_metadata_format_consistency():
     outputs_dir = fixtures_dir / "expected_outputs"
 
     required_metadata_fields = [
-        "clarifai:title=",
-        "clarifai:created_at=",
-        "clarifai:participants=",
-        "clarifai:message_count=",
-        "clarifai:plugin_metadata=",
+        "aclarai:title=",
+        "aclarai:created_at=",
+        "aclarai:participants=",
+        "aclarai:message_count=",
+        "aclarai:plugin_metadata=",
     ]
 
     for md_file in outputs_dir.glob("*.md"):
@@ -208,7 +208,7 @@ def test_metadata_format_consistency():
             # Metadata should be at the top of the file
             lines = content.split("\n")
             metadata_lines = [
-                line for line in lines[:10] if line.startswith("<!-- clarifai:")
+                line for line in lines[:10] if line.startswith("<!-- aclarai:")
             ]
             assert len(metadata_lines) >= 5, (
                 f"{md_file.name} should have metadata at the top"
