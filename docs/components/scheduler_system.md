@@ -1,6 +1,6 @@
 # Scheduler System
 
-The scheduler system provides periodic job execution infrastructure for the ClarifAI ecosystem using APScheduler (Advanced Python Scheduler).
+The scheduler system provides periodic job execution infrastructure for the aclarai ecosystem using APScheduler (Advanced Python Scheduler).
 
 ## Overview
 
@@ -13,18 +13,18 @@ The scheduler service runs background tasks on configurable cron schedules, incl
 
 ## Architecture
 
-The scheduler system follows ClarifAI architectural patterns:
+The scheduler system follows aclarai architectural patterns:
 
 - **Structured Logging**: Adheres to `docs/arch/idea-logging.md` with service context and job IDs
 - **Error Handling**: Implements `docs/arch/on-error-handling-and-resilience.md` patterns
 - **Neo4j Integration**: Uses `docs/arch/on-neo4j_interaction.md` direct Cypher approach
-- **Configuration Management**: All parameters sourced from `settings/clarifai.config.yaml`
+- **Configuration Management**: All parameters sourced from `settings/aclarai.config.yaml`
 
 ## Core Components
 
 ### SchedulerService
 
-Main service class (`clarifai_scheduler.main`) that:
+Main service class (`aclarai_scheduler.main`) that:
 
 - Initializes APScheduler with thread pool executors
 - Registers jobs from configuration
@@ -33,16 +33,16 @@ Main service class (`clarifai_scheduler.main`) that:
 
 ### VaultSyncJob
 
-Vault-to-graph synchronization implementation (`clarifai_scheduler.vault_sync`) following `docs/arch/on-graph_vault_synchronization.md`:
+Vault-to-graph synchronization implementation (`aclarai_scheduler.vault_sync`) following `docs/arch/on-graph_vault_synchronization.md`:
 
-- **Block Extraction**: Parses Markdown files for `clarifai:id` blocks
+- **Block Extraction**: Parses Markdown files for `aclarai:id` blocks
 - **Change Detection**: Uses SHA-256 hashes of semantic text content
 - **Graph Synchronization**: Creates/updates Block nodes with version tracking
 - **Statistics Tracking**: Provides detailed metrics on sync operations
 
 ## Configuration
 
-Jobs are configured via `settings/clarifai.config.yaml`:
+Jobs are configured via `settings/aclarai.config.yaml`:
 
 ```yaml
 scheduler:
@@ -64,7 +64,7 @@ The vault sync job implements the specification from `docs/arch/on-graph_vault_s
 
 ### Block Types Supported
 
-- **Inline blocks**: Individual sentences/claims with `<!-- clarifai:id=blk_abc123 ver=1 -->`
+- **Inline blocks**: Individual sentences/claims with `<!-- aclarai:id=blk_abc123 ver=1 -->`
 - **File-level blocks**: Agent-generated content with file-scope IDs
 
 ### Change Detection
@@ -76,7 +76,7 @@ The vault sync job implements the specification from `docs/arch/on-graph_vault_s
 ### Multi-tier Processing
 
 - **Tier 1**: Always processed (required content)
-- **Tier 2/3**: Processed when `clarifai:id` markers are present
+- **Tier 2/3**: Processed when `aclarai:id` markers are present
 - Configurable file inclusion patterns
 
 ## Logging Format
@@ -86,7 +86,7 @@ All operations use structured logging with required context:
 ```json
 {
   "level": "INFO",
-  "service": "clarifai-scheduler",
+  "service": "aclarai-scheduler",
   "filename.function_name": "vault_sync.run_sync",
   "job_id": "vault_sync_1734264000",
   "blocks_processed": 42,
@@ -125,7 +125,7 @@ Each job execution provides:
 The scheduler system builds on:
 
 - **APScheduler**: Job scheduling and execution framework
-- **clarifai_shared**: Configuration, logging, and Neo4j components
+- **aclarai_shared**: Configuration, logging, and Neo4j components
 - **Neo4j Python Driver**: Database operations
 - **Standard Library**: Signal handling, hashing, file operations
 

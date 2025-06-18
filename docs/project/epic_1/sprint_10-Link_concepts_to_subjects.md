@@ -9,7 +9,7 @@ Implementar um sistema para vincular `(:Concept)` nodes às suas respectivas pá
 - Implementação de um sistema para identificar a qual assunto (ou assuntos) cada `(:Concept)` node pertence, utilizando os resultados do sistema de clustering de conceitos.
 - Desenvolvimento de lógica para **adicionar links de rodapé** em cada arquivo Markdown `[[Concept]]` para sua(s) página(s) de assunto correspondente(s). O formato e a localização desses links devem ser consistentes com o design de `docs/arch/on-writing_vault_documents.md` (e.g., uma nova seção "Part Of Subjects").
 - **Utilização da lógica de escrita atômica para arquivos Markdown** (`.tmp` → `fsync` → `rename`) implementada em `docs/project/epic_1/sprint_3-Create_agent_and_integration_for_Tier_2.md` e detalhada em `docs/arch/on-filehandle_conflicts.md`, para garantir a segurança e integridade dos arquivos `[[Concept]]` durante a atualização.
-- **Garantia de que os arquivos `[[Concept]]` modificados mantenham seus marcadores `clarifai:id` e `ver=`** e que o `ver=` seja incrementado, para compatibilidade com o sistema de sincronização do vault (`docs/arch/on-graph_vault_synchronization.md`).
+- **Garantia de que os arquivos `[[Concept]]` modificados mantenham seus marcadores `aclarai:id` e `ver=`** e que o `ver=` seja incrementado, para compatibilidade com o sistema de sincronização do vault (`docs/arch/on-graph_vault_synchronization.md`).
 - Implementação **opcional** de atualização do grafo com arestas `(:Concept)-[:PART_OF]->(:Subject)` no Neo4j, modelando explicitamente essa relação de pertencimento.
 - Integração com o sistema de clustering de conceitos (que fornece os grupos de conceitos) e com o sistema de geração de páginas de assunto (que cria os `[[Subject:XYZ]]` files).
 - Este processo será executado como parte de um job agendado, provavelmente após a conclusão do `subject_group_refresh` ou como um job dependente.
@@ -27,7 +27,7 @@ Implementar um sistema para vincular `(:Concept)` nodes às suas respectivas pá
 - O sistema identifica corretamente a qual assunto (ou assuntos) cada conceito pertence com base nos clusters fornecidos.
 - Links de rodapé são adicionados corretamente em cada arquivo `[[Concept]]` para sua(s) página(s) de assunto, seguindo o formato especificado em `docs/arch/on-writing_vault_documents.md`.
 - A escrita do arquivo `[[Concept]]` utiliza a lógica de escrita atômica de forma robusta e segura.
-- Os arquivos `[[Concept]]` modificados mantêm seus marcadores `clarifai:id` e `ver=` e o `ver=` é incrementado.
+- Os arquivos `[[Concept]]` modificados mantêm seus marcadores `aclarai:id` e `ver=` e o `ver=` é incrementado.
 - A atualização opcional do grafo com arestas `(:Concept)-[:PART_OF]->(:Subject)` funciona adequadamente, se implementada.
 - A integração funciona corretamente com o sistema de clustering de conceitos e a geração de páginas de assunto.
 - A documentação clara do processo, formato dos links e da estrutura do grafo está disponível.
@@ -41,7 +41,7 @@ Implementar um sistema para vincular `(:Concept)` nodes às suas respectivas pá
 - Lógica de escrita atômica para arquivos Markdown implementada (`docs/project/epic_1/sprint_3-Create_agent_and_integration_for_Tier_2.md`).
 
 ## Entregáveis
-- Código-fonte do sistema de vinculação de conceitos a assuntos (dentro do serviço `clarifai-core` ou `scheduler`).
+- Código-fonte do sistema de vinculação de conceitos a assuntos (dentro do serviço `aclarai-core` ou `scheduler`).
 - Implementação da lógica de adição de links de rodapé em arquivos `[[Concept]]`.
 - Implementação opcional da lógica de atualização do grafo com arestas `(:Concept)-[:PART_OF]->(:Subject)`.
 - Documentação do processo e formato.
@@ -62,6 +62,6 @@ Implementar um sistema para vincular `(:Concept)` nodes às suas respectivas pá
 
 ## Notas Técnicas
 - O sistema deve iterar sobre os `(:Concept)` nodes (ou os resultados do clustering) e, para cada um, determinar seu(s) assunto(s) associado(s).
-- A lógica de patching de Markdown deve ser robusta o suficiente para inserir a nova seção de links de rodapé sem corromper o conteúdo existente ou os metadados `clarifai:id`/`ver=`.
+- A lógica de patching de Markdown deve ser robusta o suficiente para inserir a nova seção de links de rodapé sem corromper o conteúdo existente ou os metadados `aclarai:id`/`ver=`.
 - A decisão de implementar a aresta `(:Concept)-[:PART_OF]->(:Subject)` no grafo deve ser tomada com base na necessidade de consulta explícita dessa relação no Neo4j. Se a relação puder ser inferida apenas pelo clustering ou pelos links Markdown, a aresta pode ser omitida para simplificar o grafo. No entanto, o sprint plan a marca como "opcional" para este sprint.
 - O logging detalhado das atualizações de arquivos e grafo será crucial para depuração e rastreabilidade.

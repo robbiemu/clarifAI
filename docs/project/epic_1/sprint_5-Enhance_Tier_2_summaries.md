@@ -29,7 +29,7 @@ Aprimorar o sistema de resumos Tier 2 para incluir links para conceitos relevant
 - O processo de geração/atualização de resumos Tier 2 é aprimorado para incluir a vinculação automática de conceitos.
 - Documentação clara e atualizada do processo e do formato dos resumos Tier 2 aprimorados.
 - Testes automatizados demonstram a funcionalidade de adição de links de conceitos e a robustez da atualização dos arquivos Markdown.
-- Cada bloco de resumo Tier 2 gerado inclui seus próprios marcadores clarifai:id e ver= e ^anchor.
+- Cada bloco de resumo Tier 2 gerado inclui seus próprios marcadores aclarai:id e ver= e ^anchor.
 
 ## Dependências
 - Sistema de resumos Tier 2 implementado (de Sprint 3), que gera os blocos de resumo.
@@ -39,7 +39,7 @@ Aprimorar o sistema de resumos Tier 2 para incluir links para conceitos relevant
 - Definição clara do formato de resumo Tier 2 com links de conceito (`on-writing_vault_documents.md`).
 
 ## Entregáveis
-- Código-fonte atualizado para o sistema de geração de resumos Tier 2 (`clarifai-core`).
+- Código-fonte atualizado para o sistema de geração de resumos Tier 2 (`aclarai-core`).
 - Implementação da lógica de escaneamento e vinculação de conceitos a partir do grafo.
 - Documentação do processo e formato atualizado dos resumos Tier 2.
 - Testes unitários e de integração para a funcionalidade de vinculação de conceitos.

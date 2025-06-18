@@ -1,6 +1,6 @@
-# 📚 ClarifAI Project Documentation: Your Compass
+# 📚 aclarai Project Documentation: Your Compass
 
-Welcome to the ClarifAI documentation hub! This file serves as your central point of orientation, guiding you through the various architectural decisions, technical specifications, and project plans that define ClarifAI.
+Welcome to the aclarai documentation hub! This file serves as your central point of orientation, guiding you through the various architectural decisions, technical specifications, and project plans that define aclarai.
 
 Whether you're a new team member, a seasoned contributor, or just exploring the project, this guide will help you find the information you need quickly.
 
@@ -23,16 +23,16 @@ To help you find information efficiently, our documentation is organized into di
 
 ### 🚀 1. Project Vision & Product
 
-These documents articulate the core purpose, user value, and high-level technical direction of ClarifAI.
+These documents articulate the core purpose, user value, and high-level technical direction of aclarai.
 
-*   **[ClarifAI: Your AI for Conversational Clarity](./project/product_definition.md)**
-*   **[ClarifAI: Technical Overview](./project/technical_overview.md)**
-*   **[Selected User Stories for ClarifAI](./project/epic_1/epic.md)**
-*   **[ClarifAI UX Overview](./project/ux_overview.md)**
+*   **[aclarai: Your AI for Conversational Clarity](./project/product_definition.md)**
+*   **[aclarai: Technical Overview](./project/technical_overview.md)**
+*   **[Selected User Stories for aclarai](./project/epic_1/epic.md)**
+*   **[aclarai UX Overview](./project/ux_overview.md)**
 
 ### 🧩 2. Core Component Overviews (The "What")
 
-These documents provide high-level summaries of ClarifAI's major systems. They are the best starting point for understanding what each component does.
+These documents provide high-level summaries of aclarai's major systems. They are the best starting point for understanding what each component does.
 
 *   **[Block Syncing Loop](./components/block_syncing_loop.md)**
 *   **[Claimify Pipeline System](./components/claimify_pipeline_system.md)**
@@ -47,7 +47,7 @@ These documents provide high-level summaries of ClarifAI's major systems. They a
 
 These documents detail the foundational architectural choices and cross-cutting design principles that govern development.
 
-*   **[ClarifAI Deployment Architecture (Docker Compose Edition)](./arch/architecture.md)**
+*   **[aclarai Deployment Architecture (Docker Compose Edition)](./arch/architecture.md)**
 *   **[UI Design Docs](./arch/design_config_panel.md)** (Consolidated from `design_config_panel`, `design_import_panel`, etc. or list them individually)
 *   **[Error Handling and Resilience Strategy](./arch/on-error-handling-and-resilience.md)**
 *   **[Logging Strategy](./arch/idea-logging.md)**
@@ -58,7 +58,7 @@ These documents detail the foundational architectural choices and cross-cutting 
 
 These documents specify the implementation details of core services and how data flows and is stored.
 
-*   **[ClarifAI Graph–Vault Sync Design](./arch/on-graph_vault_synchronization.md)**
+*   **[aclarai Graph–Vault Sync Design](./arch/on-graph_vault_synchronization.md)**
 *   **[Pluggable Format Conversion System](./arch/on-pluggable_formats.md)**
 *   **[Vector Store Summary](./arch/on-vector_stores.md)**
 *   **[Neo4j Interaction Strategy](./arch/idea-neo4J-ineteraction.md)**
@@ -66,7 +66,7 @@ These documents specify the implementation details of core services and how data
 
 ### 🧠 5. Agent & AI Logic (Deep Dives)
 
-These documents explain the intricate workings of ClarifAI's intelligent agents and their underlying AI logic.
+These documents explain the intricate workings of aclarai's intelligent agents and their underlying AI logic.
 
 *   **[Claim Generation Walkthrough](./arch/on-claim_generation.md)**
 *   **[Concept Creation and Drift Handling](./arch/on-concepts.md)**
@@ -77,7 +77,7 @@ These documents explain the intricate workings of ClarifAI's intelligent agents 
 
 ### 📚 6. Guides & Tutorials (The "How")
 
-These documents provide practical instructions and comprehensive references for using, configuring, and contributing to ClarifAI.
+These documents provide practical instructions and comprehensive references for using, configuring, and contributing to aclarai.
 
 *   **Guides (Reference Manuals):**
     *   **[Claimify Pipeline Guide](./guides/claimify_pipeline_guide.md)**
@@ -98,4 +98,4 @@ These documents cover our agile development process and sprint plans.
 
 ## 🤝 Contributing to Documentation
 
-This documentation is a living asset. If you find errors, omissions, or areas that could be clearer, please feel free to open an issue or submit a pull request. Your contributions help make ClarifAI better for everyone
+This documentation is a living asset. If you find errors, omissions, or areas that could be clearer, please feel free to open an issue or submit a pull request. Your contributions help make aclarai better for everyone

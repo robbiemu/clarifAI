@@ -1,4 +1,4 @@
-# ClarifAI Shared Library Requirements
+# aclarai Shared Library Requirements
 # Install with: uv pip install -r shared/requirements.txt
 
 # Core LlamaIndex dependencies

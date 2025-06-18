@@ -1,1 +1,0 @@
-"""Tests for clarifai-ui service."""

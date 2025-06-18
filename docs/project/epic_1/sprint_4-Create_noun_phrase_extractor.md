@@ -28,7 +28,7 @@ Desenvolver um sistema para extrair frases nominais (noun phrases) de claims (`(
 - Frases nominais são normalizadas adequadamente (minúsculas, lematização, remoção de pontuação e trimming de espaços em branco).
 - Cada frase nominal normalizada é incorporada (embedding) e armazenada corretamente na tabela `concept_candidates` do vector store.
 - Cada entrada na tabela `concept_candidates` é marcada com o status `"pending"`.
-- Metadados essenciais (`text`, `embedding`, `source_claim_id`, `clarifai:id`, `status`) são armazenados corretamente na tabela `concept_candidates`.
+- Metadados essenciais (`text`, `embedding`, `source_claim_id`, `aclarai:id`, `status`) são armazenados corretamente na tabela `concept_candidates`.
 - Documentação clara do sistema de extração de frases nominais e seu funcionamento.
 - Testes automatizados demonstram a funcionalidade e robustez da extração, normalização, embedding e armazenamento de frases nominais.
 
@@ -39,7 +39,7 @@ Desenvolver um sistema para extrair frases nominais (noun phrases) de claims (`(
 - Tabela de vetores `concept_candidates` inicializada (parte da configuração do vector store, geralmente em Sprint 2/1).
 
 ## Entregáveis
-- Código-fonte do extrator de frases nominais (componente dentro de `clarifai-core`).
+- Código-fonte do extrator de frases nominais (componente dentro de `aclarai-core`).
 - Implementação da lógica de normalização e armazenamento na tabela `concept_candidates`.
 - Documentação técnica do sistema e seu funcionamento.
 - Testes unitários e de integração para todas as etapas da extração e persistência.
@@ -59,6 +59,6 @@ Desenvolver um sistema para extrair frases nominais (noun phrases) de claims (`(
 ## Notas Técnicas
 - Utilizar os modelos `spaCy` apropriados para o idioma (`en_core_web_sm` ou `en_core_web_trf`) e a complexidade do texto, conforme a recomendação em `on-noun_phrase_extraction.md`.
 - A normalização deve ser rigorosa para maximizar a chance de detecção de duplicatas por similaridade.
-- Assegurar que os metadados corretos (`source_claim_id`, `clarifai:id` para rastreabilidade) sejam armazenados junto com a frase e o embedding na tabela `concept_candidates`, conforme `on-concepts.md`.
+- Assegurar que os metadados corretos (`source_claim_id`, `aclarai:id` para rastreabilidade) sejam armazenados junto com a frase e o embedding na tabela `concept_candidates`, conforme `on-concepts.md`.
 - Este componente deve ser acionado sempre que novos `(:Claim)` ou `(:Summary)` nodes forem criados ou alterados no grafo.
 - Implementar mecanismos de recuperação de falhas durante o processamento do `spaCy` ou a persistência na tabela de vetores.

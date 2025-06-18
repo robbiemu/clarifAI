@@ -8,7 +8,7 @@ Implementar um job agendado para atualizar periodicamente os embeddings dos arqu
 ### Incluído
 - Implementação de um job agendado (utilizando o `APScheduler` já configurado em Sprint 3) para atualizar embeddings de arquivos de conceito.
 - Desenvolvimento de lógica para **detectar alterações em arquivos de conceito** (`vault/concepts/*.md`):
-    - Para cada arquivo de conceito, extrair o `semantic_text` (conteúdo visível, removendo metadados `clarifai:id` e `^anchor`, conforme `on-refreshing_concept_embeddings.md`).
+    - Para cada arquivo de conceito, extrair o `semantic_text` (conteúdo visível, removendo metadados `aclarai:id` e `^anchor`, conforme `on-refreshing_concept_embeddings.md`).
     - Calcular o SHA256 `embedding_hash` do `semantic_text`.
     - Comparar este hash com o `c.embedding_hash` armazenado no `(:Concept)` node correspondente no Neo4j.
     - Se os hashes forem diferentes, ou se o `embedding_hash` no Neo4j for `null`, o arquivo é considerado modificado e precisa de atualização.
@@ -39,7 +39,7 @@ Implementar um job agendado para atualizar periodicamente os embeddings dos arqu
 - Testes automatizados demonstram funcionalidade e robustez, incluindo cenários de arquivo inalterado, arquivo modificado, e `null` `embedding_hash` inicial.
 
 ## Dependências
-- Sistema de agendamento de jobs (`clarifai-scheduler` com `APScheduler`) implementado e funcional (de Sprint 3).
+- Sistema de agendamento de jobs (`aclarai-scheduler` com `APScheduler`) implementado e funcional (de Sprint 3).
 - Sistema de conceitos implementado (incluindo `(:Concept)` nodes no Neo4j e o `concepts` vector store populado, de tarefas anteriores desta Sprint 5).
 - Modelo de embedding configurado e acessível (de Sprint 2).
 - Acesso ao Neo4j para atualização de metadados.
@@ -47,7 +47,7 @@ Implementar um job agendado para atualizar periodicamente os embeddings dos arqu
 - Definição clara do processo de atualização de embeddings em `on-refreshing_concept_embeddings.md`.
 
 ## Entregáveis
-- Código-fonte do job de atualização de embeddings (dentro do serviço `clarifai-scheduler`).
+- Código-fonte do job de atualização de embeddings (dentro do serviço `aclarai-scheduler`).
 - Implementação da lógica de detecção de alterações (hashing) e recálculo de embeddings.
 - Documentação do sistema e seu funcionamento.
 - Testes unitários e de integração.

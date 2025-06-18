@@ -28,12 +28,12 @@ You're also absolutely right that all the Sprint 5 UI tasks can be implemented w
 ## 🧱 Project Layout Example
 
 ```bash
-clarifai-monorepo/
+aclarai-monorepo/
 ├── settings/
-│   ├── clarifai.config.yaml   # Central configuration file
+│   ├── aclarai.config.yaml   # Central configuration file
 │   └── prompts/               # User-editable prompts
 ├── services/
-│   └── clarifai-ui/
+│   └── aclarai-ui/
 │       └── gradio/
 │           ├── main.py        # Launches Gradio app with tabs
 │           ├── config_panel.py# UI for models, thresholds, etc.
@@ -41,6 +41,6 @@ clarifai-monorepo/
 ```
 
 * You can expose all 3 panels as **tabs** in the Gradio app
-* Config reads/writes from `settings/clarifai.config.yaml`
-* Pause toggles `.clarifai_pause` file
+* Config reads/writes from `settings/aclarai.config.yaml`
+* Pause toggles `.aclarai_pause` file
 * Scheduler reads job statuses from your shared state file or endpoint

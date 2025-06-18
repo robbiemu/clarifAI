@@ -7,13 +7,13 @@
 **Tasks:**
 
 * [ ] Start initial repos for the services in the project.
-* [ ] Scaffold ClarifAI frontend repo
-  - Create clarifai-ui/ with Dockerfile (Gradio/Python)
+* [ ] Scaffold aclarai frontend repo
+  - Create aclarai-ui/ with Dockerfile (Gradio/Python)
   - Set up /import page as the default route
   - Add simple file picker and log area (unattached, can simulate plugin output)
   - No integration work needed: Connect to backend later via REST or file drop
 
-* [ ] Build Docker Compose stack (Neo4j, Postgres w/pgvector, `clarifai-core`, `vault-watcher`, `scheduler`)
+* [ ] Build Docker Compose stack (Neo4j, Postgres w/pgvector, `aclarai-core`, `vault-watcher`, `scheduler`)
 * [ ] Implement `.env` injection and `host.docker.internal` fallback for external DBs
 * [ ] Set up github and github actions for CI before merges into main.
 
@@ -29,14 +29,14 @@
   * Use LlamaIndex's TextSplitter (e.g. SentenceSplitter or TokenTextSplitter) to segment each Tier 1 Markdown block into coherent chunks suitable for embedding
   * Embed each chunk using the configured embedding model (e.g. OpenAI, local model)
   * Store resulting vectors in Postgres using LlamaIndex’s pgvector integration, including metadata:
-    * `clarifai:id` (parent block)
+    * `aclarai:id` (parent block)
     * `chunk_index`
     * original text
 
 * [ ] Create Tier 1 Markdown files during import:
   * Compute and check file-level hash to skip duplicate imports
   * Use plugin outputs to emit Markdown files to the vault
-  * Annotate each utterance with `clarifai:id` and `^anchor`
+  * Annotate each utterance with `aclarai:id` and `^anchor`
   * Embed file-level metadata at top (participants, timestamps, plugin)
 
 ## 🔵 **Sprint 3: Claimify MVP**
@@ -75,11 +75,11 @@
   * Concept linking will be added in Sprint 4 after concepts exist.
 
 * [ ] Bootstrap scheduler container + vault sync job
-  * Add a new `clarifai-scheduler` service to the monorepo
+  * Add a new `aclarai-scheduler` service to the monorepo
   * Use `APScheduler` to run jobs on a cron schedule (e.g. nightly at 2am)
   * Implement `sync_vault_to_graph()` job:
     * Read all Tier 1 Markdown files
-    * For each block with a `clarifai:id`, hash the text
+    * For each block with a `aclarai:id`, hash the text
     * Compare against stored hash in Neo4j
     * If changed, update node text/hash and mark dirty
   * Log job execution start, finish, and result
@@ -89,7 +89,7 @@
 
 **Goal:** Establish reactive vault sync infrastructure for detecting and syncing changed blocks.
 
-* [ ] Vault file watcher with dirty block detection (based on `clarifai:id` comments)
+* [ ] Vault file watcher with dirty block detection (based on `aclarai:id` comments)
 * [ ] Block ID hashing + sync loop: update graph nodes if content changes
 * [ ] Create noun phrase extractor on claims + summaries
   * Fetch `(:Claim)` and `(:Summary)` nodes from the graph
@@ -126,7 +126,7 @@
 **Tasks:**
 
 
-* [ ] Implement ClarifAI's core configuration system, providing **both** a UI panel and a persistent YAML config file, for:
+* [ ] Implement aclarai's core configuration system, providing **both** a UI panel and a persistent YAML config file, for:
   * LLM and embedding model selections (e.g., for Claimify stages).
   * Claim and concept processing thresholds (e.g., similarity, quality).
   * Claimify context window parameters (p, f).
@@ -183,13 +183,13 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
   * Supports fallback plugin if no plugin accepts the file
 
 * [ ] Display evaluation scores in Markdown metadata
-  * Append `<!-- clarifai:... -->` blocks to Tier 1 Markdown after evaluation
+  * Append `<!-- aclarai:... -->` blocks to Tier 1 Markdown after evaluation
   * One line per score: entailment, coverage, decontextualization
   * Use consistent formatting and null handling
 
 ## 🟣 Sprint 9: Concept Highlight Pages
 
-**🎯 Goal:** Generate `Top Concepts.md`, `Trending Topics.md`, and `[[Concept]]` pages using agentic processes and the existing ClarifAI graph and vector stores.
+**🎯 Goal:** Generate `Top Concepts.md`, `Trending Topics.md`, and `[[Concept]]` pages using agentic processes and the existing aclarai graph and vector stores.
 
 
 ### Tasks
@@ -209,7 +209,7 @@ Build on the pluggable import system introduced in Sprint 2 by adding a coordina
   * Pull supporting claims, summaries, utterances, and related concepts from local sources
   * Include:
     * `## Concept: <name>`
-    * Bullet-point examples with `^clarifai:id`
+    * Bullet-point examples with `^aclarai:id`
     * See Also section
   * Skip if insufficient claim links
 

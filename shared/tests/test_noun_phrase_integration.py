@@ -13,7 +13,7 @@ import os
 # Add the parent directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from clarifai_shared.noun_phrase_extraction import (
+from aclarai_shared.noun_phrase_extraction import (
     NounPhraseExtractor,
     NounPhraseCandidate,
 )
@@ -22,13 +22,13 @@ from clarifai_shared.noun_phrase_extraction import (
 class TestNounPhraseExtractionIntegration:
     """Integration tests for complete noun phrase extraction workflow."""
 
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.spacy")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.spacy")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
     @patch(
-        "clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
+        "aclarai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
     )
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.load_config")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.load_config")
     def test_complete_extraction_workflow(
         self,
         mock_load_config,
@@ -171,13 +171,13 @@ class TestNounPhraseExtractionIntegration:
         token.is_space = is_space
         return token
 
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.spacy")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.spacy")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
     @patch(
-        "clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
+        "aclarai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
     )
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.load_config")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.load_config")
     def test_extraction_with_empty_nodes(
         self,
         mock_load_config,
@@ -222,13 +222,13 @@ class TestNounPhraseExtractionIntegration:
         # Verify vector store was not called since no candidates
         mock_vector_store.store_candidates.assert_not_called()
 
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.spacy")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.spacy")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.Neo4jGraphManager")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.EmbeddingGenerator")
     @patch(
-        "clarifai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
+        "aclarai_shared.noun_phrase_extraction.extractor.ConceptCandidatesVectorStore"
     )
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.load_config")
+    @patch("aclarai_shared.noun_phrase_extraction.extractor.load_config")
     def test_extraction_with_neo4j_error(
         self,
         mock_load_config,
@@ -292,7 +292,7 @@ class TestRealNounPhraseExtractionIntegration:
     def test_full_extraction_pipeline_integration(self):
         """Test the complete extraction pipeline with real services."""
         try:
-            from clarifai_shared.config import load_config
+            from aclarai_shared.config import load_config
 
             # Load actual configuration
             config = load_config()
@@ -317,7 +317,7 @@ class TestRealNounPhraseExtractionIntegration:
     def test_database_connectivity_integration(self):
         """Test that the system can connect to both Neo4j and PostgreSQL."""
         try:
-            from clarifai_shared.config import load_config
+            from aclarai_shared.config import load_config
 
             config = load_config()
             extractor = NounPhraseExtractor(config)
@@ -337,7 +337,7 @@ class TestRealNounPhraseExtractionIntegration:
     def test_spacy_model_integration(self):
         """Test that spaCy model can be loaded and used."""
         try:
-            from clarifai_shared.config import load_config
+            from aclarai_shared.config import load_config
 
             config = load_config()
             extractor = NounPhraseExtractor(config)
@@ -373,10 +373,10 @@ class TestRealConceptCandidatesStoreIntegration:
     def test_vector_store_operations_integration(self):
         """Test vector store operations with real PostgreSQL."""
         try:
-            from clarifai_shared.noun_phrase_extraction import (
+            from aclarai_shared.noun_phrase_extraction import (
                 ConceptCandidatesVectorStore,
             )
-            from clarifai_shared.config import load_config
+            from aclarai_shared.config import load_config
 
             config = load_config()
             store = ConceptCandidatesVectorStore(config)
@@ -406,10 +406,10 @@ class TestRealConceptCandidatesStoreIntegration:
     def test_embedding_generation_integration(self):
         """Test embedding generation with real models."""
         try:
-            from clarifai_shared.noun_phrase_extraction import (
+            from aclarai_shared.noun_phrase_extraction import (
                 ConceptCandidatesVectorStore,
             )
-            from clarifai_shared.config import load_config
+            from aclarai_shared.config import load_config
 
             config = load_config()
             store = ConceptCandidatesVectorStore(config)

@@ -7,8 +7,8 @@ import re
 import tempfile
 from pathlib import Path
 
-from clarifai_shared.import_system import Tier1ImportSystem
-from clarifai_shared.config import ClarifAIConfig, VaultPaths
+from aclarai_shared.import_system import Tier1ImportSystem
+from aclarai_shared.config import aclaraiConfig, VaultPaths
 
 
 def test_various_conversation_formats():
@@ -46,7 +46,7 @@ alice: Excellent! Let's schedule a board presentation""",
 
     with tempfile.TemporaryDirectory() as temp_dir:
         vault_dir = Path(temp_dir) / "vault"
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path=str(vault_dir), paths=VaultPaths(tier1="tier1", logs="logs")
         )
         system = Tier1ImportSystem(config)
@@ -77,10 +77,10 @@ alice: Excellent! Let's schedule a board presentation""",
                         f"    Title: {content.split('-->')[0].split('=')[1] if '-->' in content else 'N/A'}"
                     )
                     print(
-                        f"    Participants: {json.loads(content.split('clarifai:participants=')[1].split(' -->')[0]) if 'clarifai:participants=' in content else 'N/A'}"
+                        f"    Participants: {json.loads(content.split('aclarai:participants=')[1].split(' -->')[0]) if 'aclarai:participants=' in content else 'N/A'}"
                     )
                     print(
-                        f"    Message count: {content.split('clarifai:message_count=')[1].split(' -->')[0] if 'clarifai:message_count=' in content else 'N/A'}"
+                        f"    Message count: {content.split('aclarai:message_count=')[1].split(' -->')[0] if 'aclarai:message_count=' in content else 'N/A'}"
                     )
 
             except Exception as e:
@@ -95,7 +95,7 @@ def test_atomic_write_safety():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         vault_dir = Path(temp_dir) / "vault"
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path=str(vault_dir), paths=VaultPaths(tier1="tier1", logs="logs")
         )
         system = Tier1ImportSystem(config)
@@ -121,7 +121,7 @@ def test_atomic_write_safety():
 
         # Verify file content is complete
         assert "alice: Testing atomic writes" in original_content
-        assert "<!-- clarifai:id=blk_" in original_content
+        assert "<!-- aclarai:id=blk_" in original_content
         assert "^blk_" in original_content
 
         print("✓ File content is complete and properly formatted")
@@ -132,7 +132,7 @@ def test_filename_generation():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         vault_dir = Path(temp_dir) / "vault"
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path=str(vault_dir), paths=VaultPaths(tier1="tier1", logs="logs")
         )
         system = Tier1ImportSystem(config)
@@ -166,7 +166,7 @@ def test_multiple_conversations_from_single_file():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         vault_dir = Path(temp_dir) / "vault"
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path=str(vault_dir), paths=VaultPaths(tier1="tier1", logs="logs")
         )
         system = Tier1ImportSystem(config)
@@ -193,10 +193,8 @@ alice: Let's discuss that offline""")
         assert "discuss that offline" in content
 
         # Count block IDs to verify all messages have them
-        block_ids = content.count("<!-- clarifai:id=blk_")
-        message_count = int(
-            content.split("clarifai:message_count=")[1].split(" -->")[0]
-        )
+        block_ids = content.count("<!-- aclarai:id=blk_")
+        message_count = int(content.split("aclarai:message_count=")[1].split(" -->")[0])
 
         assert block_ids == message_count
 
@@ -210,7 +208,7 @@ def test_import_log_functionality():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         vault_dir = Path(temp_dir) / "vault"
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path=str(vault_dir), paths=VaultPaths(tier1="tier1", logs="logs")
         )
         system = Tier1ImportSystem(config)
@@ -313,7 +311,7 @@ def test_golden_file_format_compliance():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         vault_dir = Path(temp_dir) / "vault"
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path=str(vault_dir), paths=VaultPaths(tier1="tier1", logs="logs")
         )
         system = Tier1ImportSystem(config)
@@ -383,7 +381,7 @@ def test_golden_file_metadata_consistency():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         vault_dir = Path(temp_dir) / "vault"
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path=str(vault_dir), paths=VaultPaths(tier1="tier1", logs="logs")
         )
         system = Tier1ImportSystem(config)
@@ -423,12 +421,12 @@ bob: I'll move on to the testing phase."""
 def _verify_tier1_format_compliance(content: str, filename: str):
     """Verify that content follows Tier 1 format requirements."""
     required_patterns = [
-        ("title metadata", r"<!-- clarifai:title=.+? -->"),
-        ("created_at metadata", r"<!-- clarifai:created_at=.+? -->"),
-        ("participants metadata", r"<!-- clarifai:participants=\[.+?\] -->"),
-        ("message_count metadata", r"<!-- clarifai:message_count=\d+ -->"),
-        ("plugin_metadata", r"<!-- clarifai:plugin_metadata=\{.+?\} -->"),
-        ("block ID format", r"<!-- clarifai:id=blk_[a-z0-9]{6} ver=1 -->"),
+        ("title metadata", r"<!-- aclarai:title=.+? -->"),
+        ("created_at metadata", r"<!-- aclarai:created_at=.+? -->"),
+        ("participants metadata", r"<!-- aclarai:participants=\[.+?\] -->"),
+        ("message_count metadata", r"<!-- aclarai:message_count=\d+ -->"),
+        ("plugin_metadata", r"<!-- aclarai:plugin_metadata=\{.+?\} -->"),
+        ("block ID format", r"<!-- aclarai:id=blk_[a-z0-9]{6} ver=1 -->"),
         ("anchor format", r"\^blk_[a-z0-9]{6}"),
     ]
 
@@ -437,7 +435,7 @@ def _verify_tier1_format_compliance(content: str, filename: str):
             raise AssertionError(f"{filename}: Missing or invalid {pattern_name}")
 
     # Verify block ID and anchor consistency
-    block_ids = re.findall(r"<!-- clarifai:id=blk_([a-z0-9]{6}) ver=1 -->", content)
+    block_ids = re.findall(r"<!-- aclarai:id=blk_([a-z0-9]{6}) ver=1 -->", content)
     anchors = re.findall(r"\^blk_([a-z0-9]{6})", content)
 
     if set(block_ids) != set(anchors):
@@ -471,11 +469,11 @@ def _compare_tier1_structure(actual: str, expected: str, filename: str):
 
     # Check metadata section presence
     required_metadata = [
-        ("title metadata", "<!-- clarifai:title="),
-        ("created_at metadata", "<!-- clarifai:created_at="),
-        ("participants metadata", "<!-- clarifai:participants="),
-        ("message_count metadata", "<!-- clarifai:message_count="),
-        ("plugin_metadata", "<!-- clarifai:plugin_metadata="),
+        ("title metadata", "<!-- aclarai:title="),
+        ("created_at metadata", "<!-- aclarai:created_at="),
+        ("participants metadata", "<!-- aclarai:participants="),
+        ("message_count metadata", "<!-- aclarai:message_count="),
+        ("plugin_metadata", "<!-- aclarai:plugin_metadata="),
     ]
 
     for check_name, pattern in required_metadata:
@@ -484,7 +482,7 @@ def _compare_tier1_structure(actual: str, expected: str, filename: str):
 
     # Check block annotations presence
     block_checks = [
-        ("block ID comments", "<!-- clarifai:id=blk_"),
+        ("block ID comments", "<!-- aclarai:id=blk_"),
         ("anchor references", "^blk_"),
         ("version numbers", " ver=1 -->"),
     ]
@@ -494,8 +492,8 @@ def _compare_tier1_structure(actual: str, expected: str, filename: str):
             raise AssertionError(f"{filename}: Missing {check_name}")
 
     # Compare number of messages (block count should match expected pattern)
-    actual_blocks = len(re.findall(r"<!-- clarifai:id=blk_", actual))
-    expected_blocks = len(re.findall(r"<!-- clarifai:id=blk_", expected))
+    actual_blocks = len(re.findall(r"<!-- aclarai:id=blk_", actual))
+    expected_blocks = len(re.findall(r"<!-- aclarai:id=blk_", expected))
 
     if actual_blocks != expected_blocks:
         raise AssertionError(
@@ -517,12 +515,12 @@ def _extract_metadata(content: str) -> dict:
     metadata = {}
 
     # Extract title
-    title_match = re.search(r"<!-- clarifai:title=(.+?) -->", content)
+    title_match = re.search(r"<!-- aclarai:title=(.+?) -->", content)
     if title_match:
         metadata["title"] = title_match.group(1)
 
     # Extract participants
-    participants_match = re.search(r"<!-- clarifai:participants=(.+?) -->", content)
+    participants_match = re.search(r"<!-- aclarai:participants=(.+?) -->", content)
     if participants_match:
         try:
             metadata["participants"] = json.loads(participants_match.group(1))
@@ -530,12 +528,12 @@ def _extract_metadata(content: str) -> dict:
             metadata["participants"] = participants_match.group(1)
 
     # Extract message count
-    count_match = re.search(r"<!-- clarifai:message_count=(\d+) -->", content)
+    count_match = re.search(r"<!-- aclarai:message_count=(\d+) -->", content)
     if count_match:
         metadata["message_count"] = int(count_match.group(1))
 
     # Extract plugin metadata
-    plugin_match = re.search(r"<!-- clarifai:plugin_metadata=(.+?) -->", content)
+    plugin_match = re.search(r"<!-- aclarai:plugin_metadata=(.+?) -->", content)
     if plugin_match:
         try:
             metadata["plugin_metadata"] = json.loads(plugin_match.group(1))

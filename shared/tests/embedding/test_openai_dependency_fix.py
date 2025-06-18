@@ -1,26 +1,26 @@
 """
 Test to verify the OpenAI embedding dependency fix.
 
-This test ensures that ClarifAIVectorStore can be created without
+This test ensures that aclaraiVectorStore can be created without
 requiring the llama-index-embeddings-openai package.
 """
 
 from unittest.mock import patch, MagicMock
-from clarifai_shared.config import ClarifAIConfig, DatabaseConfig
-from clarifai_shared.embedding.storage import ClarifAIVectorStore, VectorStoreMetrics
-from clarifai_shared.embedding.chunking import ChunkMetadata
-from clarifai_shared.embedding.models import EmbeddedChunk
+from aclarai_shared.config import aclaraiConfig, DatabaseConfig
+from aclarai_shared.embedding.storage import aclaraiVectorStore, VectorStoreMetrics
+from aclarai_shared.embedding.chunking import ChunkMetadata
+from aclarai_shared.embedding.models import EmbeddedChunk
 from llama_index.core.embeddings import BaseEmbedding
 
 
 class TestOpenAIDependencyFix:
-    """Test that ClarifAIVectorStore doesn't require OpenAI embeddings package."""
+    """Test that aclaraiVectorStore doesn't require OpenAI embeddings package."""
 
     def test_vector_store_creation_without_openai_package(self):
-        """Test creating ClarifAIVectorStore without OpenAI dependency."""
+        """Test creating aclaraiVectorStore without OpenAI dependency."""
 
         # Create test config
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.database = DatabaseConfig(
             host="localhost",
             port=5432,
@@ -31,10 +31,10 @@ class TestOpenAIDependencyFix:
 
         # Mock external dependencies to focus on the OpenAI import issue
         with (
-            patch("clarifai_shared.embedding.storage.create_engine") as mock_engine,
-            patch("clarifai_shared.embedding.storage.PGVectorStore") as mock_pgvector,
+            patch("aclarai_shared.embedding.storage.create_engine") as mock_engine,
+            patch("aclarai_shared.embedding.storage.PGVectorStore") as mock_pgvector,
             patch(
-                "clarifai_shared.embedding.models.HuggingFaceEmbedding"
+                "aclarai_shared.embedding.models.HuggingFaceEmbedding"
             ) as mock_hf_embedding,
         ):
             # Setup mocks
@@ -65,7 +65,7 @@ class TestOpenAIDependencyFix:
             )
 
             # This should NOT raise ImportError about llama-index-embeddings-openai
-            vector_store = ClarifAIVectorStore(config=config)
+            vector_store = aclaraiVectorStore(config=config)
 
             # Verify the vector store was created successfully
             assert vector_store is not None
@@ -76,7 +76,7 @@ class TestOpenAIDependencyFix:
         """Test the store_embeddings method that was mentioned in the issue."""
 
         # Create test config exactly as in the failing test
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.database = DatabaseConfig(
             host="localhost",
             port=5432,
@@ -87,7 +87,7 @@ class TestOpenAIDependencyFix:
 
         # Create test embedded chunks as in the failing test
         chunk_metadata = ChunkMetadata(
-            clarifai_block_id="blk_store_test",
+            aclarai_block_id="blk_store_test",
             chunk_index=0,
             original_text="Test original text",
             text="Test chunk text",
@@ -104,10 +104,10 @@ class TestOpenAIDependencyFix:
 
         # Mock all external dependencies
         with (
-            patch("clarifai_shared.embedding.storage.create_engine") as mock_engine,
-            patch("clarifai_shared.embedding.storage.PGVectorStore") as mock_pgvector,
+            patch("aclarai_shared.embedding.storage.create_engine") as mock_engine,
+            patch("aclarai_shared.embedding.storage.PGVectorStore") as mock_pgvector,
             patch(
-                "clarifai_shared.embedding.models.HuggingFaceEmbedding"
+                "aclarai_shared.embedding.models.HuggingFaceEmbedding"
             ) as mock_hf_embedding,
         ):
             # Setup mocks
@@ -141,7 +141,7 @@ class TestOpenAIDependencyFix:
             mock_vector_index = MagicMock()
 
             # This should NOT raise ImportError about llama-index-embeddings-openai
-            vector_store = ClarifAIVectorStore(config=config)
+            vector_store = aclaraiVectorStore(config=config)
             vector_store.vector_index = mock_vector_index
 
             # Test the store_embeddings method that was failing

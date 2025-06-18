@@ -5,7 +5,7 @@ Tests for the shared configuration system.
 import os
 import tempfile
 import pytest
-from clarifai_shared.config import ClarifAIConfig, DatabaseConfig, load_config
+from aclarai_shared.config import aclaraiConfig, DatabaseConfig, load_config
 
 
 class TestDatabaseConfig:
@@ -39,8 +39,8 @@ class TestDatabaseConfig:
         assert db_config.get_neo4j_bolt_url() == expected
 
 
-class TestClarifAIConfig:
-    """Test the ClarifAIConfig class."""
+class TestaclaraiConfig:
+    """Test the aclaraiConfig class."""
 
     def setup_method(self):
         """Clean environment before each test."""
@@ -82,12 +82,12 @@ class TestClarifAIConfig:
 
     def test_from_env_with_defaults(self):
         """Test configuration creation with default values."""
-        config = ClarifAIConfig.from_env()
+        config = aclaraiConfig.from_env()
 
         assert config.postgres.host == "postgres"
         assert config.postgres.port == 5432
-        assert config.postgres.user == "clarifai"
-        assert config.postgres.database == "clarifai"
+        assert config.postgres.user == "aclarai"
+        assert config.postgres.database == "aclarai"
 
         assert config.neo4j.host == "neo4j"
         assert config.neo4j.port == 7687
@@ -110,7 +110,7 @@ class TestClarifAIConfig:
         os.environ["LOG_LEVEL"] = "DEBUG"
         os.environ["DEBUG"] = "true"
 
-        config = ClarifAIConfig.from_env()
+        config = aclaraiConfig.from_env()
 
         assert config.postgres.host == "custom-postgres"
         assert config.postgres.port == 5433
@@ -131,7 +131,7 @@ class TestClarifAIConfig:
             env_file = f.name
 
         try:
-            config = ClarifAIConfig.from_env(env_file)
+            config = aclaraiConfig.from_env(env_file)
 
             assert config.postgres.host == "file-postgres"
             assert config.postgres.password == "fake_test_file_password_xyz123"
@@ -146,7 +146,7 @@ class TestClarifAIConfig:
         os.environ["DOCKER_CONTAINER"] = "true"
         os.environ["POSTGRES_HOST"] = "192.168.1.100"
 
-        config = ClarifAIConfig.from_env()
+        config = aclaraiConfig.from_env()
 
         # Should apply fallback for external IP
         assert config.postgres.host == "host.docker.internal"
@@ -156,14 +156,14 @@ class TestClarifAIConfig:
         os.environ["DOCKER_CONTAINER"] = "true"
         os.environ["POSTGRES_HOST"] = "postgres"
 
-        config = ClarifAIConfig.from_env()
+        config = aclaraiConfig.from_env()
 
         # Should keep Docker service name
         assert config.postgres.host == "postgres"
 
     def test_validate_required_vars_missing(self):
         """Test validation with missing required variables."""
-        config = ClarifAIConfig.from_env()
+        config = aclaraiConfig.from_env()
 
         missing = config.validate_required_vars()
 
@@ -176,7 +176,7 @@ class TestClarifAIConfig:
         os.environ["POSTGRES_PASSWORD"] = "fake_test_validation_password_567"
         os.environ["NEO4J_PASSWORD"] = "fake_test_validation_neo4j_password_890"
 
-        config = ClarifAIConfig.from_env()
+        config = aclaraiConfig.from_env()
 
         missing = config.validate_required_vars()
 
@@ -210,4 +210,4 @@ class TestLoadConfig:
     def test_load_config_without_validation(self):
         """Test that load_config works without validation."""
         config = load_config(validate=False)
-        assert isinstance(config, ClarifAIConfig)
+        assert isinstance(config, aclaraiConfig)

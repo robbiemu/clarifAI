@@ -2,9 +2,9 @@
 Tests for embedding models module.
 """
 
-from clarifai_shared.embedding.models import EmbeddingGenerator, EmbeddedChunk
-from clarifai_shared.embedding.chunking import ChunkMetadata
-from clarifai_shared.config import ClarifAIConfig, EmbeddingConfig
+from aclarai_shared.embedding.models import EmbeddingGenerator, EmbeddedChunk
+from aclarai_shared.embedding.chunking import ChunkMetadata
+from aclarai_shared.config import aclaraiConfig, EmbeddingConfig
 
 
 class TestEmbeddingGenerator:
@@ -12,7 +12,7 @@ class TestEmbeddingGenerator:
 
     def test_embedding_generator_init_with_config(self):
         """Test EmbeddingGenerator initialization with config."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig(
             default_model="sentence-transformers/all-MiniLM-L6-v2",
             device="cpu",
@@ -27,7 +27,7 @@ class TestEmbeddingGenerator:
 
     def test_embedding_generator_init_with_model_override(self):
         """Test EmbeddingGenerator initialization with model override."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig(
             default_model="sentence-transformers/all-MiniLM-L6-v2"
         )
@@ -39,19 +39,19 @@ class TestEmbeddingGenerator:
 
     def test_embed_chunks(self):
         """Test embedding multiple chunks."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
 
         chunks = [
             ChunkMetadata(
-                clarifai_block_id="blk_1",
+                aclarai_block_id="blk_1",
                 chunk_index=0,
                 original_text="Original text 1",
                 text="Chunk text 1",
             ),
             ChunkMetadata(
-                clarifai_block_id="blk_2",
+                aclarai_block_id="blk_2",
                 chunk_index=0,
                 original_text="Original text 2",
                 text="Chunk text 2",
@@ -66,12 +66,12 @@ class TestEmbeddingGenerator:
 
     def test_embed_single_chunk(self):
         """Test embedding a single chunk."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
 
         chunk = ChunkMetadata(
-            clarifai_block_id="blk_single",
+            aclarai_block_id="blk_single",
             chunk_index=0,
             original_text="Original single text",
             text="Single chunk text",
@@ -83,7 +83,7 @@ class TestEmbeddingGenerator:
 
     def test_embed_text(self):
         """Test embedding raw text."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
 
@@ -93,7 +93,7 @@ class TestEmbeddingGenerator:
 
     def test_get_embedding_dimension(self):
         """Test getting embedding dimension."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig(embed_dim=512)
         generator = EmbeddingGenerator(config=config)
 
@@ -103,13 +103,13 @@ class TestEmbeddingGenerator:
 
     def test_validate_embeddings(self):
         """Test embedding validation."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig(embed_dim=384)
         generator = EmbeddingGenerator(config=config)
 
         # Create mock embedded chunks
         chunk_metadata = ChunkMetadata(
-            clarifai_block_id="blk_test",
+            aclarai_block_id="blk_test",
             chunk_index=0,
             original_text="Test original",
             text="Test text",
@@ -133,7 +133,7 @@ class TestEmbeddingGenerator:
 
     def test_validate_embeddings_empty(self):
         """Test validation with empty list."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
 
@@ -144,7 +144,7 @@ class TestEmbeddingGenerator:
 
     def test_initialize_embedding_model(self):
         """Test embedding model initialization."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
 
@@ -154,7 +154,7 @@ class TestEmbeddingGenerator:
 
     def test_get_device(self):
         """Test device detection."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig(device="cpu")
         generator = EmbeddingGenerator(config=config)
 
@@ -164,7 +164,7 @@ class TestEmbeddingGenerator:
 
     def test_get_device_auto(self):
         """Test automatic device detection."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig(device="auto")
         generator = EmbeddingGenerator(config=config)
 
@@ -174,7 +174,7 @@ class TestEmbeddingGenerator:
 
     def test_embed_texts_batch(self):
         """Test batch text embedding."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
         config.embedding = EmbeddingConfig(batch_size=2)
         generator = EmbeddingGenerator(config=config)
 
@@ -191,7 +191,7 @@ class TestEmbeddedChunk:
     def test_embedded_chunk_creation(self):
         """Test EmbeddedChunk creation."""
         chunk_metadata = ChunkMetadata(
-            clarifai_block_id="blk_test",
+            aclarai_block_id="blk_test",
             chunk_index=0,
             original_text="Original text",
             text="Chunk text",
@@ -212,7 +212,7 @@ class TestEmbeddedChunk:
     def test_embedded_chunk_equality(self):
         """Test EmbeddedChunk equality."""
         chunk_metadata = ChunkMetadata(
-            clarifai_block_id="blk_test",
+            aclarai_block_id="blk_test",
             chunk_index=0,
             original_text="Original text",
             text="Chunk text",
@@ -237,7 +237,7 @@ class TestEmbeddedChunk:
     def test_embedded_chunk_different_embeddings(self):
         """Test EmbeddedChunk with different embeddings."""
         chunk_metadata = ChunkMetadata(
-            clarifai_block_id="blk_test",
+            aclarai_block_id="blk_test",
             chunk_index=0,
             original_text="Original text",
             text="Chunk text",

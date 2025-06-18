@@ -8,14 +8,14 @@ similarity matching and merge/promote decision logic.
 import pytest
 from unittest.mock import Mock, patch
 
-from clarifai_shared.concept_detection import (
+from aclarai_shared.concept_detection import (
     ConceptDetector,
     ConceptDetectionResult,
     SimilarityMatch,
 )
-from clarifai_shared.concept_detection.models import ConceptAction
-from clarifai_shared.noun_phrase_extraction.models import NounPhraseCandidate
-from clarifai_shared.config import ClarifAIConfig, ConceptsConfig
+from aclarai_shared.concept_detection.models import ConceptAction
+from aclarai_shared.noun_phrase_extraction.models import NounPhraseCandidate
+from aclarai_shared.config import aclaraiConfig, ConceptsConfig
 
 
 class TestConceptDetector:
@@ -24,7 +24,7 @@ class TestConceptDetector:
     @pytest.fixture
     def mock_config(self):
         """Mock configuration for testing."""
-        config = Mock(spec=ClarifAIConfig)
+        config = Mock(spec=aclaraiConfig)
         config.concepts = Mock(spec=ConceptsConfig)
         config.concepts.similarity_threshold = 0.9
         return config
@@ -33,7 +33,7 @@ class TestConceptDetector:
     def mock_candidates_store(self):
         """Mock concept candidates store."""
         with patch(
-            "clarifai_shared.concept_detection.detector.ConceptCandidatesVectorStore"
+            "aclarai_shared.concept_detection.detector.ConceptCandidatesVectorStore"
         ) as mock_store_class:
             mock_store = Mock()
             mock_store.embed_dim = 384  # Typical embedding dimension
@@ -45,7 +45,7 @@ class TestConceptDetector:
     def detector(self, mock_config, mock_candidates_store):
         """Create a ConceptDetector instance for testing."""
         with patch(
-            "clarifai_shared.concept_detection.detector.load_config",
+            "aclarai_shared.concept_detection.detector.load_config",
             return_value=mock_config,
         ):
             detector = ConceptDetector(config=mock_config)
@@ -59,7 +59,7 @@ class TestConceptDetector:
             normalized_text="machine learning",
             source_node_id="claim_123",
             source_node_type="claim",
-            clarifai_id="blk_456",
+            aclarai_id="blk_456",
             embedding=[0.1] * 384,  # Mock embedding
             status="pending",
         )
@@ -72,7 +72,7 @@ class TestConceptDetector:
             normalized_text="machine learning",
             source_node_id="claim_124",
             source_node_type="claim",
-            clarifai_id="blk_457",
+            aclarai_id="blk_457",
             embedding=[0.11] * 384,  # Slightly different but similar embedding
             status="pending",
         )
@@ -85,7 +85,7 @@ class TestConceptDetector:
             normalized_text="database schema",
             source_node_id="claim_125",
             source_node_type="claim",
-            clarifai_id="blk_458",
+            aclarai_id="blk_458",
             embedding=[-0.5] * 384,  # Very different embedding
             status="pending",
         )
@@ -99,7 +99,7 @@ class TestConceptDetector:
         assert detector.id_to_metadata == {}
         assert detector.next_id == 0
 
-    @patch("clarifai_shared.concept_detection.detector.hnswlib.Index")
+    @patch("aclarai_shared.concept_detection.detector.hnswlib.Index")
     def test_initialize_index(self, mock_hnswlib_index, detector):
         """Test HNSW index initialization."""
         mock_index = Mock()
@@ -148,7 +148,7 @@ class TestConceptDetector:
         )
 
         with patch(
-            "clarifai_shared.concept_detection.detector.hnswlib.Index"
+            "aclarai_shared.concept_detection.detector.hnswlib.Index"
         ) as mock_hnswlib:
             mock_index = Mock()
             mock_hnswlib.return_value = mock_index
@@ -177,7 +177,7 @@ class TestConceptDetector:
             normalized_text="test",
             source_node_id="claim_123",
             source_node_type="claim",
-            clarifai_id="blk_456",
+            aclarai_id="blk_456",
             embedding=None,
             status="pending",
         )
@@ -247,7 +247,7 @@ class TestConceptDetector:
                 normalized_text="ai",
                 source_node_id="claim_1",
                 source_node_type="claim",
-                clarifai_id="blk_1",
+                aclarai_id="blk_1",
                 embedding=[0.1] * 384,
                 status="pending",
             ),
@@ -256,7 +256,7 @@ class TestConceptDetector:
                 normalized_text="artificial intelligence",
                 source_node_id="claim_2",
                 source_node_type="claim",
-                clarifai_id="blk_2",
+                aclarai_id="blk_2",
                 embedding=[0.11] * 384,  # Similar to first
                 status="pending",
             ),
@@ -296,7 +296,7 @@ class TestConceptDetector:
         mock_config.concepts.similarity_threshold = 0.85
 
         with patch(
-            "clarifai_shared.concept_detection.detector.load_config",
+            "aclarai_shared.concept_detection.detector.load_config",
             return_value=mock_config,
         ):
             detector = ConceptDetector(config=mock_config)

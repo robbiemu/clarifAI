@@ -8,8 +8,8 @@ The Claimify pipeline processes text through three stages (Selection → Disambi
 
 ## Prerequisites
 
-- ClarifAI development environment set up
-- Configuration file `settings/clarifai.config.yaml` properly configured
+- aclarai development environment set up
+- Configuration file `settings/aclarai.config.yaml` properly configured
 - LLM access configured (OpenAI, Azure OpenAI, or local models)
 
 ## Basic Configuration
@@ -41,13 +41,13 @@ claimify:
 ### 2. Creating Pipeline Instance
 
 ```python
-from clarifai_shared.claimify import (
+from aclarai_shared.claimify import (
     ClaimifyPipeline,
     load_claimify_config_from_file
 )
 
 # Load configuration
-config = load_claimify_config_from_file("settings/clarifai.config.yaml")
+config = load_claimify_config_from_file("settings/aclarai.config.yaml")
 
 # Create pipeline
 pipeline = ClaimifyPipeline(config=config)
@@ -58,7 +58,7 @@ pipeline = ClaimifyPipeline(config=config)
 ### 1. Basic Sentence Processing
 
 ```python
-from clarifai_shared.claimify import SentenceChunk, ClaimifyContext
+from aclarai_shared.claimify import SentenceChunk, ClaimifyContext
 
 # Create sentence chunks
 sentences = [

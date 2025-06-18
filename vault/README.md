@@ -1,6 +1,6 @@
-# ClarifAI Vault Directory
+# aclarai Vault Directory
 
-This directory serves as the default vault for Obsidian-style Markdown files that ClarifAI processes.
+This directory serves as the default vault for Obsidian-style Markdown files that aclarai processes.
 
 ## Using Your Own Obsidian Vault
 
@@ -32,7 +32,7 @@ Set the `VAULT_PATH` environment variable in your `.env` file to point to your O
 
 - This directory is mounted as `/vault` in the Docker containers
 - Files placed here will be watched by the `vault-watcher` service
-- The `clarifai-core` service processes files from this directory
+- The `aclarai-core` service processes files from this directory
 - The `scheduler` service performs periodic maintenance on this directory
 
 ## Usage
@@ -40,13 +40,13 @@ Set the `VAULT_PATH` environment variable in your `.env` file to point to your O
 1. Configure your vault path using one of the methods above
 2. Place your Markdown files in the configured vault directory
 3. The `vault-watcher` service will detect changes and emit dirty block IDs
-4. The `clarifai-core` service will process the files for claim extraction, summarization, and concept linking
+4. The `aclarai-core` service will process the files for claim extraction, summarization, and concept linking
 5. The `scheduler` service will run periodic jobs for concept hygiene and vault sync
 
 ## Important Notes
 
 - Ensure your vault directory is readable and writable by the Docker containers
 - Files are processed atomically using `.tmp` → `rename` operations
-- The system uses `clarifai:id` and `ver=` markers to track file versions
+- The system uses `aclarai:id` and `ver=` markers to track file versions
 - If using a symbolic link, ensure Docker has access to follow symlinks
 - For production deployments, consider using proper volume mounts instead of symbolic links

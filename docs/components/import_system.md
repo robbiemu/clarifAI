@@ -1,6 +1,6 @@
 # Tier 1 Markdown Import System
 
-The Tier 1 import system provides a complete pipeline for importing conversation files into the ClarifAI vault as standardized Tier 1 Markdown documents.
+The Tier 1 import system provides a complete pipeline for importing conversation files into the aclarai vault as standardized Tier 1 Markdown documents.
 
 ## Features
 
@@ -15,11 +15,11 @@ The Tier 1 import system provides a complete pipeline for importing conversation
 
 For complete usage examples and step-by-step tutorials, see:
 - **Tutorial**: `docs/tutorials/tier1_import_tutorial.md` - Complete guide with examples
-- **CLI Reference**: `shared/clarifai_shared/scripts/import_cli.py --help` - Command line options
+- **CLI Reference**: `shared/aclarai_shared/scripts/import_cli.py --help` - Command line options
 
 ## Configuration
 
-The import system uses the central `ClarifAIConfig` system with vault path configuration. See `shared/clarifai_shared/config.py` for the `VaultPaths` dataclass implementation and `docs/ENVIRONMENT_CONFIGURATION.md` for environment variable details.
+The import system uses the central `aclaraiConfig` system with vault path configuration. See `shared/aclarai_shared/config.py` for the `VaultPaths` dataclass implementation and `docs/ENVIRONMENT_CONFIGURATION.md` for environment variable details.
 
 ## Generated Format
 
@@ -64,7 +64,7 @@ The system includes comprehensive test coverage. See test files in `shared/tests
 
 ## Architecture Integration
 
-The import system integrates with ClarifAI's broader architecture:
+The import system integrates with aclarai's broader architecture:
 
 - **Plugin System**: Uses existing plugin interface and default plugin
 - **Configuration**: Leverages central configuration system
@@ -77,7 +77,7 @@ The import system integrates with ClarifAI's broader architecture:
 The system generates Tier 1 Markdown files where each conversation utterance becomes a block with:
 
 - **Speaker format**: `speaker: text` blocks
-- **Unique identifiers**: Each utterance gets a `<!-- clarifai:id=blk_xyz ver=1 -->` comment
+- **Unique identifiers**: Each utterance gets a `<!-- aclarai:id=blk_xyz ver=1 -->` comment
 - **Obsidian anchors**: Corresponding `^blk_xyz` anchors for block references
 - **File metadata**: HTML comments at the top with conversation details
 

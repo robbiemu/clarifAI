@@ -30,7 +30,7 @@ class TestNeo4jGraphManager:
     def test_neo4j_manager_init_with_config(self, mock_config):
         """Test Neo4jGraphManager initialization with config (unit test)."""
         # Import and test the actual class instead of checking file contents
-        from clarifai_shared.graph.neo4j_manager import Neo4jGraphManager
+        from aclarai_shared.graph.neo4j_manager import Neo4jGraphManager
 
         # Test that the class can be imported and has expected methods
         assert hasattr(Neo4jGraphManager, "__init__")
@@ -54,7 +54,7 @@ class TestNeo4jGraphManager:
         # Mock test - verify module file exists
         manager_path = os.path.join(
             os.path.dirname(__file__),
-            "../../clarifai_shared/graph/neo4j_manager.py",
+            "../../aclarai_shared/graph/neo4j_manager.py",
         )
         assert os.path.exists(manager_path)
 
@@ -73,10 +73,10 @@ class TestNeo4jGraphManager:
         # Mock test - verify module structure
         manager_path = os.path.join(
             os.path.dirname(__file__),
-            "../../clarifai_shared/graph/neo4j_manager.py",
+            "../../aclarai_shared/graph/neo4j_manager.py",
         )
         models_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/graph/models.py"
+            os.path.dirname(__file__), "../../aclarai_shared/graph/models.py"
         )
 
         assert os.path.exists(manager_path)
@@ -98,10 +98,10 @@ class TestNeo4jGraphManager:
         # Mock test - verify module structure
         manager_path = os.path.join(
             os.path.dirname(__file__),
-            "../../clarifai_shared/graph/neo4j_manager.py",
+            "../../aclarai_shared/graph/neo4j_manager.py",
         )
         models_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/graph/models.py"
+            os.path.dirname(__file__), "../../aclarai_shared/graph/models.py"
         )
 
         assert os.path.exists(manager_path)
@@ -123,7 +123,7 @@ class TestNeo4jGraphManager:
         # Mock test - verify module structure
         manager_path = os.path.join(
             os.path.dirname(__file__),
-            "../../clarifai_shared/graph/neo4j_manager.py",
+            "../../aclarai_shared/graph/neo4j_manager.py",
         )
         assert os.path.exists(manager_path)
 
@@ -142,7 +142,7 @@ class TestNeo4jGraphManager:
         # Mock test - verify module structure
         manager_path = os.path.join(
             os.path.dirname(__file__),
-            "../../clarifai_shared/graph/neo4j_manager.py",
+            "../../aclarai_shared/graph/neo4j_manager.py",
         )
         assert os.path.exists(manager_path)
 

@@ -11,14 +11,14 @@ class TestPromptsInit:
     def test_prompts_init_file_exists(self):
         """Test that the prompts __init__.py file exists."""
         init_path = os.path.join(
-            os.path.dirname(__file__), "../clarifai_shared/prompts/__init__.py"
+            os.path.dirname(__file__), "../aclarai_shared/prompts/__init__.py"
         )
         assert os.path.exists(init_path)
 
     def test_prompts_init_file_structure(self):
         """Test that the prompts __init__.py file has expected structure."""
         init_path = os.path.join(
-            os.path.dirname(__file__), "../clarifai_shared/prompts/__init__.py"
+            os.path.dirname(__file__), "../aclarai_shared/prompts/__init__.py"
         )
 
         with open(init_path, "r") as f:
@@ -33,7 +33,7 @@ class TestPromptsInit:
     def test_prompts_directory_structure(self):
         """Test that the prompts directory exists and has expected structure."""
         prompts_dir = os.path.join(
-            os.path.dirname(__file__), "../clarifai_shared/prompts"
+            os.path.dirname(__file__), "../aclarai_shared/prompts"
         )
         assert os.path.exists(prompts_dir)
         assert os.path.isdir(prompts_dir)

@@ -8,14 +8,14 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 
-from clarifai_shared.config import ClarifAIConfig, VaultPaths
-from clarifai_shared.graph.models import Concept
-from clarifai_shared.concept_detection.models import (
+from aclarai_shared.config import aclaraiConfig, VaultPaths
+from aclarai_shared.graph.models import Concept
+from aclarai_shared.concept_detection.models import (
     ConceptAction,
     ConceptDetectionResult,
     ConceptDetectionBatch,
 )
-from clarifai_shared.tier3_concept import ConceptFileWriter
+from aclarai_shared.tier3_concept import ConceptFileWriter
 
 
 # Skip spaCy model loading for these tests
@@ -45,10 +45,10 @@ class TestConceptProcessorTier3Integration:
     Note: These tests mock dependencies to avoid network access requirements.
     """
 
-    @patch("clarifai_shared.graph.Neo4jGraphManager")
-    @patch("clarifai_core.concept_processor.ConceptDetector")
-    @patch("clarifai_core.concept_processor.NounPhraseExtractor")
-    @patch("clarifai_core.concept_processor.ConceptCandidatesVectorStore")
+    @patch("aclarai_shared.graph.Neo4jGraphManager")
+    @patch("aclarai_core.concept_processor.ConceptDetector")
+    @patch("aclarai_core.concept_processor.NounPhraseExtractor")
+    @patch("aclarai_core.concept_processor.ConceptCandidatesVectorStore")
     def test_promoted_concepts_create_tier3_files(
         self, mock_store, mock_extractor, mock_detector, mock_neo4j_manager
     ):
@@ -56,12 +56,12 @@ class TestConceptProcessorTier3Integration:
         # Try importing ConceptProcessor
         import sys
 
-        sys.path.append("/home/runner/work/clarifAI/clarifAI/services/clarifai-core")
-        from clarifai_core.concept_processor import ConceptProcessor
+        sys.path.append("/home/runner/work/aclarai/aclarai/services/aclarai-core")
+        from aclarai_core.concept_processor import ConceptProcessor
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Setup config with temp directory
-            config = ClarifAIConfig(
+            config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
             )
 
@@ -108,7 +108,7 @@ class TestConceptProcessorTier3Integration:
                 source_candidate_id="test_candidate_1",
                 source_node_id="claim_456",
                 source_node_type="claim",
-                clarifai_id="doc_789",
+                aclarai_id="doc_789",
                 version=1,
                 timestamp=datetime.now(timezone.utc),
             )
@@ -123,7 +123,7 @@ class TestConceptProcessorTier3Integration:
                 "test_candidate_1": {
                     "source_node_id": "claim_456",
                     "source_node_type": "claim",
-                    "clarifai_id": "doc_789",
+                    "aclarai_id": "doc_789",
                     "text": "machine learning",
                 }
             }
@@ -149,17 +149,17 @@ class TestConceptProcessorTier3Integration:
             # Verify file content
             content = expected_file.read_text()
             assert "## Concept: machine learning" in content
-            assert "<!-- clarifai:id=concept_test123 ver=1 -->" in content
+            assert "<!-- aclarai:id=concept_test123 ver=1 -->" in content
             assert "^concept_test123" in content
 
             # Verify updates include concept_id
             assert len(updates) == 1
             assert updates[0]["concept_id"] == "concept_test123"
 
-    @patch("clarifai_shared.graph.Neo4jGraphManager")
-    @patch("clarifai_core.concept_processor.ConceptDetector")
-    @patch("clarifai_core.concept_processor.NounPhraseExtractor")
-    @patch("clarifai_core.concept_processor.ConceptCandidatesVectorStore")
+    @patch("aclarai_shared.graph.Neo4jGraphManager")
+    @patch("aclarai_core.concept_processor.ConceptDetector")
+    @patch("aclarai_core.concept_processor.NounPhraseExtractor")
+    @patch("aclarai_core.concept_processor.ConceptCandidatesVectorStore")
     def test_no_tier3_files_for_merged_concepts(
         self, mock_store, mock_extractor, mock_detector, mock_neo4j_manager
     ):
@@ -167,12 +167,12 @@ class TestConceptProcessorTier3Integration:
         # Try importing ConceptProcessor
         import sys
 
-        sys.path.append("/home/runner/work/clarifAI/clarifAI/services/clarifai-core")
-        from clarifai_core.concept_processor import ConceptProcessor
+        sys.path.append("/home/runner/work/aclarai/aclarai/services/aclarai-core")
+        from aclarai_core.concept_processor import ConceptProcessor
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Setup config with temp directory
-            config = ClarifAIConfig(
+            config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
             )
 
@@ -188,7 +188,7 @@ class TestConceptProcessorTier3Integration:
             mock_detector.return_value = mock_detector_instance
 
             # Mock concept detection results with a merged concept (no promotion)
-            from clarifai_shared.concept_detection.models import SimilarityMatch
+            from aclarai_shared.concept_detection.models import SimilarityMatch
 
             best_match = SimilarityMatch(
                 candidate_id="test_candidate_1",
@@ -232,7 +232,7 @@ class TestConceptProcessorTier3Integration:
                 "test_candidate_1": {
                     "source_node_id": "claim_456",
                     "source_node_type": "claim",
-                    "clarifai_id": "doc_789",
+                    "aclarai_id": "doc_789",
                     "text": "machine learning",
                 }
             }
@@ -267,7 +267,7 @@ class TestConceptFileWriterIntegration:
         """Test that ConceptFileWriter correctly creates Tier 3 files."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Setup config with temp directory
-            config = ClarifAIConfig(
+            config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
             )
 
@@ -281,7 +281,7 @@ class TestConceptFileWriterIntegration:
                 source_candidate_id="test_candidate_1",
                 source_node_id="claim_456",
                 source_node_type="claim",
-                clarifai_id="doc_789",
+                aclarai_id="doc_789",
                 version=1,
                 timestamp=datetime.now(timezone.utc),
             )
@@ -300,14 +300,14 @@ class TestConceptFileWriterIntegration:
             # Verify file content
             content = expected_file.read_text()
             assert "## Concept: machine learning" in content
-            assert "<!-- clarifai:id=concept_test123 ver=1 -->" in content
+            assert "<!-- aclarai:id=concept_test123 ver=1 -->" in content
             assert "^concept_test123" in content
             assert "This concept was automatically extracted" in content
 
     def test_concept_file_writer_error_handling(self):
         """Test that ConceptFileWriter handles errors gracefully."""
         # Use a non-existent directory to simulate write errors
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path="/nonexistent/path", paths=VaultPaths(concepts="concepts")
         )
 
@@ -319,7 +319,7 @@ class TestConceptFileWriterIntegration:
             source_candidate_id="test_candidate_1",
             source_node_id="claim_456",
             source_node_type="claim",
-            clarifai_id="doc_789",
+            aclarai_id="doc_789",
             version=1,
             timestamp=datetime.now(timezone.utc),
         )
@@ -331,7 +331,7 @@ class TestConceptFileWriterIntegration:
     def test_multiple_concepts_integration(self):
         """Test writing multiple concept files in sequence."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            config = ClarifAIConfig(
+            config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
             )
 
@@ -345,7 +345,7 @@ class TestConceptFileWriterIntegration:
                     source_candidate_id="candidate_1",
                     source_node_id="claim_456",
                     source_node_type="claim",
-                    clarifai_id="doc_789",
+                    aclarai_id="doc_789",
                     version=1,
                     timestamp=datetime.now(timezone.utc),
                 ),
@@ -355,7 +355,7 @@ class TestConceptFileWriterIntegration:
                     source_candidate_id="candidate_2",
                     source_node_id="claim_789",
                     source_node_type="claim",
-                    clarifai_id="doc_012",
+                    aclarai_id="doc_012",
                     version=1,
                     timestamp=datetime.now(timezone.utc),
                 ),

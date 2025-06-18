@@ -13,7 +13,7 @@ from pathlib import Path
 from unittest.mock import Mock
 import pika
 
-from clarifai_vault_watcher.main import VaultWatcherService
+from aclarai_vault_watcher.main import VaultWatcherService
 
 
 @pytest.mark.integration
@@ -30,7 +30,7 @@ class TestRabbitMQIntegration:
             channel = connection.channel()
 
             # Ensure the test queue exists
-            queue_name = "test_clarifai_dirty_blocks"
+            queue_name = "test_aclarai_dirty_blocks"
             channel.queue_declare(queue=queue_name, durable=True)
 
             yield connection, channel, queue_name
@@ -78,13 +78,13 @@ class TestRabbitMQIntegration:
         service, temp_dir, queue_name = vault_watcher_service
         connection, channel, _ = rabbitmq_connection
 
-        # Create a test file with ClarifAI block
+        # Create a test file with aclarai block
         vault_path = Path(temp_dir)
         test_file = vault_path / "test_message.md"
         test_content = """
 # Test Document
 
-This is a test claim. <!-- clarifai:id=clm_test_format ver=1 -->
+This is a test claim. <!-- aclarai:id=clm_test_format ver=1 -->
 ^clm_test_format
         """.strip()
 
@@ -111,7 +111,7 @@ This is a test claim. <!-- clarifai:id=clm_test_format ver=1 -->
             message_data = json.loads(body)
 
             # Verify message format
-            assert "clarifai_id" in message_data
+            assert "aclarai_id" in message_data
             assert "file_path" in message_data
             assert "change_type" in message_data
             assert "timestamp" in message_data
@@ -119,7 +119,7 @@ This is a test claim. <!-- clarifai:id=clm_test_format ver=1 -->
             assert "block_type" in message_data
 
             # Verify message content
-            assert message_data["clarifai_id"] == "clm_test_format"
+            assert message_data["aclarai_id"] == "clm_test_format"
             assert message_data["change_type"] == "added"
             assert message_data["version"] == 1
             assert message_data["block_type"] == "inline"
@@ -142,7 +142,7 @@ This is a test claim. <!-- clarifai:id=clm_test_format ver=1 -->
             test_content = f"""
 # Test Document {i}
 
-This is test claim {i}. <!-- clarifai:id=clm_batch_{i} ver=1 -->
+This is test claim {i}. <!-- aclarai:id=clm_batch_{i} ver=1 -->
 ^clm_batch_{i}
             """.strip()
 
@@ -174,12 +174,12 @@ This is test claim {i}. <!-- clarifai:id=clm_batch_{i} ver=1 -->
                 f"Expected at least 3 messages, got {len(messages)}"
             )
 
-            # Verify each message has a different clarifai_id
-            clarifai_ids = [msg["clarifai_id"] for msg in messages]
+            # Verify each message has a different aclarai_id
+            aclarai_ids = [msg["aclarai_id"] for msg in messages]
             expected_ids = [f"clm_batch_{i}" for i in range(3)]
 
             for expected_id in expected_ids:
-                assert expected_id in clarifai_ids, f"Missing message for {expected_id}"
+                assert expected_id in aclarai_ids, f"Missing message for {expected_id}"
 
         finally:
             service.stop()
@@ -202,7 +202,7 @@ This is test claim {i}. <!-- clarifai:id=clm_batch_{i} ver=1 -->
                 return mock_publisher
 
             mp.setattr(
-                "clarifai_vault_watcher.main.DirtyBlockPublisher",
+                "aclarai_vault_watcher.main.DirtyBlockPublisher",
                 mock_failing_publisher,
             )
 
@@ -213,7 +213,7 @@ This is test claim {i}. <!-- clarifai:id=clm_batch_{i} ver=1 -->
                 # Create a test file
                 vault_path = Path(temp_dir)
                 test_file = vault_path / "test_failure.md"
-                test_content = "# Test <!-- clarifai:id=clm_test_fail ver=1 -->"
+                test_content = "# Test <!-- aclarai:id=clm_test_fail ver=1 -->"
                 test_file.write_text(test_content)
 
                 # This should not raise an exception even though RabbitMQ is failing
@@ -228,7 +228,7 @@ This is test claim {i}. <!-- clarifai:id=clm_batch_{i} ver=1 -->
 
         # Publish a test message manually
         test_message = {
-            "clarifai_id": "clm_consumer_test",
+            "aclarai_id": "clm_consumer_test",
             "file_path": "/test/path.md",
             "change_type": "modified",
             "timestamp": int(time.time() * 1000),
@@ -251,8 +251,8 @@ This is test claim {i}. <!-- clarifai:id=clm_batch_{i} ver=1 -->
         assert method_frame is not None, "Message was not consumed"
 
         consumed_message = json.loads(body)
-        assert consumed_message["clarifai_id"] == "clm_consumer_test"
+        assert consumed_message["aclarai_id"] == "clm_consumer_test"
         assert consumed_message["change_type"] == "modified"
 
-        # Future: This is where clarifai-core consumer logic would be tested
+        # Future: This is where aclarai-core consumer logic would be tested
         # when the sync_vault_to_graph job is ready

@@ -1,7 +1,7 @@
-# Tarefa: Construir stack Docker Compose com Neo4j, Postgres, clarifai-core, vault-watcher e scheduler
+# Tarefa: Construir stack Docker Compose com Neo4j, Postgres, aclarai-core, vault-watcher e scheduler
 
 ## Descrição
-Desenvolver e configurar um stack Docker Compose completo para o ClarifAI, incluindo todos os serviços de backend necessários: Neo4j (banco de dados de grafos), Postgres com pgvector (banco de dados vetorial), clarifai-core (serviço principal), vault-watcher (observador de arquivos) e scheduler (agendador de tarefas).
+Desenvolver e configurar um stack Docker Compose completo para o aclarai, incluindo todos os serviços de backend necessários: Neo4j (banco de dados de grafos), Postgres com pgvector (banco de dados vetorial), aclarai-core (serviço principal), vault-watcher (observador de arquivos) e scheduler (agendador de tarefas).
 
 ## Escopo
 
@@ -9,14 +9,14 @@ Desenvolver e configurar um stack Docker Compose completo para o ClarifAI, inclu
 - Criação do arquivo docker-compose.yml com definição de todos os serviços
 - Configuração do Neo4j para armazenamento de grafos de conhecimento
 - Configuração do Postgres com extensão pgvector para armazenamento de embeddings
-- Definição dos serviços clarifai-core, vault-watcher e scheduler
+- Definição dos serviços aclarai-core, vault-watcher e scheduler
 - Configuração de volumes para persistência de dados
 - Configuração de redes para comunicação entre serviços
 - Definição de variáveis de ambiente e dependências entre serviços
 - Documentação da arquitetura e uso do stack Docker Compose
 
 ### Excluído
-- Implementação do código interno dos serviços (clarifai-core, vault-watcher, scheduler)
+- Implementação do código interno dos serviços (aclarai-core, vault-watcher, scheduler)
 - Configuração de serviços de frontend (será feita em tarefa separada)
 - Configuração de produção com SSL/TLS e autenticação avançada
 - Otimizações de desempenho específicas para ambientes de produção

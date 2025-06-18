@@ -41,7 +41,7 @@ jobs:
       run: |
         uv venv
         uv pip install -e ".[dev]"
-        uv pip install -e ./shared -e ./services/clarifai-core -e ./services/clarifai-ui -e ./services/scheduler -e ./services/vault-watcher
+        uv pip install -e ./shared -e ./services/aclarai-core -e ./services/aclarai-ui -e ./services/scheduler -e ./services/vault-watcher
         
     - name: Run Ruff linter
       run: |
@@ -88,7 +88,7 @@ jobs:
       run: |
         uv venv
         uv pip install -e ".[dev]"
-        uv pip install -e ./shared -e ./services/clarifai-core -e ./services/clarifai-ui -e ./services/scheduler -e ./services/vault-watcher
+        uv pip install -e ./shared -e ./services/aclarai-core -e ./services/aclarai-ui -e ./services/scheduler -e ./services/vault-watcher
         
     - name: Run Bandit security check
       run: |
@@ -127,7 +127,7 @@ jobs:
       run: |
         uv venv
         uv pip install -e ".[dev]"
-        uv pip install -e ./shared -e ./services/clarifai-core -e ./services/clarifai-ui -e ./services/scheduler -e ./services/vault-watcher
+        uv pip install -e ./shared -e ./services/aclarai-core -e ./services/aclarai-ui -e ./services/scheduler -e ./services/vault-watcher
         
     - name: Run tests
       run: |
@@ -192,7 +192,7 @@ jobs:
     
     strategy:
       matrix:
-        service: [clarifai-core, vault-watcher, scheduler, clarifai-ui]
+        service: [aclarai-core, vault-watcher, scheduler, aclarai-ui]
     
     steps:
     - name: Checkout code
@@ -213,7 +213,7 @@ jobs:
       run: |
         echo "Building Docker image for ${{ matrix.service }}"
         # Try to build the Docker image, but allow it to fail gracefully
-        if docker build --tag clarifai-${{ matrix.service }}:test \
+        if docker build --tag aclarai-${{ matrix.service }}:test \
           --cache-from type=local,src=/tmp/.buildx-cache \
           --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
           ./services/${{ matrix.service }}; then
@@ -228,9 +228,9 @@ jobs:
       run: |
         echo "Testing Docker image for ${{ matrix.service }}"
         # Only test if the image was successfully built
-        if docker image inspect clarifai-${{ matrix.service }}:test > /dev/null 2>&1; then
+        if docker image inspect aclarai-${{ matrix.service }}:test > /dev/null 2>&1; then
           echo "Testing image..."
-          docker run --rm clarifai-${{ matrix.service }}:test python --version
+          docker run --rm aclarai-${{ matrix.service }}:test python --version
           echo "✅ Image test completed for ${{ matrix.service }}"
         else
           echo "⚠️ Skipping image test for ${{ matrix.service }} - image not built"

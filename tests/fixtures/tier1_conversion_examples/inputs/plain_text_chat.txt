@@ -24,6 +24,6 @@ Graduate Student: The decontextualization score is interesting - it ensures clai
 
 Dr. Smith: That's crucial for knowledge reuse. Claims in concept pages need to be understandable independently of their source conversations.
 
-Research Assistant: The metadata format stores these scores as HTML comments, right? Like <!-- clarifai:entailed_score=0.91 -->
+Research Assistant: The metadata format stores these scores as HTML comments, right? Like <!-- aclarai:entailed_score=0.91 -->
 
 Dr. Smith: Yes, and that's compatible with Obsidian while remaining human-readable. Very elegant solution.

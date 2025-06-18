@@ -6,16 +6,16 @@ import tempfile
 from pathlib import Path
 from datetime import datetime, timezone
 
-from clarifai_shared.tier3_concept.writer import ConceptFileWriter
-from clarifai_shared.graph.models import Concept
-from clarifai_shared.config import ClarifAIConfig, VaultPaths
+from aclarai_shared.tier3_concept.writer import ConceptFileWriter
+from aclarai_shared.graph.models import Concept
+from aclarai_shared.config import aclaraiConfig, VaultPaths
 
 
 def test_end_to_end_concept_creation():
     """Test the complete flow from concept creation to file writing."""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Setup configuration
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
         )
 
@@ -29,7 +29,7 @@ def test_end_to_end_concept_creation():
             source_candidate_id="candidate_456",
             source_node_id="claim_789",
             source_node_type="claim",
-            clarifai_id="doc_abc123",
+            aclarai_id="doc_abc123",
             version=1,
             timestamp=datetime.now(timezone.utc),
         )
@@ -49,13 +49,13 @@ def test_end_to_end_concept_creation():
         assert "## Concept: machine learning" in content
         assert "### Examples" in content
         assert "### See Also" in content
-        assert "<!-- clarifai:id=concept_machine_learning_123 ver=1 -->" in content
+        assert "<!-- aclarai:id=concept_machine_learning_123 ver=1 -->" in content
         assert "^concept_machine_learning_123" in content
 
         # Verify the structure
         lines = content.strip().split("\n")
         assert lines[0] == "## Concept: machine learning"
-        assert lines[-2] == "<!-- clarifai:id=concept_machine_learning_123 ver=1 -->"
+        assert lines[-2] == "<!-- aclarai:id=concept_machine_learning_123 ver=1 -->"
         assert lines[-1] == "^concept_machine_learning_123"
 
         print("✅ End-to-end test passed: concept file created successfully")
@@ -66,7 +66,7 @@ def test_end_to_end_concept_creation():
 def test_multiple_concepts_creation():
     """Test creating multiple concept files."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
         )
 
@@ -80,7 +80,7 @@ def test_multiple_concepts_creation():
                 source_candidate_id="cand_001",
                 source_node_id="claim_001",
                 source_node_type="claim",
-                clarifai_id="doc_001",
+                aclarai_id="doc_001",
                 version=1,
                 timestamp=datetime.now(timezone.utc),
             ),
@@ -90,7 +90,7 @@ def test_multiple_concepts_creation():
                 source_candidate_id="cand_002",
                 source_node_id="claim_002",
                 source_node_type="claim",
-                clarifai_id="doc_002",
+                aclarai_id="doc_002",
                 version=1,
                 timestamp=datetime.now(timezone.utc),
             ),

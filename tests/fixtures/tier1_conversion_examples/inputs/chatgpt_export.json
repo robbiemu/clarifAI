@@ -41,7 +41,7 @@
         "create_time": 1703261520.0,
         "content": {
           "content_type": "text",
-          "parts": ["Agreed. What about the Tier 1 Markdown generation? We need to ensure each utterance gets a unique clarifai:id and proper anchors."]
+          "parts": ["Agreed. What about the Tier 1 Markdown generation? We need to ensure each utterance gets a unique aclarai:id and proper anchors."]
         }
       }
     },
@@ -55,7 +55,7 @@
         "create_time": 1703261580.0,
         "content": {
           "content_type": "text",
-          "parts": ["Exactly. The format should be 'Speaker: text' followed by HTML comments with the clarifai:id and the ^anchor. We also need atomic file writing with .tmp → fsync → rename."]
+          "parts": ["Exactly. The format should be 'Speaker: text' followed by HTML comments with the aclarai:id and the ^anchor. We also need atomic file writing with .tmp → fsync → rename."]
         }
       }
     },
@@ -83,7 +83,7 @@
         "create_time": 1703261700.0,
         "content": {
           "content_type": "text",
-          "parts": ["Right! And store the vectors in Postgres via pgvector, including metadata like the parent clarifai:id, chunk_index, and original text. This will support the RAG workflow later."]
+          "parts": ["Right! And store the vectors in Postgres via pgvector, including metadata like the parent aclarai:id, chunk_index, and original text. This will support the RAG workflow later."]
         }
       }
     }

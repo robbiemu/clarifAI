@@ -33,7 +33,7 @@ def test_vault_sync_with_fixtures():
         # Copy fixtures
         shutil.copy(fixtures_dir / "tier1_conversation.md", tier1_dir)
         shutil.copy(fixtures_dir / "mixed_content.md", tier1_dir)
-        shutil.copy(fixtures_dir / "no_clarifai_ids.md", tier1_dir)
+        shutil.copy(fixtures_dir / "no_aclarai_ids.md", tier1_dir)
         shutil.copy(fixtures_dir / "tier3_concept_page.md", tier3_dir)
 
         print(f"Test vault created at: {temp_vault}")
@@ -45,7 +45,7 @@ def test_vault_sync_with_fixtures():
         print(f"\nTier1 conversation content preview: {tier1_conversation[:200]}...")
 
         # Count expected blocks
-        expected_blocks = tier1_conversation.count("clarifai:id=")
+        expected_blocks = tier1_conversation.count("aclarai:id=")
         print(f"Expected blocks in tier1_conversation.md: {expected_blocks}")
 
         # Test with simple block extraction function
@@ -53,7 +53,7 @@ def test_vault_sync_with_fixtures():
             """Simple block extraction for testing."""
             import re
 
-            pattern = r"<!--\s*clarifai:id=([^-\s]+)(?:\s+ver=(\d+))?\s*-->"
+            pattern = r"<!--\s*aclarai:id=([^-\s]+)(?:\s+ver=(\d+))?\s*-->"
             matches = re.findall(pattern, content)
             return [(match[0], int(match[1]) if match[1] else 1) for match in matches]
 
@@ -81,8 +81,8 @@ def test_vault_sync_with_fixtures():
             f"Expected 4 blocks in mixed content, got {len(mixed_blocks)}"
         )
 
-        # Test file with no clarifai:id
-        no_id_content = (tier1_dir / "no_clarifai_ids.md").read_text()
+        # Test file with no aclarai:id
+        no_id_content = (tier1_dir / "no_aclarai_ids.md").read_text()
         no_id_blocks = extract_blocks_simple(no_id_content)
         print(f"No-ID file blocks: {no_id_blocks}")
 
@@ -139,17 +139,17 @@ def test_file_structure_discovery():
 
         # Create some test files
         (vault_path / "conversations" / "meeting_001.md").write_text(
-            "# Meeting\nContent <!-- clarifai:id=blk_001 -->"
+            "# Meeting\nContent <!-- aclarai:id=blk_001 -->"
         )
         (vault_path / "conversations" / "brainstorm.md").write_text(
-            "# Brainstorm\nIdeas <!-- clarifai:id=blk_002 -->"
+            "# Brainstorm\nIdeas <!-- aclarai:id=blk_002 -->"
         )
         (vault_path / "concepts" / "important_concept.md").write_text(
-            "# Concept\nDescription <!-- clarifai:id=concept_001 -->"
+            "# Concept\nDescription <!-- aclarai:id=concept_001 -->"
         )
         (vault_path / "summaries" / "weekly_summary.md").write_text(
             "# Summary\nOverview"
-        )  # No clarifai:id
+        )  # No aclarai:id
 
         # Test file discovery
         md_files = list(vault_path.glob("**/*.md"))

@@ -1,6 +1,6 @@
 # Noun Phrase Extraction System
 
-This document provides a high-level overview of the Noun Phrase Extraction system, a core component of ClarifAI's concept detection pipeline.
+This document provides a high-level overview of the Noun Phrase Extraction system, a core component of aclarai's concept detection pipeline.
 
 ## Overview
 
@@ -8,7 +8,7 @@ The Noun Phrase Extraction system is responsible for identifying and processing 
 
 ## Architecture
 
-The system is composed of three main components, all located in the `shared/clarifai_shared/noun_phrase_extraction/` module:
+The system is composed of three main components, all located in the `shared/aclarai_shared/noun_phrase_extraction/` module:
 
 -   **`NounPhraseExtractor`**: The main orchestrator that fetches graph nodes, uses spaCy for extraction, normalizes the text, and coordinates storage.
 -   **`ConceptCandidatesVectorStore`**: A specialized vector store that manages the `concept_candidates` table in PostgreSQL. It handles embedding generation and provides methods for storing and querying candidates.
@@ -39,7 +39,7 @@ The system implements efficient batch processing for both embedding generation a
 
 The extraction process gracefully handles individual node failures without stopping the entire batch, ensuring maximum data recovery even when some source nodes have malformed content.
 
-## Role in the ClarifAI Ecosystem
+## Role in the aclarai Ecosystem
 
 This system acts as a bridge between raw, extracted claims/summaries and the canonical concept layer. By creating a pool of "concept candidates," it enables the next stage of the pipeline (concept detection via `hnswlib`) to identify and merge semantically similar ideas before they are promoted to full `(:Concept)` nodes in the graph.
 
@@ -52,7 +52,7 @@ The extracted noun phrases serve as the foundation for:
 
 ## Configuration Integration
 
-The system follows ClarifAI's configuration-driven architecture, reading all parameters from `settings/clarifai.config.yaml`. Key configuration aspects include:
+The system follows aclarai's configuration-driven architecture, reading all parameters from `settings/aclarai.config.yaml`. Key configuration aspects include:
 
 - **spaCy Model Selection**: Choose between speed (`en_core_web_sm`) and accuracy (`en_core_web_trf`)
 - **Normalization Rules**: Control phrase filtering and cleanup behavior

@@ -1,6 +1,6 @@
 # HNSW-based Concept Detection System
 
-This document describes the HNSW-based concept detection system implemented for ClarifAI, which uses hnswlib for fast similarity search and concept deduplication.
+This document describes the HNSW-based concept detection system implemented for aclarai, which uses hnswlib for fast similarity search and concept deduplication.
 
 ## Overview
 
@@ -12,17 +12,17 @@ The concept detection system analyzes noun phrase candidates extracted from Clai
 
 ### Components
 
-1. **ConceptDetector** (`shared/clarifai_shared/concept_detection/detector.py`)
+1. **ConceptDetector** (`shared/aclarai_shared/concept_detection/detector.py`)
    - Core component using hnswlib for similarity search
    - Builds and manages HNSW index from concept candidates
    - Provides similarity-based decision logic
 
-2. **ConceptProcessor** (`services/clarifai-core/clarifai_core/concept_processor.py`)
-   - Integration component for clarifai-core pipeline
+2. **ConceptProcessor** (`services/aclarai-core/aclarai_core/concept_processor.py`)
+   - Integration component for aclarai-core pipeline
    - Orchestrates noun phrase extraction, storage, and concept detection
    - Handles batch processing and status updates
 
-3. **Data Models** (`shared/clarifai_shared/concept_detection/models.py`)
+3. **Data Models** (`shared/aclarai_shared/concept_detection/models.py`)
    - `ConceptAction`: Enum for merge/promote actions
    - `SimilarityMatch`: Represents similarity matches between candidates
    - `ConceptDetectionResult`: Results for individual candidates
@@ -40,7 +40,7 @@ The concept detection system integrates with:
 
 ### Similarity Thresholds
 
-Configured in `shared/clarifai_shared/config.py`:
+Configured in `shared/aclarai_shared/config.py`:
 
 ```python
 @dataclass
@@ -69,8 +69,8 @@ space='cosine'         # Distance metric for embeddings
 ### Basic Concept Detection
 
 ```python
-from clarifai_shared.concept_detection import ConceptDetector
-from clarifai_shared.noun_phrase_extraction.models import NounPhraseCandidate
+from aclarai_shared.concept_detection import ConceptDetector
+from aclarai_shared.noun_phrase_extraction.models import NounPhraseCandidate
 
 # Initialize detector
 detector = ConceptDetector()
@@ -84,7 +84,7 @@ candidate = NounPhraseCandidate(
     normalized_text="machine learning", 
     source_node_id="claim_123",
     source_node_type="claim",
-    clarifai_id="blk_456",
+    aclarai_id="blk_456",
     embedding=[0.1] * 384
 )
 
@@ -106,17 +106,17 @@ print(f"Promoted: {batch_result.promoted_count}")
 print(f"Processing time: {batch_result.processing_time}s")
 ```
 
-### Integration with clarifai-core
+### Integration with aclarai-core
 
 ```python
-from clarifai_core.concept_processor import ConceptProcessor
+from aclarai_core.concept_processor import ConceptProcessor
 
 # Initialize processor
 processor = ConceptProcessor()
 
 # Process a block for concepts
 block = {
-    "clarifai_id": "blk_123",
+    "aclarai_id": "blk_123",
     "semantic_text": "Machine learning algorithms are used in AI applications.",
     "content_hash": "abc123",
     "version": 1
@@ -198,7 +198,7 @@ The system implements robust error handling:
 uv run pytest shared/tests/concept_detection/ -v
 
 # Run integration tests  
-uv run pytest services/clarifai-core/tests/test_concept_processor.py -v
+uv run pytest services/aclarai-core/tests/test_concept_processor.py -v
 ```
 
 
@@ -207,7 +207,7 @@ uv run pytest services/clarifai-core/tests/test_concept_processor.py -v
 
 - **hnswlib**: Fast approximate nearest neighbor search
 - **numpy**: Array operations for embeddings  
-- **clarifai_shared**: Configuration and data models
+- **aclarai_shared**: Configuration and data models
 - **LlamaIndex**: Fallback vector operations
 
 ## References

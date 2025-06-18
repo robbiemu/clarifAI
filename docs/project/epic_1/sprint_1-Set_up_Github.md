@@ -1,12 +1,12 @@
 # Tarefa: Configurar GitHub e GitHub Actions para CI do Monorepo
 
 ## Descrição
-Configurar o repositório GitHub **do monorepo** para o projeto ClarifAI e implementar GitHub Actions para integração contínua (CI), garantindo que todos os merges para a branch `main` passem por verificações automatizadas **que cobrem todos os serviços do monorepo**.
+Configurar o repositório GitHub **do monorepo** para o projeto aclarai e implementar GitHub Actions para integração contínua (CI), garantindo que todos os merges para a branch `main` passem por verificações automatizadas **que cobrem todos os serviços do monorepo**.
 
 ## Escopo
 
 ### Incluído
-- Criação do repositório GitHub para o projeto ClarifAI **(agora um monorepo único)**
+- Criação do repositório GitHub para o projeto aclarai **(agora um monorepo único)**
 - Configuração de proteção da branch `main` para exigir revisões de código
 - Implementação de workflows de GitHub Actions para:
   - Verificação de linting e formatação de código **para todos os serviços Python**

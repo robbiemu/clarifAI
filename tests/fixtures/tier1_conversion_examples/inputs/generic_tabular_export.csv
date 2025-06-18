@@ -1,7 +1,7 @@
 timestamp,user_id,user_name,message,thread_ts,reply_count,reactions
-2023-12-22 14:30:00,U123456,alice,"Hey team, I just reviewed the ClarifAI architecture docs. The vault synchronization design looks solid.",,0,
+2023-12-22 14:30:00,U123456,alice,"Hey team, I just reviewed the aclarai architecture docs. The vault synchronization design looks solid.",,0,
 2023-12-22 14:31:15,U789012,bob,"Thanks Alice! I'm particularly excited about the pluggable format conversion system. Should handle multiple input types nicely.",,0,👍:2
-2023-12-22 14:32:30,U345678,carol,"Question about the clarifai:id format - are we using UUIDs or content hashes?",,0,
+2023-12-22 14:32:30,U345678,carol,"Question about the aclarai:id format - are we using UUIDs or content hashes?",,0,
 2023-12-22 14:33:45,U123456,alice,"Good question @carol. According to the docs, IDs can be UUIDs or hashes. I think deterministic hashes would be better for consistency across re-imports.",,0,
 2023-12-22 14:35:00,U789012,bob,"Makes sense. That way if we re-process the same conversation, we get the same IDs and can detect duplicates properly.",,0,
 2023-12-22 14:36:20,U345678,carol,"Perfect! And the ^anchor format will work great with Obsidian. Users can link directly to specific utterances.",,0,🎯:1

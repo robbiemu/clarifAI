@@ -56,7 +56,7 @@ service_context = ServiceContext.from_defaults(
 # Connect to your Postgres database
 # You'll need to create the table and enable the pgvector extension first.
 # Example: CREATE EXTENSION IF NOT EXISTS vector;
-# CREATE TABLE IF NOT EXISTS public.clarifai_utterances (
+# CREATE TABLE IF NOT EXISTS public.aclarai_utterances (
 #    id UUID PRIMARY KEY,
 #    embedding vector(384), -- Match your model's embedding dimension (e.g., MiniLM-L6-v2 is 384)
 #    text VARCHAR,
@@ -77,7 +77,7 @@ with engine.connect() as connection:
 
 vector_store = PGVectorStore(
     embed_dim=embed_model.query_embedding_length, # Automatically get the embedding dimension
-    collection_name="clarifai_utterances", # This will be your table name
+    collection_name="aclarai_utterances", # This will be your table name
     connection_string="postgresql+psycopg2://user:password@host:port/database",
     # Or use existing SQLAlchemy engine:
     # engine=engine
@@ -96,13 +96,13 @@ index = VectorStoreIndex.from_vector_store(
 from llama_index.schema import Document
 
 # Example: Assuming you have your Tier 1 Markdown blocks
-utterance_text = "Alice: Let's release v1.2 next week.<!-- clarifai:id=blk_1a2b3c ver=1 -->^blk_1a2b3c"
-# Your actual process would parse this, extract clarifai_id and the actual text.
+utterance_text = "Alice: Let's release v1.2 next week.<!-- aclarai:id=blk_1a2b3c ver=1 -->^blk_1a2b3c"
+# Your actual process would parse this, extract aclarai_id and the actual text.
 # For simplicity, here we'll just use the text.
 document = Document(
     text=utterance_text,
     metadata={
-        "clarifai_id": "blk_1a2b3c",
+        "aclarai_id": "blk_1a2b3c",
         "chunk_index": 0, # This would be assigned by your segmentation logic
         "original_text_full_block": utterance_text # Store original full block if needed
     }

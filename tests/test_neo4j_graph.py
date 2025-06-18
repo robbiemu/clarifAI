@@ -24,7 +24,7 @@ def load_module_from_path(name: str, path: Path):
 
 # Load the models module
 models_path = (
-    Path(__file__).parent.parent / "shared" / "clarifai_shared" / "graph" / "models.py"
+    Path(__file__).parent.parent / "shared" / "aclarai_shared" / "graph" / "models.py"
 )
 models = load_module_from_path("models", models_path)
 

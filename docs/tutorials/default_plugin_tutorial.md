@@ -1,13 +1,13 @@
-# Getting Started with ClarifAI Default Plugin
+# Getting Started with aclarai Default Plugin
 
-This tutorial walks you through using ClarifAI's default plugin for converting unstructured conversation data into standardized Tier 1 Markdown format. The default plugin serves as a fallback for files that aren't recognized by specific format plugins.
+This tutorial walks you through using aclarai's default plugin for converting unstructured conversation data into standardized Tier 1 Markdown format. The default plugin serves as a fallback for files that aren't recognized by specific format plugins.
 
 ## Overview
 
-The default plugin is part of ClarifAI's pluggable format conversion system. It:
+The default plugin is part of aclarai's pluggable format conversion system. It:
 - Always accepts input as a fallback option
 - Uses pattern matching and optional LLM processing
-- Converts conversations to ClarifAI Tier 1 Markdown format
+- Converts conversations to aclarai Tier 1 Markdown format
 - Generates unique block IDs and metadata
 
 ## Step 1: Basic Setup
@@ -23,7 +23,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent / "shared"))
 
 # Import the plugin system
-from clarifai_shared import DefaultPlugin, convert_file_to_markdowns
+from aclarai_shared import DefaultPlugin, convert_file_to_markdowns
 ```
 
 ## Step 2: Prepare Sample Data
@@ -97,18 +97,18 @@ if outputs:
 
 Expected output format:
 ```markdown
-<!-- clarifai:title=Sprint Planning -->
-<!-- clarifai:created_at=2023-12-22T16:45:00Z -->
-<!-- clarifai:participants=["alice", "bob", "charlie"] -->
-<!-- clarifai:message_count=6 -->
-<!-- clarifai:plugin_metadata={"source_format": "fallback_llm", ...} -->
+<!-- aclarai:title=Sprint Planning -->
+<!-- aclarai:created_at=2023-12-22T16:45:00Z -->
+<!-- aclarai:participants=["alice", "bob", "charlie"] -->
+<!-- aclarai:message_count=6 -->
+<!-- aclarai:plugin_metadata={"source_format": "fallback_llm", ...} -->
 
 alice: Let's start our sprint planning meeting.
-<!-- clarifai:id=blk_abc123 ver=1 -->
+<!-- aclarai:id=blk_abc123 ver=1 -->
 ^blk_abc123
 
 bob: I've prepared the backlog for review.
-<!-- clarifai:id=blk_def456 ver=1 -->
+<!-- aclarai:id=blk_def456 ver=1 -->
 ^blk_def456
 
 ...
@@ -283,7 +283,7 @@ When other plugins return `False` from `can_accept()`, the default plugin will a
 - **Multiple Format Support**: Handles various conversation structures
 - **Metadata Extraction**: Automatically extracts session IDs, topics, durations
 - **Block ID Generation**: Creates unique identifiers for each message
-- **Tier 1 Compliance**: Outputs standard ClarifAI Markdown format
+- **Tier 1 Compliance**: Outputs standard aclarai Markdown format
 
 ## Next Steps
 
@@ -303,8 +303,8 @@ The default plugin demonstrates the standard plugin interface. To write your own
 
 Example custom plugin structure:
 ```python
-from clarifai_shared import Plugin, MarkdownOutput
-from clarifai_shared.utils.block_id import generate_unique_block_id
+from aclarai_shared import Plugin, MarkdownOutput
+from aclarai_shared.utils.block_id import generate_unique_block_id
 
 class MyCustomPlugin(Plugin):
     def can_accept(self, raw_input: str) -> bool:

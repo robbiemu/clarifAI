@@ -1,7 +1,7 @@
 # Tarefa: Implementar Agente de Avaliação de Entailment
 
 ## Descrição
-Desenvolver e implementar um agente de avaliação de entailment que analise a relação lógica entre claims (`(:Claim)` nodes) e suas fontes (`:Block` nodes), produzindo uma pontuação (`entailed_score`) que indique o grau de suporte lógico da fonte para o claim. Esta pontuação é crucial para o processo de avaliação de qualidade dos claims no ClarifAI, conforme detalhado em `docs/arch/on-evaluation_agents.md` e `docs/project/technical_overview.md`.
+Desenvolver e implementar um agente de avaliação de entailment que analise a relação lógica entre claims (`(:Claim)` nodes) e suas fontes (`:Block` nodes), produzindo uma pontuação (`entailed_score`) que indique o grau de suporte lógico da fonte para o claim. Esta pontuação é crucial para o processo de avaliação de qualidade dos claims no aclarai, conforme detalhado em `docs/arch/on-evaluation_agents.md` e `docs/project/technical_overview.md`.
 
 ## Escopo
 
@@ -9,7 +9,7 @@ Desenvolver e implementar um agente de avaliação de entailment que analise a r
 - Implementação do **Agente de Avaliação de Entailment**, seguindo a descrição em `docs/arch/on-evaluation_agents.md` (Seção "Agent: `entailment`").
 - Desenvolvimento de lógica para analisar a `source` (bloco Markdown original ou contexto estruturado) e o `claim` (texto do claim candidato), produzindo um `entailed_score` (float entre 0 e 1). A estrutura de entrada para o agente é definida em `docs/arch/on-evaluation_agents.md` (Seção "Input Format").
 - Armazenamento da pontuação `entailed_score` como uma propriedade na aresta `[:ORIGINATES_FROM]` que conecta o `(:Claim)` node ao seu `(:Block)` de origem no Neo4j, conforme `docs/arch/on-evaluation_agents.md` (Seção "Storage").
-- Armazenamento da pontuação `entailed_score` como metadado em um comentário HTML no Markdown Tier 1 (`<!-- clarifai:entailed_score=0.91 -->`), conforme `docs/arch/on-evaluation_agents.md` (Seção "Storage").
+- Armazenamento da pontuação `entailed_score` como metadado em um comentário HTML no Markdown Tier 1 (`<!-- aclarai:entailed_score=0.91 -->`), conforme `docs/arch/on-evaluation_agents.md` (Seção "Storage").
 - **Utilização da lógica de escrita atômica para arquivos Markdown** (implementada em Sprint 3, detalhada em `docs/arch/on-filehandle_conflicts.md`) para a atualização dos metadados no Markdown Tier 1.
 - Implementação de um sistema de retry robusto para o agente em casos de falha (e.g., timeout, erro do LLM).
 - Tratamento adequado de valores `null` para `entailed_score` em caso de falha do agente após os retries. Claims com scores `null` não serão escritos em Markdown e não serão vinculados a conceitos, conforme `docs/arch/on-evaluation_agents.md` (Seção "Failure Handling").
@@ -28,7 +28,7 @@ Desenvolver e implementar um agente de avaliação de entailment que analise a r
 - A pontuação `entailed_score` é produzida com precisão e consistência para diferentes inputs.
 - A pontuação `entailed_score` é armazenada corretamente na aresta `[:ORIGINATES_FROM]` no grafo Neo4j e como metadado no Markdown Tier 1.
 - **A atualização do Markdown Tier 1 com os metadados de pontuação utiliza a lógica de escrita atômica de forma robusta e segura.**
-- **Os marcadores `clarifai:id` e `ver=` existentes nos blocos Markdown Tier 1 são preservados e a propriedade `ver=` é incrementada quando os metadados de pontuação são adicionados/atualizados.**
+- **Os marcadores `aclarai:id` e `ver=` existentes nos blocos Markdown Tier 1 são preservados e a propriedade `ver=` é incrementada quando os metadados de pontuação são adicionados/atualizados.**
 - O sistema de retry funciona adequadamente para casos de falha do agente, com o `entailed_score` sendo definido como `null` após falhas persistentes.
 - O tratamento de valores `null` está apropriado, garantindo que claims com `null` score não sejam processados downstream (no que diz respeito a serem escritos em Markdown ou vinculados a conceitos *nesta fase*).
 - A documentação clara do processo de avaliação de entailment, incluindo a estrutura do prompt e a interpretação da pontuação, está disponível.

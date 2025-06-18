@@ -1,4 +1,4 @@
-# ✅ Create Tier 1 Markdown files with `clarifai:id` comments and Obsidian `^anchors`
+# ✅ Create Tier 1 Markdown files with `aclarai:id` comments and Obsidian `^anchors`
 
 ## What it does:
 Converts a conversation (list of utterances) into a Markdown file where each utterance is:
@@ -7,7 +7,7 @@ Converts a conversation (list of utterances) into a Markdown file where each utt
 * Followed by:
 
   ```markdown
-  <!-- clarifai:id=blk_xyz ver=1 -->
+  <!-- aclarai:id=blk_xyz ver=1 -->
   ^blk_xyz
   ```
 
@@ -39,15 +39,15 @@ We are generating a **Tier 1 document** — this is the raw transcript layer. It
 
 ```markdown
 Alice: Let's release v1.2 next week.
-<!-- clarifai:id=blk_1a2b3c ver=1 -->
+<!-- aclarai:id=blk_1a2b3c ver=1 -->
 ^blk_1a2b3c
 
 Bob: Sounds good. Should we announce it on Friday?
-<!-- clarifai:id=blk_4d5e6f ver=1 -->
+<!-- aclarai:id=blk_4d5e6f ver=1 -->
 ^blk_4d5e6f
 
 Alice: Yes, I'll prep the release notes.
-<!-- clarifai:id=blk_7g8h9i ver=1 -->
+<!-- aclarai:id=blk_7g8h9i ver=1 -->
 ^blk_7g8h9i
 ```
 
@@ -55,7 +55,7 @@ Alice: Yes, I'll prep the release notes.
 
 #### 📌 Details
 
-* Each utterance is one **block**, identified by a unique `clarifai:id`
+* Each utterance is one **block**, identified by a unique `aclarai:id`
 * `ver=1` indicates it's the first version
 * Obsidian’s `^anchor` is aligned to the block ID
 * These anchors enable linking from Tier 2 summaries directly back to Tier 1

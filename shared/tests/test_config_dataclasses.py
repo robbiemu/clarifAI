@@ -77,12 +77,12 @@ class VaultPaths:
     tier1: str = "tier1"
     summaries: str = "."
     concepts: str = "."
-    logs: str = ".clarifai/import_logs"
+    logs: str = ".aclarai/import_logs"
 
 
 @dataclass
-class ClarifAIConfig:
-    """Main configuration class for ClarifAI services."""
+class aclaraiConfig:
+    """Main configuration class for aclarai services."""
 
     postgres: DatabaseConfig = field(
         default_factory=lambda: DatabaseConfig("", 0, "", "")
@@ -274,7 +274,7 @@ class TestVaultPaths:
         assert paths.tier1 == "tier1"
         assert paths.summaries == "."
         assert paths.concepts == "."
-        assert paths.logs == ".clarifai/import_logs"
+        assert paths.logs == ".aclarai/import_logs"
 
     def test_vault_paths_custom_values(self):
         """Test VaultPaths with custom values."""
@@ -295,12 +295,12 @@ class TestVaultPaths:
         assert paths.logs == "logs"
 
 
-class TestClarifAIConfig:
-    """Test cases for ClarifAIConfig dataclass."""
+class TestaclaraiConfig:
+    """Test cases for aclaraiConfig dataclass."""
 
-    def test_clarifai_config_defaults(self):
-        """Test ClarifAIConfig default values."""
-        config = ClarifAIConfig()
+    def test_aclarai_config_defaults(self):
+        """Test aclaraiConfig default values."""
+        config = aclaraiConfig()
 
         # Check default factory instances
         assert isinstance(config.postgres, DatabaseConfig)
@@ -321,12 +321,12 @@ class TestClarifAIConfig:
         assert config.openai_api_key is None
         assert config.anthropic_api_key is None
 
-    def test_clarifai_config_custom_values(self):
-        """Test ClarifAIConfig with custom values."""
+    def test_aclarai_config_custom_values(self):
+        """Test aclaraiConfig with custom values."""
         postgres_config = DatabaseConfig("pg.host", 5432, "pguser", "pgpass", "pgdb")
         neo4j_config = DatabaseConfig("neo4j.host", 7687, "neo4j", "neo4jpass")
 
-        config = ClarifAIConfig(
+        config = aclaraiConfig(
             postgres=postgres_config,
             neo4j=neo4j_config,
             rabbitmq_host="custom.rabbit",
@@ -346,9 +346,9 @@ class TestClarifAIConfig:
         assert config.debug is True
         assert config.openai_api_key == "sk-test123"
 
-    def test_clarifai_config_nested_defaults(self):
+    def test_aclarai_config_nested_defaults(self):
         """Test that nested configs have proper defaults."""
-        config = ClarifAIConfig()
+        config = aclaraiConfig()
 
         # Check embedding config defaults
         assert (
@@ -364,10 +364,10 @@ class TestClarifAIConfig:
         assert config.paths.vault == "/vault"
         assert config.paths.tier1 == "tier1"
 
-    def test_clarifai_config_separate_instances(self):
-        """Test that different ClarifAIConfig instances have separate nested objects."""
-        config1 = ClarifAIConfig()
-        config2 = ClarifAIConfig()
+    def test_aclarai_config_separate_instances(self):
+        """Test that different aclaraiConfig instances have separate nested objects."""
+        config1 = aclaraiConfig()
+        config2 = aclaraiConfig()
 
         # They should be separate instances
         assert config1.embedding is not config2.embedding

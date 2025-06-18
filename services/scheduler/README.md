@@ -1,6 +1,6 @@
-# ClarifAI Scheduler
+# aclarai Scheduler
 
-This service is responsible for running periodic background tasks within the ClarifAI ecosystem. These tasks include, but are not limited to, concept hygiene (deduplication, refinement), refreshing embeddings, reprocessing content that has been marked as dirty, and performing regular synchronization between the vault and the knowledge graph.
+This service is responsible for running periodic background tasks within the aclarai ecosystem. These tasks include, but are not limited to, concept hygiene (deduplication, refinement), refreshing embeddings, reprocessing content that has been marked as dirty, and performing regular synchronization between the vault and the knowledge graph.
 
 ## Features
 
@@ -9,14 +9,14 @@ This service is responsible for running periodic background tasks within the Cla
 The core functionality implemented in this service is the **vault sync job** that maintains consistency between Markdown files in the vault and the Neo4j knowledge graph.
 
 **What it does:**
-- Scans all Tier 1 Markdown files (and optionally other tiers) for blocks with `clarifai:id` markers
+- Scans all Tier 1 Markdown files (and optionally other tiers) for blocks with `aclarai:id` markers
 - Calculates content hashes for semantic text (visible content excluding metadata comments)
 - Compares hashes with stored values in Neo4j to detect changes
 - Updates Neo4j nodes with new content, increments version numbers, and marks changed blocks for reprocessing
 - Provides detailed logging with statistics and error reporting
 
 **Configuration:**
-The vault sync job is configured via `settings/clarifai.config.yaml`:
+The vault sync job is configured via `settings/aclarai.config.yaml`:
 
 ```yaml
 scheduler:
@@ -33,7 +33,7 @@ The service uses **APScheduler** (Advanced Python Scheduler) to run jobs on cron
 
 ## Architecture
 
-The scheduler follows the ClarifAI architectural patterns:
+The scheduler follows the aclarai architectural patterns:
 
 - **Structured logging** following `docs/arch/idea-logging.md`
 - **Error handling and retries** following `docs/arch/on-error-handling-and-resilience.md`
@@ -46,7 +46,7 @@ The scheduler follows the ClarifAI architectural patterns:
 
 Implements the vault-to-graph synchronization logic:
 
-- **Block extraction**: Parses Markdown files to extract `clarifai:id` blocks
+- **Block extraction**: Parses Markdown files to extract `aclarai:id` blocks
 - **Hash calculation**: Computes SHA-256 hashes of semantic text for change detection
 - **Graph synchronization**: Creates/updates Block nodes in Neo4j with version tracking
 - **Statistics tracking**: Provides detailed metrics on sync operations
@@ -72,7 +72,7 @@ Main service class that:
 
 ```bash
 cd services/scheduler
-python -m clarifai_scheduler.main
+python -m aclarai_scheduler.main
 ```
 
 ### Docker
@@ -80,25 +80,25 @@ python -m clarifai_scheduler.main
 The service includes a Dockerfile for containerized deployment:
 
 ```bash
-docker build -t clarifai-scheduler .
-docker run clarifai-scheduler
+docker build -t aclarai-scheduler .
+docker run aclarai-scheduler
 ```
 
 ## Logging
 
 All operations are logged with structured format including:
 
-- Service identification (`clarifai-scheduler`)
+- Service identification (`aclarai-scheduler`)
 - Function names for traceability
 - Job IDs for tracking individual executions
 - Statistics and error details
-- Context IDs (`clarifai_id`, `job_id`) for correlation
+- Context IDs (`aclarai_id`, `job_id`) for correlation
 
 Example log entry:
 ```json
 {
   "level": "INFO",
-  "service": "clarifai-scheduler",
+  "service": "aclarai-scheduler",
   "filename.function_name": "vault_sync.run_sync",
   "job_id": "vault_sync_1734264000",
   "blocks_processed": 42,

@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, Mock, patch
 # Note: These imports may fail without proper package installation
 # but the test structure demonstrates the intended functionality
 try:
-    from clarifai_scheduler.vault_sync import VaultSyncJob
+    from aclarai_scheduler.vault_sync import VaultSyncJob
 
     VAULT_SYNC_AVAILABLE = True
 except ImportError:
@@ -22,7 +22,7 @@ except ImportError:
         def __init__(self, config=None):
             pass
 
-        def _extract_clarifai_blocks(self, content):  # noqa: ARG002
+        def _extract_aclarai_blocks(self, content):  # noqa: ARG002
             return []
 
         def _calculate_content_hash(self, text):
@@ -41,10 +41,10 @@ def _create_mock_config():
     return mock_config
 
 
-@patch("clarifai_scheduler.vault_sync.load_config")
-@patch("clarifai_scheduler.vault_sync.Neo4jGraphManager")
-def test_extract_clarifai_blocks(mock_neo4j, mock_load_config):
-    """Test extraction of clarifai:id blocks from markdown content."""
+@patch("aclarai_scheduler.vault_sync.load_config")
+@patch("aclarai_scheduler.vault_sync.Neo4jGraphManager")
+def test_extract_aclarai_blocks(mock_neo4j, mock_load_config):
+    """Test extraction of aclarai:id blocks from markdown content."""
     # Setup mocks to avoid database connection
     mock_load_config.return_value = _create_mock_config()
     mock_neo4j.return_value = MagicMock()
@@ -55,37 +55,37 @@ def test_extract_clarifai_blocks(mock_neo4j, mock_load_config):
     content = """
 # Test Document
 
-Alice: This is the first utterance. <!-- clarifai:id=blk_abc123 ver=1 -->
+Alice: This is the first utterance. <!-- aclarai:id=blk_abc123 ver=1 -->
 ^blk_abc123
 
-Bob: This is the second utterance. <!-- clarifai:id=blk_def456 ver=2 -->
+Bob: This is the second utterance. <!-- aclarai:id=blk_def456 ver=2 -->
 ^blk_def456
 
-Some text without clarifai:id.
+Some text without aclarai:id.
 """
 
-    blocks = vault_sync.block_parser.extract_clarifai_blocks(content)
+    blocks = vault_sync.block_parser.extract_aclarai_blocks(content)
 
     # Should extract 2 blocks
     assert len(blocks) == 2
 
     # Check first block
     block1 = blocks[0]
-    assert block1["clarifai_id"] == "blk_abc123"
+    assert block1["aclarai_id"] == "blk_abc123"
     assert block1["version"] == 1
     assert "Alice: This is the first utterance." in block1["semantic_text"]
 
     # Check second block
     block2 = blocks[1]
-    assert block2["clarifai_id"] == "blk_def456"
+    assert block2["aclarai_id"] == "blk_def456"
     assert block2["version"] == 2
     assert "Bob: This is the second utterance." in block2["semantic_text"]
 
 
-@patch("clarifai_scheduler.vault_sync.load_config")
-@patch("clarifai_scheduler.vault_sync.Neo4jGraphManager")
+@patch("aclarai_scheduler.vault_sync.load_config")
+@patch("aclarai_scheduler.vault_sync.Neo4jGraphManager")
 def test_extract_file_level_block(mock_neo4j, mock_load_config):
-    """Test extraction of file-level clarifai:id blocks."""
+    """Test extraction of file-level aclarai:id blocks."""
     # Setup mocks to avoid database connection
     mock_load_config.return_value = _create_mock_config()
     mock_neo4j.return_value = MagicMock()
@@ -100,24 +100,24 @@ def test_extract_file_level_block(mock_neo4j, mock_load_config):
 - Concept B: Another topic
 - Concept C: Third topic
 
-<!-- clarifai:id=file_top_concepts_20240615 ver=1 -->
+<!-- aclarai:id=file_top_concepts_20240615 ver=1 -->
 """
 
-    blocks = vault_sync.block_parser.extract_clarifai_blocks(content)
+    blocks = vault_sync.block_parser.extract_aclarai_blocks(content)
 
     # Should extract 1 file-level block
     assert len(blocks) == 1
 
     block = blocks[0]
-    assert block["clarifai_id"] == "file_top_concepts_20240615"
+    assert block["aclarai_id"] == "file_top_concepts_20240615"
     assert block["version"] == 1
     # Semantic text should be the entire content excluding the comment
     assert "# Top Concepts Report" in block["semantic_text"]
-    assert "clarifai:id" not in block["semantic_text"]
+    assert "aclarai:id" not in block["semantic_text"]
 
 
-@patch("clarifai_scheduler.vault_sync.load_config")
-@patch("clarifai_scheduler.vault_sync.Neo4jGraphManager")
+@patch("aclarai_scheduler.vault_sync.load_config")
+@patch("aclarai_scheduler.vault_sync.Neo4jGraphManager")
 def test_calculate_content_hash(mock_neo4j, mock_load_config):
     """Test content hash calculation."""
     # Setup mocks to avoid database connection
@@ -156,21 +156,21 @@ def test_process_markdown_file_integration():
         test_content = """
 # Test Conversation
 
-Alice: Hello there! <!-- clarifai:id=blk_greeting ver=1 -->
+Alice: Hello there! <!-- aclarai:id=blk_greeting ver=1 -->
 ^blk_greeting
 
-Bob: Hi Alice, how are you? <!-- clarifai:id=blk_response ver=1 -->
+Bob: Hi Alice, how are you? <!-- aclarai:id=blk_response ver=1 -->
 ^blk_response
 
-Alice: I'm doing well, thanks! <!-- clarifai:id=blk_followup ver=1 -->
+Alice: I'm doing well, thanks! <!-- aclarai:id=blk_followup ver=1 -->
 ^blk_followup
 """
         test_file.write_text(test_content)
 
         # Mock the graph manager and config
         with (
-            patch("clarifai_scheduler.vault_sync.load_config") as mock_config,
-            patch("clarifai_scheduler.vault_sync.Neo4jGraphManager") as mock_graph,
+            patch("aclarai_scheduler.vault_sync.load_config") as mock_config,
+            patch("aclarai_scheduler.vault_sync.Neo4jGraphManager") as mock_graph,
         ):
             # Configure mocks
             mock_config.return_value.vault_path = temp_dir
@@ -196,8 +196,8 @@ Alice: I'm doing well, thanks! <!-- clarifai:id=blk_followup ver=1 -->
             assert stats["errors"] == 0
 
 
-@patch("clarifai_scheduler.vault_sync.load_config")
-@patch("clarifai_scheduler.vault_sync.Neo4jGraphManager")
+@patch("aclarai_scheduler.vault_sync.load_config")
+@patch("aclarai_scheduler.vault_sync.Neo4jGraphManager")
 def test_vault_sync_job_stats_merging(mock_neo4j, mock_load_config):
     """Test that statistics are properly merged across files and tiers."""
     # Setup mocks to avoid database connection
@@ -237,10 +237,10 @@ if __name__ == "__main__":
     print("Running vault sync tests...")
 
     try:
-        test_extract_clarifai_blocks()
-        print("✓ test_extract_clarifai_blocks passed")
+        test_extract_aclarai_blocks()
+        print("✓ test_extract_aclarai_blocks passed")
     except Exception as e:
-        print(f"✗ test_extract_clarifai_blocks failed: {e}")
+        print(f"✗ test_extract_aclarai_blocks failed: {e}")
 
     try:
         test_extract_file_level_block()

@@ -1,16 +1,16 @@
 # Tier 1 Import System Tutorial
 
-This tutorial shows how to use the ClarifAI Tier 1 import system to convert conversation files into standardized Tier 1 Markdown documents.
+This tutorial shows how to use the aclarai Tier 1 import system to convert conversation files into standardized Tier 1 Markdown documents.
 
 ## Basic Usage
 
 ### Setting Up the Import System
 
 ```python
-from clarifai_shared import ClarifAIConfig, Tier1ImportSystem, VaultPaths
+from aclarai_shared import aclaraiConfig, Tier1ImportSystem, VaultPaths
 
 # Configure with your vault path
-config = ClarifAIConfig(
+config = aclaraiConfig(
     vault_path="/path/to/your/vault",
     paths=VaultPaths(
         tier1="conversations",  # Where Tier 1 files go
@@ -82,22 +82,22 @@ charlie: Frontend is ready for testing
 The system generates Tier 1 Markdown files with proper annotations:
 
 ```markdown
-<!-- clarifai:title=Weekly Team Sync -->
-<!-- clarifai:created_at=2025-06-09T23:29:03.406829 -->
-<!-- clarifai:participants=["alice", "bob", "charlie"] -->
-<!-- clarifai:message_count=3 -->
-<!-- clarifai:plugin_metadata={"source_format": "fallback_llm", "session_id": "team_weekly_20250609"} -->
+<!-- aclarai:title=Weekly Team Sync -->
+<!-- aclarai:created_at=2025-06-09T23:29:03.406829 -->
+<!-- aclarai:participants=["alice", "bob", "charlie"] -->
+<!-- aclarai:message_count=3 -->
+<!-- aclarai:plugin_metadata={"source_format": "fallback_llm", "session_id": "team_weekly_20250609"} -->
 
 alice: Let's start with project updates
-<!-- clarifai:id=blk_fkj7pn ver=1 -->
+<!-- aclarai:id=blk_fkj7pn ver=1 -->
 ^blk_fkj7pn
 
 bob: The backend API is 90% complete
-<!-- clarifai:id=blk_xl8j4v ver=1 -->
+<!-- aclarai:id=blk_xl8j4v ver=1 -->
 ^blk_xl8j4v
 
 charlie: Frontend is ready for testing
-<!-- clarifai:id=blk_mn3k2p ver=1 -->
+<!-- aclarai:id=blk_mn3k2p ver=1 -->
 ^blk_mn3k2p
 ```
 
@@ -120,7 +120,7 @@ except DuplicateDetectionError:
 ## Error Handling
 
 ```python
-from clarifai_shared.import_system import DuplicateDetectionError, ImportSystemError
+from aclarai_shared.import_system import DuplicateDetectionError, ImportSystemError
 
 try:
     output_files = system.import_file("conversation.txt")
@@ -139,7 +139,7 @@ Here's a complete example that creates sample files and imports them:
 ```python
 import tempfile
 from pathlib import Path
-from clarifai_shared import ClarifAIConfig, Tier1ImportSystem, VaultPaths
+from aclarai_shared import aclaraiConfig, Tier1ImportSystem, VaultPaths
 
 # Create a temporary demo environment
 with tempfile.TemporaryDirectory() as temp_dir:
@@ -155,7 +155,7 @@ alice: Perfect, let's review it together.""")
     
     # Setup vault and import system
     vault_dir = temp_path / "vault"
-    config = ClarifAIConfig(
+    config = aclaraiConfig(
         vault_path=str(vault_dir),
         paths=VaultPaths(tier1="conversations")
     )

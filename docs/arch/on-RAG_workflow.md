@@ -67,14 +67,14 @@ Similar Concepts:
 - __setitem__
 
 ---
-Generate a Markdown page that defines this concept, explains its usage, and links to relevant clarifai IDs.
+Generate a Markdown page that defines this concept, explains its usage, and links to relevant aclarai IDs.
 ```
 
 ---
 
 ### 📦 Output: Tier 3 Markdown File (`[[Concept]]`)
 - `## Concept: <term>`
-- Claims and utterance links with `^clarifai:id`
+- Claims and utterance links with `^aclarai:id`
 - Optional `See also` section
 
 ---

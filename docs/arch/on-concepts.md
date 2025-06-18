@@ -1,6 +1,6 @@
 # 🧠 Concept Creation and Drift Handling (Initial Strategy)
 
-ClarifAI extracts, organizes, and updates concepts in a lightweight but effective way that suits individual users and small teams. This approach builds on the existing block-level processing and nightly maintenance workflows.
+aclarai extracts, organizes, and updates concepts in a lightweight but effective way that suits individual users and small teams. This approach builds on the existing block-level processing and nightly maintenance workflows.
 
 ---
 
@@ -26,7 +26,7 @@ Each canonical concept is represented by a `(:Concept)` node in the graph. These
 | `name`           | `String`    | The canonical name of the concept (also used in the Markdown filename)     |
 | `embedding_hash` | `String`    | SHA256 hash of the Markdown text used to produce the current embedding     |
 | `last_updated`   | `Datetime`  | Timestamp of last embedding refresh (usually from nightly concept sync)    |
-| `version`        | `Int`       | Parsed from the concept file’s `clarifai:id` block to track vault edits    |
+| `version`        | `Int`       | Parsed from the concept file’s `aclarai:id` block to track vault edits    |
 | `status`         | `String`    | Optional: may be `"active"`, `"merged"`, or `"deprecated"` for hygiene ops |
 
 
@@ -44,7 +44,7 @@ Each row includes:
 
 * `text`: the noun phrase (e.g. `"slice object"`)
 * `embedding`: vector representation
-* `source_claim_id` and `clarifai_id` for traceability
+* `source_claim_id` and `aclarai_id` for traceability
 * `status`: e.g., `"pending"`, `"merged"`, `"promoted"`
 
 This table supports:
@@ -127,4 +127,4 @@ Not included in the MVP, but the groundwork is in place:
 * No UI review flow required—MVP stays simple and autonomous
 * Fully integrated into the existing nightly sync and block-based claim extraction pipeline
 
-This plan keeps ClarifAI usable for individuals from day one while still laying the groundwork for smarter concept maintenance over time.
+This plan keeps aclarai usable for individuals from day one while still laying the groundwork for smarter concept maintenance over time.

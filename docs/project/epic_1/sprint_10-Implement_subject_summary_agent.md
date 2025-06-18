@@ -13,9 +13,9 @@ Desenvolver e implementar um agente inteligente para gerar arquivos Markdown `[[
   - Cabeçalho `## Subject: <name or synthesized theme>`
   - Lista de `[[Concept]]`s membros com backlinks
   - Resumo em seções de temas ou questões-chave
-  - Inclusão dos marcadores `<!-- clarifai:id=subject_<slug> ver=N -->` e `^subject_<slug>` para compatibilidade com o sistema de sincronização do vault (`docs/arch/on-graph_vault_synchronization.md`).
+  - Inclusão dos marcadores `<!-- aclarai:id=subject_<slug> ver=N -->` e `^subject_<slug>` para compatibilidade com o sistema de sincronização do vault (`docs/arch/on-graph_vault_synchronization.md`).
   (Esta estrutura segue `docs/arch/on-writing_vault_documents.md`).
-- O comportamento do agente será configurável via `settings/clarifai.config.yaml` (gerenciado pela UI de Sprint 10), incluindo:
+- O comportamento do agente será configurável via `settings/aclarai.config.yaml` (gerenciado pela UI de Sprint 10), incluindo:
   - `model.subject_summary` (modelo LLM a ser utilizado, conforme `docs/arch/design_config_panel.md`).
   - `similarity_threshold` para formação de clusters (embora a formação do cluster seja em outra tarefa, o agente pode usar para coerência, conforme `docs/arch/design_config_panel.md`).
   - `min_concepts` e `max_concepts` para o tamanho do cluster.
@@ -37,8 +37,8 @@ Desenvolver e implementar um agente inteligente para gerar arquivos Markdown `[[
 - O agente gera arquivos Markdown `[[Subject:XYZ]]` com a estrutura padronizada especificada em `docs/arch/on-writing_vault_documents.md`.
 - O conteúdo das páginas de assunto inclui informações relevantes de claims compartilhados, resumos comuns e nomes dos principais conceitos, puxados do grafo.
 - A capacidade de pesquisa web funciona corretamente quando `allow_web_search` está habilitada, e as referências são incorporadas de forma relevante.
-- A estrutura do arquivo segue o formato especificado (cabeçalho, conceitos membros, resumo em seções) e inclui os marcadores `clarifai:id` e `ver=`.
-- O agente respeita e aplica as configurações lidas do `clarifai.config.yaml` (`model.subject_summary`, `similarity_threshold`, `min_concepts`, `max_concepts`, `allow_web_search`, `skip_if_incoherent`).
+- A estrutura do arquivo segue o formato especificado (cabeçalho, conceitos membros, resumo em seções) e inclui os marcadores `aclarai:id` e `ver=`.
+- O agente respeita e aplica as configurações lidas do `aclarai.config.yaml` (`model.subject_summary`, `similarity_threshold`, `min_concepts`, `max_concepts`, `allow_web_search`, `skip_if_incoherent`).
 - A escrita do arquivo `[[Subject:XYZ]]` utiliza a lógica de escrita atômica de forma robusta e segura.
 - A integração com o sistema de clustering de conceitos funciona corretamente, recebendo os clusters de entrada.
 - A documentação clara do processo, formato e opções de configuração está disponível.
@@ -51,13 +51,13 @@ Desenvolver e implementar um agente inteligente para gerar arquivos Markdown `[[
 - Acesso ao sistema de arquivos para criação de arquivos Markdown.
 - Definição clara do formato de páginas de assunto em `docs/arch/on-writing_vault_documents.md` e `docs/arch/design_config_panel.md`.
 - Lógica de escrita atômica para arquivos Markdown implementada (`docs/project/epic_1/sprint_3-Create_agent_and_integration_for_Tier_2.md`).
-- Configuração de `model.subject_summary` disponível via `clarifai.config.yaml` (gerenciada pela UI de Sprint 10).
+- Configuração de `model.subject_summary` disponível via `aclarai.config.yaml` (gerenciada pela UI de Sprint 10).
 
 ## Entregáveis
-- Código-fonte do Subject Summary Agent (dentro do serviço `clarifai-core` ou `scheduler`).
+- Código-fonte do Subject Summary Agent (dentro do serviço `aclarai-core` ou `scheduler`).
 - Implementação da lógica de extração de informações relevantes do grafo.
 - Implementação da capacidade de pesquisa web para contexto adicional (se `allow_web_search` for `true`).
-- Geração de arquivos Markdown `[[Subject:XYZ]]` com estrutura padronizada e metadados `clarifai:id`/`ver=`.
+- Geração de arquivos Markdown `[[Subject:XYZ]]` com estrutura padronizada e metadados `aclarai:id`/`ver=`.
 - Documentação técnica do processo e formato.
 - Testes unitários e de integração.
 

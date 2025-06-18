@@ -1,7 +1,7 @@
 # Tarefa: Criar/atualizar arquivos Markdown Tier 3 ([[Concept]]) e nós (:Concept)
 
 ## Descrição
-Desenvolver um sistema para criar e atualizar arquivos Markdown Tier 3 (`[[Concept]]`) no vault e seus correspondentes nós `(:Concept)` no grafo de conhecimento Neo4j. Este sistema será acionado por **candidatos a conceito "promovidos"** pela lógica de detecção baseada em embeddings (`hnswlib` de Sprint 4), estabelecendo a camada conceitual canônica do ClarifAI.
+Desenvolver um sistema para criar e atualizar arquivos Markdown Tier 3 (`[[Concept]]`) no vault e seus correspondentes nós `(:Concept)` no grafo de conhecimento Neo4j. Este sistema será acionado por **candidatos a conceito "promovidos"** pela lógica de detecção baseada em embeddings (`hnswlib` de Sprint 4), estabelecendo a camada conceitual canônica do aclarai.
 
 ## Escopo
 
@@ -43,7 +43,7 @@ Desenvolver um sistema para criar e atualizar arquivos Markdown Tier 3 (`[[Conce
 - A lógica de escrita atômica para arquivos Markdown implementada (de Sprint 3, referenciada em `on-filehandle_conflicts.md`).
 
 ## Entregáveis
-- Código-fonte do sistema de criação e atualização de conceitos (dentro de `clarifai-core`).
+- Código-fonte do sistema de criação e atualização de conceitos (dentro de `aclarai-core`).
 - Implementação da lógica de interação com o Neo4j para nós `(:Concept)`.
 - Documentação do sistema e seu funcionamento.
 - Testes unitários e de integração.
@@ -66,4 +66,4 @@ Desenvolver um sistema para criar e atualizar arquivos Markdown Tier 3 (`[[Conce
 - A criação de nós `(:Concept)` deve incluir todas as propriedades definidas em `on-concepts.md` (`name`, `embedding_hash`, `last_updated`, `version`, `status`). O `embedding_hash` deve ser calculado a partir do texto que *será escrito no arquivo Markdown* (mesmo que inicialmente esse texto seja apenas um nome/slug).
 - Utilizar transações no Neo4j para garantir a atomicidade das operações de criação/atualização de nós.
 - A lógica de persistência para o nó `(:Concept)` deve ser robusta, lidando com erros de conexão ou escrita.
-- O sistema deve garantir que o `clarifai:id` e o `^anchor` sejam inseridos corretamente nos novos arquivos Tier 3, alinhados com o `concept_id` gerado.
+- O sistema deve garantir que o `aclarai:id` e o `^anchor` sejam inseridos corretamente nos novos arquivos Tier 3, alinhados com o `concept_id` gerado.

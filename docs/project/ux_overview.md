@@ -1,6 +1,6 @@
-# 🧭 ClarifAI UX Overview
+# 🧭 aclarai UX Overview
 
-This document describes the user-facing structure of ClarifAI, with updated assumptions from the finalized architecture and sprint planning through Sprint 5.
+This document describes the user-facing structure of aclarai, with updated assumptions from the finalized architecture and sprint planning through Sprint 5.
 
 ---
 
@@ -32,7 +32,7 @@ This document describes the user-facing structure of ClarifAI, with updated assu
   Internal claim IDs are accessible for debugging or linking but remain hidden by default in Obsidian.
 
 * **Claim Review UX:**
-  ClarifAI supports manual edits to claim blocks; edits trigger reprocessing when drift is detected.
+  aclarai supports manual edits to claim blocks; edits trigger reprocessing when drift is detected.
 
 ---
 
@@ -45,7 +45,7 @@ This document describes the user-facing structure of ClarifAI, with updated assu
   Claims and summaries may auto-link to concepts via `[[wikilink]]`. These are also reflected in the Neo4j graph.
 
 * **Concept Metadata:**
-  ClarifAI tracks a content-derived `embedding_hash` on each concept node to detect drift. The actual embedding is stored in a vector DB.
+  aclarai tracks a content-derived `embedding_hash` on each concept node to detect drift. The actual embedding is stored in a vector DB.
 
 * **Nightly Sync Jobs:**
   Embeddings are refreshed nightly. If vault edits alter the concept meaning, the system updates the vector DB and graph node accordingly.
@@ -55,9 +55,9 @@ This document describes the user-facing structure of ClarifAI, with updated assu
 ## **4. Automation Control & Config**
 
 * **Configuration Options:**
-  ClarifAI supports configuration through either:
+  aclarai supports configuration through either:
 
-  * a YAML file (`settings/clarifai.config.yaml`), or
+  * a YAML file (`settings/aclarai.config.yaml`), or
   * a lightweight UI panel (future)
 
 * **Configurable Parameters Include:**
@@ -71,7 +71,7 @@ This document describes the user-facing structure of ClarifAI, with updated assu
 
   * "Pause automation" supported via:
 
-    * File flag (`.clarifai_pause`) in vault root
+    * File flag (`.aclarai_pause`) in vault root
     * UI toggle (future)
   * Scheduler supports override/disable per job via config
 

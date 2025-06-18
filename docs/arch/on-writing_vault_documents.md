@@ -1,6 +1,6 @@
 # 🧠 On Writing Vault Documents
 
-This document defines the expected output formats, content structure, and agent responsibilities for all agents that write Markdown documents to the ClarifAI vault. Each of these agents is scheduled and configured through the system and is responsible for maintaining consistent, structured, high-quality pages.
+This document defines the expected output formats, content structure, and agent responsibilities for all agents that write Markdown documents to the aclarai vault. Each of these agents is scheduled and configured through the system and is responsible for maintaining consistent, structured, high-quality pages.
 
 ---
 
@@ -25,14 +25,14 @@ This document defines the expected output formats, content structure, and agent 
 <definition paragraph>
 
 ### Examples
-- <claim or utterance> ^clarifai:id
+- <claim or utterance> ^aclarai:id
 - ...
 
 ### See Also
 - [[Related Concept A]]
 - [[Related Concept B]]
 
-<!-- clarifai:id=concept_<slug> ver=N -->
+<!-- aclarai:id=concept_<slug> ver=N -->
 ^concept_<slug>
 ```
 
@@ -71,7 +71,7 @@ This document defines the expected output formats, content structure, and agent 
 - Summary of shared topics from claims
 - Optional inline links to related subject pages
 
-<!-- clarifai:id=subject_<slug> ver=N -->
+<!-- aclarai:id=subject_<slug> ver=N -->
 ^subject_<slug>
 ```
 
@@ -144,7 +144,7 @@ This document defines the expected output formats, content structure, and agent 
 - <summary sentence> ^clm_<id>
 - ...
 
-<!-- clarifai:id=clm_<id> ver=N -->
+<!-- aclarai:id=clm_<id> ver=N -->
 ^clm_<id>
 ```
 

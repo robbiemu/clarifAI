@@ -1,5 +1,5 @@
 """
-Tests for ClarifAI configuration with YAML support.
+Tests for aclarai configuration with YAML support.
 
 These tests verify the configuration loading and YAML integration.
 """
@@ -8,8 +8,8 @@ import pytest
 import os
 from unittest.mock import patch, mock_open
 
-from clarifai_shared.config import (
-    ClarifAIConfig,
+from aclarai_shared.config import (
+    aclaraiConfig,
     EmbeddingConfig,
     ConceptsConfig,
     PathsConfig,
@@ -54,8 +54,8 @@ def test_paths_config_defaults():
     assert config.settings == "/settings"
 
 
-def test_clarifai_config_with_yaml():
-    """Test ClarifAI config loading with YAML content."""
+def test_aclarai_config_with_yaml():
+    """Test aclarai config loading with YAML content."""
     yaml_content = """
 databases:
   postgres:
@@ -92,7 +92,7 @@ paths:
     with (
         patch("builtins.open", mock_open(read_data=yaml_content)),
         patch("pathlib.Path.exists", return_value=True),
-        patch("clarifai_shared.config.yaml.safe_load") as mock_yaml_load,
+        patch("aclarai_shared.config.yaml.safe_load") as mock_yaml_load,
     ):
         # Setup yaml mock to return parsed content
         mock_yaml_load.return_value = {
@@ -130,7 +130,7 @@ paths:
                 "NEO4J_PASSWORD": "neo4j_pass",
             },
         ):
-            config = ClarifAIConfig.from_env(config_file="test.yaml")
+            config = aclaraiConfig.from_env(config_file="test.yaml")
 
             # Verify database config uses YAML values
             assert config.postgres.host == "test-postgres"
@@ -169,7 +169,7 @@ databases:
     with (
         patch("builtins.open", mock_open(read_data=yaml_content)),
         patch("pathlib.Path.exists", return_value=True),
-        patch("clarifai_shared.config.yaml.safe_load") as mock_yaml_load,
+        patch("aclarai_shared.config.yaml.safe_load") as mock_yaml_load,
     ):
         mock_yaml_load.return_value = {
             "databases": {"postgres": {"host": "yaml-postgres", "port": 5432}}
@@ -187,7 +187,7 @@ databases:
                 "NEO4J_PASSWORD": "neo4j_pass",
             },
         ):
-            config = ClarifAIConfig.from_env(config_file="test.yaml")
+            config = aclaraiConfig.from_env(config_file="test.yaml")
 
             # Environment values should win
             assert config.postgres.host == "env-postgres"
@@ -210,7 +210,7 @@ def test_config_without_yaml():
             },
         ),
     ):
-        config = ClarifAIConfig.from_env()
+        config = aclaraiConfig.from_env()
 
         # Should use defaults when no YAML
         assert config.postgres.host == "postgres"  # Default
@@ -224,13 +224,13 @@ def test_config_without_yaml():
 def test_load_config_function():
     """Test the load_config convenience function."""
     with (
-        patch("clarifai_shared.config.ClarifAIConfig.from_env") as mock_from_env,
+        patch("aclarai_shared.config.aclaraiConfig.from_env") as mock_from_env,
         patch.dict(
             os.environ,
             {"POSTGRES_PASSWORD": "test_pass", "NEO4J_PASSWORD": "neo4j_pass"},
         ),
     ):
-        mock_config = ClarifAIConfig()
+        mock_config = aclaraiConfig()
         mock_from_env.return_value = mock_config
 
         # Test with validation disabled
@@ -241,8 +241,8 @@ def test_load_config_function():
 
 def test_load_config_validation_failure():
     """Test config validation failure."""
-    with patch("clarifai_shared.config.ClarifAIConfig.from_env") as mock_from_env:
-        mock_config = ClarifAIConfig()
+    with patch("aclarai_shared.config.aclaraiConfig.from_env") as mock_from_env:
+        mock_config = aclaraiConfig()
         mock_from_env.return_value = mock_config
 
         # Missing required environment variables
@@ -259,7 +259,7 @@ def test_yaml_loading_error_handling():
         patch("builtins.open", mock_open(read_data="invalid: yaml: content:")),
         patch("pathlib.Path.exists", return_value=True),
         patch(
-            "clarifai_shared.config.yaml.safe_load", side_effect=Exception("YAML error")
+            "aclarai_shared.config.yaml.safe_load", side_effect=Exception("YAML error")
         ),
     ):
         with patch.dict(
@@ -272,7 +272,7 @@ def test_yaml_loading_error_handling():
             },
         ):
             # Should not raise exception, should use defaults
-            config = ClarifAIConfig.from_env(config_file="invalid.yaml")
+            config = aclaraiConfig.from_env(config_file="invalid.yaml")
 
             # Should fall back to defaults
             assert config.postgres.host == "postgres"
@@ -284,7 +284,7 @@ def test_yaml_loading_error_handling():
 
 def test_yaml_module_not_available():
     """Test behavior when PyYAML is not available."""
-    with patch("clarifai_shared.config.yaml", None):
+    with patch("aclarai_shared.config.yaml", None):
         with patch.dict(
             os.environ,
             {
@@ -294,7 +294,7 @@ def test_yaml_module_not_available():
                 "NEO4J_PASSWORD": "neo4j_pass",
             },
         ):
-            config = ClarifAIConfig.from_env(config_file="test.yaml")
+            config = aclaraiConfig.from_env(config_file="test.yaml")
 
             # Should use defaults when YAML not available
             assert config.postgres.host == "postgres"
@@ -320,7 +320,7 @@ def test_config_backward_compatibility():
             },
         ),
     ):
-        config = ClarifAIConfig.from_env()
+        config = aclaraiConfig.from_env()
 
         # New paths config should be updated
         assert config.paths.vault == "/custom/vault"

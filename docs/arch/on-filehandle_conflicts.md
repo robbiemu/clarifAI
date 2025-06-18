@@ -11,7 +11,7 @@ Even making the file read‑only at the OS level doesn’t stop Obsidian from tr
 | **Partial writes / corruption** | Unlikely—`writeFile` is atomic on POSIX if it overwrites in place, but you still risk a torn write during crashes. | Use a *write‑temp → fsync → rename* pattern when your service modifies a note, so any other watcher (including Obsidian) either sees the old version or the fully written new one, never a half‑written file. |
 | **Lock‑based coordination**     | Not available.                                                                                                     | Rely on ID + version counters in hidden comments or YAML front‑matter to detect stale graph copies, then apply optimistic‑locking rules in Neo4j.                                                             |
 
-So you’re free to let ClarifAI edit vault files directly—just build conflict‑detection and atomic‑write safeguards into your sync layer rather than counting on Obsidian to hold a lock.
+So you’re free to let aclarai edit vault files directly—just build conflict‑detection and atomic‑write safeguards into your sync layer rather than counting on Obsidian to hold a lock.
 
 [1]: https://forum.obsidian.md/t/editing-notes-outside-obsidian/72139?utm_source=chatgpt.com "Editing notes outside obsidian - Share & showcase"
 [2]: https://forum.obsidian.md/t/option-to-lock-editing-of-individual-notes/22162 "Option to lock editing of individual notes - Feature requests - Obsidian Forum"

@@ -31,7 +31,7 @@ def install_script_path():
     return (
         Path(__file__).parent.parent
         / "services"
-        / "clarifai-core"
+        / "aclarai-core"
         / "install"
         / "install_prompts.py"
     )
@@ -63,7 +63,7 @@ def test_install_prompts_help_message(install_script_path):
         )
 
         if result.returncode == 0:
-            assert "Install default prompt templates for ClarifAI" in result.stdout
+            assert "Install default prompt templates for aclarai" in result.stdout
             assert "--force" in result.stdout
             assert "--all" in result.stdout
             assert "--prompts-dir" in result.stdout
@@ -110,11 +110,11 @@ def test_install_script_structure_and_imports(install_script_path):
 
 
 def test_install_script_path_resolution(install_script_path):
-    """Test that the script correctly imports from the clarifai_shared package."""
+    """Test that the script correctly imports from the aclarai_shared package."""
     content = install_script_path.read_text()
 
     # The script should use clean package imports instead of fragile path manipulation
-    assert "from clarifai_shared.utils.prompt_installer import" in content
+    assert "from aclarai_shared.utils.prompt_installer import" in content
     assert "install_all_default_prompts" in content
     assert "install_default_prompt" in content
 
@@ -133,23 +133,23 @@ def test_docker_file_location_structure():
     script_path = (
         Path(__file__).parent.parent
         / "services"
-        / "clarifai-core"
+        / "aclarai-core"
         / "install"
         / "install_prompts.py"
     )
 
     # Verify the directory structure makes sense for Docker
-    clarifai_core_dir = script_path.parent.parent
-    assert clarifai_core_dir.name == "clarifai-core"
-    assert (clarifai_core_dir / "Dockerfile").exists()
+    aclarai_core_dir = script_path.parent.parent
+    assert aclarai_core_dir.name == "aclarai-core"
+    assert (aclarai_core_dir / "Dockerfile").exists()
 
-    # The install directory should be in the clarifai-core service
+    # The install directory should be in the aclarai-core service
     assert script_path.parent.name == "install"
 
     # Should be able to reach shared from this location
     shared_dir = script_path.parent.parent.parent.parent / "shared"
     assert shared_dir.exists()
-    assert (shared_dir / "clarifai_shared").exists()
+    assert (shared_dir / "aclarai_shared").exists()
 
 
 # Mock-based tests for functionality (when dependencies are not available)
@@ -159,7 +159,7 @@ def test_mock_install_functionality():
     script_path = (
         Path(__file__).parent.parent
         / "services"
-        / "clarifai-core"
+        / "aclarai-core"
         / "install"
         / "install_prompts.py"
     )

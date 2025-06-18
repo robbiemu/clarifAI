@@ -19,7 +19,7 @@ Implementar um sistema para aplicar limiares de avaliação na vinculação de c
 - Implementação de testes para verificar o correto funcionamento da média geométrica e da lógica de filtragem em diversos cenários (claims de alta/baixa qualidade, com/sem `null` scores).
 
 ### Excluído
-- Interface de usuário para ajuste *dinâmico* de limiares em tempo real que não seja através do arquivo `clarifai.config.yaml` ou da UI de configuração já planejada (de Sprint 6).
+- Interface de usuário para ajuste *dinâmico* de limiares em tempo real que não seja através do arquivo `aclarai.config.yaml` ou da UI de configuração já planejada (de Sprint 6).
 - Otimizações avançadas de desempenho que não são inerentes à lógica de filtragem em si.
 - Algoritmos complexos de ponderação adaptativa para as pontuações (a média geométrica é fixa).
 - Análise estatística avançada de distribuição de pontuações.
@@ -37,10 +37,10 @@ Implementar um sistema para aplicar limiares de avaliação na vinculação de c
 - Sistema de vinculação de conceitos implementado (de Sprint 5), que será modificado para respeitar os limiares.
 - Sistema de geração de resumos implementado (de Sprint 3 e 4), que será modificado para respeitar os limiares.
 - Acesso ao Neo4j para consulta das pontuações dos claims.
-- Configuração dos limiares de qualidade no `clarifai.config.yaml` (de Sprint 6).
+- Configuração dos limiares de qualidade no `aclarai.config.yaml` (de Sprint 6).
 
 ## Entregáveis
-- Código-fonte do sistema de aplicação de limiares (módulo dentro do `clarifai-core`).
+- Código-fonte do sistema de aplicação de limiares (módulo dentro do `aclarai-core`).
 - Implementação da lógica de cálculo da média geométrica.
 - Modificações nos pipelines de vinculação de conceitos, promoção de claims e geração de resumos para incorporar a lógica de filtragem.
 - Documentação do processo e seus efeitos.

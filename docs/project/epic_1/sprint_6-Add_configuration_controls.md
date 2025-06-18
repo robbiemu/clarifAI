@@ -1,7 +1,7 @@
 # Tarefa: Adicionar Controles de Configuração para Jobs Agendados
 
 ## Descrição
-Implementar controles de configuração granulares para jobs agendados no ClarifAI, permitindo que os usuários configurem o comportamento de cada job individualmente. Isso incluirá a capacidade de habilitar/desabilitar jobs, configurar a execução apenas manual e gerenciar suas programações (cron) através de um arquivo de configuração e toggles na interface de usuário (UI).
+Implementar controles de configuração granulares para jobs agendados no aclarai, permitindo que os usuários configurem o comportamento de cada job individualmente. Isso incluirá a capacidade de habilitar/desabilitar jobs, configurar a execução apenas manual e gerenciar suas programações (cron) através de um arquivo de configuração e toggles na interface de usuário (UI).
 
 ## Escopo
 
@@ -16,8 +16,8 @@ Implementar controles de configuração granulares para jobs agendados no Clarif
     - Higiene de conceito (e.g., `concept_embedding_refresh`).
     - Sincronização do vault (e.g., `vault_sync`).
     - Agentes de resumo (e.g., `concept_summary_refresh`, `subject_summary_refresh`).
-- Persistência das configurações de jobs no arquivo `settings/clarifai.config.yaml` (sob a seção `scheduler:`), seguindo a estrutura de `docs/arch/design_config_panel.md`.
-- Implementação da lógica no `clarifai-scheduler` para **ler e respeitar** essas configurações por job (`enabled`, `manual_only`, `cron`).
+- Persistência das configurações de jobs no arquivo `settings/aclarai.config.yaml` (sob a seção `scheduler:`), seguindo a estrutura de `docs/arch/design_config_panel.md`.
+- Implementação da lógica no `aclarai-scheduler` para **ler e respeitar** essas configurações por job (`enabled`, `manual_only`, `cron`).
 - Documentação clara de todas as opções de configuração de jobs e seus efeitos.
 - Implementação de logging para alterações de estado de configuração de jobs e suas execuções.
 
@@ -29,24 +29,24 @@ Implementar controles de configuração granulares para jobs agendados no Clarif
 - Sistema de notificação para falhas de jobs além do logging interno.
 
 ## Critérios de Aceitação
-- Controles de configuração para jobs agendados estão implementados e funcionais na UI e no `settings/clarifai.config.yaml`.
+- Controles de configuração para jobs agendados estão implementados e funcionais na UI e no `settings/aclarai.config.yaml`.
 - Os estados `enabled`, `manual_only` e os parâmetros `cron` são suportados e funcionam corretamente para todos os jobs configuráveis.
 - A configuração funciona para os tipos de jobs especificados (higiene de conceito, sincronização, agentes de resumo).
-- As configurações de jobs são persistidas corretamente no `settings/clarifai.config.yaml`.
-- O `clarifai-scheduler` lê e respeita as configurações (`enabled`, `manual_only`, `cron`) para cada job antes de executá-lo.
+- As configurações de jobs são persistidas corretamente no `settings/aclarai.config.yaml`.
+- O `aclarai-scheduler` lê e respeita as configurações (`enabled`, `manual_only`, `cron`) para cada job antes de executá-lo.
 - A interface de usuário para ativar/desativar jobs e ajustar suas configurações é intuitiva e funcional.
 - Documentação clara de todas as opções e seus efeitos está disponível.
 - O logging de alterações de estado de configuração de jobs e suas execuções é implementado.
 
 ## Dependências
-- Sistema de agendamento de jobs (`clarifai-scheduler` com `APScheduler`) implementado (de Sprint 3).
-- Sistema de persistência de configurações (`settings/clarifai.config.yaml` e sua UI/módulo de gerenciamento, de tarefa anterior deste sprint).
+- Sistema de agendamento de jobs (`aclarai-scheduler` com `APScheduler`) implementado (de Sprint 3).
+- Sistema de persistência de configurações (`settings/aclarai.config.yaml` e sua UI/módulo de gerenciamento, de tarefa anterior deste sprint).
 - Definição clara de todos os jobs configuráveis (especialmente em `docs/arch/design_config_panel.md`).
 
 ## Entregáveis
-- Código-fonte dos controles de configuração de jobs (dentro do módulo de configuração e no `clarifai-scheduler`).
+- Código-fonte dos controles de configuração de jobs (dentro do módulo de configuração e no `aclarai-scheduler`).
 - Atualização da UI (Gradio) para incluir os controles por job.
-- Implementação da lógica de persistência das configurações de jobs no `settings/clarifai.config.yaml`.
+- Implementação da lógica de persistência das configurações de jobs no `settings/aclarai.config.yaml`.
 - Documentação de todas as opções configuráveis de jobs e seus efeitos.
 - Testes de funcionalidade abrangentes para os controles de configuração de jobs.
 
@@ -57,13 +57,13 @@ Implementar controles de configuração granulares para jobs agendados no Clarif
 - **Risco**: Desativação acidental de jobs críticos ou configuração de `cron` inválida.
   - **Mitigação**: Implementar confirmações na UI para alterações importantes e validação rigorosa para `cron` strings. O logging detalhado de alterações de configuração ajudará na auditoria.
 - **Risco**: Inconsistência entre a configuração e o estado real dos jobs no `scheduler`.
-  - **Mitigação**: Garantir que o `clarifai-scheduler` *sempre* releia as configurações (ou seja notificado sobre mudanças) antes de decidir executar um job. O arquivo `settings/clarifai.config.yaml` deve ser a fonte da verdade.
+  - **Mitigação**: Garantir que o `aclarai-scheduler` *sempre* releia as configurações (ou seja notificado sobre mudanças) antes de decidir executar um job. O arquivo `settings/aclarai.config.yaml` deve ser a fonte da verdade.
 - **Risco**: Confusão do usuário sobre os diferentes estados dos jobs (`enabled`, `manual_only`, `pausa global`).
   - **Mitigação**: Fornecer feedback claro na UI (e.g., status "Pausado (Global)", "Habilitado", "Apenas Manual"). A documentação deve explicar claramente a hierarquia dos controles.
 
 ## Notas Técnicas
-- O modelo de dados para as configurações de jobs no `settings/clarifai.config.yaml` deve seguir a estrutura de `docs/arch/design_config_panel.md` (Seção 5, `scheduler:`).
+- O modelo de dados para as configurações de jobs no `settings/aclarai.config.yaml` deve seguir a estrutura de `docs/arch/design_config_panel.md` (Seção 5, `scheduler:`).
 - A UI deve permitir que o usuário veja e edite o `cron` string diretamente, e não apenas toggles simples, para maior flexibilidade.
-- O `clarifai-scheduler` precisará de uma lógica que, para cada job, verifique primeiro a *pausa global* (da tarefa anterior deste sprint) e, em seguida, as configurações específicas do job (`enabled`, `manual_only`).
+- O `aclarai-scheduler` precisará de uma lógica que, para cada job, verifique primeiro a *pausa global* (da tarefa anterior deste sprint) e, em seguida, as configurações específicas do job (`enabled`, `manual_only`).
 - A implementação deve ser modular, permitindo a fácil adição de novos jobs configuráveis no futuro.
 - Assegurar que as alterações de configuração de jobs sejam registradas no log, incluindo quem fez a alteração (se aplicável, para ambientes multi-usuário) e o valor anterior/novo.

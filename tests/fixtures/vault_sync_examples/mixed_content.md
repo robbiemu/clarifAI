@@ -1,6 +1,6 @@
 # Mixed Content Document
 
-This document contains various types of content and clarifai:id markers to test different scenarios.
+This document contains various types of content and aclarai:id markers to test different scenarios.
 
 ## Regular Content
 
@@ -8,10 +8,10 @@ This is just regular markdown content without any special markers.
 
 ## Inline Block Content
 
-Here's an important statement: The system should handle edge cases gracefully. <!-- clarifai:id=blk_edge_cases ver=2 -->
+Here's an important statement: The system should handle edge cases gracefully. <!-- aclarai:id=blk_edge_cases ver=2 -->
 ^blk_edge_cases
 
-Another statement: Performance is crucial for user experience. <!-- clarifai:id=blk_performance ver=1 -->
+Another statement: Performance is crucial for user experience. <!-- aclarai:id=blk_performance ver=1 -->
 ^blk_performance
 
 ## Code Block Example
@@ -31,11 +31,11 @@ def calculate_rate_limit(user_tier):
 
 - Regular list item
 - Another item
-- Important architectural decision: We'll use Redis for session storage. <!-- clarifai:id=blk_redis_decision ver=1 -->
+- Important architectural decision: We'll use Redis for session storage. <!-- aclarai:id=blk_redis_decision ver=1 -->
 ^blk_redis_decision
 
 ## Conclusion
 
 This document demonstrates mixed content handling in the vault sync system.
 
-<!-- clarifai:id=doc_mixed_content_example ver=1 -->
+<!-- aclarai:id=doc_mixed_content_example ver=1 -->

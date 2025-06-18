@@ -1,16 +1,16 @@
 # Default Plugin Implementation Guide
 
-This document describes the implementation of the default/fallback plugin for ClarifAI's pluggable format conversion system.
+This document describes the implementation of the default/fallback plugin for aclarai's pluggable format conversion system.
 
 ## Overview
 
-The default plugin serves as a fallback for files that aren't recognized by specific format plugins. It uses pattern matching and optional LLM processing to extract conversations from unstructured text and convert them to ClarifAI's standard Tier 1 Markdown format.
+The default plugin serves as a fallback for files that aren't recognized by specific format plugins. It uses pattern matching and optional LLM processing to extract conversations from unstructured text and convert them to aclarai's standard Tier 1 Markdown format.
 
 ## Architecture
 
 ### Plugin System Components
 
-The plugin system consists of several key components in the `clarifai_shared` package:
+The plugin system consists of several key components in the `aclarai_shared` package:
 
 #### 1. Plugin Interface (`plugin_interface.py`)
 - `Plugin` abstract base class defining the plugin interface
@@ -30,7 +30,7 @@ The plugin system consists of several key components in the `clarifai_shared` pa
 ### Basic Usage
 
 ```python
-from clarifai_shared import DefaultPlugin, convert_file_to_markdowns
+from aclarai_shared import DefaultPlugin, convert_file_to_markdowns
 from pathlib import Path
 
 # Create plugin instance
@@ -94,21 +94,21 @@ The plugin automatically extracts metadata from common fields:
 
 ## Output Format
 
-The plugin generates ClarifAI Tier 1 Markdown with the following structure:
+The plugin generates aclarai Tier 1 Markdown with the following structure:
 
 ```markdown
-<!-- clarifai:title=Conversation Title -->
-<!-- clarifai:created_at=2023-12-22T16:45:00Z -->
-<!-- clarifai:participants=["alice", "bob"] -->
-<!-- clarifai:message_count=3 -->
-<!-- clarifai:plugin_metadata={"source_format": "fallback_llm", ...} -->
+<!-- aclarai:title=Conversation Title -->
+<!-- aclarai:created_at=2023-12-22T16:45:00Z -->
+<!-- aclarai:participants=["alice", "bob"] -->
+<!-- aclarai:message_count=3 -->
+<!-- aclarai:plugin_metadata={"source_format": "fallback_llm", ...} -->
 
 alice: First message content
-<!-- clarifai:id=blk_abc123 ver=1 -->
+<!-- aclarai:id=blk_abc123 ver=1 -->
 ^blk_abc123
 
 bob: Second message content
-<!-- clarifai:id=blk_def456 ver=1 -->
+<!-- aclarai:id=blk_def456 ver=1 -->
 ^blk_def456
 ```
 
@@ -350,7 +350,7 @@ VOLUME ["/settings"]
 Users can then:
 1. Copy prompt files from the container: `docker cp container:/settings/prompts ./settings/prompts`
 2. Edit the YAML files locally (partial overrides are supported)
-3. Mount the directory back: `docker run -v ./settings:/settings clarifai`
+3. Mount the directory back: `docker run -v ./settings:/settings aclarai`
 
 Since the system uses deep merge, users only need to override the specific keys they want to customize.
 
@@ -374,7 +374,7 @@ python -c "import yaml; yaml.safe_load(open('settings/prompts/conversation_extra
 
 ### LLM Configuration
 
-The plugin supports transparent LLM configuration through the ClarifAI configuration system:
+The plugin supports transparent LLM configuration through the aclarai configuration system:
 
 ```python
 # LLM configuration is handled automatically through the config system
@@ -382,14 +382,14 @@ The plugin supports transparent LLM configuration through the ClarifAI configura
 plugin = DefaultPlugin()
 
 # For custom configurations, you can create an agent with specific LLM
-from clarifai_shared.plugins.default_plugin import ConversationExtractorAgent
+from aclarai_shared.plugins.default_plugin import ConversationExtractorAgent
 
 # The agent will automatically use the configured LLM
 agent = ConversationExtractorAgent()
 ```
 
 **Configuration Notes:**
-- LLM selection is managed through `settings/clarifai.config.yaml` 
+- LLM selection is managed through `settings/aclarai.config.yaml` 
 - The `model.fallback_plugin` configuration determines which LLM to use
 - Supports multiple providers: OpenAI, Anthropic, Ollama, OpenRouter
 - No hardcoded model dependencies in plugin code
@@ -408,7 +408,7 @@ registry = [
 ]
 ```
 
-The plugin should **not** be used as a template for custom plugin development. Instead, refer to the plugin interface documentation and use the shared utilities provided in the `clarifai_shared.utils` module.
+The plugin should **not** be used as a template for custom plugin development. Instead, refer to the plugin interface documentation and use the shared utilities provided in the `aclarai_shared.utils` module.
 
 ## Integration with Plugin System
 

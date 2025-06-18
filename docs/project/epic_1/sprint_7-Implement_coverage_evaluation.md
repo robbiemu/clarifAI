@@ -12,7 +12,7 @@ Desenvolver e implementar um agente de avaliação de coverage que analise a com
 - **Adição de nós `(:Element)` ao grafo Neo4j** para cada elemento verificável omitido, com a propriedade `text` (conforme `docs/arch/on-evaluation_agents.md`).
 - **Criação de arestas `[:OMITS]` entre o `(:Claim)` node e cada `(:Element)` node** omitido no grafo, conforme `docs/arch/on-evaluation_agents.md` (Seção "Missed Elements").
 - Armazenamento da pontuação `coverage_score` como uma propriedade na aresta `[:ORIGINATES_FROM]` que conecta o `(:Claim)` node ao seu `(:Block)` de origem no Neo4j, conforme `docs/arch/on-evaluation_agents.md` (Seção "Storage").
-- Armazenamento da pontuação `coverage_score` como metadado em um comentário HTML no Markdown Tier 1 (`<!-- clarifai:coverage_score=0.77 -->`), conforme `docs/arch/on-evaluation_agents.md` (Seção "Storage").
+- Armazenamento da pontuação `coverage_score` como metadado em um comentário HTML no Markdown Tier 1 (`<!-- aclarai:coverage_score=0.77 -->`), conforme `docs/arch/on-evaluation_agents.md` (Seção "Storage").
 - **Utilização da lógica de escrita atômica para arquivos Markdown** (implementada em Sprint 3, detalhada em `docs/arch/on-filehandle_conflicts.md`) para a atualização dos metadados no Markdown Tier 1.
 - Implementação de um sistema de retry robusto para o agente em casos de falha (e.g., timeout, erro do LLM), consistente com o tratamento de falhas de outros agentes de avaliação (conforme `docs/arch/on-evaluation_agents.md`, Seção "Failure Handling").
 - Tratamento adequado de valores `null` para `coverage_score` em caso de falha do agente após os retries. Claims com scores `null` não serão escritos em Markdown nem vinculados a conceitos (conforme `docs/arch/on-evaluation_agents.md`, Seção "Failure Handling").
@@ -32,7 +32,7 @@ Desenvolver e implementar um agente de avaliação de coverage que analise a com
 - Nós `(:Element)` e arestas `[:OMITS]` são adicionados corretamente ao grafo Neo4j, com as propriedades definidas.
 - A pontuação `coverage_score` é armazenada corretamente na aresta `[:ORIGINATES_FROM]` no grafo Neo4j e como metadado no Markdown Tier 1.
 - **A atualização do Markdown Tier 1 com os metadados de pontuação utiliza a lógica de escrita atômica de forma robusta e segura.**
-- **Os marcadores `clarifai:id` e `ver=` existentes nos blocos Markdown Tier 1 são preservados e a propriedade `ver=` é incrementada quando os metadados de pontuação são adicionados/atualizados.**
+- **Os marcadores `aclarai:id` e `ver=` existentes nos blocos Markdown Tier 1 são preservados e a propriedade `ver=` é incrementada quando os metadados de pontuação são adicionados/atualizados.**
 - O sistema de retry funciona adequadamente para casos de falha do agente, com o `coverage_score` sendo definido como `null` após falhas persistentes.
 - O tratamento de valores `null` está apropriado, garantindo que claims com `null` score não sejam processados downstream (no que diz respeito a serem escritos em Markdown ou vinculados a conceitos *nesta fase*).
 - A documentação clara do processo de avaliação de coverage, incluindo a estrutura do prompt e a interpretação da pontuação e dos elementos omitidos, está disponível.

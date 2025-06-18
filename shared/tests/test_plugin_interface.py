@@ -11,14 +11,14 @@ class TestMarkdownOutput:
     def test_plugin_interface_file_exists(self):
         """Test that the plugin interface file exists."""
         interface_path = os.path.join(
-            os.path.dirname(__file__), "../clarifai_shared/plugin_interface.py"
+            os.path.dirname(__file__), "../aclarai_shared/plugin_interface.py"
         )
         assert os.path.exists(interface_path)
 
     def test_plugin_interface_structure(self):
         """Test that the plugin interface classes and methods are properly implemented."""
         # Import the actual classes instead of checking strings in files
-        from clarifai_shared.plugin_interface import (
+        from aclarai_shared.plugin_interface import (
             MarkdownOutput,
             Plugin,
             UnknownFormatError,
@@ -83,7 +83,7 @@ class TestPluginInterface:
     def test_plugin_abstract_class_structure(self):
         """Test Plugin abstract class structure."""
         interface_path = os.path.join(
-            os.path.dirname(__file__), "../clarifai_shared/plugin_interface.py"
+            os.path.dirname(__file__), "../aclarai_shared/plugin_interface.py"
         )
 
         with open(interface_path, "r") as f:
@@ -104,7 +104,7 @@ class TestPluginInterface:
     def test_unknown_format_error_structure(self):
         """Test UnknownFormatError exception structure."""
         interface_path = os.path.join(
-            os.path.dirname(__file__), "../clarifai_shared/plugin_interface.py"
+            os.path.dirname(__file__), "../aclarai_shared/plugin_interface.py"
         )
 
         with open(interface_path, "r") as f:

@@ -1,6 +1,6 @@
 # Neo4j Graph System
 
-The graph system provides functionality for creating and managing (:Claim) and (:Sentence) nodes in the ClarifAI Neo4j knowledge graph.
+The graph system provides functionality for creating and managing (:Claim) and (:Sentence) nodes in the aclarai Neo4j knowledge graph.
 
 ## Overview
 
@@ -28,7 +28,7 @@ This implementation follows the architectural guidelines from `docs/arch/idea-ne
 Input data for creating Claim nodes:
 
 ```python
-from clarifai_shared.graph import ClaimInput
+from aclarai_shared.graph import ClaimInput
 
 claim_input = ClaimInput(
     text="The Earth orbits the Sun",
@@ -52,7 +52,7 @@ Properties:
 Input data for creating Sentence nodes:
 
 ```python
-from clarifai_shared.graph import SentenceInput
+from aclarai_shared.graph import SentenceInput
 
 sentence_input = SentenceInput(
     text="This statement is ambiguous and unclear",
@@ -173,7 +173,7 @@ The module includes comprehensive error handling:
 
 ## Configuration
 
-Neo4j connection settings are managed through the ClarifAI configuration system:
+Neo4j connection settings are managed through the aclarai configuration system:
 
 ```yaml
 databases:
@@ -191,7 +191,7 @@ Environment variables:
 
 ## Implementation Details
 
-The graph system is implemented in `shared/clarifai_shared/graph/`:
+The graph system is implemented in `shared/aclarai_shared/graph/`:
 
 - `models.py`: Data models for Claims and Sentences
 - `neo4j_manager.py`: Neo4j operations manager

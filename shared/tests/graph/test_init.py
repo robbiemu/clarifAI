@@ -2,14 +2,14 @@
 Tests for graph module initialization.
 """
 
-from clarifai_shared.graph import (
+from aclarai_shared.graph import (
     Claim,
     Sentence,
     ClaimInput,
     SentenceInput,
     Neo4jGraphManager,
 )
-from clarifai_shared.graph import models
+from aclarai_shared.graph import models
 
 
 class TestGraphInit:
@@ -24,7 +24,7 @@ class TestGraphInit:
 
     def test_neo4j_manager_module_loads(self):
         """Test that neo4j_manager module loads correctly."""
-        from clarifai_shared.graph import neo4j_manager
+        from aclarai_shared.graph import neo4j_manager
 
         assert hasattr(neo4j_manager, "Neo4jGraphManager")
 
@@ -38,7 +38,7 @@ class TestGraphInit:
 
     def test_module_all_attribute(self):
         """Test that __all__ attribute is properly defined."""
-        import clarifai_shared.graph as graph_module
+        import aclarai_shared.graph as graph_module
 
         assert hasattr(graph_module, "__all__")
         assert isinstance(graph_module.__all__, list)
@@ -60,7 +60,7 @@ class TestGraphInit:
     def test_import_functionality(self):
         """Test that imports work as expected."""
         # This exercises the actual import code in __init__.py
-        from clarifai_shared.graph import (
+        from aclarai_shared.graph import (
             Claim as ImportedClaim,
             Sentence as ImportedSentence,
             ClaimInput as ImportedClaimInput,

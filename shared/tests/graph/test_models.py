@@ -12,14 +12,14 @@ class TestClaimInput:
     def test_graph_models_file_exists(self):
         """Test that the graph models file exists."""
         models_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/graph/models.py"
+            os.path.dirname(__file__), "../../aclarai_shared/graph/models.py"
         )
         assert os.path.exists(models_path)
 
     def test_graph_models_structure(self):
         """Test that the graph models classes are properly implemented."""
         # Import the actual classes instead of checking strings in files
-        from clarifai_shared.graph.models import (
+        from aclarai_shared.graph.models import (
             ClaimInput,
             SentenceInput,
             Claim,
@@ -127,7 +127,7 @@ class TestClaimAndSentenceModels:
     def test_claim_and_sentence_classes_exist(self):
         """Test that Claim and Sentence classes exist in the models file."""
         models_path = os.path.join(
-            os.path.dirname(__file__), "../../clarifai_shared/graph/models.py"
+            os.path.dirname(__file__), "../../aclarai_shared/graph/models.py"
         )
 
         with open(models_path, "r") as f:

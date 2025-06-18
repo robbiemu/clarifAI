@@ -6,9 +6,9 @@ import tempfile
 from pathlib import Path
 from datetime import datetime, timezone
 
-from clarifai_shared.tier3_concept.writer import ConceptFileWriter
-from clarifai_shared.graph.models import Concept
-from clarifai_shared.config import ClarifAIConfig, VaultPaths
+from aclarai_shared.tier3_concept.writer import ConceptFileWriter
+from aclarai_shared.graph.models import Concept
+from aclarai_shared.config import aclaraiConfig, VaultPaths
 
 
 class TestConceptFileWriter:
@@ -23,7 +23,7 @@ class TestConceptFileWriter:
     def test_initialization_with_config(self):
         """Test ConceptFileWriter initialization with custom config."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            config = ClarifAIConfig(
+            config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="custom_concepts")
             )
             writer = ConceptFileWriter(config)
@@ -62,7 +62,7 @@ class TestConceptFileWriter:
             source_candidate_id="candidate_123",
             source_node_id="claim_456",
             source_node_type="claim",
-            clarifai_id="doc_789",
+            aclarai_id="doc_789",
             version=1,
             timestamp=datetime.now(timezone.utc),
         )
@@ -73,19 +73,19 @@ class TestConceptFileWriter:
         assert "## Concept: machine learning" in content
         assert "### Examples" in content
         assert "### See Also" in content
-        assert "<!-- clarifai:id=concept_test123 ver=1 -->" in content
+        assert "<!-- aclarai:id=concept_test123 ver=1 -->" in content
         assert "^concept_test123" in content
 
         # Check content structure
         lines = content.split("\n")
         assert lines[0] == "## Concept: machine learning"
-        assert lines[-2] == "<!-- clarifai:id=concept_test123 ver=1 -->"
+        assert lines[-2] == "<!-- aclarai:id=concept_test123 ver=1 -->"
         assert lines[-1] == "^concept_test123"
 
     def test_write_concept_file_success(self):
         """Test successful concept file writing."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            config = ClarifAIConfig(
+            config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
             )
             writer = ConceptFileWriter(config)
@@ -96,7 +96,7 @@ class TestConceptFileWriter:
                 source_candidate_id="candidate_123",
                 source_node_id="claim_456",
                 source_node_type="claim",
-                clarifai_id="doc_789",
+                aclarai_id="doc_789",
                 version=1,
                 timestamp=datetime.now(timezone.utc),
             )
@@ -112,13 +112,13 @@ class TestConceptFileWriter:
             # Check file content
             content = expected_file.read_text()
             assert "## Concept: machine learning" in content
-            assert "<!-- clarifai:id=concept_test123 ver=1 -->" in content
+            assert "<!-- aclarai:id=concept_test123 ver=1 -->" in content
             assert "^concept_test123" in content
 
     def test_write_concept_file_directory_creation(self):
         """Test that concepts directory is created if it doesn't exist."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            config = ClarifAIConfig(
+            config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="new_concepts")
             )
             writer = ConceptFileWriter(config)
@@ -133,7 +133,7 @@ class TestConceptFileWriter:
                 source_candidate_id="candidate_123",
                 source_node_id="claim_456",
                 source_node_type="claim",
-                clarifai_id="doc_789",
+                aclarai_id="doc_789",
                 version=1,
                 timestamp=datetime.now(timezone.utc),
             )
@@ -153,7 +153,7 @@ class TestConceptFileWriter:
     def test_atomic_write_safety(self):
         """Test that atomic write is used correctly."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            config = ClarifAIConfig(
+            config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
             )
             writer = ConceptFileWriter(config)
@@ -164,7 +164,7 @@ class TestConceptFileWriter:
                 source_candidate_id="candidate_123",
                 source_node_id="claim_456",
                 source_node_type="claim",
-                clarifai_id="doc_789",
+                aclarai_id="doc_789",
                 version=1,
                 timestamp=datetime.now(timezone.utc),
             )
@@ -182,5 +182,5 @@ class TestConceptFileWriter:
             expected_file = concepts_dir / "atomic_write_test.md"
             content = expected_file.read_text()
             assert "## Concept: atomic write test" in content
-            assert "<!-- clarifai:id=concept_atomic_test ver=1 -->" in content
+            assert "<!-- aclarai:id=concept_atomic_test ver=1 -->" in content
             assert "^concept_atomic_test" in content

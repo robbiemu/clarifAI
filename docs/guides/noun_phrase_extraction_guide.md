@@ -1,17 +1,17 @@
 # Noun Phrase Extraction Configuration Guide
 
-This guide explains how to configure the Noun Phrase Extraction system in ClarifAI and manage embedding model changes effectively.
+This guide explains how to configure the Noun Phrase Extraction system in aclarai and manage embedding model changes effectively.
 
 ## Overview
 
-The behavior of the noun phrase extractor is controlled through the `noun_phrase_extraction` section in your `settings/clarifai.config.yaml` file. This allows you to tune the spaCy model, normalization rules, and vector storage parameters.
+The behavior of the noun phrase extractor is controlled through the `noun_phrase_extraction` section in your `settings/aclarai.config.yaml` file. This allows you to tune the spaCy model, normalization rules, and vector storage parameters.
 
 ## Configuration Parameters
 
 Here is an example of the configuration block with explanations for each parameter:
 
 ```yaml
-# In settings/clarifai.config.yaml
+# In settings/aclarai.config.yaml
 
 noun_phrase_extraction:
   # spaCy model to use for extraction. "en_core_web_trf" is more accurate
@@ -61,13 +61,13 @@ When you change this model, the concept candidates storage automatically adapts 
 
 #### The Migration Process
 
-1. **Stop All ClarifAI Services**
+1. **Stop All aclarai Services**
    ```bash
    docker compose down
    ```
 
 2. **Edit Configuration**
-   Only change the model name in your `settings/clarifai.config.yaml`:
+   Only change the model name in your `settings/aclarai.config.yaml`:
    ```yaml
    embedding:
      models:
@@ -77,7 +77,7 @@ When you change this model, the concept candidates storage automatically adapts 
 3. **Clear Existing Vector Data**
    ```bash
    # Remove PostgreSQL data volume (destructive operation)
-   docker volume rm clarifai_pg_data
+   docker volume rm aclarai_pg_data
    ```
 
 4. **Restart Services**

@@ -1,16 +1,16 @@
 # Scheduler Job Setup Guide
 
-This guide explains how to set up and configure periodic jobs using ClarifAI's scheduler service.
+This guide explains how to set up and configure periodic jobs using aclarai's scheduler service.
 
 ## Overview
 
-The ClarifAI scheduler uses APScheduler (Advanced Python Scheduler) to run periodic background tasks. Jobs are configured through the central configuration file and can be enabled/disabled and customized as needed.
+The aclarai scheduler uses APScheduler (Advanced Python Scheduler) to run periodic background tasks. Jobs are configured through the central configuration file and can be enabled/disabled and customized as needed.
 
 ## Basic Job Configuration
 
 ### Configuration File Structure
 
-Jobs are defined in `settings/clarifai.config.yaml` under the `scheduler.jobs` section:
+Jobs are defined in `settings/aclarai.config.yaml` under the `scheduler.jobs` section:
 
 ```yaml
 scheduler:
@@ -49,7 +49,7 @@ scheduler:
 ```
 
 **What it does:**
-- Scans Tier 1, 2, and 3 Markdown files for `clarifai:id` blocks
+- Scans Tier 1, 2, and 3 Markdown files for `aclarai:id` blocks
 - Calculates content hashes to detect changes
 - Updates Neo4j nodes with new content and version numbers
 - Marks changed blocks for reprocessing
@@ -91,7 +91,7 @@ scheduler:
 Create a new job class following the pattern used by `VaultSyncJob`:
 
 ```python
-# services/scheduler/clarifai_scheduler/my_custom_job.py
+# services/scheduler/aclarai_scheduler/my_custom_job.py
 
 import logging
 from typing import Dict, Any
@@ -140,7 +140,7 @@ class MyCustomJob:
 
 ### Step 2: Register Job in Main Service
 
-Add your job to the scheduler service in `services/scheduler/clarifai_scheduler/main.py`:
+Add your job to the scheduler service in `services/scheduler/aclarai_scheduler/main.py`:
 
 ```python
 from .my_custom_job import MyCustomJob
@@ -178,7 +178,7 @@ class SchedulerService:
 
 ### Step 3: Add Configuration
 
-Add your job configuration to `settings/clarifai.config.yaml`:
+Add your job configuration to `settings/aclarai.config.yaml`:
 
 ```yaml
 scheduler:
@@ -200,7 +200,7 @@ The scheduler automatically logs job execution with structured format:
 ```json
 {
   "level": "INFO",
-  "service": "clarifai-scheduler",
+  "service": "aclarai-scheduler",
   "filename.function_name": "main._run_job_with_logging",
   "job_id": "vault_sync_1734264000",
   "job_name": "vault_sync",
@@ -230,14 +230,14 @@ def run_job(self) -> Dict[str, Any]:
 
 ```bash
 cd services/scheduler
-python -m clarifai_scheduler.main
+python -m aclarai_scheduler.main
 ```
 
 ### Docker
 
 ```bash
-docker build -t clarifai-scheduler .
-docker run clarifai-scheduler
+docker build -t aclarai-scheduler .
+docker run aclarai-scheduler
 ```
 
 ### Docker Compose
@@ -245,7 +245,7 @@ docker run clarifai-scheduler
 The scheduler is included in the main docker-compose.yml:
 
 ```bash
-docker compose up clarifai-scheduler
+docker compose up aclarai-scheduler
 ```
 
 ## Troubleshooting
@@ -263,7 +263,7 @@ Enable debug logging by setting `LOG_LEVEL=DEBUG` in your environment:
 
 ```bash
 export LOG_LEVEL=DEBUG
-python -m clarifai_scheduler.main
+python -m aclarai_scheduler.main
 ```
 
 ### Manual Job Execution
@@ -271,8 +271,8 @@ python -m clarifai_scheduler.main
 For testing, you can run jobs manually:
 
 ```python
-from clarifai_scheduler.vault_sync import VaultSyncJob
-from clarifai_shared import load_config
+from aclarai_scheduler.vault_sync import VaultSyncJob
+from aclarai_shared import load_config
 
 config = load_config()
 job = VaultSyncJob(config)

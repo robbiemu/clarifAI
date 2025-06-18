@@ -1,6 +1,6 @@
 """Test concept detection models."""
 
-from clarifai_shared.concept_detection.models import (
+from aclarai_shared.concept_detection.models import (
     ConceptAction,
     SimilarityMatch,
     ConceptDetectionResult,

@@ -8,7 +8,7 @@ from datetime import datetime
 
 import pytest
 
-from clarifai_shared import (
+from aclarai_shared import (
     Plugin,
     MarkdownOutput,
     ensure_defaults,

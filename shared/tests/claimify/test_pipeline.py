@@ -13,8 +13,8 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from clarifai_shared.claimify.pipeline import ClaimifyPipeline
-from clarifai_shared.claimify.data_models import (
+from aclarai_shared.claimify.pipeline import ClaimifyPipeline
+from aclarai_shared.claimify.data_models import (
     SentenceChunk,
     ClaimifyContext,
     ClaimifyConfig,

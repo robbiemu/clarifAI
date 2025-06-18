@@ -1,6 +1,6 @@
-# ClarifAI Embedding System Documentation
+# aclarai Embedding System Documentation
 
-This document provides comprehensive documentation for the ClarifAI embedding system, which implements utterance chunk embedding and vector storage for the ClarifAI platform.
+This document provides comprehensive documentation for the aclarai embedding system, which implements utterance chunk embedding and vector storage for the aclarai platform.
 
 ## Overview
 
@@ -13,9 +13,9 @@ The embedding system processes Tier 1 Markdown content by:
 
 ## Architecture
 
-The system follows the ClarifAI architecture principles:
+The system follows the aclarai architecture principles:
 
-- **Configuration-driven**: All parameters configurable via `settings/clarifai.config.yaml`
+- **Configuration-driven**: All parameters configurable via `settings/aclarai.config.yaml`
 - **LlamaIndex-first**: Uses LlamaIndex abstractions for consistency
 - **Reusable**: Placed in shared library for cross-service usage
 - **Resilient**: Graceful error handling and fallbacks
@@ -68,14 +68,14 @@ embedding:
   batch_size: 32    # Chunks to embed at once
 ```
 
-### 3. ClarifAIVectorStore
+### 3. aclaraiVectorStore
 
 PostgreSQL vector storage using LlamaIndex PGVectorStore with metadata handling.
 
 **Key Features:**
 - LlamaIndex PGVectorStore integration
 - Automatic table and index creation
-- Metadata preservation (clarifai:id, chunk_index, original text)
+- Metadata preservation (aclarai:id, chunk_index, original text)
 - Efficient similarity queries with IVFFlat indexing
 - Batch operations
 
@@ -110,7 +110,7 @@ Each embedded chunk stores the following metadata:
 
 ```python
 {
-    "clarifai_block_id": "blk_abc123",      # Parent Tier 1 block ID
+    "aclarai_block_id": "blk_abc123",      # Parent Tier 1 block ID
     "chunk_index": 0,                       # Ordinal within block
     "original_text": "Full original text", # Complete source text
     "model_name": "sentence-transformers/all-MiniLM-L6-v2",
@@ -179,7 +179,7 @@ python -m pytest shared/tests/ -v
 
 ### With Vault Synchronization
 
-The embedding system integrates with ClarifAI's vault synchronization:
+The embedding system integrates with aclarai's vault synchronization:
 
 ```python
 # In vault sync job
@@ -198,8 +198,8 @@ for tier1_file in changed_tier1_files:
 Services can use the embedding system for various tasks:
 
 ```python
-# In clarifai-core service
-from clarifai_shared.embedding import EmbeddingPipeline
+# In aclarai-core service
+from aclarai_shared.embedding import EmbeddingPipeline
 
 pipeline = EmbeddingPipeline()
 

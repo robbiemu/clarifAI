@@ -6,14 +6,14 @@ Desenvolver e implementar um job agendado para agrupar `(:Concept)` nodes relaci
 ## Escopo
 
 ### Incluído
-- Implementação de um job (executado pelo `clarifai-scheduler` de `docs/project/epic_1/sprint_3-Bootstrap_scheduler_and_vault_sync_job.md`) para agrupar conceitos relacionados.
+- Implementação de um job (executado pelo `aclarai-scheduler` de `docs/project/epic_1/sprint_3-Bootstrap_scheduler_and_vault_sync_job.md`) para agrupar conceitos relacionados.
 - Desenvolvimento de um algoritmo de agrupamento que utilize os vetores do **índice HNSW de embeddings de conceitos** (`docs/arch/on-concepts.md`, seção "Concept Vector Index" e `docs/project/epic_1/sprint_5-hnswlib.md`) para formar clusters temáticos baseados em similaridade semântica. Os vetores de entrada serão provenientes do `concepts` vector store (`docs/arch/on-vector_stores.md`).
 - Implementação de filtros para os clusters formados, incluindo:
     - **Tamanho mínimo de cluster** (`min_concepts`): filtrando grupos que contenham menos que um número configurável de conceitos, conforme `docs/arch/design_config_panel.md` (Seção 4, `subject_summaries`).
     - **Limiar de similaridade** (`similarity_threshold`): utilizando um limiar de distância de cosseno (ou métrica equivalente) para determinar a coesão interna dos clusters, conforme `docs/arch/design_config_panel.md` (Seção 4, `subject_summaries`).
     - **Tamanho máximo de cluster** (`max_concepts`): limitando o número de conceitos por grupo para evitar clusters excessivamente grandes, conforme `docs/arch/design_config_panel.md` (Seção 4, `subject_summaries`).
 - Armazenamento em cache das atribuições de grupo (qual conceito pertence a qual cluster) para uso posterior pelo **Agente de Resumo de Assunto** (`docs/project/epic_1/sprint_10-Implement_Subject_Summary_Agent.md`). Este cache pode ser em memória ou em um armazenamento persistente leve.
-- Integração do job com o `clarifai-scheduler`, permitindo sua configuração e agendamento via `clarifai.config.yaml` e a UI, conforme `docs/project/epic_1/sprint_6-Add_configuration_controls.md`.
+- Integração do job com o `aclarai-scheduler`, permitindo sua configuração e agendamento via `aclarai.config.yaml` e a UI, conforme `docs/project/epic_1/sprint_6-Add_configuration_controls.md`.
 - Documentação clara do processo de clustering, da escolha do algoritmo e da configuração.
 - Implementação de testes para verificar a correta formação de clusters e a aplicação dos filtros.
 
@@ -26,20 +26,20 @@ Desenvolver e implementar um job agendado para agrupar `(:Concept)` nodes relaci
 ## Critérios de Aceitação
 - O job utiliza corretamente os vetores do **índice HNSW de embeddings de conceitos** (`docs/arch/on-concepts.md`, `docs/arch/on-vector_stores.md`) para formar clusters.
 - Os clusters formados são semanticamente coerentes e temáticos, refletindo as similaridades entre os `(:Concept)` nodes (`docs/arch/on-concepts.md`).
-- Os filtros por tamanho mínimo de cluster (`min_concepts`), tamanho máximo de cluster (`max_concepts`) e limiar de similaridade (`similarity_threshold`) funcionam adequadamente, conforme configurado em `clarifai.config.yaml` (`docs/arch/design_config_panel.md`).
+- Os filtros por tamanho mínimo de cluster (`min_concepts`), tamanho máximo de cluster (`max_concepts`) e limiar de similaridade (`similarity_threshold`) funcionam adequadamente, conforme configurado em `aclarai.config.yaml` (`docs/arch/design_config_panel.md`).
 - As atribuições de grupo (mapeamento `concept_id` para `cluster_id`) são armazenadas em cache de forma acessível para uso posterior pelo Agente de Resumo de Assunto.
-- A integração com o `clarifai-scheduler` (`docs/project/epic_1/sprint_3-Bootstrap_scheduler_and_vault_sync_job.md`) funciona corretamente, permitindo que o job seja agendado e executado.
+- A integração com o `aclarai-scheduler` (`docs/project/epic_1/sprint_3-Bootstrap_scheduler_and_vault_sync_job.md`) funciona corretamente, permitindo que o job seja agendado e executado.
 - A documentação clara do processo de clustering e configuração está disponível no repositório.
 - Testes automatizados demonstram a funcionalidade e robustez do job, cobrindo a correta formação de clusters e a aplicação dos filtros.
 
 ## Dependências
 - **Índice HNSW de embeddings de conceitos** (`docs/arch/on-concepts.md`, `docs/arch/on-vector_stores.md`) implementado e populado com os vetores dos `(:Concept)` nodes (`docs/project/epic_1/sprint_5-hnswlib.md`).
 - `(:Concept)` nodes existentes no Neo4j, com embeddings atualizados (`docs/project/epic_1/sprint_5-Create_Update_Tier_3.md` e `docs/project/epic_1/sprint_5-Refresh_embeddings.md`).
-- Sistema de agendamento (`clarifai-scheduler` com `APScheduler`) implementado e funcional (`docs/project/epic_1/sprint_3-Bootstrap_scheduler_and_vault_sync_job.md`).
-- Configuração clara dos parâmetros de clustering em `settings/clarifai.config.yaml` (`docs/arch/design_config_panel.md`).
+- Sistema de agendamento (`aclarai-scheduler` com `APScheduler`) implementado e funcional (`docs/project/epic_1/sprint_3-Bootstrap_scheduler_and_vault_sync_job.md`).
+- Configuração clara dos parâmetros de clustering em `settings/aclarai.config.yaml` (`docs/arch/design_config_panel.md`).
 
 ## Entregáveis
-- Código-fonte do job de clustering de conceitos (dentro do serviço `clarifai-scheduler`).
+- Código-fonte do job de clustering de conceitos (dentro do serviço `aclarai-scheduler`).
 - Implementação do algoritmo de formação de clusters.
 - Sistema de cache para atribuições de grupo.
 - Documentação técnica do processo e configuração.
@@ -57,7 +57,7 @@ Desenvolver e implementar um job agendado para agrupar `(:Concept)` nodes relaci
   - **Mitigação**: Utilizar os parâmetros configuráveis para tamanho mínimo e máximo de cluster (`min_concepts`, `max_concepts`) em `docs/arch/design_config_panel.md` para controlar a granularidade. A escolha do algoritmo de clustering também influenciará (e.g., DBSCAN pode gerar mais outliers, agrupamento hierárquico pode ser controlado por corte na árvore).
 
 ## Notas Técnicas
-- O job deve ser executado periodicamente pelo `clarifai-scheduler`, lendo os parâmetros de `settings/clarifai.config.yaml` para `subject_summaries` (`similarity_threshold`, `min_concepts`, `max_concepts`).
+- O job deve ser executado periodicamente pelo `aclarai-scheduler`, lendo os parâmetros de `settings/aclarai.config.yaml` para `subject_summaries` (`similarity_threshold`, `min_concepts`, `max_concepts`).
 - Considerar o uso de algoritmos de clusterização como DBSCAN (útil para lidar com densidade e identificar outliers) ou agrupamento hierárquico (útil para explorar diferentes granularidades de cluster) para a formação de clusters. A escolha pode depender da complexidade e distribuição dos embeddings.
 - Implementar métricas de qualidade (e.g., Coeficiente de Silhueta, Índice de Davies-Bouldin) para avaliar a coerência e separação dos clusters formados. Isso pode auxiliar na calibração dos parâmetros.
 - O sistema de cache para atribuições de grupo deve ser projetado para permitir rápida recuperação e atualização incremental de associações de conceitos a clusters. Pode ser um simples dicionário em memória para o MVP, mas com consideração para persistência em caso de reinício.

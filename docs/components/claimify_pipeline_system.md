@@ -1,6 +1,6 @@
-# ClarifAI Claimify Pipeline System Documentation
+# aclarai Claimify Pipeline System Documentation
 
-This document provides comprehensive documentation for the ClarifAI Claimify pipeline system, which extracts high-quality claims from Tier 1 content through a three-stage process.
+This document provides comprehensive documentation for the aclarai Claimify pipeline system, which extracts high-quality claims from Tier 1 content through a three-stage process.
 
 ## Overview
 
@@ -12,9 +12,9 @@ The Claimify pipeline processes sentence chunks through three sequential stages 
 
 ## Architecture
 
-The system follows the ClarifAI architecture principles:
+The system follows the aclarai architecture principles:
 
-- **Configuration-driven**: All parameters configurable via `settings/clarifai.config.yaml`
+- **Configuration-driven**: All parameters configurable via `settings/aclarai.config.yaml`
 - **LlamaIndex-first**: Uses LlamaIndex abstractions for LLM integration
 - **Reusable**: Placed in shared library for cross-service usage
 - **Resilient**: Graceful error handling and fallbacks
@@ -81,7 +81,7 @@ Breaks disambiguated sentences into atomic, self-contained claims.
 ## Integration Points
 
 ### Configuration System
-The pipeline integrates with the main ClarifAI configuration through `config_integration.py`:
+The pipeline integrates with the main aclarai configuration through `config_integration.py`:
 
 ```yaml
 claimify:

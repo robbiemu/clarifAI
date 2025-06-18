@@ -9,7 +9,7 @@ import os
 import tempfile
 import pytest
 from pathlib import Path
-from clarifai_shared import load_config
+from aclarai_shared import load_config
 
 
 class TestEnvironmentIntegration:

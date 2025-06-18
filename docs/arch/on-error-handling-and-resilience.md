@@ -1,6 +1,6 @@
 # 🛡️ Error Handling and Resilience Strategy
 
-This document defines the error handling and resilience strategy used across distributed components in the ClarifAI system. It outlines guiding principles and shared mechanisms that help the system remain robust, fault-tolerant, and transparent when facing unexpected failures.
+This document defines the error handling and resilience strategy used across distributed components in the aclarai system. It outlines guiding principles and shared mechanisms that help the system remain robust, fault-tolerant, and transparent when facing unexpected failures.
 
 ---
 
@@ -16,7 +16,7 @@ The following table summarizes the core resilience techniques used across the sy
 |------------------------------|-----------------------------------|------------------------------------|
 | Structured Logging            | Always                            | All components                     |
 | Retry + Backoff              | Transient API/db errors           | LLM agents, Neo4j, Postgres        |
-| Atomic File Writes           | Config and Markdown updates       | `clarifai-core`, Obsidian outputs  |
+| Atomic File Writes           | Config and Markdown updates       | `aclarai-core`, Obsidian outputs  |
 | Graceful Degradation         | Low-quality or invalid data       | Plugins, Evaluation Agents         |
 | Circuit Breakers *(planned)* | Persistent service failures       | External APIs (LLMs, databases)    |
 | Idempotency & Deduplication  | Reprocessing, sync jobs           | `vault-to-graph`, scheduler        |
@@ -65,7 +65,7 @@ The following table summarizes the core resilience techniques used across the sy
 
 ### 1. **Structured Logging**
 
-* **Use:** All services (`clarifai-core`, `vault-watcher`, `scheduler`, `clarifai-ui`).
+* **Use:** All services (`aclarai-core`, `vault-watcher`, `scheduler`, `aclarai-ui`).
 * **How:** Use Python’s `logging` with structured output.
 * **Why:** Enables centralized log collection, traceability using IDs (e.g., `claim_id`, `block_id`).
 
@@ -110,7 +110,7 @@ The following table summarizes the core resilience techniques used across the sy
 ### 6. **Idempotency & Deduplication**
 
 * **Use:** Synchronization and reprocessing.
-* **How:** Unique `clarifai:id`, `ver=`, and hash checks.
+* **How:** Unique `aclarai:id`, `ver=`, and hash checks.
 * **Why:** Safe retries and parallelism.
 * **Examples:** `vault-to-graph`, scheduler jobs.
 
@@ -118,7 +118,7 @@ The following table summarizes the core resilience techniques used across the sy
 
 ## IV. Error Handling by Component
 
-### `clarifai-core`
+### `aclarai-core`
 
 * Focus: Data integrity and orchestration.
 * Patterns: Atomic writes, `try/except`, error filtering based on evaluation results.
@@ -143,7 +143,7 @@ The following table summarizes the core resilience techniques used across the sy
 * Focus: Persistent storage.
 * Patterns: Retry with backoff, transaction wrapping, specific exception handling.
 
-### `clarifai-scheduler`
+### `aclarai-scheduler`
 
 * Focus: Job orchestration.
 * Patterns: Job-level retries, isolation, lifecycle logging, respect global pause flag.

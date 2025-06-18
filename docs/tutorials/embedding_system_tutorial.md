@@ -1,6 +1,6 @@
 # Embedding System Tutorial
 
-This tutorial walks you through using the ClarifAI embedding system to process utterance chunks and store them as semantic vectors in PostgreSQL.
+This tutorial walks you through using the aclarai embedding system to process utterance chunks and store them as semantic vectors in PostgreSQL.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ If you're using a local PostgreSQL installation:
 ```sql
 -- Connect to your PostgreSQL instance
 CREATE EXTENSION IF NOT EXISTS vector;
-CREATE DATABASE clarifai;
+CREATE DATABASE aclarai;
 ```
 
 **Note**: This manual setup is primarily for developers who want to configure their environment outside of the project's Docker infrastructure.
@@ -43,7 +43,7 @@ Create a `.env` file in the project root:
 # Database configuration
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
-POSTGRES_DB=clarifai
+POSTGRES_DB=aclarai
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your_secure_password
 
@@ -56,8 +56,8 @@ OPENAI_API_KEY=your_openai_key_here
 ### 1. Initialize the Embedding Pipeline
 
 ```python
-from clarifai_shared.embedding import EmbeddingPipeline
-from clarifai_shared.config import load_config
+from aclarai_shared.embedding import EmbeddingPipeline
+from aclarai_shared.config import load_config
 
 # Load configuration
 config = load_config()
@@ -71,11 +71,11 @@ pipeline = EmbeddingPipeline(config)
 The embedding system is designed to work with Tier 1 Markdown utterance blocks:
 
 ```python
-# Sample Tier 1 content with clarifai metadata
+# Sample Tier 1 content with aclarai metadata
 tier1_content = """
-<!-- clarifai:title=Demo Conversation -->
-<!-- clarifai:created_at=2024-01-15T10:00:00Z -->
-<!-- clarifai:id=conv_001 -->
+<!-- aclarai:title=Demo Conversation -->
+<!-- aclarai:created_at=2024-01-15T10:00:00Z -->
+<!-- aclarai:id=conv_001 -->
 
 # Conversation Analysis
 
@@ -100,7 +100,7 @@ Schedule a deeper dive session on convolutional neural networks and their use in
 try:
     results = pipeline.process_utterance(
         content=tier1_content,
-        clarifai_id="conv_001",
+        aclarai_id="conv_001",
         metadata={"source": "demo", "type": "conversation"}
     )
     
@@ -145,7 +145,7 @@ except Exception as e:
 You can adjust chunking behavior through the configuration:
 
 ```yaml
-# In settings/clarifai.config.yaml
+# In settings/aclarai.config.yaml
 embedding:
   chunking:
     chunk_size: 512        # Tokens per chunk
@@ -174,7 +174,7 @@ PostgreSQL vector storage can be tuned for performance:
 ```yaml
 embedding:
   storage:
-    table_name: "clarifai_embeddings"
+    table_name: "aclarai_embeddings"
     vector_dimension: 384     # Must match model output
     distance_metric: "cosine" # or "l2", "inner_product"
     index_type: "ivfflat"     # Vector index for performance
@@ -198,13 +198,13 @@ def process_vault_directory(vault_path: str):
             # Read the file content
             content = tier1_file.read_text()
             
-            # Extract clarifai:id from metadata
-            clarifai_id = extract_clarifai_id(content)
+            # Extract aclarai:id from metadata
+            aclarai_id = extract_aclarai_id(content)
             
             # Process with the pipeline
             results = pipeline.process_utterance(
                 content=content,
-                clarifai_id=clarifai_id,
+                aclarai_id=aclarai_id,
                 metadata={"source_file": str(tier1_file)}
             )
             
@@ -213,10 +213,10 @@ def process_vault_directory(vault_path: str):
         except Exception as e:
             print(f"Error processing {tier1_file.name}: {e}")
 
-def extract_clarifai_id(content: str) -> str:
-    """Extract clarifai:id from markdown metadata."""
+def extract_aclarai_id(content: str) -> str:
+    """Extract aclarai:id from markdown metadata."""
     import re
-    match = re.search(r'<!-- clarifai:id=([^-]+) -->', content)
+    match = re.search(r'<!-- aclarai:id=([^-]+) -->', content)
     return match.group(1) if match else "unknown"
 ```
 
@@ -227,7 +227,7 @@ The system automatically preserves important metadata:
 ```python
 # Metadata is automatically included for each chunk
 metadata_example = {
-    "clarifai_id": "conv_001",           # Original utterance ID
+    "aclarai_id": "conv_001",           # Original utterance ID
     "chunk_index": 0,                    # Position in original content
     "original_length": 1250,             # Length of source content
     "chunk_tokens": 128,                 # Estimated tokens in chunk
@@ -274,7 +274,7 @@ Enable detailed logging for troubleshooting:
 
 ```python
 import logging
-logging.getLogger("clarifai_shared.embedding").setLevel(logging.DEBUG)
+logging.getLogger("aclarai_shared.embedding").setLevel(logging.DEBUG)
 ```
 
 ## API Reference Examples
@@ -288,15 +288,15 @@ For complete Tier 1 Markdown files with metadata:
 ```python
 # Process full Tier 1 Markdown content with embedded metadata
 tier1_content = """
-<!-- clarifai:title=Example Conversation -->
-<!-- clarifai:created_at=2024-01-01T10:00:00Z -->
+<!-- aclarai:title=Example Conversation -->
+<!-- aclarai:created_at=2024-01-01T10:00:00Z -->
 
 Alice: This is an example utterance for testing.
-<!-- clarifai:id=blk_abc123 ver=1 -->
+<!-- aclarai:id=blk_abc123 ver=1 -->
 ^blk_abc123
 
 Bob: And this is another utterance in the conversation.
-<!-- clarifai:id=blk_def456 ver=1 -->
+<!-- aclarai:id=blk_def456 ver=1 -->
 ^blk_def456
 """
 
@@ -318,7 +318,7 @@ For processing individual utterance blocks:
 # Process a single utterance block
 result = pipeline.process_single_block(
     text="This is a single utterance to embed.",
-    clarifai_block_id="blk_single123",
+    aclarai_block_id="blk_single123",
     replace_existing=True
 )
 
@@ -346,7 +346,7 @@ for component, info in status['components'].items():
 For advanced use cases, you can work with components separately:
 
 ```python
-from clarifai_shared.embedding import UtteranceChunker, EmbeddingGenerator, ClarifAIVectorStore
+from aclarai_shared.embedding import UtteranceChunker, EmbeddingGenerator, aclaraiVectorStore
 
 # Use components individually for custom workflows
 chunker = UtteranceChunker()
@@ -355,7 +355,7 @@ chunks = chunker.chunk_utterance_block("Text to chunk", "blk_test")
 generator = EmbeddingGenerator()
 embedded_chunks = generator.embed_chunks(chunks)
 
-vector_store = ClarifAIVectorStore()
+vector_store = aclaraiVectorStore()
 metrics = vector_store.store_embeddings(embedded_chunks)
 print(f"Storage metrics: {metrics}")
 ```
@@ -367,7 +367,7 @@ The embedding system implements comprehensive error handling patterns:
 ```python
 # Graceful fallback handling
 try:
-    result = pipeline.process_utterance(content, clarifai_id)
+    result = pipeline.process_utterance(content, aclarai_id)
     if not result.success:
         # Check specific error types
         for error in result.errors:
@@ -379,7 +379,7 @@ try:
                 print(f"Processing error: {error}")
 except Exception as e:
     # Unexpected errors are caught and logged
-    logger.error(f"Unexpected error processing {clarifai_id}: {e}")
+    logger.error(f"Unexpected error processing {aclarai_id}: {e}")
 ```
 
 ### Performance Optimization Techniques
@@ -431,7 +431,7 @@ pipeline = EmbeddingPipeline(config_override=config_updates)
 
 ### Full Configuration Example
 
-Here's a complete configuration template for `settings/clarifai.config.yaml`:
+Here's a complete configuration template for `settings/aclarai.config.yaml`:
 
 ```yaml
 # Embedding system configuration
@@ -465,7 +465,7 @@ databases:
   postgres:
     host: "postgres"           # Database host
     port: 5432                 # Database port
-    database: "clarifai"       # Database name
+    database: "aclarai"       # Database name
     # User and password loaded from environment:
     # POSTGRES_USER, POSTGRES_PASSWORD
 ```
@@ -476,13 +476,13 @@ Create a `.env` file with these required variables:
 
 ```bash
 # Database credentials (required)
-POSTGRES_USER=clarifai
+POSTGRES_USER=aclarai
 POSTGRES_PASSWORD=your_secure_password
 
 # Optional database overrides
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
-POSTGRES_DB=clarifai
+POSTGRES_DB=aclarai
 
 # API keys (if using external embedding providers)
 OPENAI_API_KEY=your_openai_key
@@ -523,7 +523,7 @@ Each embedded chunk stores comprehensive metadata for tracking and analysis:
 # Complete metadata structure for each stored chunk
 metadata_schema = {
     # Core identifiers
-    "clarifai_id": "conv_001",                    # Original utterance ID
+    "aclarai_id": "conv_001",                    # Original utterance ID
     "chunk_index": 0,                             # Position in original content
     
     # Content information
@@ -550,7 +550,7 @@ metadata_schema = {
 ```python
 # The system provides detailed error information
 try:
-    result = pipeline.process_utterance(content, clarifai_id)
+    result = pipeline.process_utterance(content, aclarai_id)
     
     # Check processing results
     if result.success:
@@ -590,7 +590,7 @@ from typing import Optional
 def process_with_retry(
     pipeline: EmbeddingPipeline, 
     content: str, 
-    clarifai_id: str,
+    aclarai_id: str,
     max_retries: int = 3,
     backoff_factor: float = 2.0
 ) -> Optional[ProcessingResult]:
@@ -598,7 +598,7 @@ def process_with_retry(
     
     for attempt in range(max_retries):
         try:
-            result = pipeline.process_utterance(content, clarifai_id)
+            result = pipeline.process_utterance(content, aclarai_id)
             
             if result.success:
                 return result

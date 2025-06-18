@@ -88,7 +88,7 @@ Each Tier 1 block produces a list of **chunked sentence inputs**, where:
 * Each chunk is grammatically plausible (enough)
 * Each chunk is guaranteed to:
 
-  * Get a `clarifai:id`
+  * Get a `aclarai:id`
   * Be sent to the Claimify pipeline
   * Be recorded as either a `(:Claim)` or `(:Sentence)`
 
@@ -99,7 +99,7 @@ Each Tier 1 block produces a list of **chunked sentence inputs**, where:
 Each output chunk includes:
 
 * `text`: the chunked input for Claimify
-* `clarifai_block_id`: ID of the parent Tier 1 block
+* `aclarai_block_id`: ID of the parent Tier 1 block
 * `chunk_index`: ordinal within block
 * (optional) `offset_start`, `offset_end` if you track line or char spans
 

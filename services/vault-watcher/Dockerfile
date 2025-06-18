@@ -1,4 +1,4 @@
-# ClarifAI Vault Watcher Service - Monitors vault for file changes
+# aclarai Vault Watcher Service - Monitors vault for file changes
 FROM python:3.11-slim
 
 # Set working directory
@@ -21,12 +21,12 @@ COPY . /app/
 RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir -e .
 
 # Create a non-root user for security
-RUN useradd -m -u 1000 clarifai && chown -R clarifai:clarifai /app
-USER clarifai
+RUN useradd -m -u 1000 aclarai && chown -R aclarai:aclarai /app
+USER aclarai
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD python -c "import clarifai_vault_watcher; print('OK')" || exit 1
+  CMD python -c "import aclarai_vault_watcher; print('OK')" || exit 1
 
 # Run the application
-CMD ["python", "-m", "clarifai_vault_watcher.main"]
+CMD ["python", "-m", "aclarai_vault_watcher.main"]
