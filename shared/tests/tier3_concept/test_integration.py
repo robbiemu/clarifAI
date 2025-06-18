@@ -17,6 +17,7 @@ from clarifai_shared.concept_detection.models import (
 )
 from clarifai_shared.tier3_concept import ConceptFileWriter
 
+
 # Skip spaCy model loading for these tests
 @pytest.fixture(autouse=True)
 def mock_spacy_model():
@@ -26,7 +27,8 @@ def mock_spacy_model():
         mock_load.return_value = mock_nlp
         yield mock_nlp
 
-# Skip embedding model loading for these tests  
+
+# Skip embedding model loading for these tests
 @pytest.fixture(autouse=True)
 def mock_embedding_models():
     """Mock embedding model loading to avoid network dependencies."""
@@ -43,29 +45,19 @@ class TestConceptProcessorTier3Integration:
     Note: These tests mock dependencies to avoid network access requirements.
     """
 
-    @patch("clarifai_shared.graph.neo4j_manager.Neo4jGraphManager")
-    @patch("clarifai_shared.concept_detection.detector.ConceptDetector")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.NounPhraseExtractor")
-    @patch("clarifai_shared.noun_phrase_extraction.concept_candidates_store.ConceptCandidatesVectorStore")
+    @patch("clarifai_shared.graph.Neo4jGraphManager")
+    @patch("clarifai_core.concept_processor.ConceptDetector")
+    @patch("clarifai_core.concept_processor.NounPhraseExtractor")
+    @patch("clarifai_core.concept_processor.ConceptCandidatesVectorStore")
     def test_promoted_concepts_create_tier3_files(
         self, mock_store, mock_extractor, mock_detector, mock_neo4j_manager
     ):
         """Test that promoted concepts create both Neo4j nodes and Tier 3 files."""
-        
-        # Check if HuggingFace models are accessible
-        try:
-            import urllib.request
-            urllib.request.urlopen("https://huggingface.co", timeout=1)
-        except Exception:
-            pytest.skip("Skipping test due to network restrictions (cannot access HuggingFace models)")
-        
-        try:
-            # Try importing ConceptProcessor - will fail if dependencies unavailable
-            import sys
-            sys.path.append("/home/runner/work/clarifAI/clarifAI/services/clarifai-core")
-            from clarifai_core.concept_processor import ConceptProcessor
-        except (ImportError, OSError) as e:
-            pytest.skip(f"ConceptProcessor dependencies unavailable: {e}")
+        # Try importing ConceptProcessor
+        import sys
+
+        sys.path.append("/home/runner/work/clarifAI/clarifAI/services/clarifai-core")
+        from clarifai_core.concept_processor import ConceptProcessor
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Setup config with temp directory
@@ -164,29 +156,19 @@ class TestConceptProcessorTier3Integration:
             assert len(updates) == 1
             assert updates[0]["concept_id"] == "concept_test123"
 
-    @patch("clarifai_shared.graph.neo4j_manager.Neo4jGraphManager")
-    @patch("clarifai_shared.concept_detection.detector.ConceptDetector")
-    @patch("clarifai_shared.noun_phrase_extraction.extractor.NounPhraseExtractor")
-    @patch("clarifai_shared.noun_phrase_extraction.concept_candidates_store.ConceptCandidatesVectorStore")
+    @patch("clarifai_shared.graph.Neo4jGraphManager")
+    @patch("clarifai_core.concept_processor.ConceptDetector")
+    @patch("clarifai_core.concept_processor.NounPhraseExtractor")
+    @patch("clarifai_core.concept_processor.ConceptCandidatesVectorStore")
     def test_no_tier3_files_for_merged_concepts(
         self, mock_store, mock_extractor, mock_detector, mock_neo4j_manager
     ):
         """Test that merged concepts don't create Tier 3 files."""
-        
-        # Check if HuggingFace models are accessible
-        try:
-            import urllib.request
-            urllib.request.urlopen("https://huggingface.co", timeout=1)
-        except Exception:
-            pytest.skip("Skipping test due to network restrictions (cannot access HuggingFace models)")
-        
-        try:
-            # Try importing ConceptProcessor - will fail if dependencies unavailable
-            import sys
-            sys.path.append("/home/runner/work/clarifAI/clarifAI/services/clarifai-core")
-            from clarifai_core.concept_processor import ConceptProcessor
-        except (ImportError, OSError) as e:
-            pytest.skip(f"ConceptProcessor dependencies unavailable: {e}")
+        # Try importing ConceptProcessor
+        import sys
+
+        sys.path.append("/home/runner/work/clarifAI/clarifAI/services/clarifai-core")
+        from clarifai_core.concept_processor import ConceptProcessor
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Setup config with temp directory
