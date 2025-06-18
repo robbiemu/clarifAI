@@ -118,7 +118,7 @@ During Sprint 5, claim evaluation scores (entailed_score, coverage_score, decont
 
 ## Current Implementation Status
 
-### ✅ Implemented (Unblocked)
+### ✅ Implemented (Available)
 - Complete LLM agent with prompt generation and response parsing
 - Neo4j operations for claims, concepts, and relationships
 - Markdown file updating with wikilinks and version incrementing
@@ -126,16 +126,20 @@ During Sprint 5, claim evaluation scores (entailed_score, coverage_score, decont
 - Full test suite with 96%+ coverage on core components
 - Error handling and logging throughout
 - Demonstration script showing functionality
+- **Dependency injection ready architecture** for testing and modularity
+- **Integrated vector store support** with fallback text matching
+- **Hybrid concept candidate selection** using both vector similarity and text matching
 
-### ⚠️ Blocked (Waiting for Dependencies) 
-- **Concept candidate identification via vector similarity search**
-  - Blocked by: `sprint_5-Create_Update_Tier_3.md`
-  - Missing: concepts vector store with canonical (:Concept) nodes
-  - Current workaround: Simple text-based matching as fallback
+### 🔄 Enhanced Integration Features
+- **Vector Store Integration**: Attempts to use the real concepts vector store from `ConceptCandidatesVectorStore`
+- **Graceful Fallback**: Falls back to simple text matching when vector store is unavailable
+- **Dependency Injection**: Supports mock injection for neo4j_manager and vector_store for testing
+- **Dual Neo4j Managers**: Uses both the standard `Neo4jGraphManager` and custom `ClaimConceptNeo4jManager`
 
-- **End-to-end integration testing**
-  - Requires actual concepts to link to
-  - Will be completed once concepts vector store is available
+### ⚠️ Operational Notes 
+- **Vector Store Availability**: System automatically detects vector store availability and falls back gracefully
+- **Incremental Deployment**: Can be deployed even before concepts vector store is fully populated
+- **Testing Ready**: Full dependency injection support for comprehensive testing
 
 ## Integration Instructions
 
@@ -158,6 +162,7 @@ llm:
 ```python
 from aclarai_shared.claim_concept_linking import ClaimConceptLinker
 
+# Basic usage with default services
 linker = ClaimConceptLinker()
 results = linker.link_claims_to_concepts(
     max_claims=100,
@@ -167,6 +172,22 @@ results = linker.link_claims_to_concepts(
 
 print(f"Linked {results['links_created']} claim-concept pairs")
 print(f"Updated {results['files_updated']} Tier 2 files")
+
+# Advanced usage with dependency injection for testing
+from aclarai_shared.graph.neo4j_manager import Neo4jGraphManager
+from aclarai_shared.noun_phrase_extraction.concept_candidates_store import ConceptCandidatesVectorStore
+
+# Custom configuration
+config = load_config()
+neo4j_manager = Neo4jGraphManager(config)
+vector_store = ConceptCandidatesVectorStore(config)
+
+linker = ClaimConceptLinker(
+    config=config,
+    neo4j_manager=neo4j_manager,
+    vector_store=vector_store
+)
+results = linker.link_claims_to_concepts()
 ```
 
 ## Testing
@@ -202,10 +223,28 @@ All components use structured logging with:
 
 ## Next Steps
 
-1. **Integration**: Once concepts vector store is available from Tier 3 creation task
-2. **Vector Similarity**: Replace fallback text matching with proper embedding-based candidate selection
-3. **Testing**: Complete end-to-end integration tests with real data
-4. **Production**: Deploy to aclarai-core service for automated processing
+1. **Vector Store Population**: Ensure concepts vector store is populated by Tier 3 creation task
+2. **Performance Testing**: Test with real concept vector store once available
+3. **Configuration Tuning**: Adjust similarity and strength thresholds based on production data
+4. **Monitoring**: Deploy with comprehensive logging for production monitoring
+
+## Integration Architecture
+
+The system now supports both standalone operation and full integration:
+
+### Dependency Injection Architecture
+- **Configurable Services**: All major dependencies can be injected for testing
+- **Fallback Strategy**: Graceful degradation when services are unavailable
+- **Mock Support**: Full testability with mock services
+
+### Vector Store Integration
+- **Primary Method**: Uses `ConceptCandidatesVectorStore.find_similar_candidates()` 
+- **Fallback Method**: Simple text matching when vector store unavailable
+- **Automatic Detection**: System automatically tries vector store first, then falls back
+
+### Dual Neo4j Manager Support
+- **Standard Manager**: `Neo4jGraphManager` for dependency injection compatibility
+- **Custom Manager**: `ClaimConceptNeo4jManager` for specialized claim-concept operations
 
 ## Files Structure
 
