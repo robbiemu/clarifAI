@@ -4,6 +4,8 @@
 
 aclarai is an AI-powered knowledge system designed to transform your scattered digital conversations (from chats, meeting transcripts, AI interactions, etc.) into a deeply interconnected and organized knowledge base directly within your Obsidian vault. It acts as an intelligent assistant that reads, understands, and links your conversational data, making it instantly accessible and actionable.
 
+**RECENT PROJECT RENAME** - When I started this project I named it clarifAI based on the name of a significant pattern I am making use of to select concepts: Microsoft's [claimify](https://arxiv.org/abs/2502.10855). However, [clarifai](https://www.clarifai.com) is its own AI-focused company with a trademark, as well as significant [open source contributions](https://github.com/clarifai). I'm not even 50% of my way through the MVP, not a single user has shown up to comment or contribute, so it is easy for me to rename the repo to something that will not be an issue. I am nearly certain that all necessary changes have been made. If you see that word anywhere in this repo please let me know.
+
 ## Monorepo Structure
 
 This repository is a monorepo containing the various services and shared libraries that constitute the aclarai system. This structure helps in managing dependencies and streamlining the development process across different components.
