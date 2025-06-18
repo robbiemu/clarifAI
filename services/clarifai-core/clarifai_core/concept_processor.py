@@ -21,6 +21,7 @@ from clarifai_shared.concept_detection.models import (
     ConceptDetectionBatch,
 )
 from clarifai_shared.graph.models import ConceptInput
+from clarifai_shared.tier3_concept import ConceptFileWriter
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class ConceptProcessor:
         self.noun_phrase_extractor = NounPhraseExtractor(config)
         self.candidates_store = ConceptCandidatesVectorStore(config)
         self.concept_detector = ConceptDetector(config)
+        self.concept_file_writer = ConceptFileWriter(config)
 
         logger.info(
             "Initialized ConceptProcessor",
@@ -301,6 +303,53 @@ class ConceptProcessor:
                     extra={
                         "service": "clarifai-core",
                         "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                        "concepts_created": len(created_concepts),
+                    },
+                )
+
+                # Write Tier 3 Markdown files for created concepts
+                files_written = 0
+                file_write_errors = []
+                for concept in created_concepts:
+                    try:
+                        if self.concept_file_writer.write_concept_file(concept):
+                            files_written += 1
+                        else:
+                            file_write_errors.append(
+                                f"Failed to write Tier 3 file for concept {concept.concept_id}: write_concept_file returned False"
+                            )
+                    except Exception as e:
+                        file_write_errors.append(
+                            f"Error writing Tier 3 file for concept {concept.concept_id}: {e}"
+                        )
+                        logger.error(
+                            f"Failed to write Tier 3 file for concept {concept.concept_id}: {e}",
+                            extra={
+                                "service": "clarifai-core",
+                                "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                                "concept_id": concept.concept_id,
+                                "error": str(e),
+                            },
+                        )
+
+                if file_write_errors:
+                    logger.warning(
+                        f"Some Tier 3 file writes failed: {len(file_write_errors)} errors",
+                        extra={
+                            "service": "clarifai-core",
+                            "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                            "file_write_errors": len(file_write_errors),
+                            "files_written": files_written,
+                            "concepts_created": len(created_concepts),
+                        },
+                    )
+
+                logger.info(
+                    f"Created {files_written} Tier 3 Markdown files for promoted concepts",
+                    extra={
+                        "service": "clarifai-core",
+                        "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                        "files_written": files_written,
                         "concepts_created": len(created_concepts),
                     },
                 )
