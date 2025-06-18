@@ -1,10 +1,10 @@
 # GitHub Copilot - Project Guidelines and Instructions
 
-This document provides details about the ClarifAI project, its structure, and the guidelines for implementing features and fixes. If you are asked to work on a something other than a sprint task, these guidelines may still be of interest. If you are asked to work on a sprint task, please follow the workflow outlined below.
+This document provides details about the aclarai project, its structure, and the guidelines for implementing features and fixes. If you are asked to work on a something other than a sprint task, these guidelines may still be of interest. If you are asked to work on a sprint task, please follow the workflow outlined below.
 
 ## 🎯 Objective
 
-Your primary role is to act as an expert Python developer working on the ClarifAI project. When asked to process a sprint task document (formatted as `docs/project/epic_M/sprint_N-*.md`), you will analyze all relevant documentation, adhere to the project's coding standards and architecture, and produce a complete and correct implementation.
+Your primary role is to act as an expert Python developer working on the aclarai project. When asked to process a sprint task document (formatted as `docs/project/epic_M/sprint_N-*.md`), you will analyze all relevant documentation, adhere to the project's coding standards and architecture, and produce a complete and correct implementation.
 
 ---
 
@@ -14,13 +14,13 @@ This is a monorepo containing multiple services and shared libraries.
 
 -   **`docs/`**: All project documentation, including architecture, design, and sprint plans. This is your primary source for requirements.
 -   **`services/`**: Contains the individual applications.
-    -   `clarifai-core/`: The main processing engine.
+    -   `aclarai-core/`: The main processing engine.
     -   `vault-watcher/`: File system monitoring service.
     -   `scheduler/`: For running periodic jobs.
-    -   `clarifai-ui/`: The Gradio-based user interface.
+    -   `aclarai-ui/`: The Gradio-based user interface.
 -   **`shared/`**: Reusable Python modules, such as data models and common LlamaIndex tools, to be used across different services.
 -   **`.github/workflows/`**: CI/CD pipeline configurations.
--   **`settings/clarifai.config.yaml`**: The central configuration file for the entire application. All configurable parameters must be read from here.
+-   **`settings/aclarai.config.yaml`**: The central configuration file for the entire application. All configurable parameters must be read from here.
 -   **`.env`**: For storing secrets and environment-specific variables (e.g., API keys, database URLs).
 
 ---
@@ -41,8 +41,8 @@ This project uses `uv` for package and virtual environment management.
 ## 🐍 Python & Project Guidelines
 
 1.  **Type Hinting:** All new code **must** include full type hints using the `typing` module.
-2.  **Structured Logging:** Adhere strictly to `docs/arch/idea-logging.md`. Logs must go to `stdout`/`stderr` and include `service`, `filename.function_name`, and relevant contextual IDs (`clarifai_id`, `job_id`).
-3.  **Configuration Management: Never hardcode values.** All configurable parameters are loaded at runtime by automatically merging the user's `settings/clarifai.config.yaml` over the base `shared/clarifai_shared/clarifai.config.default.yaml`. This provides a complete set of defaults that are safely overridden by user customizations, ensuring no values are ever hardcoded in the application.
+2.  **Structured Logging:** Adhere strictly to `docs/arch/idea-logging.md`. Logs must go to `stdout`/`stderr` and include `service`, `filename.function_name`, and relevant contextual IDs (`aclarai_id`, `job_id`).
+3.  **Configuration Management: Never hardcode values.** All configurable parameters are loaded at runtime by automatically merging the user's `settings/aclarai.config.yaml` over the base `shared/aclarai_shared/aclarai.config.default.yaml`. This provides a complete set of defaults that are safely overridden by user customizations, ensuring no values are ever hardcoded in the application.
 4.  **Error Handling & Resilience:** Follow the patterns in `docs/arch/on-error-handling-and-resilience.md`. Use retries with exponential backoff for transient network errors (APIs, DBs), implement atomic file writes (`write-temp -> rename`) for all vault modifications, and handle failures gracefully (e.g., returning `null` scores from evaluation agents).
 5.  **LlamaIndex First:** Prefer LlamaIndex abstractions (`VectorStoreIndex`, `Neo4jGraphStore`, `ServiceContext`, agentic tools) for interacting with data stores and LLMs.
 6.  **Reusable Code:** Place any logic, data model, or tool that could be used by more than one service in the `shared/` directory to avoid code duplication.
@@ -71,7 +71,7 @@ When you receive a sprint task file, follow this precise workflow to plan and ex
     -   "configuration," "thresholds," "UI panel" → `docs/arch/design_config_panel.md`
     -   "atomic writes," "file conflicts" → `docs/arch/on-filehandle_conflicts.md`
     -   "Neo4j," "Cypher," "graph nodes" → `docs/arch/on-neo4j_interaction.md`
-    -   `clarifai:id`, `ver=`, "sync loop" → `docs/arch/on-graph_vault_synchronization.md`
+    -   `aclarai:id`, `ver=`, "sync loop" → `docs/arch/on-graph_vault_synchronization.md`
     -   "Top Concepts," "Subject Summaries," agent-written files → `docs/arch/on-writing_vault_documents.md`
     -   "concepts," "vector store," `hnswlib` → `docs/arch/on-concepts.md` & `docs/arch/on-vector_stores.md`
 -   **Internalize these requirements** to ensure your implementation is consistent with the established architecture before writing any code.
