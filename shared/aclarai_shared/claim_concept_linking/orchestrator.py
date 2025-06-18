@@ -45,82 +45,43 @@ class ClaimConceptLinker:
 
         Args:
             config: aclarai configuration (loads default if None)
-            neo4j_manager: Optional Neo4j manager for dependency injection (mainly for testing)
-            vector_store: Optional vector store for dependency injection (mainly for testing)
-            agent: Optional agent for dependency injection (mainly for testing)
+            neo4j_manager: Optional Neo4j manager for dependency injection
+            vector_store: Optional vector store for dependency injection
+            agent: Optional agent for dependency injection
         """
-        # Handle config loading with proper fallback for tests
-        if config is not None:
-            self.config = config
-        elif neo4j_manager is not None or vector_store is not None or agent is not None:
-            # If we have injected dependencies (like in tests), we can create a minimal config
+        self.config = config
+        if not config:
             try:
                 self.config = load_config()
             except Exception:
-                # Create a minimal config for testing
+                # For testing without full environment, create minimal config
                 from ..config import aclaraiConfig
 
                 self.config = aclaraiConfig()
-        else:
-            self.config = load_config()
 
-        # Initialize components - use injected dependencies if provided
+        # Use injected dependencies or create defaults
+        self.neo4j_manager = neo4j_manager or ClaimConceptNeo4jManager(self.config)
+        self.vector_store = vector_store
+
         if agent is not None:
             self.agent = agent
         else:
             try:
                 self.agent = ClaimConceptLinkerAgent(self.config)
-            except Exception as e:
-                # For testing without full config, create a minimal mock agent
-                logger.warning(
-                    f"Could not initialize ClaimConceptLinkerAgent: {e}. Creating mock for testing.",
-                    extra={
-                        "service": "aclarai",
-                        "filename.function_name": "claim_concept_linking.ClaimConceptLinker.__init__",
-                        "error": str(e),
-                    },
-                )
+            except Exception:
+                # For testing without full config, agent can be None
                 self.agent = None
 
-        self.neo4j_manager = neo4j_manager or ClaimConceptNeo4jManager(self.config)
-
-        try:
-            self.markdown_updater = Tier2MarkdownUpdater(self.config)
-        except Exception:
-            # For testing without full config
-            self.markdown_updater = None
-
-        # Initialize vector store for concept similarity search
-        if vector_store is not None:
-            self.vector_store = vector_store
-            self.use_vector_search = True
-        else:
-            # Try to initialize the real vector store
-            try:
-                from ..noun_phrase_extraction.concept_candidates_store import (
-                    ConceptCandidatesVectorStore,
-                )
-
-                self.vector_store = ConceptCandidatesVectorStore(self.config)
-                self.use_vector_search = True
-            except Exception as e:
-                logger.warning(
-                    f"Could not initialize vector store, falling back to text matching: {e}",
-                    extra={
-                        "service": "aclarai",
-                        "filename.function_name": "claim_concept_linking.ClaimConceptLinker.__init__",
-                        "error": str(e),
-                    },
-                )
-                self.vector_store = None
-                self.use_vector_search = False
+        self.markdown_updater = Tier2MarkdownUpdater(self.config, self.neo4j_manager)
 
         logger.info(
-            f"Initialized ClaimConceptLinker with vector search: {self.use_vector_search}",
+            "Initialized ClaimConceptLinker",
             extra={
                 "service": "aclarai",
                 "filename.function_name": "claim_concept_linking.ClaimConceptLinker.__init__",
-                "use_vector_search": self.use_vector_search,
+                "has_vector_store": self.vector_store is not None,
+                "has_custom_neo4j": neo4j_manager is not None,
+                "has_custom_agent": agent is not None,
             },
         )
 
@@ -199,16 +160,10 @@ class ClaimConceptLinker:
             for claim in claims:
                 stats["claims_processed"] += 1  # Track claims processed
 
-                # For each claim, find candidate concepts using vector search if available
-                if self.use_vector_search:
-                    candidate_concepts = self._find_candidate_concepts_vector(
-                        claim, similarity_threshold
-                    )
-                else:
-                    # Fall back to simple text matching
-                    candidate_concepts = self._find_candidate_concepts_fallback(
-                        claim, concepts, similarity_threshold
-                    )
+                # Find candidate concepts using vector search
+                candidate_concepts = self._find_candidate_concepts_vector(
+                    claim, similarity_threshold
+                )
 
                 # Classify relationships for each candidate
                 for candidate in candidate_concepts:
@@ -361,44 +316,6 @@ class ClaimConceptLinker:
 
         return candidates
 
-    def _find_candidate_concepts_fallback(
-        self, claim: Dict[str, Any], concepts: List[Dict[str, Any]], threshold: float
-    ) -> List[ConceptCandidate]:
-        """
-        Fallback method for finding candidate concepts using simple text matching.
-
-        This is a placeholder for when the vector similarity search is not available.
-
-        Args:
-            claim: Claim dictionary
-            concepts: List of available concepts
-            threshold: Similarity threshold (unused in fallback)
-
-        Returns:
-            List of concept candidates
-        """
-        candidates = []
-        claim_text_lower = claim["text"].lower()
-
-        # Simple keyword matching as fallback
-        for concept in concepts:
-            concept_text_lower = concept["text"].lower()
-
-            # Check if concept text appears in claim text
-            if concept_text_lower in claim_text_lower:
-                candidate = ConceptCandidate(
-                    concept_id=concept["id"],
-                    concept_text=concept["text"],
-                    similarity_score=0.8,  # Fixed score for keyword match
-                    source_node_id=concept.get("source_node_id"),
-                    source_node_type=concept.get("source_node_type"),
-                    aclarai_id=concept.get("aclarai_id"),
-                )
-                candidates.append(candidate)
-
-        # Limit to top candidates
-        return candidates[:5]  # Max 5 candidates per claim
-
     def _create_claim_concept_pair(
         self, claim: Dict[str, Any], candidate: ConceptCandidate
     ) -> ClaimConceptPair:
@@ -478,13 +395,12 @@ class ClaimConceptLinker:
         Returns:
             List of tuples containing (document, similarity_score)
         """
-        if not self.use_vector_search or self.vector_store is None:
+        if self.vector_store is None:
             logger.warning(
-                "Vector search not available, returning empty results",
+                "Vector store not available, returning empty results",
                 extra={
                     "service": "aclarai",
                     "filename.function_name": "claim_concept_linking.ClaimConceptLinker.find_candidate_concepts",
-                    "use_vector_search": self.use_vector_search,
                 },
             )
             return []

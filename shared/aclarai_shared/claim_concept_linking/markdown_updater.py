@@ -27,14 +27,16 @@ class Tier2MarkdownUpdater:
     and incrementing version numbers.
     """
 
-    def __init__(self, config: Optional[aclaraiConfig] = None):
+    def __init__(self, config: Optional[aclaraiConfig] = None, neo4j_manager=None):
         """
         Initialize the Tier 2 Markdown updater.
 
         Args:
             config: aclarai configuration (loads default if None)
+            neo4j_manager: Neo4j manager for database queries
         """
         self.config = config or load_config()
+        self.neo4j_manager = neo4j_manager
 
         # Get vault and Tier 2 directory paths
         self.vault_path = Path(self.config.vault_path)
@@ -116,26 +118,58 @@ class Tier2MarkdownUpdater:
         """
         Group link results by the aclarai_id of their source file.
 
-        Note: This is a placeholder implementation. In practice, we would
-        need to query Neo4j to find which file contains each claim.
-
         Args:
             link_results: List of link results
 
         Returns:
             Dictionary mapping aclarai_id to list of links for that file
         """
-        # TODO: Implement actual file lookup via Neo4j
-        # For now, return empty dict to avoid errors during testing
-        logger.warning(
-            "File lookup not implemented - would need Neo4j query to map claims to files",
+        if not self.neo4j_manager:
+            logger.warning(
+                "No Neo4j manager available for file lookup",
+                extra={
+                    "service": "aclarai",
+                    "filename.function_name": "claim_concept_linking.Tier2MarkdownUpdater._group_links_by_file",
+                    "link_count": len(link_results),
+                },
+            )
+            return {}
+
+        # Extract claim IDs from link results
+        claim_ids = [link.claim_id for link in link_results]
+
+        # Get source file mapping from Neo4j
+        claim_to_file = self.neo4j_manager.get_claims_source_files(claim_ids)
+
+        # Group link results by file
+        links_by_file = {}
+        for link in link_results:
+            aclarai_id = claim_to_file.get(link.claim_id)
+            if aclarai_id:
+                if aclarai_id not in links_by_file:
+                    links_by_file[aclarai_id] = []
+                links_by_file[aclarai_id].append(link)
+            else:
+                logger.warning(
+                    f"No source file found for claim {link.claim_id}",
+                    extra={
+                        "service": "aclarai",
+                        "filename.function_name": "claim_concept_linking.Tier2MarkdownUpdater._group_links_by_file",
+                        "claim_id": link.claim_id,
+                    },
+                )
+
+        logger.info(
+            f"Grouped {len(link_results)} links into {len(links_by_file)} files",
             extra={
                 "service": "aclarai",
                 "filename.function_name": "claim_concept_linking.Tier2MarkdownUpdater._group_links_by_file",
                 "link_count": len(link_results),
+                "file_count": len(links_by_file),
             },
         )
-        return {}
+
+        return links_by_file
 
     def _update_single_file(
         self, aclarai_id: str, file_links: List[ClaimConceptLinkResult]

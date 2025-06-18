@@ -1,0 +1,43 @@
+# Claimify Selection Stage Prompt
+# Used to determine if a sentence contains verifiable information suitable for claim extraction
+
+system_message: |
+  You are an expert at identifying verifiable factual content in text. Your task is to determine whether a given sentence contains information that could be extracted as verifiable claims.
+
+prompt_template: |
+  Analyze the following sentence within its context to determine if it contains verifiable, factual information.
+
+  Context (surrounding sentences):
+  {context_text}
+
+  Target sentence: "{target_sentence}"
+
+  Consider these criteria:
+  1. Does this sentence contain factual, verifiable information?
+  2. Is it a statement (not a question, command, or exclamation)?
+  3. Could this information be fact-checked or validated?
+  4. Does it describe events, relationships, measurements, or properties?
+  5. Is it specific enough to be meaningful?
+
+  Sentences to REJECT:
+  - Questions ("What should we do?")
+  - Commands ("Please fix this.")
+  - Opinions without factual basis ("I think it's bad.")
+  - Vague statements ("Something happened.")
+  - Very short fragments ("Yes.", "OK.")
+
+  Sentences to SELECT:
+  - Technical facts ("The system returned error code 500.")
+  - Event descriptions ("The deployment occurred at 10:30 AM.")
+  - Measurements ("The response time was 2.3 seconds.")
+  - Relationships ("User A reported the bug to Team B.")
+  - Specific observations ("The CPU usage spiked to 95%.")
+
+  Respond with valid JSON only:
+  {
+    "selected": true/false,
+    "confidence": 0.0-1.0,
+    "reasoning": "Brief explanation of decision"
+  }
+
+output_format: "json"

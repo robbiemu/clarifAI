@@ -114,7 +114,6 @@ During Sprint 5, claim evaluation scores (entailed_score, coverage_score, decont
 1. **Classification Decision**: Based exclusively on LLM output, not score thresholds
 2. **Score Copying**: Null values are preserved when copying from claims to relationships  
 3. **Edge Creation**: All relationship types are created regardless of score values
-4. **Future Integration**: Ready for quality filtering once evaluation agents populate scores in Sprint 7
 
 ## Current Implementation Status
 
@@ -127,10 +126,9 @@ During Sprint 5, claim evaluation scores (entailed_score, coverage_score, decont
 - Error handling and logging throughout
 - Demonstration script showing functionality
 
-### ⚠️ Blocked (Waiting for Dependencies) 
+### ⚠️ Dependencies 
 - **Concept candidate identification via vector similarity search**
-  - Blocked by: `sprint_5-Create_Update_Tier_3.md`
-  - Missing: concepts vector store with canonical (:Concept) nodes
+  - Requires: concepts vector store with canonical (:Concept) nodes
   - Current workaround: Simple text-based matching as fallback
 
 - **End-to-end integration testing**
@@ -223,8 +221,7 @@ shared/tests/claim_concept_linking/
 ├── test_agent.py            # Agent tests
 └── test_models.py           # Model tests
 
-shared/aclarai_shared/scripts/
-└── demo_claim_concept_linking.py  # Demonstration script
+
 ```
 
 This implementation provides a robust, well-tested foundation for claim-concept linking that is ready for integration once the prerequisite concepts vector store becomes available.

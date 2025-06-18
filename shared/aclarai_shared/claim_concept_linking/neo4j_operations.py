@@ -322,3 +322,50 @@ class ClaimConceptNeo4jManager:
                 },
             )
             return None
+
+    def get_claims_source_files(self, claim_ids: List[str]) -> Dict[str, str]:
+        """
+        Get the source file aclarai_id for multiple claims.
+
+        Args:
+            claim_ids: List of claim IDs
+
+        Returns:
+            Dictionary mapping claim_id to aclarai_id of source file
+        """
+        try:
+            query = """
+            MATCH (c:Claim)-[:REFERENCES]->(b:Block)
+            WHERE c.id IN $claim_ids
+            RETURN c.id as claim_id, b.aclarai_id as aclarai_id
+            """
+
+            result = self.neo4j_manager.execute_query(query, {"claim_ids": claim_ids})
+
+            file_mapping = {}
+            for record in result:
+                file_mapping[record["claim_id"]] = record["aclarai_id"]
+
+            logger.debug(
+                f"Found source files for {len(file_mapping)} claims",
+                extra={
+                    "service": "aclarai",
+                    "filename.function_name": "claim_concept_linking.ClaimConceptNeo4jManager.get_claims_source_files",
+                    "claim_count": len(claim_ids),
+                    "file_count": len(set(file_mapping.values())),
+                },
+            )
+
+            return file_mapping
+
+        except Exception as e:
+            logger.error(
+                f"Failed to get claims source files: {e}",
+                extra={
+                    "service": "aclarai",
+                    "filename.function_name": "claim_concept_linking.ClaimConceptNeo4jManager.get_claims_source_files",
+                    "claim_ids_count": len(claim_ids),
+                    "error": str(e),
+                },
+            )
+            return {}
