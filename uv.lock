@@ -465,6 +465,11 @@ dev = [
     { name = "ruff" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ruff" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.8.0" },
@@ -493,6 +498,9 @@ requires-dist = [
     { name = "watchdog", specifier = ">=6.0.0" },
 ]
 provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff", specifier = ">=0.11.13" }]
 
 [[package]]
 name = "clarifai-scheduler"
