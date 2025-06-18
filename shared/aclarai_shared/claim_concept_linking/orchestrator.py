@@ -1,17 +1,21 @@
 """
-Claim-Concept Linking Orchestrator.
+Main orchestrator for claim-concept linking.
 
-This module contains the ClaimConceptLinker class that orchestrates the process
-of linking Claims to Concepts using vector similarity search and LLM classification.
+This module provides the main ClaimConceptLinker class that coordinates
+the full linking process, from fetching claims to updating Markdown files.
 """
 
 import logging
-from typing import Optional, List, Dict, Any
+from typing import List, Optional, Dict, Any
 
-from ..config import aclaraiConfig
-from ..graph.neo4j_manager import Neo4jGraphManager
-from ..noun_phrase_extraction.concept_candidates_store import (
-    ConceptCandidatesVectorStore,
+from ..config import aclaraiConfig, load_config
+from .agent import ClaimConceptLinkerAgent
+from .neo4j_operations import ClaimConceptNeo4jManager
+from .markdown_updater import Tier2MarkdownUpdater
+from .models import (
+    ClaimConceptPair,
+    ClaimConceptLinkResult,
+    ConceptCandidate,
 )
 
 logger = logging.getLogger(__name__)
@@ -19,110 +23,263 @@ logger = logging.getLogger(__name__)
 
 class ClaimConceptLinker:
     """
-    Orchestrator for linking Claims to Concepts in the knowledge graph.
+    Main orchestrator for linking claims to concepts.
 
-    This class provides the main coordination logic for:
-    1. Querying for Claims that need linking
-    2. Finding candidate Concepts via vector similarity
-    3. Using LLM classification to determine relationship types
-    4. Creating relationships in Neo4j
-    5. Updating Markdown files with wikilinks
+    This class coordinates the full process of:
+    1. Fetching unlinked claims
+    2. Finding candidate concepts (currently blocked - needs concepts vector store)
+    3. Classifying relationships with LLM
+    4. Creating Neo4j relationships
+    5. Updating Tier 2 Markdown files
     """
 
-    def __init__(
-        self,
-        config: Optional[aclaraiConfig] = None,
-        neo4j_manager: Optional[Neo4jGraphManager] = None,
-        vector_store: Optional[ConceptCandidatesVectorStore] = None,
-    ):
+    def __init__(self, config: Optional[aclaraiConfig] = None):
         """
-        Initialize the ClaimConceptLinker.
+        Initialize the claim-concept linker.
 
         Args:
             config: aclarai configuration (loads default if None)
-            neo4j_manager: Neo4j manager instance (creates real one if None)
-            vector_store: Vector store instance (creates real one if None)
         """
-        # Only create real services if no mocks provided
-        if neo4j_manager is None or vector_store is None:
-            if config is None:
-                from ..config import load_config
+        self.config = config or load_config()
 
-                config = load_config(validate=False)
-
-        self.config = config
-        self.neo4j_manager = neo4j_manager or Neo4jGraphManager(config)
-        self.vector_store = vector_store or ConceptCandidatesVectorStore(config)
+        # Initialize components
+        self.agent = ClaimConceptLinkerAgent(config)
+        self.neo4j_manager = ClaimConceptNeo4jManager(config)
+        self.markdown_updater = Tier2MarkdownUpdater(config)
 
         logger.info(
-            "claim_concept_linking.orchestrator.ClaimConceptLinker.__init__: "
-            "ClaimConceptLinker initialized",
+            "Initialized ClaimConceptLinker",
             extra={
-                "service": "aclarai-core",
-                "filename.function_name": "orchestrator.ClaimConceptLinker.__init__",
-                "neo4j_manager_type": type(self.neo4j_manager).__name__,
-                "vector_store_type": type(self.vector_store).__name__,
+                "service": "aclarai",
+                "filename.function_name": "claim_concept_linking.ClaimConceptLinker.__init__",
             },
         )
 
-    def link_claims_to_concepts(self) -> Dict[str, Any]:
+    def link_claims_to_concepts(
+        self,
+        max_claims: int = 100,
+        similarity_threshold: float = 0.7,
+        strength_threshold: float = 0.5,
+    ) -> Dict[str, Any]:
         """
-        Main method to link Claims to Concepts.
-
-        Returns:
-            Dict containing processing results and statistics
-        """
-        logger.info(
-            "claim_concept_linking.orchestrator.ClaimConceptLinker.link_claims_to_concepts: "
-            "Starting claim-concept linking process",
-            extra={
-                "service": "aclarai-core",
-                "filename.function_name": "orchestrator.ClaimConceptLinker.link_claims_to_concepts",
-            },
-        )
-
-        # This is a placeholder implementation that demonstrates the structure
-        # The actual implementation would be completed in the full sprint task
-        results = {
-            "claims_processed": 0,
-            "relationships_created": 0,
-            "markdown_files_updated": 0,
-        }
-
-        logger.info(
-            "claim_concept_linking.orchestrator.ClaimConceptLinker.link_claims_to_concepts: "
-            "Claim-concept linking process completed",
-            extra={
-                "service": "aclarai-core",
-                "filename.function_name": "orchestrator.ClaimConceptLinker.link_claims_to_concepts",
-                "results": results,
-            },
-        )
-
-        return results
-
-    def get_unlinked_claims(self) -> List[Dict[str, Any]]:
-        """
-        Query for Claims that need linking to Concepts.
-
-        Returns:
-            List of Claim data dictionaries
-        """
-        # Placeholder - would use neo4j_manager to query for unlinked claims
-        return []
-
-    def find_candidate_concepts(
-        self, claim_text: str, top_k: int = 5
-    ) -> List[Dict[str, Any]]:
-        """
-        Find candidate Concepts for a given Claim using vector similarity.
+        Execute the full claim-concept linking process.
 
         Args:
-            claim_text: The text of the claim to find concepts for
-            top_k: Maximum number of candidates to return
+            max_claims: Maximum number of claims to process
+            similarity_threshold: Minimum similarity for concept candidates
+            strength_threshold: Minimum strength for creating relationships
 
         Returns:
-            List of candidate concept data with similarity scores
+            Dictionary with processing statistics and results
         """
-        # This would use the vector_store to find similar concepts
-        return self.vector_store.find_similar_candidates(claim_text, top_k=top_k)
+        logger.info(
+            "Starting claim-concept linking process",
+            extra={
+                "service": "aclarai",
+                "filename.function_name": "claim_concept_linking.ClaimConceptLinker.link_claims_to_concepts",
+                "max_claims": max_claims,
+                "similarity_threshold": similarity_threshold,
+                "strength_threshold": strength_threshold,
+            },
+        )
+
+        stats = {
+            "claims_fetched": 0,
+            "concepts_available": 0,
+            "pairs_analyzed": 0,
+            "links_created": 0,
+            "files_updated": 0,
+            "errors": [],
+        }
+
+        try:
+            # Step 1: Fetch unlinked claims
+            claims = self.neo4j_manager.fetch_unlinked_claims(limit=max_claims)
+            stats["claims_fetched"] = len(claims)
+
+            if not claims:
+                logger.info(
+                    "No unlinked claims found",
+                    extra={
+                        "service": "aclarai",
+                        "filename.function_name": "claim_concept_linking.ClaimConceptLinker.link_claims_to_concepts",
+                    },
+                )
+                return stats
+
+            # Step 2: Fetch available concepts
+            concepts = self.neo4j_manager.fetch_all_concepts()
+            stats["concepts_available"] = len(concepts)
+
+            if not concepts:
+                logger.warning(
+                    "No concepts available for linking - this is expected if Tier 3 creation task hasn't run yet",
+                    extra={
+                        "service": "aclarai",
+                        "filename.function_name": "claim_concept_linking.ClaimConceptLinker.link_claims_to_concepts",
+                    },
+                )
+                return stats
+
+            # Step 3: Process claim-concept pairs
+            successful_links = []
+
+            for claim in claims:
+                # For each claim, find candidate concepts
+                # NOTE: This is where vector similarity search would normally happen
+                # For now, we'll use a simple text matching as fallback
+                candidate_concepts = self._find_candidate_concepts_fallback(
+                    claim, concepts, similarity_threshold
+                )
+
+                # Classify relationships for each candidate
+                for candidate in candidate_concepts:
+                    pair = self._create_claim_concept_pair(claim, candidate)
+                    stats["pairs_analyzed"] += 1
+
+                    # Get LLM classification
+                    classification = self.agent.classify_relationship(pair)
+
+                    if classification and classification.strength >= strength_threshold:
+                        # Convert to link result
+                        link_result = self._create_link_result(pair, classification)
+
+                        # Create Neo4j relationship
+                        if self.neo4j_manager.create_claim_concept_relationship(
+                            link_result
+                        ):
+                            successful_links.append(link_result)
+                            stats["links_created"] += 1
+                        else:
+                            stats["errors"].append(
+                                f"Failed to create relationship for {pair.claim_id} -> {pair.concept_id}"
+                            )
+
+            # Step 4: Update Markdown files
+            if successful_links:
+                markdown_stats = self.markdown_updater.update_files_with_links(
+                    successful_links
+                )
+                stats["files_updated"] = markdown_stats["files_updated"]
+                stats["errors"].extend(markdown_stats["errors"])
+
+            logger.info(
+                "Completed claim-concept linking",
+                extra={
+                    "service": "aclarai",
+                    "filename.function_name": "claim_concept_linking.ClaimConceptLinker.link_claims_to_concepts",
+                    **stats,
+                },
+            )
+
+        except Exception as e:
+            error_msg = f"Fatal error in claim-concept linking: {e}"
+            stats["errors"].append(error_msg)
+            logger.error(
+                error_msg,
+                extra={
+                    "service": "aclarai",
+                    "filename.function_name": "claim_concept_linking.ClaimConceptLinker.link_claims_to_concepts",
+                    "error": str(e),
+                },
+            )
+
+        return stats
+
+    def _find_candidate_concepts_fallback(
+        self, claim: Dict[str, Any], concepts: List[Dict[str, Any]], threshold: float
+    ) -> List[ConceptCandidate]:
+        """
+        Fallback method for finding candidate concepts using simple text matching.
+
+        This is a placeholder for the vector similarity search that will be
+        available once the concepts vector store is implemented.
+
+        Args:
+            claim: Claim dictionary
+            concepts: List of available concepts
+            threshold: Similarity threshold (unused in fallback)
+
+        Returns:
+            List of concept candidates
+        """
+        candidates = []
+        claim_text_lower = claim["text"].lower()
+
+        # Simple keyword matching as fallback
+        for concept in concepts:
+            concept_text_lower = concept["text"].lower()
+
+            # Check if concept text appears in claim text
+            if concept_text_lower in claim_text_lower:
+                candidate = ConceptCandidate(
+                    concept_id=concept["id"],
+                    concept_text=concept["text"],
+                    similarity_score=0.8,  # Fixed score for keyword match
+                    source_node_id=concept.get("source_node_id"),
+                    source_node_type=concept.get("source_node_type"),
+                    aclarai_id=concept.get("aclarai_id"),
+                )
+                candidates.append(candidate)
+
+        # Limit to top candidates
+        return candidates[:5]  # Max 5 candidates per claim
+
+    def _create_claim_concept_pair(
+        self, claim: Dict[str, Any], candidate: ConceptCandidate
+    ) -> ClaimConceptPair:
+        """
+        Create a ClaimConceptPair from claim data and concept candidate.
+
+        Args:
+            claim: Claim dictionary from Neo4j
+            candidate: Concept candidate
+
+        Returns:
+            ClaimConceptPair for classification
+        """
+        # Get additional context if available
+        context = self.neo4j_manager.get_claim_context(claim["id"])
+
+        return ClaimConceptPair(
+            claim_id=claim["id"],
+            claim_text=claim["text"],
+            concept_id=candidate.concept_id,
+            concept_text=candidate.concept_text,
+            source_sentence=context.get("source_block_text") if context else None,
+            summary_block=context.get("summary_text") if context else None,
+            entailed_score=claim.get("entailed_score"),
+            coverage_score=claim.get("coverage_score"),
+            decontextualization_score=claim.get("decontextualization_score"),
+        )
+
+    def _create_link_result(
+        self,
+        pair: ClaimConceptPair,
+        classification: Any,  # AgentClassificationResult
+    ) -> ClaimConceptLinkResult:
+        """
+        Create a ClaimConceptLinkResult from classification.
+
+        Args:
+            pair: The claim-concept pair
+            classification: LLM classification result
+
+        Returns:
+            ClaimConceptLinkResult for Neo4j storage
+        """
+        # Convert string relation to enum
+        relationship = classification.to_relationship_type()
+        if not relationship:
+            raise ValueError(f"Invalid relationship type: {classification.relation}")
+
+        return ClaimConceptLinkResult(
+            claim_id=pair.claim_id,
+            concept_id=pair.concept_id,
+            relationship=relationship,
+            strength=classification.strength,
+            # Copy scores from the claim (may be null during Sprint 5)
+            entailed_score=pair.entailed_score,
+            coverage_score=pair.coverage_score,
+            agent_model=self.agent.model_name,
+        )
