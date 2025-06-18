@@ -309,9 +309,40 @@ class ConceptProcessor:
 
                 # Write Tier 3 Markdown files for created concepts
                 files_written = 0
+                file_write_errors = []
                 for concept in created_concepts:
-                    if self.concept_file_writer.write_concept_file(concept):
-                        files_written += 1
+                    try:
+                        if self.concept_file_writer.write_concept_file(concept):
+                            files_written += 1
+                        else:
+                            file_write_errors.append(
+                                f"Failed to write Tier 3 file for concept {concept.concept_id}: write_concept_file returned False"
+                            )
+                    except Exception as e:
+                        file_write_errors.append(
+                            f"Error writing Tier 3 file for concept {concept.concept_id}: {e}"
+                        )
+                        logger.error(
+                            f"Failed to write Tier 3 file for concept {concept.concept_id}: {e}",
+                            extra={
+                                "service": "clarifai-core",
+                                "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                                "concept_id": concept.concept_id,
+                                "error": str(e),
+                            },
+                        )
+
+                if file_write_errors:
+                    logger.warning(
+                        f"Some Tier 3 file writes failed: {len(file_write_errors)} errors",
+                        extra={
+                            "service": "clarifai-core",
+                            "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
+                            "file_write_errors": len(file_write_errors),
+                            "files_written": files_written,
+                            "concepts_created": len(created_concepts),
+                        },
+                    )
 
                 logger.info(
                     f"Created {files_written} Tier 3 Markdown files for promoted concepts",
