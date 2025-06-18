@@ -47,8 +47,9 @@ class ClaimConceptLinker:
         if neo4j_manager is None or vector_store is None:
             if config is None:
                 from ..config import load_config
+
                 config = load_config(validate=False)
-        
+
         self.config = config
         self.neo4j_manager = neo4j_manager or Neo4jGraphManager(config)
         self.vector_store = vector_store or ConceptCandidatesVectorStore(config)

@@ -69,7 +69,9 @@ class MockVectorStore:
 
             # Create document entry
             doc = {
-                "id": getattr(candidate, "candidate_id", f"cand_{hash(candidate.text)}"),
+                "id": getattr(
+                    candidate, "candidate_id", f"cand_{hash(candidate.text)}"
+                ),
                 "text": candidate.normalized_text,
                 "metadata": {
                     "source_node_id": candidate.source_node_id,
