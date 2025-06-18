@@ -225,7 +225,7 @@ class ClaimConceptLinker:
     def _get_concepts_from_vector_store(self) -> List[Dict[str, Any]]:
         """
         Get all concepts from the vector store.
-        
+
         Returns:
             List of concept dictionaries
         """
@@ -249,7 +249,7 @@ class ClaimConceptLinker:
         """
         # Try to use vector store for similarity search
         try:
-            if hasattr(self.vector_store, 'find_similar_candidates'):
+            if hasattr(self.vector_store, "find_similar_candidates"):
                 similar_candidates = self.vector_store.find_similar_candidates(
                     claim["text"], top_k=5
                 )
@@ -257,9 +257,15 @@ class ClaimConceptLinker:
                 candidates = []
                 for candidate_data in similar_candidates:
                     candidate = ConceptCandidate(
-                        concept_id=candidate_data.get("concept_id", candidate_data.get("id")),
-                        concept_text=candidate_data.get("concept_text", candidate_data.get("text")),
-                        similarity_score=candidate_data.get("similarity_score", candidate_data.get("score", 0.0)),
+                        concept_id=candidate_data.get(
+                            "concept_id", candidate_data.get("id")
+                        ),
+                        concept_text=candidate_data.get(
+                            "concept_text", candidate_data.get("text")
+                        ),
+                        similarity_score=candidate_data.get(
+                            "similarity_score", candidate_data.get("score", 0.0)
+                        ),
                         source_node_id=candidate_data.get("source_node_id"),
                         source_node_type=candidate_data.get("source_node_type"),
                         aclarai_id=candidate_data.get("aclarai_id"),

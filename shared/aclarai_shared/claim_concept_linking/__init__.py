@@ -20,7 +20,7 @@ try:
     )
     from .neo4j_operations import ClaimConceptNeo4jManager
     from .markdown_updater import Tier2MarkdownUpdater
-    
+
     __all__ = [
         "ClaimConceptLinker",
         "ClaimConceptLinkerAgent",
@@ -34,6 +34,6 @@ try:
         "Tier2MarkdownUpdater",
     ]
 except ImportError:
-    # If some modules don't exist (e.g., during partial implementation), 
+    # If some modules don't exist (e.g., during partial implementation),
     # only export the main orchestrator
     __all__ = ["ClaimConceptLinker"]
