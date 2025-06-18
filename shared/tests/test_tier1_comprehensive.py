@@ -194,9 +194,7 @@ alice: Let's discuss that offline""")
 
         # Count block IDs to verify all messages have them
         block_ids = content.count("<!-- aclarai:id=blk_")
-        message_count = int(
-            content.split("aclarai:message_count=")[1].split(" -->")[0]
-        )
+        message_count = int(content.split("aclarai:message_count=")[1].split(" -->")[0])
 
         assert block_ids == message_count
 

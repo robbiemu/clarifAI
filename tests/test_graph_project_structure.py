@@ -22,9 +22,7 @@ class TestGraphProjectStructure:
 
     def test_required_files_exist(self):
         """Ensure all required module files are present."""
-        base_path = (
-            Path(__file__).parent.parent / "shared" / "aclarai_shared" / "graph"
-        )
+        base_path = Path(__file__).parent.parent / "shared" / "aclarai_shared" / "graph"
 
         required_files = ["__init__.py", "models.py", "neo4j_manager.py"]
 

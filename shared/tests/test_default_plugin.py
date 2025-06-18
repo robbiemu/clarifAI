@@ -386,9 +386,7 @@ def test_default_plugin_markdown_format_compliance():
         # Should have proper block ID format
         import re
 
-        block_ids = re.findall(
-            r"<!-- aclarai:id=(blk_[a-z0-9]{6}) ver=1 -->", markdown
-        )
+        block_ids = re.findall(r"<!-- aclarai:id=(blk_[a-z0-9]{6}) ver=1 -->", markdown)
         anchors = re.findall(r"\^(blk_[a-z0-9]{6})", markdown)
 
         assert len(block_ids) == len(

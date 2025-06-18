@@ -137,9 +137,7 @@ class TestSummaryDataModels:
     def test_summary_result_markdown_generation(self):
         """Test full markdown file generation from SummaryResult."""
         block1 = SummaryBlock(summary_text="First summary point", aclarai_id="clm_001")
-        block2 = SummaryBlock(
-            summary_text="Second summary point", aclarai_id="clm_002"
-        )
+        block2 = SummaryBlock(summary_text="Second summary point", aclarai_id="clm_002")
 
         result = SummaryResult(
             summary_blocks=[block1, block2], source_file_context="test_context"

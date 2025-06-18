@@ -293,15 +293,11 @@ class aclaraiVectorStore:
             chunks = [result[0] for result in results]
             chunks.sort(key=lambda x: x.get("chunk_index", 0))
 
-            logger.debug(
-                f"Retrieved {len(chunks)} chunks for block {aclarai_block_id}"
-            )
+            logger.debug(f"Retrieved {len(chunks)} chunks for block {aclarai_block_id}")
             return chunks
 
         except Exception as e:
-            logger.error(
-                f"Failed to retrieve chunks for block {aclarai_block_id}: {e}"
-            )
+            logger.error(f"Failed to retrieve chunks for block {aclarai_block_id}: {e}")
             return []
 
     def delete_chunks_by_block_id(self, aclarai_block_id: str) -> int:
