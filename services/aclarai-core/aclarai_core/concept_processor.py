@@ -325,7 +325,7 @@ class ConceptProcessor:
                         logger.error(
                             f"Failed to write Tier 3 file for concept {concept.concept_id}: {e}",
                             extra={
-                                "service": "clarifai-core",
+                                "service": "aclarai-core",
                                 "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
                                 "concept_id": concept.concept_id,
                                 "error": str(e),
@@ -336,7 +336,7 @@ class ConceptProcessor:
                     logger.warning(
                         f"Some Tier 3 file writes failed: {len(file_write_errors)} errors",
                         extra={
-                            "service": "clarifai-core",
+                            "service": "aclarai-core",
                             "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
                             "file_write_errors": len(file_write_errors),
                             "files_written": files_written,
@@ -347,7 +347,7 @@ class ConceptProcessor:
                 logger.info(
                     f"Created {files_written} Tier 3 Markdown files for promoted concepts",
                     extra={
-                        "service": "clarifai-core",
+                        "service": "aclarai-core",
                         "filename.function_name": "concept_processor.ConceptProcessor._update_candidate_statuses",
                         "files_written": files_written,
                         "concepts_created": len(created_concepts),

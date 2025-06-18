@@ -10,9 +10,9 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from clarifai_shared.config import ClarifAIConfig
-from clarifai_shared.graph.models import Concept
-from clarifai_shared.import_system import write_file_atomically
+from aclarai_shared.config import aclaraiConfig
+from aclarai_shared.graph.models import Concept
+from aclarai_shared.import_system import write_file_atomically
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +25,9 @@ class ConceptFileWriter:
     atomic write operations and following the Concept Summary Agent format.
     """
 
-    def __init__(self, config: Optional[ClarifAIConfig] = None):
+    def __init__(self, config: Optional[aclaraiConfig] = None):
         """Initialize the concept file writer."""
-        self.config = config or ClarifAIConfig()
+        self.config = config or aclaraiConfig()
 
         # Get the concepts directory from configuration
         vault_path = Path(self.config.vault_path)
@@ -39,7 +39,7 @@ class ConceptFileWriter:
         logger.debug(
             f"Initialized ConceptFileWriter with concepts directory: {self.concepts_dir}",
             extra={
-                "service": "clarifai-core",
+                "service": "aclarai-core",
                 "filename.function_name": "tier3_concept.ConceptFileWriter.__init__",
                 "concepts_dir": str(self.concepts_dir),
             },
@@ -69,7 +69,7 @@ class ConceptFileWriter:
             logger.info(
                 f"Successfully wrote concept file: {filename}",
                 extra={
-                    "service": "clarifai-core",
+                    "service": "aclarai-core",
                     "filename.function_name": "tier3_concept.ConceptFileWriter.write_concept_file",
                     "concept_id": concept.concept_id,
                     "concept_text": concept.text,
@@ -83,7 +83,7 @@ class ConceptFileWriter:
             logger.error(
                 f"Failed to write concept file for {concept.concept_id}: {e}",
                 extra={
-                    "service": "clarifai-core",
+                    "service": "aclarai-core",
                     "filename.function_name": "tier3_concept.ConceptFileWriter.write_concept_file",
                     "concept_id": concept.concept_id,
                     "concept_text": concept.text,
@@ -152,7 +152,7 @@ class ConceptFileWriter:
             "### See Also",
             "<!-- Related concepts will be added through concept linking -->",
             "",
-            f"<!-- clarifai:id={concept.concept_id} ver={concept.version} -->",
+            f"<!-- aclarai:id={concept.concept_id} ver={concept.version} -->",
             f"^{concept.concept_id}",
         ]
 

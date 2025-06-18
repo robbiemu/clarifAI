@@ -1,10 +1,10 @@
 # Concept Creation Tutorial
 
-This tutorial explains the end-to-end flow from text processing to the creation of `[[Concept]]` Markdown files in ClarifAI, showing how the concept promotion pipeline automatically generates Tier 3 concept documents.
+This tutorial explains the end-to-end flow from text processing to the creation of `[[Concept]]` Markdown files in aclarai, showing how the concept promotion pipeline automatically generates Tier 3 concept documents.
 
 ## Overview
 
-The ClarifAI concept creation system follows this pipeline:
+The aclarai concept creation system follows this pipeline:
 
 1. **Text Processing** → Extract noun phrases from claims and summaries
 2. **Concept Detection** → Identify similar concepts or promote new ones
@@ -15,10 +15,10 @@ The ClarifAI concept creation system follows this pipeline:
 
 ### Step 1: Noun Phrase Extraction
 
-When processing claims or summaries, ClarifAI extracts noun phrases that could become concepts:
+When processing claims or summaries, aclarai extracts noun phrases that could become concepts:
 
 ```python
-from clarifai_shared.noun_phrase_extraction import NounPhraseExtractor
+from aclarai_shared.noun_phrase_extraction import NounPhraseExtractor
 
 # Initialize extractor
 extractor = NounPhraseExtractor()
@@ -28,7 +28,7 @@ result = extractor.extract_from_text(
     text="Machine learning is revolutionizing data analysis in healthcare.",
     source_node_id="claim_123",
     source_node_type="claim",
-    clarifai_id="doc_456"
+    aclarai_id="doc_456"
 )
 
 # This extracts candidates like:
@@ -42,7 +42,7 @@ result = extractor.extract_from_text(
 The system then analyzes each candidate to determine if it should be merged with existing concepts or promoted to a new concept:
 
 ```python
-from clarifai_shared.concept_detection import ConceptDetector
+from aclarai_shared.concept_detection import ConceptDetector
 
 detector = ConceptDetector()
 
@@ -59,7 +59,7 @@ detection_batch = detector.process_candidates_batch(candidates)
 Promoted concepts become (:Concept) nodes in the Neo4j graph:
 
 ```python
-from clarifai_shared.graph import Neo4jGraphManager
+from aclarai_shared.graph import Neo4jGraphManager
 
 neo4j_manager = Neo4jGraphManager()
 
@@ -77,7 +77,7 @@ concepts = neo4j_manager.create_concepts(promoted_concept_inputs)
 Finally, each new concept automatically gets a Tier 3 Markdown file:
 
 ```python
-from clarifai_shared.tier3_concept import ConceptFileWriter
+from aclarai_shared.tier3_concept import ConceptFileWriter
 
 writer = ConceptFileWriter()
 
@@ -115,17 +115,17 @@ This concept was automatically extracted and promoted from processed content.
 ### See Also
 <!-- Related concepts will be added through concept linking -->
 
-<!-- clarifai:id=concept_machine_learning_123 ver=1 -->
+<!-- aclarai:id=concept_machine_learning_123 ver=1 -->
 ^concept_machine_learning_123
 ```
 
 ## Key Components Explained
 
-### ClarifAI ID and Anchors
+### aclarai ID and Anchors
 
 Each concept file includes two important markers:
 
-1. **ClarifAI ID Comment**: `<!-- clarifai:id=concept_machine_learning_123 ver=1 -->`
+1. **aclarai ID Comment**: `<!-- aclarai:id=concept_machine_learning_123 ver=1 -->`
    - Links the file to the Neo4j (:Concept) node
    - Includes version number for tracking changes
    - Used for synchronization between vault and graph
@@ -140,7 +140,7 @@ Each concept file includes two important markers:
 Concept files are created in the configured concepts directory:
 
 ```yaml
-# In settings/clarifai.config.yaml
+# In settings/aclarai.config.yaml
 paths:
   concepts: "concepts"  # Creates files in vault/concepts/
 ```
@@ -172,7 +172,7 @@ Obsidian's graph view will show relationships between:
 Here's how the complete pipeline works in practice:
 
 ```python
-from clarifai_core.concept_processor import ConceptProcessor
+from aclarai_core.concept_processor import ConceptProcessor
 
 # Initialize the processor (handles all steps automatically)
 processor = ConceptProcessor()
@@ -180,7 +180,7 @@ processor = ConceptProcessor()
 # Process a block (claim or summary)
 result = processor.process_block_for_concepts(
     block={
-        "clarifai_id": "claim_456",
+        "aclarai_id": "claim_456",
         "semantic_text": "Machine learning algorithms are improving medical diagnosis accuracy."
     },
     block_type="claim"
@@ -195,7 +195,7 @@ result = processor.process_block_for_concepts(
 
 ## Configuration
 
-Customize concept creation behavior in your `settings/clarifai.config.yaml`:
+Customize concept creation behavior in your `settings/aclarai.config.yaml`:
 
 ```yaml
 concept_detection:
@@ -223,10 +223,10 @@ Track concept creation through structured logs:
 
 ```bash
 # View concept creation activity
-grep "Created.*Tier 3 Markdown files" clarifai.log
+grep "Created.*Tier 3 Markdown files" aclarai.log
 
 # Monitor concept promotion rates
-grep "promoted concepts" clarifai.log
+grep "promoted concepts" aclarai.log
 ```
 
 ## Next Steps
@@ -236,4 +236,4 @@ grep "promoted concepts" clarifai.log
 - **Relationship Mapping**: Use Obsidian's graph view to explore concept networks
 - **Custom Templates**: Modify concept file templates in the codebase
 
-The concept creation system provides a foundation for building a comprehensive knowledge graph that grows automatically as you process more content through ClarifAI.
+The concept creation system provides a foundation for building a comprehensive knowledge graph that grows automatically as you process more content through aclarai.
