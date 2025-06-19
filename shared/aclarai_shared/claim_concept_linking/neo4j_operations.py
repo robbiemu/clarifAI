@@ -370,7 +370,9 @@ class ClaimConceptNeo4jManager:
             )
             return {}
 
-    def get_concepts_for_claims(self, claim_ids: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    def get_concepts_for_claims(
+        self, claim_ids: List[str]
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """
         Get all concepts linked to the specified claims.
 
@@ -399,13 +401,15 @@ class ClaimConceptNeo4jManager:
                 claim_id = record["claim_id"]
                 if claim_id not in concepts_mapping:
                     concepts_mapping[claim_id] = []
-                
-                concepts_mapping[claim_id].append({
-                    "concept_id": record["concept_id"],
-                    "concept_text": record["concept_text"],
-                    "relationship_type": record["relationship_type"],
-                    "strength": record["strength"],
-                })
+
+                concepts_mapping[claim_id].append(
+                    {
+                        "concept_id": record["concept_id"],
+                        "concept_text": record["concept_text"],
+                        "relationship_type": record["relationship_type"],
+                        "strength": record["strength"],
+                    }
+                )
 
             logger.debug(
                 f"Found concepts for {len(concepts_mapping)} claims",

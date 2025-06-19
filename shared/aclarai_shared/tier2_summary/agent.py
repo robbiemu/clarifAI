@@ -66,7 +66,7 @@ class Tier2SummaryAgent:
 
         self.neo4j_manager = neo4j_manager
         self.embedding_storage = embedding_storage
-        
+
         # Initialize claim-concept linking manager for retrieving linked concepts
         # Only initialize if config is available and has neo4j configuration
         try:
@@ -592,7 +592,7 @@ class Tier2SummaryAgent:
 
             response = self._retry_with_backoff(_generate_llm_response)
             summary_text = response.text.strip()
-            
+
             # Get linked concepts for this summary
             linked_concepts = self._get_linked_concepts_for_summary(summary_input)
 
@@ -670,41 +670,49 @@ class Tier2SummaryAgent:
 
         return "\n".join(prompt_parts)
 
-    def _get_linked_concepts_for_summary(self, summary_input: SummaryInput) -> List[str]:
+    def _get_linked_concepts_for_summary(
+        self, summary_input: SummaryInput
+    ) -> List[str]:
         """
         Get concept names linked to the claims in this summary.
-        
+
         Args:
             summary_input: The summary input containing claims
-            
+
         Returns:
             List of unique concept text values for wikilinks
         """
         if not summary_input.claims or self.claim_concept_manager is None:
             return []
-            
+
         try:
             # Extract claim IDs
-            claim_ids = [claim.get("id") for claim in summary_input.claims if claim.get("id")]
+            claim_ids = [
+                claim.get("id") for claim in summary_input.claims if claim.get("id")
+            ]
             if not claim_ids:
                 return []
-                
+
             # Get concepts linked to these claims
-            concepts_mapping = self.claim_concept_manager.get_concepts_for_claims(claim_ids)
-            
+            concepts_mapping = self.claim_concept_manager.get_concepts_for_claims(
+                claim_ids
+            )
+
             # Extract unique concept texts, prioritizing higher strength relationships
             concept_texts = set()
             for claim_id, concepts in concepts_mapping.items():
                 # Sort by strength descending, take top concepts to avoid over-linking
-                sorted_concepts = sorted(concepts, key=lambda x: x.get("strength", 0.0), reverse=True)
+                sorted_concepts = sorted(
+                    concepts, key=lambda x: x.get("strength", 0.0), reverse=True
+                )
                 # Limit to top 3 concepts per claim to keep summaries clean
                 for concept in sorted_concepts[:3]:
                     concept_text = concept.get("concept_text", "").strip()
                     if concept_text:
                         concept_texts.add(concept_text)
-                        
+
             result = list(concept_texts)
-            
+
             logger.debug(
                 "Retrieved linked concepts for summary",
                 extra={
@@ -714,9 +722,9 @@ class Tier2SummaryAgent:
                     "concept_count": len(result),
                 },
             )
-            
+
             return result
-            
+
         except Exception as e:
             logger.warning(
                 "Failed to retrieve linked concepts for summary",

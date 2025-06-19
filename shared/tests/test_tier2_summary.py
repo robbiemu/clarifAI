@@ -120,8 +120,13 @@ class TestSummaryDataModels:
 
         # Check structure
         assert "- Point about machine learning" in markdown
-        assert "- Another point about AI ^clm_def456" in markdown  # Last line gets anchor
-        assert "Related concepts: [[Machine Learning]], [[Artificial Intelligence]]" in markdown
+        assert (
+            "- Another point about AI ^clm_def456" in markdown
+        )  # Last line gets anchor
+        assert (
+            "Related concepts: [[Machine Learning]], [[Artificial Intelligence]]"
+            in markdown
+        )
         assert "<!-- aclarai:id=clm_def456 ver=1 -->" in markdown
         assert "^clm_def456" in markdown
 
@@ -634,25 +639,47 @@ class TestTier2SummaryAgent:
         """Test retrieving linked concepts for a summary."""
         # Create test claims and concepts data
         claims = [
-            {"id": "claim1", "text": "Machine learning is advancing", "node_type": "claim"},
+            {
+                "id": "claim1",
+                "text": "Machine learning is advancing",
+                "node_type": "claim",
+            },
             {"id": "claim2", "text": "AI improves efficiency", "node_type": "claim"},
         ]
-        
+
         summary_input = SummaryInput(claims=claims)
-        
+
         # Mock the claim-concept manager
         mock_concepts_mapping = {
             "claim1": [
-                {"concept_text": "Machine Learning", "relationship_type": "SUPPORTS_CONCEPT", "strength": 0.9},
-                {"concept_text": "Technology", "relationship_type": "MENTIONS_CONCEPT", "strength": 0.7},
+                {
+                    "concept_text": "Machine Learning",
+                    "relationship_type": "SUPPORTS_CONCEPT",
+                    "strength": 0.9,
+                },
+                {
+                    "concept_text": "Technology",
+                    "relationship_type": "MENTIONS_CONCEPT",
+                    "strength": 0.7,
+                },
             ],
             "claim2": [
-                {"concept_text": "Artificial Intelligence", "relationship_type": "SUPPORTS_CONCEPT", "strength": 0.95},
-                {"concept_text": "Efficiency", "relationship_type": "MENTIONS_CONCEPT", "strength": 0.6},
+                {
+                    "concept_text": "Artificial Intelligence",
+                    "relationship_type": "SUPPORTS_CONCEPT",
+                    "strength": 0.95,
+                },
+                {
+                    "concept_text": "Efficiency",
+                    "relationship_type": "MENTIONS_CONCEPT",
+                    "strength": 0.6,
+                },
             ],
         }
-        
-        with patch("aclarai_shared.tier2_summary.agent.aclaraiConfig") as mock_config_class:
+
+        with patch(
+            "aclarai_shared.tier2_summary.agent.aclaraiConfig"
+        ) as mock_config_class:
             mock_config = Mock()
             mock_config.llm.models = {"default": "gpt-3.5-turbo"}
             mock_config.llm.temperature = 0.1
@@ -665,28 +692,34 @@ class TestTier2SummaryAgent:
                 mock_openai.return_value = mock_llm
 
                 agent = Tier2SummaryAgent()
-                
+
                 # Mock the claim-concept manager's method
-                agent.claim_concept_manager.get_concepts_for_claims = Mock(return_value=mock_concepts_mapping)
-                
+                agent.claim_concept_manager.get_concepts_for_claims = Mock(
+                    return_value=mock_concepts_mapping
+                )
+
                 # Test the method
                 linked_concepts = agent._get_linked_concepts_for_summary(summary_input)
-                
+
                 # Should return unique concept names
                 assert len(linked_concepts) == 4
                 assert "Machine Learning" in linked_concepts
-                assert "Artificial Intelligence" in linked_concepts 
+                assert "Artificial Intelligence" in linked_concepts
                 assert "Technology" in linked_concepts
                 assert "Efficiency" in linked_concepts
-                
+
                 # Verify the claim-concept manager was called correctly
-                agent.claim_concept_manager.get_concepts_for_claims.assert_called_once_with(["claim1", "claim2"])
+                agent.claim_concept_manager.get_concepts_for_claims.assert_called_once_with(
+                    ["claim1", "claim2"]
+                )
 
     def test_get_linked_concepts_empty_claims(self):
         """Test retrieving linked concepts when no claims are present."""
         summary_input = SummaryInput(claims=[])
-        
-        with patch("aclarai_shared.tier2_summary.agent.aclaraiConfig") as mock_config_class:
+
+        with patch(
+            "aclarai_shared.tier2_summary.agent.aclaraiConfig"
+        ) as mock_config_class:
             mock_config = Mock()
             mock_config.llm.models = {"default": "gpt-3.5-turbo"}
             mock_config.llm.temperature = 0.1
@@ -699,10 +732,10 @@ class TestTier2SummaryAgent:
                 mock_openai.return_value = mock_llm
 
                 agent = Tier2SummaryAgent()
-                
+
                 # Test with empty claims
                 linked_concepts = agent._get_linked_concepts_for_summary(summary_input)
-                
+
                 # Should return empty list
                 assert linked_concepts == []
 
