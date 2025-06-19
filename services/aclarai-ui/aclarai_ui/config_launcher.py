@@ -19,30 +19,28 @@ from aclarai_ui.config_panel import create_configuration_panel
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, 
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("aclarai-ui.config_launcher")
+
 
 def main():
     """Launch the configuration panel."""
     try:
         logger.info("Starting aclarai Configuration Panel")
-        
+
         interface = create_configuration_panel()
-        
+
         logger.info("Launching configuration panel on http://localhost:7861")
-        
+
         interface.launch(
-            server_name="0.0.0.0",
-            server_port=7861,
-            share=False,
-            debug=True
+            server_name="0.0.0.0", server_port=7861, share=False, debug=True
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to start configuration panel: {e}")
         raise
+
 
 if __name__ == "__main__":
     main()
