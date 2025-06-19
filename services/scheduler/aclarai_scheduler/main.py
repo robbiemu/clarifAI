@@ -214,7 +214,7 @@ class SchedulerService:
         try:
             # Execute the concept refresh job
             job_stats = self.concept_refresh_job.run_job()
-            
+
             # Log completion with statistics
             self.logger.info(
                 "scheduler.main._run_concept_refresh_job: Concept embedding refresh job completed",
@@ -230,9 +230,9 @@ class SchedulerService:
                     "success": job_stats["success"],
                 },
             )
-            
+
             return job_stats
-            
+
         except Exception as e:
             self.logger.error(
                 "scheduler.main._run_concept_refresh_job: Concept embedding refresh job failed",
@@ -246,7 +246,7 @@ class SchedulerService:
             return {
                 "success": False,
                 "error": str(e),
-                "duration": time.time() - job_start_time
+                "duration": time.time() - job_start_time,
             }
 
     def run(self):
