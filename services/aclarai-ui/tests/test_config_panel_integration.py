@@ -5,13 +5,27 @@ import tempfile
 import yaml
 import os
 from pathlib import Path
-from playwright.sync_api import Page, expect
-
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from aclarai_ui.config_panel import create_configuration_panel
+
+# Try to import Playwright, skip tests if not available
+try:
+    from playwright.sync_api import Page, expect
+
+    playwright_available = True
+except ImportError:
+    playwright_available = False
+    # Create dummy fixtures for when Playwright is not available
+    Page = None
+    expect = None
+
+pytestmark = pytest.mark.skipif(
+    not playwright_available,
+    reason="Playwright not available - install with 'uv sync --extra dev && uv run playwright install'",
+)
 
 
 @pytest.mark.integration
