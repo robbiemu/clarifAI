@@ -173,7 +173,7 @@ class ClaimConceptLinker:
                     # Get LLM classification
                     if self.agent is None:
                         # For testing without agent, create a mock classification
-                        from .models import ClaimConceptRelationship
+                        from .models import RelationshipType
 
                         class MockClassification:
                             def __init__(self):
@@ -182,7 +182,7 @@ class ClaimConceptLinker:
                                 self.reasoning = "Mock classification for testing"
 
                             def to_relationship_type(self):
-                                return ClaimConceptRelationship.SUPPORTS_CONCEPT
+                                return RelationshipType.SUPPORTS_CONCEPT
 
                         classification = MockClassification()
                     else:
