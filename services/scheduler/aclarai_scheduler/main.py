@@ -11,6 +11,7 @@ import os
 import logging
 import signal
 import sys
+import time
 from typing import Optional
 
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -19,6 +20,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 
 from aclarai_shared import load_config
 from .vault_sync import VaultSyncJob
+from .concept_refresh import ConceptEmbeddingRefreshJob
 
 
 class SchedulerService:
@@ -35,6 +37,7 @@ class SchedulerService:
         self.logger = logging.getLogger(__name__)
         self.scheduler: Optional[BlockingScheduler] = None
         self.vault_sync_job = VaultSyncJob(self.config)
+        self.concept_refresh_job = ConceptEmbeddingRefreshJob(self.config)
 
         # Set up signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -195,8 +198,8 @@ class SchedulerService:
             raise
 
     def _run_concept_refresh_job(self):
-        """Execute the concept embedding refresh job (placeholder)."""
-        job_start_time = __import__("time").time()
+        """Execute the concept embedding refresh job."""
+        job_start_time = time.time()
         job_id = f"concept_refresh_{int(job_start_time)}"
 
         self.logger.info(
@@ -208,17 +211,43 @@ class SchedulerService:
             },
         )
 
-        # TODO: Implement concept embedding refresh functionality
-        # This is a placeholder for future sprint tasks
-        self.logger.info(
-            "scheduler.main._run_concept_refresh_job: Concept embedding refresh job completed (placeholder)",
-            extra={
-                "service": "aclarai-scheduler",
-                "filename.function_name": "scheduler.main._run_concept_refresh_job",
-                "job_id": job_id,
-                "status": "placeholder_implementation",
-            },
-        )
+        try:
+            # Execute the concept refresh job
+            job_stats = self.concept_refresh_job.run_job()
+
+            # Log completion with statistics
+            self.logger.info(
+                "scheduler.main._run_concept_refresh_job: Concept embedding refresh job completed",
+                extra={
+                    "service": "aclarai-scheduler",
+                    "filename.function_name": "scheduler.main._run_concept_refresh_job",
+                    "job_id": job_id,
+                    "duration": job_stats["duration"],
+                    "concepts_processed": job_stats["concepts_processed"],
+                    "concepts_updated": job_stats["concepts_updated"],
+                    "concepts_skipped": job_stats["concepts_skipped"],
+                    "errors": job_stats["errors"],
+                    "success": job_stats["success"],
+                },
+            )
+
+            return job_stats
+
+        except Exception as e:
+            self.logger.error(
+                "scheduler.main._run_concept_refresh_job: Concept embedding refresh job failed",
+                extra={
+                    "service": "aclarai-scheduler",
+                    "filename.function_name": "scheduler.main._run_concept_refresh_job",
+                    "job_id": job_id,
+                    "error": str(e),
+                },
+            )
+            return {
+                "success": False,
+                "error": str(e),
+                "duration": time.time() - job_start_time,
+            }
 
     def run(self):
         """Start the scheduler service."""
