@@ -20,10 +20,10 @@ from tests.utils import get_seeded_mock_services
 
 class MockClaimConceptNeo4jManager:
     """Mock ClaimConceptNeo4jManager for testing."""
-    
+
     def __init__(self, base_manager=None):
         self.base_manager = base_manager
-        
+
     def fetch_unlinked_claims(self, limit=100):
         """Return mock claims data."""
         claims_data = [
@@ -35,15 +35,15 @@ class MockClaimConceptNeo4jManager:
                 "decontextualization_score": 0.85,
             },
             {
-                "id": "claim_memory_issue_1", 
+                "id": "claim_memory_issue_1",
                 "text": "Out of memory error in GPU processing",
                 "entailed_score": 0.89,
                 "coverage_score": 0.91,
                 "decontextualization_score": 0.83,
-            }
+            },
         ]
         return claims_data[:limit]
-        
+
     def fetch_all_concepts(self):
         """Return mock concepts data."""
         return [
@@ -51,18 +51,18 @@ class MockClaimConceptNeo4jManager:
             {"id": "concept_memory_error", "text": "Memory Error"},
             {"id": "concept_cuda_error", "text": "CUDA Error"},
         ]
-        
+
     def get_claim_context(self, claim_id):
         """Return mock context."""
         return {
             "source_block_text": f"Source text for {claim_id}",
-            "summary_text": f"Summary for {claim_id}"
+            "summary_text": f"Summary for {claim_id}",
         }
-        
+
     def create_claim_concept_relationship(self, link_result):
         """Mock relationship creation - always succeeds."""
         return True
-        
+
     def get_claims_source_files(self, claim_ids):
         """Return mock file mappings."""
         return {claim_id: f"/mock/vault/file_{claim_id}.md" for claim_id in claim_ids}
@@ -104,7 +104,7 @@ class TestClaimConceptLinkerOrchestrator:
                     mock_neo4j.assert_called_once()
                     mock_agent.assert_called_once()
                     mock_updater.assert_called_once()
-                    
+
                     # Vector store should remain None when not injected
                     assert linker.vector_store is None
 
@@ -242,12 +242,12 @@ class TestClaimConceptLinkerOrchestrator:
     def test_link_claims_to_concepts_empty_claims(self):
         """Test linking process with no claims available."""
         neo4j_manager, vector_store = get_seeded_mock_services()
-        
+
         # Create mock manager with no claims
         class EmptyMockClaimConceptNeo4jManager(MockClaimConceptNeo4jManager):
             def fetch_unlinked_claims(self, limit=100):
                 return []  # No claims
-        
+
         mock_claim_concept_manager = EmptyMockClaimConceptNeo4jManager(neo4j_manager)
 
         linker = ClaimConceptLinker(
@@ -271,8 +271,10 @@ class TestClaimConceptLinkerOrchestrator:
         class NoConceptsMockClaimConceptNeo4jManager(MockClaimConceptNeo4jManager):
             def fetch_all_concepts(self):
                 return []  # No concepts
-        
-        mock_claim_concept_manager = NoConceptsMockClaimConceptNeo4jManager(neo4j_manager)
+
+        mock_claim_concept_manager = NoConceptsMockClaimConceptNeo4jManager(
+            neo4j_manager
+        )
 
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
