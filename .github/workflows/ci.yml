@@ -130,6 +130,9 @@ jobs:
         uv pip install -e ./shared -e ./services/aclarai-core -e ./services/aclarai-ui -e ./services/scheduler -e ./services/vault-watcher
         
     - name: Run tests
+      env:
+        NEO4J_PASSWORD: fake_test_neo4j_password_123
+        POSTGRES_PASSWORD: fake_test_postgres_password_456
       run: |
         source .venv/bin/activate
         # Set PYTHONPATH to include all service directories
