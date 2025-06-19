@@ -369,3 +369,68 @@ class ClaimConceptNeo4jManager:
                 },
             )
             return {}
+
+    def get_concepts_for_claims(
+        self, claim_ids: List[str]
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get all concepts linked to the specified claims.
+
+        Args:
+            claim_ids: List of claim IDs to find concepts for
+
+        Returns:
+            Dictionary mapping claim_id to list of linked concept info
+        """
+        if not claim_ids:
+            return {}
+
+        try:
+            query = """
+            MATCH (c:Claim)-[r:SUPPORTS_CONCEPT|MENTIONS_CONCEPT|CONTRADICTS_CONCEPT]->(k:Concept)
+            WHERE c.id IN $claim_ids
+            RETURN c.id as claim_id, k.id as concept_id, k.text as concept_text,
+                   type(r) as relationship_type, r.strength as strength
+            ORDER BY c.id, r.strength DESC
+            """
+
+            result = self.neo4j_manager.execute_query(query, {"claim_ids": claim_ids})
+
+            concepts_mapping = {}
+            for record in result:
+                claim_id = record["claim_id"]
+                if claim_id not in concepts_mapping:
+                    concepts_mapping[claim_id] = []
+
+                concepts_mapping[claim_id].append(
+                    {
+                        "concept_id": record["concept_id"],
+                        "concept_text": record["concept_text"],
+                        "relationship_type": record["relationship_type"],
+                        "strength": record["strength"],
+                    }
+                )
+
+            logger.debug(
+                f"Found concepts for {len(concepts_mapping)} claims",
+                extra={
+                    "service": "aclarai",
+                    "filename.function_name": "claim_concept_linking.ClaimConceptNeo4jManager.get_concepts_for_claims",
+                    "claim_count": len(claim_ids),
+                    "claims_with_concepts": len(concepts_mapping),
+                },
+            )
+
+            return concepts_mapping
+
+        except Exception as e:
+            logger.error(
+                f"Failed to get concepts for claims: {e}",
+                extra={
+                    "service": "aclarai",
+                    "filename.function_name": "claim_concept_linking.ClaimConceptNeo4jManager.get_concepts_for_claims",
+                    "claim_ids_count": len(claim_ids),
+                    "error": str(e),
+                },
+            )
+            return {}

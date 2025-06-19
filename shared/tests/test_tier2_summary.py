@@ -107,6 +107,50 @@ class TestSummaryDataModels:
         lines = markdown.strip().split("\n")
         assert lines[-1] == "^clm_abc123"
 
+    def test_summary_block_markdown_with_concepts(self):
+        """Test markdown generation from SummaryBlock with linked concepts."""
+        summary_block = SummaryBlock(
+            summary_text="Point about machine learning\nAnother point about AI",
+            aclarai_id="clm_def456",
+            version=1,
+            linked_concepts=["Machine Learning", "Artificial Intelligence"],
+        )
+
+        markdown = summary_block.to_markdown()
+
+        # Check structure
+        assert "- Point about machine learning" in markdown
+        assert (
+            "- Another point about AI ^clm_def456" in markdown
+        )  # Last line gets anchor
+        assert (
+            "Related concepts: [[Machine Learning]], [[Artificial Intelligence]]"
+            in markdown
+        )
+        assert "<!-- aclarai:id=clm_def456 ver=1 -->" in markdown
+        assert "^clm_def456" in markdown
+
+        # Check it ends with anchor
+        lines = markdown.strip().split("\n")
+        assert lines[-1] == "^clm_def456"
+
+    def test_summary_block_markdown_without_concepts(self):
+        """Test markdown generation from SummaryBlock without linked concepts."""
+        summary_block = SummaryBlock(
+            summary_text="Basic summary point",
+            aclarai_id="clm_ghi789",
+            version=1,
+            linked_concepts=[],  # Empty concepts
+        )
+
+        markdown = summary_block.to_markdown()
+
+        # Should not contain concept section when list is empty
+        assert "Related concepts:" not in markdown
+        assert "[[" not in markdown
+        assert "- Basic summary point ^clm_ghi789" in markdown
+        assert "<!-- aclarai:id=clm_ghi789 ver=1 -->" in markdown
+
     def test_summary_result_creation(self):
         """Test SummaryResult object creation and properties."""
         block1 = SummaryBlock(summary_text="First summary", aclarai_id="clm_001")
@@ -590,6 +634,110 @@ class TestTier2SummaryAgent:
         call_args = mock_build_neighborhoods.call_args[0]
         assert len(call_args[0]) == 1  # seed_claims
         assert call_args[1] == 0.80  # similarity_threshold (from config)
+
+    def test_get_linked_concepts_for_summary(self):
+        """Test retrieving linked concepts for a summary."""
+        # Create test claims and concepts data
+        claims = [
+            {
+                "id": "claim1",
+                "text": "Machine learning is advancing",
+                "node_type": "claim",
+            },
+            {"id": "claim2", "text": "AI improves efficiency", "node_type": "claim"},
+        ]
+
+        summary_input = SummaryInput(claims=claims)
+
+        # Mock the claim-concept manager
+        mock_concepts_mapping = {
+            "claim1": [
+                {
+                    "concept_text": "Machine Learning",
+                    "relationship_type": "SUPPORTS_CONCEPT",
+                    "strength": 0.9,
+                },
+                {
+                    "concept_text": "Technology",
+                    "relationship_type": "MENTIONS_CONCEPT",
+                    "strength": 0.7,
+                },
+            ],
+            "claim2": [
+                {
+                    "concept_text": "Artificial Intelligence",
+                    "relationship_type": "SUPPORTS_CONCEPT",
+                    "strength": 0.95,
+                },
+                {
+                    "concept_text": "Efficiency",
+                    "relationship_type": "MENTIONS_CONCEPT",
+                    "strength": 0.6,
+                },
+            ],
+        }
+
+        with patch(
+            "aclarai_shared.tier2_summary.agent.aclaraiConfig"
+        ) as mock_config_class:
+            mock_config = Mock()
+            mock_config.llm.models = {"default": "gpt-3.5-turbo"}
+            mock_config.llm.temperature = 0.1
+            mock_config.llm.max_tokens = 1000
+            mock_config.features = {"tier2_generation": True}
+            mock_config_class.return_value = mock_config
+
+            with patch("aclarai_shared.tier2_summary.agent.OpenAI") as mock_openai:
+                mock_llm = Mock()
+                mock_openai.return_value = mock_llm
+
+                agent = Tier2SummaryAgent()
+
+                # Mock the claim-concept manager's method
+                agent.claim_concept_manager.get_concepts_for_claims = Mock(
+                    return_value=mock_concepts_mapping
+                )
+
+                # Test the method
+                linked_concepts = agent._get_linked_concepts_for_summary(summary_input)
+
+                # Should return unique concept names
+                assert len(linked_concepts) == 4
+                assert "Machine Learning" in linked_concepts
+                assert "Artificial Intelligence" in linked_concepts
+                assert "Technology" in linked_concepts
+                assert "Efficiency" in linked_concepts
+
+                # Verify the claim-concept manager was called correctly
+                agent.claim_concept_manager.get_concepts_for_claims.assert_called_once_with(
+                    ["claim1", "claim2"]
+                )
+
+    def test_get_linked_concepts_empty_claims(self):
+        """Test retrieving linked concepts when no claims are present."""
+        summary_input = SummaryInput(claims=[])
+
+        with patch(
+            "aclarai_shared.tier2_summary.agent.aclaraiConfig"
+        ) as mock_config_class:
+            mock_config = Mock()
+            mock_config.llm.models = {"default": "gpt-3.5-turbo"}
+            mock_config.llm.temperature = 0.1
+            mock_config.llm.max_tokens = 1000
+            mock_config.features = {"tier2_generation": True}
+            mock_config_class.return_value = mock_config
+
+            with patch("aclarai_shared.tier2_summary.agent.OpenAI") as mock_openai:
+                mock_llm = Mock()
+                mock_openai.return_value = mock_llm
+
+                agent = Tier2SummaryAgent()
+
+                # Test with empty claims
+                linked_concepts = agent._get_linked_concepts_for_summary(summary_input)
+
+                # Should return empty list
+                assert linked_concepts == []
 
 
 class TestAtomicFileWriting:

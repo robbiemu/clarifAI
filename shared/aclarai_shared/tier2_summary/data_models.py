@@ -69,6 +69,9 @@ class SummaryBlock:
     aclarai_id: str
     version: int = 1
     source_block_ids: List[str] = field(default_factory=list)  # Links back to Tier 1
+    linked_concepts: List[str] = field(
+        default_factory=list
+    )  # Concept names for wikilinks
     timestamp: Optional[datetime] = None
 
     def __post_init__(self):
@@ -97,6 +100,14 @@ class SummaryBlock:
         # Add the summary ID anchor to the last line
         if lines:
             lines[-1] = f"{lines[-1]} ^{self.aclarai_id}"
+
+        # Add concept wikilinks if any
+        if self.linked_concepts:
+            lines.append("")  # Empty line before concepts
+            concept_links = ", ".join(
+                f"[[{concept}]]" for concept in self.linked_concepts
+            )
+            lines.append(f"Related concepts: {concept_links}")
 
         lines.append("")  # Empty line before metadata
 
