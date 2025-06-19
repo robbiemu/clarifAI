@@ -45,12 +45,18 @@ class TestConceptProcessorTier3Integration:
     Note: These tests mock dependencies to avoid network access requirements.
     """
 
-    @patch("aclarai_shared.graph.Neo4jGraphManager")
+    @patch("aclarai_core.concept_processor.Neo4jGraphManager")
     @patch("aclarai_core.concept_processor.ConceptDetector")
     @patch("aclarai_core.concept_processor.NounPhraseExtractor")
     @patch("aclarai_core.concept_processor.ConceptCandidatesVectorStore")
+    @patch("aclarai_core.concept_processor.ConceptFileWriter")
     def test_promoted_concepts_create_tier3_files(
-        self, mock_store, mock_extractor, mock_detector, mock_neo4j_manager
+        self,
+        mock_concept_file_writer,
+        mock_store,
+        mock_extractor,
+        mock_detector,
+        mock_neo4j_manager,
     ):
         """Test that promoted concepts create both Neo4j nodes and Tier 3 files."""
         # Try importing ConceptProcessor
@@ -75,6 +81,11 @@ class TestConceptProcessorTier3Integration:
 
             mock_detector_instance = Mock()
             mock_detector.return_value = mock_detector_instance
+
+            # Setup ConceptFileWriter mock
+            mock_concept_file_writer_instance = Mock()
+            mock_concept_file_writer.return_value = mock_concept_file_writer_instance
+            mock_concept_file_writer_instance.write_concept_file.return_value = True
 
             # Mock concept detection results with a promoted concept
             promoted_result = ConceptDetectionResult(
@@ -156,12 +167,18 @@ class TestConceptProcessorTier3Integration:
             assert len(updates) == 1
             assert updates[0]["concept_id"] == "concept_test123"
 
-    @patch("aclarai_shared.graph.Neo4jGraphManager")
+    @patch("aclarai_core.concept_processor.Neo4jGraphManager")
     @patch("aclarai_core.concept_processor.ConceptDetector")
     @patch("aclarai_core.concept_processor.NounPhraseExtractor")
     @patch("aclarai_core.concept_processor.ConceptCandidatesVectorStore")
+    @patch("aclarai_core.concept_processor.ConceptFileWriter")
     def test_no_tier3_files_for_merged_concepts(
-        self, mock_store, mock_extractor, mock_detector, mock_neo4j_manager
+        self,
+        mock_concept_file_writer,
+        mock_store,
+        mock_extractor,
+        mock_detector,
+        mock_neo4j_manager,
     ):
         """Test that merged concepts don't create Tier 3 files."""
         # Try importing ConceptProcessor
@@ -186,6 +203,11 @@ class TestConceptProcessorTier3Integration:
 
             mock_detector_instance = Mock()
             mock_detector.return_value = mock_detector_instance
+
+            # Setup ConceptFileWriter mock
+            mock_concept_file_writer_instance = Mock()
+            mock_concept_file_writer.return_value = mock_concept_file_writer_instance
+            mock_concept_file_writer_instance.write_concept_file.return_value = True
 
             # Mock concept detection results with a merged concept (no promotion)
             from aclarai_shared.concept_detection.models import SimilarityMatch

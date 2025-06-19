@@ -10,6 +10,7 @@ import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
+from aclarai_shared import load_config
 from aclarai_shared.config import aclaraiConfig
 from aclarai_shared.concept_detection import ConceptDetector
 from aclarai_shared.noun_phrase_extraction import NounPhraseExtractor
@@ -21,6 +22,7 @@ from aclarai_shared.concept_detection.models import (
     ConceptDetectionBatch,
 )
 from aclarai_shared.graph.models import ConceptInput
+from aclarai_shared.graph import Neo4jGraphManager
 from aclarai_shared.tier3_concept import ConceptFileWriter
 
 logger = logging.getLogger(__name__)
@@ -35,15 +37,38 @@ class ConceptProcessor:
     should be merged or promoted.
     """
 
-    def __init__(self, config: Optional[aclaraiConfig] = None):
-        """Initialize the concept processor."""
-        self.config = config
+    def __init__(
+        self,
+        config: Optional[aclaraiConfig] = None,
+        noun_phrase_extractor: Optional[NounPhraseExtractor] = None,
+        candidates_store: Optional[ConceptCandidatesVectorStore] = None,
+        concept_detector: Optional[ConceptDetector] = None,
+        concept_file_writer: Optional[ConceptFileWriter] = None,
+        neo4j_manager: Optional[Neo4jGraphManager] = None,
+    ):
+        """
+        Initialize the concept processor.
 
-        # Initialize components
-        self.noun_phrase_extractor = NounPhraseExtractor(config)
-        self.candidates_store = ConceptCandidatesVectorStore(config)
-        self.concept_detector = ConceptDetector(config)
-        self.concept_file_writer = ConceptFileWriter(config)
+        Args:
+            config: aclarai configuration (loads default if None)
+            noun_phrase_extractor: Noun phrase extractor (creates default if None)
+            candidates_store: Concept candidates vector store (creates default if None)
+            concept_detector: Concept detector (creates default if None)
+            concept_file_writer: Concept file writer (creates default if None)
+            neo4j_manager: Neo4j graph manager (creates default if None)
+        """
+        self.config = config or load_config(validate=False)
+
+        # Use injected dependencies or create real ones if not provided
+        self.noun_phrase_extractor = noun_phrase_extractor or NounPhraseExtractor(
+            self.config
+        )
+        self.candidates_store = candidates_store or ConceptCandidatesVectorStore(
+            self.config
+        )
+        self.concept_detector = concept_detector or ConceptDetector(self.config)
+        self.concept_file_writer = concept_file_writer or ConceptFileWriter(self.config)
+        self.neo4j_manager = neo4j_manager or Neo4jGraphManager(self.config)
 
         logger.info(
             "Initialized ConceptProcessor",
@@ -293,10 +318,7 @@ class ConceptProcessor:
         # Create Concept nodes for promoted candidates
         if promoted_concepts:
             try:
-                from aclarai_shared.graph import Neo4jGraphManager
-
-                neo4j_manager = Neo4jGraphManager(self.config)
-                created_concepts = neo4j_manager.create_concepts(promoted_concepts)
+                created_concepts = self.neo4j_manager.create_concepts(promoted_concepts)
 
                 logger.info(
                     f"Created {len(created_concepts)} Concept nodes from promoted candidates",
