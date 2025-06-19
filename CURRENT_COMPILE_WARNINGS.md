@@ -58,12 +58,13 @@ CoverageWarning: Module services was never imported.
 ```
 
 **Source:** `pytest-cov` coverage tool configuration
-**Files Triggering:** During individual service tests when run from service subdirectories
+**Files Triggering:** During CI test execution
 **Explanation:** 
-- Our test script uses `cd "$service_dir"` to run tests from within each service directory
+- The CI workflow runs tests from the repository root using pytest
 - The coverage tool is configured to look for a top-level `services` package
-- Since tests run from subdirectories, the top-level `services` package is never directly imported
-- This is a side effect of our testing strategy, not an actual issue
+- However, tests are run against individual service modules within the services/ directory
+- The top-level `services` directory itself is never directly imported as a Python package
+- This is expected behavior for our monorepo structure where services are independent modules
 
 **Impact:** Cosmetic warning only - does not affect functionality or coverage accuracy
 **Action Required:** None - this is expected behavior given our monorepo testing approach
