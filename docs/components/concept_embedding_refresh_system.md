@@ -123,7 +123,7 @@ The system depends on:
 1. **Neo4j**: For storing concept metadata and embedding hashes
 2. **Embedding Service**: Configured embedding model for generating vectors
 3. **Vector Store**: Concepts collection for storing embeddings
-4. **Concept Infrastructure**: `:Concept` nodes from Sprint 5 tasks
+4. **Concept Infrastructure**: Depends on the existence of (:Concept) nodes in the knowledge graph, which are created by the concept promotion pipeline.
 
 ## Usage
 
@@ -169,8 +169,7 @@ Potential improvements for future sprints:
 1. **Batch Processing**: Process multiple concepts in embedding batches for efficiency
 2. **Incremental Timestamps**: Use file modification times as an additional change indicator
 3. **Drift Analysis**: Track semantic drift patterns over time
-4. **Performance Metrics**: Detailed timing for each processing stage
-5. **Concept Validation**: Verify concept files match expected format before processing
+4. **Concept Validation**: Verify concept files match expected format before processing
 
 ## Related Documentation
 
