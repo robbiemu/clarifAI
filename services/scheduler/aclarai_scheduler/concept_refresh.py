@@ -15,8 +15,9 @@ from pathlib import Path
 from aclarai_shared import load_config
 from aclarai_shared.config import aclaraiConfig
 from aclarai_shared.graph.neo4j_manager import Neo4jGraphManager
-from aclarai_shared.embedding.models import EmbeddingGenerator
+from aclarai_shared.embedding.models import EmbeddingGenerator, EmbeddedChunk
 from aclarai_shared.embedding.storage import aclaraiVectorStore
+from aclarai_shared.embedding.chunking import ChunkMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -355,19 +356,25 @@ class ConceptEmbeddingRefreshJob:
     
     def _update_vector_store(self, concept_name: str, embedding: List[float]) -> None:
         """
-        Update the vector store with the new embedding.
+        Update the vector store with the new embedding for a concept.
+        This is achieved by deleting existing entries and inserting the new one.
         
         Args:
             concept_name: Name of the concept
             embedding: New embedding vector
         """
         try:
+            # The unique ID for a concept's vector is derived from its name.
+            # This ensures we can reliably find and delete it.
+            concept_block_id = f"concept_{concept_name}"
+            
             logger.info(
-                f"concept_refresh._update_vector_store: Updating vector store for concept: {concept_name}",
+                f"concept_refresh._update_vector_store: Upserting embedding for concept: {concept_name} (ID: {concept_block_id})",
                 extra={
                     "service": "aclarai-scheduler",
                     "filename.function_name": "concept_refresh._update_vector_store",
                     "concept_name": concept_name,
+                    "concept_block_id": concept_block_id,
                     "embedding_dim": len(embedding),
                 }
             )
@@ -375,18 +382,54 @@ class ConceptEmbeddingRefreshJob:
             # Check if vector store has an upsert method (for mocks)
             if hasattr(self.vector_store, 'upsert'):
                 self.vector_store.upsert(concept_name, embedding)
-            else:
-                # For the real vector store, we need to work with its interface
-                # For now, log that this functionality is pending concept vector store infrastructure
-                logger.info(
-                    f"concept_refresh._update_vector_store: Vector store upsert pending concept infrastructure for {concept_name}",
+                return
+            
+            # 1. Delete any existing vectors for this concept to ensure a clean update.
+            # This makes the operation idempotent.
+            deleted_count = self.vector_store.delete_chunks_by_block_id(concept_block_id)
+            if deleted_count > 0:
+                logger.debug(
+                    f"concept_refresh._update_vector_store: Deleted {deleted_count} old vector(s) for concept '{concept_name}'",
                     extra={
                         "service": "aclarai-scheduler",
                         "filename.function_name": "concept_refresh._update_vector_store",
                         "concept_name": concept_name,
-                        "note": "Concept vector store infrastructure needed for production use",
+                        "deleted_count": deleted_count,
                     }
                 )
+            
+            # 2. Create a new EmbeddedChunk to insert.
+            # The semantic text of the concept file is the "content" of this chunk.
+            semantic_text = f"Concept: {concept_name}"  # Basic content for metadata context
+            chunk_meta = ChunkMetadata(
+                aclarai_block_id=concept_block_id,
+                chunk_index=0,  # A concept file is treated as a single chunk
+                original_text=semantic_text,
+                text=semantic_text,
+            )
+            
+            embedded_chunk = EmbeddedChunk(
+                chunk_metadata=chunk_meta,
+                embedding=embedding,
+                model_name=self.embedding_generator.model_name,
+                embedding_dim=len(embedding),
+            )
+            
+            # 3. Store the new embedding.
+            metrics = self.vector_store.store_embeddings([embedded_chunk])
+            if metrics.failed_inserts > 0:
+                raise RuntimeError(f"Failed to insert new embedding for concept '{concept_name}'.")
+            
+            logger.info(
+                f"concept_refresh._update_vector_store: Successfully upserted embedding for concept: {concept_name}",
+                extra={
+                    "service": "aclarai-scheduler",
+                    "filename.function_name": "concept_refresh._update_vector_store",
+                    "concept_name": concept_name,
+                    "concept_block_id": concept_block_id,
+                    "successful_inserts": metrics.successful_inserts,
+                }
+            )
                 
         except Exception as e:
             logger.error(

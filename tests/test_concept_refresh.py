@@ -18,6 +18,16 @@ class MockVectorStoreForConcepts:
 
     def __init__(self):
         self.upsert = Mock()
+        self.delete_chunks_by_block_id = Mock(return_value=0)
+        self.store_embeddings = Mock()
+
+
+class MockVectorStoreMetrics:
+    """Mock metrics for vector store operations."""
+
+    def __init__(self, successful_inserts=1, failed_inserts=0):
+        self.successful_inserts = successful_inserts
+        self.failed_inserts = failed_inserts
 
 
 def test_extract_semantic_text():
@@ -179,6 +189,7 @@ def test_process_concept_file_with_changes():
         # Create mocks for dependencies
         mock_neo4j = Mock()
         mock_embedding_gen = Mock()
+        mock_embedding_gen.model_name = "test-model"
         mock_vector_store = MockVectorStoreForConcepts()
 
         # Create test concept file
@@ -217,8 +228,10 @@ This is a test concept with updated content.
         # Verify that embedding was generated
         mock_embedding_gen.embed_text.assert_called_once()
 
-        # Verify that vector store and Neo4j were updated
+        # Verify that vector store upsert was called (for mocks with upsert method)
         mock_vector_store.upsert.assert_called_once_with("test_concept", mock_embedding)
+
+        # Verify Neo4j update was called
         job._update_neo4j_metadata.assert_called_once()
 
 
@@ -353,6 +366,90 @@ def test_get_stored_embedding_hash_found():
     result = job._get_stored_embedding_hash("existing_concept")
 
     assert result == "stored_hash_value"
+
+
+def test_update_vector_store_with_real_store():
+    """Test the _update_vector_store method with a real vector store (no upsert method)."""
+    mock_config = MagicMock()
+    mock_config.vault_path = "/tmp/test_vault"
+
+    # Create mocks for dependencies
+    mock_neo4j = Mock()
+    mock_embedding_gen = Mock()
+    mock_embedding_gen.model_name = "test-model"
+
+    # Create a mock vector store without upsert method (like the real one)
+    mock_vector_store = Mock()
+    mock_vector_store.delete_chunks_by_block_id.return_value = 2  # Simulate deleting 2 old chunks
+    mock_vector_store.store_embeddings.return_value = MockVectorStoreMetrics(successful_inserts=1, failed_inserts=0)
+
+    # Remove upsert method to simulate real vector store
+    if hasattr(mock_vector_store, 'upsert'):
+        delattr(mock_vector_store, 'upsert')
+
+    job = ConceptEmbeddingRefreshJob(
+        config=mock_config,
+        neo4j_manager=mock_neo4j,
+        embedding_generator=mock_embedding_gen,
+        vector_store=mock_vector_store
+    )
+
+    # Test the upsert operation
+    concept_name = "test_concept"
+    embedding = [0.1, 0.2, 0.3, 0.4, 0.5]
+
+    job._update_vector_store(concept_name, embedding)
+
+    # Verify delete was called with correct concept block ID
+    mock_vector_store.delete_chunks_by_block_id.assert_called_once_with("concept_test_concept")
+
+    # Verify store_embeddings was called with one EmbeddedChunk
+    mock_vector_store.store_embeddings.assert_called_once()
+    call_args = mock_vector_store.store_embeddings.call_args[0][0]  # Get the list of embedded chunks
+    assert len(call_args) == 1
+    embedded_chunk = call_args[0]
+    assert embedded_chunk.embedding == embedding
+    assert embedded_chunk.model_name == "test-model"
+    assert embedded_chunk.embedding_dim == len(embedding)
+    assert embedded_chunk.chunk_metadata.aclarai_block_id == "concept_test_concept"
+    assert embedded_chunk.chunk_metadata.chunk_index == 0
+
+
+def test_update_vector_store_with_failed_insert():
+    """Test the _update_vector_store method when insertion fails."""
+    mock_config = MagicMock()
+    mock_config.vault_path = "/tmp/test_vault"
+
+    # Create mocks for dependencies
+    mock_neo4j = Mock()
+    mock_embedding_gen = Mock()
+    mock_embedding_gen.model_name = "test-model"
+
+    # Create a mock vector store that fails insertion
+    mock_vector_store = Mock()
+    mock_vector_store.delete_chunks_by_block_id.return_value = 0
+    mock_vector_store.store_embeddings.return_value = MockVectorStoreMetrics(successful_inserts=0, failed_inserts=1)
+
+    # Remove upsert method to simulate real vector store
+    if hasattr(mock_vector_store, 'upsert'):
+        delattr(mock_vector_store, 'upsert')
+
+    job = ConceptEmbeddingRefreshJob(
+        config=mock_config,
+        neo4j_manager=mock_neo4j,
+        embedding_generator=mock_embedding_gen,
+        vector_store=mock_vector_store
+    )
+
+    # Test the upsert operation - should raise exception on failed insert
+    concept_name = "test_concept"
+    embedding = [0.1, 0.2, 0.3, 0.4, 0.5]
+
+    try:
+        job._update_vector_store(concept_name, embedding)
+        raise AssertionError("Expected RuntimeError to be raised")
+    except RuntimeError as e:
+        assert "Failed to insert new embedding" in str(e)
 
 
 if __name__ == "__main__":
