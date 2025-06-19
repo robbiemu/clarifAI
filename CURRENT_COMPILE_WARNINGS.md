@@ -2,6 +2,19 @@
 
 This document tracks known warnings that appear during compilation, testing, and runtime that originate from external dependencies rather than our codebase. These warnings are documented to help reviewers distinguish between issues in our code and known dependency issues that are beyond our control.
 
+---
+
+## Guidelines for Reviewers
+
+When reviewing code changes:
+
+1. **Ignore warnings listed above** - These are known dependency issues beyond our control
+2. **Flag new warnings** - Any warnings not documented here should be investigated
+3. **Check warning sources** - Look at the file paths to distinguish our code from dependencies
+4. **Focus on our code** - Prioritize warnings coming from files in our `shared/`, `services/`, or root directories
+
+---
+
 ## Dependency Warnings
 
 ### 1. Spacy/Weasel Click Deprecation Warning
@@ -76,15 +89,6 @@ OSError: We couldn't connect to 'https://huggingface.co' to load the files, and 
 
 ---
 
-## Guidelines for Reviewers
-
-When reviewing code changes:
-
-1. **Ignore warnings listed above** - These are known dependency issues beyond our control
-2. **Flag new warnings** - Any warnings not documented here should be investigated
-3. **Check warning sources** - Look at the file paths to distinguish our code from dependencies
-4. **Focus on our code** - Prioritize warnings coming from files in our `shared/`, `services/`, or root directories
-
 ## Maintenance
 
 This document should be updated when:
@@ -92,12 +96,5 @@ This document should be updated when:
 - Existing warnings are resolved through dependency updates
 - New versions of dependencies introduce different warnings
 - Testing infrastructure changes affect warning patterns
-
-## Suppression Strategy
-
-For warnings that become too noisy, consider:
-1. **Dependency updates** - Check if newer versions resolve the warnings
-2. **Selective suppression** - Use `filterwarnings` in pytest configuration for specific warnings
-3. **Environment-specific handling** - Different warning handling for CI vs. development environments
 
 Last updated: January 2025
