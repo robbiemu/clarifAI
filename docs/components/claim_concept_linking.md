@@ -205,23 +205,4 @@ All components use structured logging with:
 3. **Testing**: Complete end-to-end integration tests with real data
 4. **Production**: Deploy to aclarai-core service for automated processing
 
-## Files Structure
-
-```
-shared/aclarai_shared/claim_concept_linking/
-├── __init__.py              # Module exports
-├── agent.py                 # LLM classification agent  
-├── models.py                # Data models and enums
-├── neo4j_operations.py      # Neo4j database operations
-├── markdown_updater.py      # Tier 2 file updates
-└── orchestrator.py          # Main coordination logic
-
-shared/tests/claim_concept_linking/
-├── __init__.py              # Test module setup
-├── test_agent.py            # Agent tests
-└── test_models.py           # Model tests
-
-
-```
-
 This implementation provides a robust, well-tested foundation for claim-concept linking that is ready for integration once the prerequisite concepts vector store becomes available.

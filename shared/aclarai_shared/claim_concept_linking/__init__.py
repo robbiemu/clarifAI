@@ -1,5 +1,5 @@
 """
-Claim-concept linking module for aclarai.
+Claim-Concept Linking Module.
 
 This module provides functionality to link (:Claim) nodes to (:Concept) nodes
 using LLM-based classification, following the architecture defined in
