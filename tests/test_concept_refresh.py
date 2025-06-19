@@ -463,18 +463,50 @@ def test_update_vector_store_with_failed_insert():
         assert "Failed to insert new embedding" in str(e)
 
 
+def _check_service_availability():
+    """
+    Check if required services (Neo4j, PostgreSQL) are available.
+    Returns (available, skip_reason).
+    """
+    import socket
+
+    def check_port(host, port, timeout=5):
+        """Check if a port is open on the given host."""
+        try:
+            socket.create_connection((host, port), timeout=timeout)
+            return True
+        except (socket.error, socket.timeout):
+            return False
+
+    # Check Neo4j (port 7687)
+    if not check_port("localhost", 7687):
+        return False, "Neo4j service not available on localhost:7687"
+
+    # Check PostgreSQL (port 5432)
+    if not check_port("localhost", 5432):
+        return False, "PostgreSQL service not available on localhost:5432"
+
+    return True, None
+
+
 @pytest.mark.integration
 def test_concept_embedding_refresh_job_end_to_end():
     """
     End-to-end integration test for ConceptEmbeddingRefreshJob using real services.
 
     This test:
-    1. Creates a temporary vault with concept files
-    2. Runs the job without mocks (uses real Neo4j, vector store, embedding generator)
-    3. Verifies that the complete workflow executes successfully
+    1. Verifies that required services (Neo4j, PostgreSQL) are available
+    2. Creates a temporary vault with concept files
+    3. Runs the job without mocks (uses real services but with mock embeddings)
+    4. Verifies that the complete workflow executes successfully
 
-    Requires: Running Neo4j and PostgreSQL services (e.g., via docker-compose)
+    Requires: Running Neo4j and PostgreSQL services (e.g., via docker-compose up postgres neo4j)
     """
+    # First check if required services are available
+    services_available, skip_reason = _check_service_availability()
+    if not services_available:
+        pytest.skip(f"Integration test skipped - {skip_reason}")
+
     # Create temporary vault directory
     with tempfile.TemporaryDirectory() as temp_dir:
         vault_path = Path(temp_dir)
@@ -534,17 +566,41 @@ Deep learning models consist of:
             concept_file = concepts_path / filename
             concept_file.write_text(content)
 
-        # Create a real ConceptEmbeddingRefreshJob without injecting mocks
-        # This will use the default config and create real service instances
+        # Use mock embedding generator to avoid external dependencies
+        # but real Neo4j and PostgreSQL services
         try:
+            from unittest.mock import Mock
+
             from aclarai_shared.config import aclaraiConfig
 
             # Create config pointing to our temporary vault
             config = aclaraiConfig()
             config.vault_path = str(vault_path)
 
-            # Create the job without mocks - it will use real services
-            job = ConceptEmbeddingRefreshJob(config=config)
+            # Create mock embedding generator to avoid HuggingFace dependency
+            mock_embedding_gen = Mock()
+            mock_embedding_gen.model_name = "mock-embedding-model"
+
+            # Return deterministic embeddings for testing
+            def mock_embed_text(text):
+                # Create a simple hash-based embedding for testing
+                import hashlib
+
+                hash_obj = hashlib.md5(text.encode())
+                # Convert hash to list of floats between -1 and 1
+                hash_bytes = hash_obj.digest()
+                embedding = [(b / 127.5) - 1.0 for b in hash_bytes]
+                # Pad or truncate to 384 dimensions (common embedding size)
+                while len(embedding) < 384:
+                    embedding.extend(embedding[: 384 - len(embedding)])
+                return embedding[:384]
+
+            mock_embedding_gen.embed_text.side_effect = mock_embed_text
+
+            # Create the job with real Neo4j and vector store, but mock embeddings
+            job = ConceptEmbeddingRefreshJob(
+                config=config, embedding_generator=mock_embedding_gen
+            )
 
             # Run the job end-to-end
             result = job.run_job()
@@ -572,23 +628,41 @@ Deep learning models consist of:
                 "Processed count should equal updated + skipped"
             )
 
+            # Verify the mock embedding generator was called
+            assert mock_embedding_gen.embed_text.called, (
+                "Embedding generator should have been called"
+            )
+
             print(f"✓ Integration test passed. Results: {result}")
 
         except ImportError as e:
             pytest.skip(f"Integration test skipped - missing dependencies: {e}")
         except Exception as e:
-            # If the test fails due to missing services (Neo4j, PostgreSQL), skip it
-            # This allows the test to be skipped in CI environments without those services
-            if any(
-                keyword in str(e).lower()
-                for keyword in ["connection", "database", "neo4j", "postgres"]
-            ):
-                pytest.skip(
-                    f"Integration test skipped - database services not available: {e}"
-                )
-            else:
-                # Re-raise other exceptions as actual test failures
-                raise
+            # If services were available but test still failed, this is a real failure
+            print(f"Integration test failed with services available: {e}")
+            raise
+
+
+@pytest.mark.integration
+def test_service_availability_check():
+    """
+    Test the service availability check function.
+
+    This test demonstrates that the integration test can detect when services
+    are or aren't available and provides appropriate feedback.
+    """
+    available, reason = _check_service_availability()
+
+    if available:
+        print("✓ Services are available - integration tests can run")
+        assert reason is None
+    else:
+        print(f"✗ Services not available: {reason}")
+        assert reason is not None
+        assert isinstance(reason, str)
+        assert "not available" in reason.lower()
+
+    # This test always passes - it just reports service availability
 
 
 if __name__ == "__main__":
