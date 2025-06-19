@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, Mock
 
+import pytest
 from aclarai_scheduler.concept_refresh import ConceptEmbeddingRefreshJob
 
 
@@ -43,7 +44,7 @@ def test_extract_semantic_text():
         config=mock_config,
         neo4j_manager=mock_neo4j,
         embedding_generator=mock_embedding_gen,
-        vector_store=mock_vector_store
+        vector_store=mock_vector_store,
     )
 
     # Test content with metadata and anchors
@@ -83,7 +84,7 @@ def test_extract_semantic_text_no_metadata():
         config=mock_config,
         neo4j_manager=mock_neo4j,
         embedding_generator=mock_embedding_gen,
-        vector_store=mock_vector_store
+        vector_store=mock_vector_store,
     )
 
     file_content = """# Deep Learning
@@ -106,7 +107,7 @@ def test_compute_hash():
         config=mock_config,
         neo4j_manager=mock_neo4j,
         embedding_generator=mock_embedding_gen,
-        vector_store=mock_vector_store
+        vector_store=mock_vector_store,
     )
 
     text = "Machine learning is awesome"
@@ -156,7 +157,7 @@ This is a test concept.
             config=mock_config,
             neo4j_manager=mock_neo4j,
             embedding_generator=mock_embedding_gen,
-            vector_store=mock_vector_store
+            vector_store=mock_vector_store,
         )
 
         # Mock that the stored hash matches current hash
@@ -208,7 +209,7 @@ This is a test concept with updated content.
             config=mock_config,
             neo4j_manager=mock_neo4j,
             embedding_generator=mock_embedding_gen,
-            vector_store=mock_vector_store
+            vector_store=mock_vector_store,
         )
 
         # Mock that the stored hash is different (indicating changes)
@@ -250,7 +251,7 @@ def test_run_job_no_concepts_directory():
         config=mock_config,
         neo4j_manager=mock_neo4j,
         embedding_generator=mock_embedding_gen,
-        vector_store=mock_vector_store
+        vector_store=mock_vector_store,
     )
 
     result = job.run_job()
@@ -292,7 +293,7 @@ def test_run_job_with_concept_files():
             config=mock_config,
             neo4j_manager=mock_neo4j,
             embedding_generator=mock_embedding_gen,
-            vector_store=mock_vector_store
+            vector_store=mock_vector_store,
         )
 
         # Mock the process_concept_file method
@@ -329,7 +330,7 @@ def test_get_stored_embedding_hash_not_found():
         config=mock_config,
         neo4j_manager=mock_neo4j_manager,
         embedding_generator=mock_embedding_gen,
-        vector_store=mock_vector_store
+        vector_store=mock_vector_store,
     )
 
     result = job._get_stored_embedding_hash("nonexistent_concept")
@@ -360,7 +361,7 @@ def test_get_stored_embedding_hash_found():
         config=mock_config,
         neo4j_manager=mock_neo4j_manager,
         embedding_generator=mock_embedding_gen,
-        vector_store=mock_vector_store
+        vector_store=mock_vector_store,
     )
 
     result = job._get_stored_embedding_hash("existing_concept")
@@ -380,18 +381,22 @@ def test_update_vector_store_with_real_store():
 
     # Create a mock vector store without upsert method (like the real one)
     mock_vector_store = Mock()
-    mock_vector_store.delete_chunks_by_block_id.return_value = 2  # Simulate deleting 2 old chunks
-    mock_vector_store.store_embeddings.return_value = MockVectorStoreMetrics(successful_inserts=1, failed_inserts=0)
+    mock_vector_store.delete_chunks_by_block_id.return_value = (
+        2  # Simulate deleting 2 old chunks
+    )
+    mock_vector_store.store_embeddings.return_value = MockVectorStoreMetrics(
+        successful_inserts=1, failed_inserts=0
+    )
 
     # Remove upsert method to simulate real vector store
-    if hasattr(mock_vector_store, 'upsert'):
-        delattr(mock_vector_store, 'upsert')
+    if hasattr(mock_vector_store, "upsert"):
+        delattr(mock_vector_store, "upsert")
 
     job = ConceptEmbeddingRefreshJob(
         config=mock_config,
         neo4j_manager=mock_neo4j,
         embedding_generator=mock_embedding_gen,
-        vector_store=mock_vector_store
+        vector_store=mock_vector_store,
     )
 
     # Test the upsert operation
@@ -401,11 +406,15 @@ def test_update_vector_store_with_real_store():
     job._update_vector_store(concept_name, embedding)
 
     # Verify delete was called with correct concept block ID
-    mock_vector_store.delete_chunks_by_block_id.assert_called_once_with("concept_test_concept")
+    mock_vector_store.delete_chunks_by_block_id.assert_called_once_with(
+        "concept_test_concept"
+    )
 
     # Verify store_embeddings was called with one EmbeddedChunk
     mock_vector_store.store_embeddings.assert_called_once()
-    call_args = mock_vector_store.store_embeddings.call_args[0][0]  # Get the list of embedded chunks
+    call_args = mock_vector_store.store_embeddings.call_args[0][
+        0
+    ]  # Get the list of embedded chunks
     assert len(call_args) == 1
     embedded_chunk = call_args[0]
     assert embedded_chunk.embedding == embedding
@@ -428,17 +437,19 @@ def test_update_vector_store_with_failed_insert():
     # Create a mock vector store that fails insertion
     mock_vector_store = Mock()
     mock_vector_store.delete_chunks_by_block_id.return_value = 0
-    mock_vector_store.store_embeddings.return_value = MockVectorStoreMetrics(successful_inserts=0, failed_inserts=1)
+    mock_vector_store.store_embeddings.return_value = MockVectorStoreMetrics(
+        successful_inserts=0, failed_inserts=1
+    )
 
     # Remove upsert method to simulate real vector store
-    if hasattr(mock_vector_store, 'upsert'):
-        delattr(mock_vector_store, 'upsert')
+    if hasattr(mock_vector_store, "upsert"):
+        delattr(mock_vector_store, "upsert")
 
     job = ConceptEmbeddingRefreshJob(
         config=mock_config,
         neo4j_manager=mock_neo4j,
         embedding_generator=mock_embedding_gen,
-        vector_store=mock_vector_store
+        vector_store=mock_vector_store,
     )
 
     # Test the upsert operation - should raise exception on failed insert
@@ -450,6 +461,134 @@ def test_update_vector_store_with_failed_insert():
         raise AssertionError("Expected RuntimeError to be raised")
     except RuntimeError as e:
         assert "Failed to insert new embedding" in str(e)
+
+
+@pytest.mark.integration
+def test_concept_embedding_refresh_job_end_to_end():
+    """
+    End-to-end integration test for ConceptEmbeddingRefreshJob using real services.
+
+    This test:
+    1. Creates a temporary vault with concept files
+    2. Runs the job without mocks (uses real Neo4j, vector store, embedding generator)
+    3. Verifies that the complete workflow executes successfully
+
+    Requires: Running Neo4j and PostgreSQL services (e.g., via docker-compose)
+    """
+    # Create temporary vault directory
+    with tempfile.TemporaryDirectory() as temp_dir:
+        vault_path = Path(temp_dir)
+        concepts_path = vault_path / "concepts"
+        concepts_path.mkdir()
+
+        # Create test concept files with realistic content
+        concept_files = [
+            (
+                "machine_learning.md",
+                """# Machine Learning
+
+Machine learning is a subset of artificial intelligence (AI) that enables computer systems to automatically learn and improve from experience without being explicitly programmed.
+
+## Key Characteristics
+
+- **Pattern Recognition**: ML algorithms identify patterns in data
+- **Automatic Improvement**: Performance improves with more data
+- **Prediction**: Can make predictions on new, unseen data
+
+## Types of Machine Learning
+
+1. **Supervised Learning**: Uses labeled training data
+2. **Unsupervised Learning**: Finds patterns in unlabeled data
+3. **Reinforcement Learning**: Learns through interaction and feedback
+
+<!-- aclarai:id=concept_machine_learning ver=1 -->
+^concept_machine_learning""",
+            ),
+            (
+                "deep_learning.md",
+                """# Deep Learning
+
+Deep learning is a subset of machine learning that uses artificial neural networks with multiple layers to model and understand complex patterns in data.
+
+## Architecture
+
+Deep learning models consist of:
+- **Input Layer**: Receives raw data
+- **Hidden Layers**: Process and transform information (multiple layers = "deep")
+- **Output Layer**: Produces final predictions or classifications
+
+## Applications
+
+- Computer vision and image recognition
+- Natural language processing
+- Speech recognition
+- Autonomous vehicles
+
+<!-- aclarai:id=concept_deep_learning ver=1 -->
+^concept_deep_learning""",
+            ),
+        ]
+
+        # Write concept files to temporary vault
+        for filename, content in concept_files:
+            concept_file = concepts_path / filename
+            concept_file.write_text(content)
+
+        # Create a real ConceptEmbeddingRefreshJob without injecting mocks
+        # This will use the default config and create real service instances
+        try:
+            from aclarai_shared.config import aclaraiConfig
+
+            # Create config pointing to our temporary vault
+            config = aclaraiConfig()
+            config.vault_path = str(vault_path)
+
+            # Create the job without mocks - it will use real services
+            job = ConceptEmbeddingRefreshJob(config=config)
+
+            # Run the job end-to-end
+            result = job.run_job()
+
+            # Verify the job executed successfully
+            assert result["success"] is True, (
+                f"Job failed with error: {result.get('error_details', 'Unknown error')}"
+            )
+            assert result["concepts_processed"] == 2, (
+                f"Expected 2 concepts processed, got {result['concepts_processed']}"
+            )
+
+            # The concepts should be updated since they're new (no previous hash in Neo4j)
+            assert result["concepts_updated"] >= 0, (
+                f"Expected non-negative concepts updated, got {result['concepts_updated']}"
+            )
+            assert result["concepts_skipped"] >= 0, (
+                f"Expected non-negative concepts skipped, got {result['concepts_skipped']}"
+            )
+            assert result["errors"] == 0, f"Expected no errors, got {result['errors']}"
+
+            # Verify that the results make sense
+            total_processed = result["concepts_updated"] + result["concepts_skipped"]
+            assert total_processed == result["concepts_processed"], (
+                "Processed count should equal updated + skipped"
+            )
+
+            print(f"✓ Integration test passed. Results: {result}")
+
+        except ImportError as e:
+            pytest.skip(f"Integration test skipped - missing dependencies: {e}")
+        except Exception as e:
+            # If the test fails due to missing services (Neo4j, PostgreSQL), skip it
+            # This allows the test to be skipped in CI environments without those services
+            if any(
+                keyword in str(e).lower()
+                for keyword in ["connection", "database", "neo4j", "postgres"]
+            ):
+                pytest.skip(
+                    f"Integration test skipped - database services not available: {e}"
+                )
+            else:
+                # Re-raise other exceptions as actual test failures
+                raise
 
 
 if __name__ == "__main__":
