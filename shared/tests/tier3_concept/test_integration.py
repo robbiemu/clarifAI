@@ -45,13 +45,7 @@ class TestConceptProcessorTier3Integration:
     Note: These tests mock dependencies to avoid network access requirements.
     """
 
-    @patch("aclarai_shared.graph.Neo4jGraphManager")
-    @patch("aclarai_core.concept_processor.ConceptDetector")
-    @patch("aclarai_core.concept_processor.NounPhraseExtractor")
-    @patch("aclarai_core.concept_processor.ConceptCandidatesVectorStore")
-    def test_promoted_concepts_create_tier3_files(
-        self, mock_store, mock_extractor, mock_detector, mock_neo4j_manager
-    ):
+    def test_promoted_concepts_create_tier3_files(self):
         """Test that promoted concepts create both Neo4j nodes and Tier 3 files."""
         # Try importing ConceptProcessor
         import sys
@@ -67,14 +61,15 @@ class TestConceptProcessorTier3Integration:
 
             # Setup mocks
             mock_store_instance = Mock()
-            mock_store.return_value = mock_store_instance
             mock_store_instance.update_candidate_status.return_value = True
 
             mock_extractor_instance = Mock()
-            mock_extractor.return_value = mock_extractor_instance
 
             mock_detector_instance = Mock()
-            mock_detector.return_value = mock_detector_instance
+
+            # Setup ConceptFileWriter mock
+            mock_concept_file_writer_instance = Mock()
+            mock_concept_file_writer_instance.write_concept_file.return_value = True
 
             # Mock concept detection results with a promoted concept
             promoted_result = ConceptDetectionResult(
@@ -100,7 +95,6 @@ class TestConceptProcessorTier3Integration:
 
             # Mock Neo4j manager to return created concepts
             mock_neo4j_instance = Mock()
-            mock_neo4j_manager.return_value = mock_neo4j_instance
 
             created_concept = Concept(
                 concept_id="concept_test123",
@@ -115,8 +109,15 @@ class TestConceptProcessorTier3Integration:
 
             mock_neo4j_instance.create_concepts.return_value = [created_concept]
 
-            # Initialize ConceptProcessor
-            processor = ConceptProcessor(config)
+            # Initialize ConceptProcessor with mocked dependencies
+            processor = ConceptProcessor(
+                config=config,
+                noun_phrase_extractor=mock_extractor_instance,
+                candidates_store=mock_store_instance,
+                concept_detector=mock_detector_instance,
+                concept_file_writer=mock_concept_file_writer_instance,
+                neo4j_manager=mock_neo4j_instance,
+            )
 
             # Create candidate metadata map
             candidate_metadata_map = {
@@ -139,30 +140,19 @@ class TestConceptProcessorTier3Integration:
             assert len(created_concepts_arg) == 1
             assert created_concepts_arg[0].text == "machine learning"
 
-            # Verify Tier 3 file was created
-            concepts_dir = Path(temp_dir) / "concepts"
-            expected_file = concepts_dir / "machine_learning.md"
-            assert expected_file.exists(), (
-                f"Expected file {expected_file} was not created"
+            # Verify ConceptFileWriter.write_concept_file was called with the created concept
+            mock_concept_file_writer_instance.write_concept_file.assert_called_once()
+            written_concept = (
+                mock_concept_file_writer_instance.write_concept_file.call_args[0][0]
             )
-
-            # Verify file content
-            content = expected_file.read_text()
-            assert "## Concept: machine learning" in content
-            assert "<!-- aclarai:id=concept_test123 ver=1 -->" in content
-            assert "^concept_test123" in content
+            assert written_concept.concept_id == "concept_test123"
+            assert written_concept.text == "machine learning"
 
             # Verify updates include concept_id
             assert len(updates) == 1
             assert updates[0]["concept_id"] == "concept_test123"
 
-    @patch("aclarai_shared.graph.Neo4jGraphManager")
-    @patch("aclarai_core.concept_processor.ConceptDetector")
-    @patch("aclarai_core.concept_processor.NounPhraseExtractor")
-    @patch("aclarai_core.concept_processor.ConceptCandidatesVectorStore")
-    def test_no_tier3_files_for_merged_concepts(
-        self, mock_store, mock_extractor, mock_detector, mock_neo4j_manager
-    ):
+    def test_no_tier3_files_for_merged_concepts(self):
         """Test that merged concepts don't create Tier 3 files."""
         # Try importing ConceptProcessor
         import sys
@@ -178,14 +168,15 @@ class TestConceptProcessorTier3Integration:
 
             # Setup mocks
             mock_store_instance = Mock()
-            mock_store.return_value = mock_store_instance
             mock_store_instance.update_candidate_status.return_value = True
 
             mock_extractor_instance = Mock()
-            mock_extractor.return_value = mock_extractor_instance
 
             mock_detector_instance = Mock()
-            mock_detector.return_value = mock_detector_instance
+
+            # Setup ConceptFileWriter mock
+            mock_concept_file_writer_instance = Mock()
+            mock_concept_file_writer_instance.write_concept_file.return_value = True
 
             # Mock concept detection results with a merged concept (no promotion)
             from aclarai_shared.concept_detection.models import SimilarityMatch
@@ -222,10 +213,16 @@ class TestConceptProcessorTier3Integration:
 
             # Mock Neo4j manager (should not be called)
             mock_neo4j_instance = Mock()
-            mock_neo4j_manager.return_value = mock_neo4j_instance
 
-            # Initialize ConceptProcessor
-            processor = ConceptProcessor(config)
+            # Initialize ConceptProcessor with mocked dependencies
+            processor = ConceptProcessor(
+                config=config,
+                noun_phrase_extractor=mock_extractor_instance,
+                candidates_store=mock_store_instance,
+                concept_detector=mock_detector_instance,
+                concept_file_writer=mock_concept_file_writer_instance,
+                neo4j_manager=mock_neo4j_instance,
+            )
 
             # Create candidate metadata map
             candidate_metadata_map = {
@@ -245,13 +242,8 @@ class TestConceptProcessorTier3Integration:
             # Verify Neo4j concept creation was NOT called (no promoted concepts)
             mock_neo4j_instance.create_concepts.assert_not_called()
 
-            # Verify no Tier 3 files were created
-            concepts_dir = Path(temp_dir) / "concepts"
-            if concepts_dir.exists():
-                concept_files = list(concepts_dir.glob("*.md"))
-                assert len(concept_files) == 0, (
-                    f"Unexpected concept files created: {concept_files}"
-                )
+            # Verify ConceptFileWriter was NOT called (no promoted concepts)
+            mock_concept_file_writer_instance.write_concept_file.assert_not_called()
 
             # Verify updates don't include concept_id for merged concepts
             assert len(updates) == 1

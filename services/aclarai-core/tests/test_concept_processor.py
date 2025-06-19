@@ -7,7 +7,7 @@ into the aclarai-core service.
 
 import pytest
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from aclarai_core.concept_processor import ConceptProcessor
 from aclarai_shared.config import aclaraiConfig
@@ -36,14 +36,23 @@ class TestConceptProcessor:
     @pytest.fixture
     def concept_processor(self, mock_config):
         """Create a ConceptProcessor instance for testing."""
-        with (
-            patch("aclarai_core.concept_processor.NounPhraseExtractor"),
-            patch("aclarai_core.concept_processor.ConceptCandidatesVectorStore"),
-            patch("aclarai_core.concept_processor.ConceptDetector"),
-            patch("aclarai_core.concept_processor.ConceptFileWriter"),
-        ):
-            processor = ConceptProcessor(mock_config)
-            return processor
+        # Create mock dependencies
+        mock_noun_phrase_extractor = Mock()
+        mock_candidates_store = Mock()
+        mock_concept_detector = Mock()
+        mock_concept_file_writer = Mock()
+        mock_neo4j_manager = Mock()
+
+        # Create processor with injected mocks
+        processor = ConceptProcessor(
+            config=mock_config,
+            noun_phrase_extractor=mock_noun_phrase_extractor,
+            candidates_store=mock_candidates_store,
+            concept_detector=mock_concept_detector,
+            concept_file_writer=mock_concept_file_writer,
+            neo4j_manager=mock_neo4j_manager,
+        )
+        return processor
 
     @pytest.fixture
     def sample_block(self):
@@ -61,6 +70,8 @@ class TestConceptProcessor:
         assert concept_processor.noun_phrase_extractor is not None
         assert concept_processor.candidates_store is not None
         assert concept_processor.concept_detector is not None
+        assert concept_processor.concept_file_writer is not None
+        assert concept_processor.neo4j_manager is not None
 
     def test_process_block_for_concepts_success(self, concept_processor, sample_block):
         """Test successful processing of a block for concepts."""
@@ -451,7 +462,17 @@ class TestConceptProcessorIntegration:
             )
 
             # Update candidate statuses
-            updates = processor._update_candidate_statuses(detection_batch)
+            candidate_metadata_map = {
+                "integration_test_1": {
+                    "source_node_id": "blk_test_integration",
+                    "source_node_type": "claim",
+                    "aclarai_id": "blk_test_integration",
+                    "text": "integration test concept",
+                }
+            }
+            updates = processor._update_candidate_statuses(
+                detection_batch, candidate_metadata_map
+            )
 
             # Verify updates were applied
             assert (
