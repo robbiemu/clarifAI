@@ -8,6 +8,7 @@ from typing import Optional, Tuple
 from datetime import datetime
 
 from .config import config
+from .config_panel import create_configuration_panel
 
 
 # Configure structured logging as per docs/arch/on-error-handling-and-resilience.md
@@ -580,6 +581,168 @@ def create_import_interface():
         raise
 
 
+def create_complete_interface():
+    """Create the complete aclarai interface with multiple panels."""
+    try:
+        logger.info(
+            "Creating complete aclarai interface",
+            extra={
+                "service": "aclarai-ui",
+                "component": "interface_creator",
+                "action": "create_complete_interface",
+            },
+        )
+
+        with gr.Blocks(title="aclarai", theme=gr.themes.Soft()) as interface:
+            gr.Markdown("# 🧠 aclarai - AI-Powered Knowledge Management")
+            gr.Markdown(
+                """Welcome to aclarai, an intelligent system for processing and organizing conversational data 
+                into structured knowledge graphs. Use the tabs below to access different functionality."""
+            )
+
+            with gr.Tabs():
+                with gr.Tab("📥 Import", id="import_tab"):
+                    # Import panel content (existing functionality)
+                    with gr.Group():
+                        # Session-based state management for import status
+                        import_status_state = gr.State(ImportStatus())
+
+                        gr.Markdown(
+                            """Upload conversation files from various sources (ChatGPT exports, Slack logs, generic text files) 
+                            to process and import into the aclarai system. Files are automatically detected and processed 
+                            using the appropriate format plugin."""
+                        )
+
+                        # File Picker Section
+                        with gr.Group():
+                            gr.Markdown("## 📁 File Selection")
+                            file_input = gr.File(
+                                label="Drag files here or click to browse",
+                                file_types=[".json", ".txt", ".csv", ".md", ".zip"],
+                                type="filepath",
+                                height=100,
+                            )
+
+                            with gr.Row():
+                                import_btn = gr.Button(
+                                    "🚀 Process File", variant="primary", size="lg"
+                                )
+                                clear_btn = gr.Button("🗑️ Clear Queue", variant="secondary")
+
+                        # Live Import Queue Section
+                        with gr.Group():
+                            gr.Markdown("## 📋 Live Import Queue")
+                            queue_display = gr.Markdown(
+                                value="No files in import queue.", label="Import Status"
+                            )
+
+                        # Post-import Summary Section
+                        with gr.Group():
+                            gr.Markdown("## 📊 Import Summary")
+                            summary_display = gr.Markdown(
+                                value="Process files to see import summary.", label="Summary"
+                            )
+
+                        # Event handlers with error handling and state management
+                        def safe_simulate_plugin_orchestrator(file_input_value, import_status):
+                            try:
+                                queue_display, summary_display, updated_status = (
+                                    simulate_plugin_orchestrator(file_input_value, import_status)
+                                )
+                                return queue_display, summary_display, updated_status
+                            except Exception as e:
+                                logger.error(
+                                    "Error in plugin orchestrator simulation",
+                                    extra={
+                                        "service": "aclarai-ui",
+                                        "component": "interface_handler",
+                                        "action": "simulate_orchestrator",
+                                        "error": str(e),
+                                        "error_type": type(e).__name__,
+                                    },
+                                )
+                                return (
+                                    "Error processing file. Please try again.",
+                                    "Processing failed.",
+                                    import_status,
+                                )
+
+                        def safe_clear_import_queue(import_status):
+                            try:
+                                queue_display, summary_display, new_status = clear_import_queue(
+                                    import_status
+                                )
+                                return queue_display, summary_display, new_status
+                            except Exception as e:
+                                logger.error(
+                                    "Error clearing import queue",
+                                    extra={
+                                        "service": "aclarai-ui",
+                                        "component": "interface_handler",
+                                        "action": "clear_queue",
+                                        "error": str(e),
+                                        "error_type": type(e).__name__,
+                                    },
+                                )
+                                return (
+                                    "Error clearing queue. Please refresh the page.",
+                                    "",
+                                    import_status,
+                                )
+
+                        import_btn.click(
+                            fn=safe_simulate_plugin_orchestrator,
+                            inputs=[file_input, import_status_state],
+                            outputs=[queue_display, summary_display, import_status_state],
+                        )
+
+                        # Auto-process on file upload
+                        file_input.change(
+                            fn=safe_simulate_plugin_orchestrator,
+                            inputs=[file_input, import_status_state],
+                            outputs=[queue_display, summary_display, import_status_state],
+                        )
+
+                        # Clear queue handler
+                        clear_btn.click(
+                            fn=safe_clear_import_queue,
+                            inputs=[import_status_state],
+                            outputs=[queue_display, summary_display, import_status_state],
+                        )
+
+                with gr.Tab("⚙️ Configuration", id="config_tab"):
+                    # Configuration panel
+                    config_panel = create_configuration_panel()
+                    # Extract the components from the config panel and embed them here
+                    # This is a bit of a workaround since we can't directly embed a Blocks inside another Blocks
+                    gr.Markdown("Configuration panel will be available here. Please use the standalone configuration interface for now.")
+                    gr.Markdown("**Note:** Configuration functionality is implemented in `config_panel.py` and can be accessed separately.")
+
+        logger.info(
+            "Complete interface created successfully",
+            extra={
+                "service": "aclarai-ui",
+                "component": "interface_creator",
+                "action": "create_complete_interface",
+            },
+        )
+
+        return interface
+
+    except Exception as e:
+        logger.error(
+            "Failed to create complete interface",
+            extra={
+                "service": "aclarai-ui",
+                "component": "interface_creator",
+                "action": "create_complete_interface",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            },
+        )
+        raise
+
+
 def main():
     """Launch the Gradio application with proper error handling."""
     try:
@@ -588,6 +751,8 @@ def main():
             extra={"service": "aclarai-ui", "component": "main", "action": "startup"},
         )
 
+        # For now, we'll launch the import interface as the main interface
+        # The configuration panel can be accessed separately
         interface = create_import_interface()
 
         logger.info(
