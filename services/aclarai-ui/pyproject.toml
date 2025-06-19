@@ -11,6 +11,13 @@ dependencies = [
     "aclarai-shared"
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "playwright",
+    "pytest-playwright"
+]
+
 [project.scripts]
 aclarai-ui = "aclarai_ui.main:main"
 
