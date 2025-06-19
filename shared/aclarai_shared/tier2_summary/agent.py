@@ -17,6 +17,7 @@ from ..config import aclaraiConfig
 from ..graph.neo4j_manager import Neo4jGraphManager
 from ..embedding.storage import aclaraiVectorStore
 from ..import_system import write_file_atomically
+from ..claim_concept_linking.neo4j_operations import ClaimConceptNeo4jManager
 from .data_models import SummaryInput, SummaryBlock, SummaryResult, generate_summary_id
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,21 @@ class Tier2SummaryAgent:
 
         self.neo4j_manager = neo4j_manager
         self.embedding_storage = embedding_storage
+        
+        # Initialize claim-concept linking manager for retrieving linked concepts
+        # Only initialize if config is available and has neo4j configuration
+        try:
+            self.claim_concept_manager = ClaimConceptNeo4jManager(config=self.config)
+        except Exception as e:
+            logger.warning(
+                "Could not initialize claim-concept manager, concept linking disabled",
+                extra={
+                    "service": "aclarai",
+                    "filename.function_name": "agent.__init__",
+                    "error": str(e),
+                },
+            )
+            self.claim_concept_manager = None
 
         # Initialize LLM
         if llm is not None:
@@ -576,12 +592,16 @@ class Tier2SummaryAgent:
 
             response = self._retry_with_backoff(_generate_llm_response)
             summary_text = response.text.strip()
+            
+            # Get linked concepts for this summary
+            linked_concepts = self._get_linked_concepts_for_summary(summary_input)
 
             # Create summary block
             summary_block = SummaryBlock(
                 summary_text=summary_text,
                 aclarai_id=generate_summary_id(),
                 source_block_ids=summary_input.source_block_ids,
+                linked_concepts=linked_concepts,
             )
 
             processing_time = time.time() - start_time
@@ -649,6 +669,64 @@ class Tier2SummaryAgent:
         prompt_parts.extend(["", "Summary (as bullet points):"])
 
         return "\n".join(prompt_parts)
+
+    def _get_linked_concepts_for_summary(self, summary_input: SummaryInput) -> List[str]:
+        """
+        Get concept names linked to the claims in this summary.
+        
+        Args:
+            summary_input: The summary input containing claims
+            
+        Returns:
+            List of unique concept text values for wikilinks
+        """
+        if not summary_input.claims or self.claim_concept_manager is None:
+            return []
+            
+        try:
+            # Extract claim IDs
+            claim_ids = [claim.get("id") for claim in summary_input.claims if claim.get("id")]
+            if not claim_ids:
+                return []
+                
+            # Get concepts linked to these claims
+            concepts_mapping = self.claim_concept_manager.get_concepts_for_claims(claim_ids)
+            
+            # Extract unique concept texts, prioritizing higher strength relationships
+            concept_texts = set()
+            for claim_id, concepts in concepts_mapping.items():
+                # Sort by strength descending, take top concepts to avoid over-linking
+                sorted_concepts = sorted(concepts, key=lambda x: x.get("strength", 0.0), reverse=True)
+                # Limit to top 3 concepts per claim to keep summaries clean
+                for concept in sorted_concepts[:3]:
+                    concept_text = concept.get("concept_text", "").strip()
+                    if concept_text:
+                        concept_texts.add(concept_text)
+                        
+            result = list(concept_texts)
+            
+            logger.debug(
+                "Retrieved linked concepts for summary",
+                extra={
+                    "service": "aclarai",
+                    "filename.function_name": "agent._get_linked_concepts_for_summary",
+                    "claim_count": len(claim_ids),
+                    "concept_count": len(result),
+                },
+            )
+            
+            return result
+            
+        except Exception as e:
+            logger.warning(
+                "Failed to retrieve linked concepts for summary",
+                extra={
+                    "service": "aclarai",
+                    "filename.function_name": "agent._get_linked_concepts_for_summary",
+                    "error": str(e),
+                },
+            )
+            return []
 
     def write_summary_file(
         self,
