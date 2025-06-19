@@ -50,46 +50,6 @@ DeprecationWarning: websockets.legacy is deprecated; see https://websockets.read
 
 ---
 
-### 3. Coverage Module Import Warning
-
-**Warning Message:**
-```
-CoverageWarning: Module services was never imported.
-```
-
-**Source:** `pytest-cov` coverage tool configuration
-**Files Triggering:** During CI test execution
-**Explanation:** 
-- The CI workflow runs tests from the repository root using pytest
-- The coverage tool is configured to look for a top-level `services` package
-- However, tests are run against individual service modules within the services/ directory
-- The top-level `services` directory itself is never directly imported as a Python package
-- This is expected behavior for our monorepo structure where services are independent modules
-
-**Impact:** Cosmetic warning only - does not affect functionality or coverage accuracy
-**Action Required:** None - this is expected behavior given our monorepo testing approach
-**Alternative:** Could be silenced by configuring `pytest-cov` to ignore this specific warning in `pyproject.toml`
-
----
-
-### 4. Network Connectivity Warnings (Testing Environment)
-
-**Warning Message:**
-```
-OSError: We couldn't connect to 'https://huggingface.co' to load the files, and couldn't find them in the cached files.
-```
-
-**Source:** `transformers`/`sentence-transformers` packages attempting to download models
-**Files Triggering:** Embedding and model tests that require external model downloads
-**Context:** Limited internet access in CI/testing environments
-**Impact:** Some tests fail when they cannot download required ML models
-**Action Required:** 
-- Consider pre-caching models in CI environment
-- Or mock model loading in tests that don't specifically test model functionality
-- Document that certain tests require internet connectivity for model downloads
-
----
-
 ## Maintenance
 
 This document should be updated when:

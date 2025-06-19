@@ -86,13 +86,13 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 testpaths = ["tests", "shared/tests"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "--cov=aclarai_shared --cov=services --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml"
+addopts = "--cov=aclarai_shared --cov=services/aclarai-core/aclarai_core --cov=services/aclarai-ui/aclarai_ui --cov=services/scheduler/aclarai_scheduler --cov=services/vault-watcher/aclarai_vault_watcher --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
 ]
 
 [tool.coverage.run]
-source = ["aclarai_shared", "services"]
+source = ["aclarai_shared", "services/aclarai-core/aclarai_core", "services/aclarai-ui/aclarai_ui", "services/scheduler/aclarai_scheduler", "services/vault-watcher/aclarai_vault_watcher"]
 omit = [
     "*/tests/*",
     "*/test_*.py",
