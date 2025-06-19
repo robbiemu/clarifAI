@@ -8,26 +8,36 @@ docs/arch/on-refreshing_concept_embeddings.md
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 from aclarai_scheduler.concept_refresh import ConceptEmbeddingRefreshJob
 
 
+class MockVectorStoreForConcepts:
+    """Simple mock vector store with upsert method for concept testing."""
+
+    def __init__(self):
+        self.upsert = Mock()
+
+
 def test_extract_semantic_text():
     """Test semantic text extraction from concept file content."""
-    with (
-        patch("aclarai_scheduler.concept_refresh.Neo4jGraphManager"),
-        patch("aclarai_scheduler.concept_refresh.EmbeddingGenerator"),
-        patch("aclarai_scheduler.concept_refresh.aclaraiVectorStore"),
-    ):
-        # Create a mock config
-        mock_config = MagicMock()
-        mock_config.vault_path = "/tmp/test_vault"
+    # Create mocks for dependencies
+    mock_config = MagicMock()
+    mock_config.vault_path = "/tmp/test_vault"
+    mock_neo4j = Mock()
+    mock_embedding_gen = Mock()
+    mock_vector_store = MockVectorStoreForConcepts()
 
-        job = ConceptEmbeddingRefreshJob(mock_config)
+    job = ConceptEmbeddingRefreshJob(
+        config=mock_config,
+        neo4j_manager=mock_neo4j,
+        embedding_generator=mock_embedding_gen,
+        vector_store=mock_vector_store
+    )
 
-        # Test content with metadata and anchors
-        file_content = """# Machine Learning
+    # Test content with metadata and anchors
+    file_content = """# Machine Learning
 
 Machine learning is a subset of artificial intelligence.
 
@@ -39,7 +49,7 @@ Key characteristics:
 ^concept_machine_learning
 """
 
-        expected_semantic_text = """# Machine Learning
+    expected_semantic_text = """# Machine Learning
 
 Machine learning is a subset of artificial intelligence.
 
@@ -47,62 +57,63 @@ Key characteristics:
 - Pattern recognition
 - Automatic improvement"""
 
-        result = job._extract_semantic_text(file_content)
-        assert result.strip() == expected_semantic_text.strip()
+    result = job._extract_semantic_text(file_content)
+    assert result.strip() == expected_semantic_text.strip()
 
 
 def test_extract_semantic_text_no_metadata():
     """Test semantic text extraction when there's no metadata."""
-    with (
-        patch("aclarai_scheduler.concept_refresh.Neo4jGraphManager"),
-        patch("aclarai_scheduler.concept_refresh.EmbeddingGenerator"),
-        patch("aclarai_scheduler.concept_refresh.aclaraiVectorStore"),
-    ):
-        mock_config = MagicMock()
-        mock_config.vault_path = "/tmp/test_vault"
+    mock_config = MagicMock()
+    mock_config.vault_path = "/tmp/test_vault"
+    mock_neo4j = Mock()
+    mock_embedding_gen = Mock()
+    mock_vector_store = MockVectorStoreForConcepts()
 
-        job = ConceptEmbeddingRefreshJob(mock_config)
+    job = ConceptEmbeddingRefreshJob(
+        config=mock_config,
+        neo4j_manager=mock_neo4j,
+        embedding_generator=mock_embedding_gen,
+        vector_store=mock_vector_store
+    )
 
-        file_content = """# Deep Learning
+    file_content = """# Deep Learning
 
 Deep learning uses neural networks with multiple layers."""
 
-        result = job._extract_semantic_text(file_content)
-        assert result.strip() == file_content.strip()
+    result = job._extract_semantic_text(file_content)
+    assert result.strip() == file_content.strip()
 
 
 def test_compute_hash():
     """Test SHA256 hash computation."""
-    with (
-        patch("aclarai_scheduler.concept_refresh.Neo4jGraphManager"),
-        patch("aclarai_scheduler.concept_refresh.EmbeddingGenerator"),
-        patch("aclarai_scheduler.concept_refresh.aclaraiVectorStore"),
-    ):
-        mock_config = MagicMock()
-        mock_config.vault_path = "/tmp/test_vault"
+    mock_config = MagicMock()
+    mock_config.vault_path = "/tmp/test_vault"
+    mock_neo4j = Mock()
+    mock_embedding_gen = Mock()
+    mock_vector_store = MockVectorStoreForConcepts()
 
-        job = ConceptEmbeddingRefreshJob(mock_config)
+    job = ConceptEmbeddingRefreshJob(
+        config=mock_config,
+        neo4j_manager=mock_neo4j,
+        embedding_generator=mock_embedding_gen,
+        vector_store=mock_vector_store
+    )
 
-        text = "Machine learning is awesome"
-        hash1 = job._compute_hash(text)
-        hash2 = job._compute_hash(text)
+    text = "Machine learning is awesome"
+    hash1 = job._compute_hash(text)
+    hash2 = job._compute_hash(text)
 
-        # Same text should produce same hash
-        assert hash1 == hash2
-        assert len(hash1) == 64  # SHA256 produces 64 character hex string
+    # Same text should produce same hash
+    assert hash1 == hash2
+    assert len(hash1) == 64  # SHA256 produces 64 character hex string
 
-        # Different text should produce different hash
-        different_text = "Deep learning is awesome"
-        hash3 = job._compute_hash(different_text)
-        assert hash1 != hash3
+    # Different text should produce different hash
+    different_text = "Deep learning is awesome"
+    hash3 = job._compute_hash(different_text)
+    assert hash1 != hash3
 
 
-@patch("aclarai_scheduler.concept_refresh.Neo4jGraphManager")
-@patch("aclarai_scheduler.concept_refresh.EmbeddingGenerator")
-@patch("aclarai_scheduler.concept_refresh.aclaraiVectorStore")
-def test_process_concept_file_no_changes(
-    _mock_vector_store, mock_embedding_gen, mock_neo4j
-):
+def test_process_concept_file_no_changes():
     """Test processing a concept file when no changes are detected."""
     # Create temporary vault directory
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -114,9 +125,10 @@ def test_process_concept_file_no_changes(
         mock_config = MagicMock()
         mock_config.vault_path = str(vault_path)
 
-        # Create mock Neo4j manager that returns existing hash
-        mock_neo4j_instance = MagicMock()
-        mock_neo4j.return_value = mock_neo4j_instance
+        # Create mocks for dependencies
+        mock_neo4j = Mock()
+        mock_embedding_gen = Mock()
+        mock_vector_store = MockVectorStoreForConcepts()
 
         # Create test concept file
         concept_file = concepts_path / "test_concept.md"
@@ -130,7 +142,12 @@ This is a test concept.
         with open(concept_file, "w") as f:
             f.write(content)
 
-        job = ConceptEmbeddingRefreshJob(mock_config)
+        job = ConceptEmbeddingRefreshJob(
+            config=mock_config,
+            neo4j_manager=mock_neo4j,
+            embedding_generator=mock_embedding_gen,
+            vector_store=mock_vector_store
+        )
 
         # Mock that the stored hash matches current hash
         semantic_text = job._extract_semantic_text(content)
@@ -144,15 +161,10 @@ This is a test concept.
         assert updated is False  # No update needed
 
         # Verify that embedding was not generated
-        mock_embedding_gen.return_value.embed_text.assert_not_called()
+        mock_embedding_gen.embed_text.assert_not_called()
 
 
-@patch("aclarai_scheduler.concept_refresh.Neo4jGraphManager")
-@patch("aclarai_scheduler.concept_refresh.EmbeddingGenerator")
-@patch("aclarai_scheduler.concept_refresh.aclaraiVectorStore")
-def test_process_concept_file_with_changes(
-    _mock_vector_store, mock_embedding_gen, _mock_neo4j
-):
+def test_process_concept_file_with_changes():
     """Test processing a concept file when changes are detected."""
     # Create temporary vault directory
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -163,6 +175,11 @@ def test_process_concept_file_with_changes(
         # Create test config
         mock_config = MagicMock()
         mock_config.vault_path = str(vault_path)
+
+        # Create mocks for dependencies
+        mock_neo4j = Mock()
+        mock_embedding_gen = Mock()
+        mock_vector_store = MockVectorStoreForConcepts()
 
         # Create test concept file
         concept_file = concepts_path / "test_concept.md"
@@ -176,16 +193,20 @@ This is a test concept with updated content.
         with open(concept_file, "w") as f:
             f.write(content)
 
-        job = ConceptEmbeddingRefreshJob(mock_config)
+        job = ConceptEmbeddingRefreshJob(
+            config=mock_config,
+            neo4j_manager=mock_neo4j,
+            embedding_generator=mock_embedding_gen,
+            vector_store=mock_vector_store
+        )
 
         # Mock that the stored hash is different (indicating changes)
         job._get_stored_embedding_hash = Mock(return_value="old_hash_value")
-        job._update_vector_store = Mock()
         job._update_neo4j_metadata = Mock()
 
         # Mock embedding generation
         mock_embedding = [0.1, 0.2, 0.3, 0.4, 0.5]
-        mock_embedding_gen.return_value.embed_text.return_value = mock_embedding
+        mock_embedding_gen.embed_text.return_value = mock_embedding
 
         # Process the file
         processed, updated = job._process_concept_file(concept_file)
@@ -194,25 +215,30 @@ This is a test concept with updated content.
         assert updated is True  # Update was needed
 
         # Verify that embedding was generated
-        mock_embedding_gen.return_value.embed_text.assert_called_once()
+        mock_embedding_gen.embed_text.assert_called_once()
 
         # Verify that vector store and Neo4j were updated
-        job._update_vector_store.assert_called_once_with("test_concept", mock_embedding)
+        mock_vector_store.upsert.assert_called_once_with("test_concept", mock_embedding)
         job._update_neo4j_metadata.assert_called_once()
 
 
-@patch("aclarai_scheduler.concept_refresh.Neo4jGraphManager")
-@patch("aclarai_scheduler.concept_refresh.EmbeddingGenerator")
-@patch("aclarai_scheduler.concept_refresh.aclaraiVectorStore")
-def test_run_job_no_concepts_directory(
-    _mock_vector_store, _mock_embedding_gen, _mock_neo4j
-):
+def test_run_job_no_concepts_directory():
     """Test run_job when concepts directory doesn't exist."""
     # Create test config with non-existent concepts directory
     mock_config = MagicMock()
     mock_config.vault_path = "/nonexistent/vault"
 
-    job = ConceptEmbeddingRefreshJob(mock_config)
+    # Create mocks for dependencies
+    mock_neo4j = Mock()
+    mock_embedding_gen = Mock()
+    mock_vector_store = MockVectorStoreForConcepts()
+
+    job = ConceptEmbeddingRefreshJob(
+        config=mock_config,
+        neo4j_manager=mock_neo4j,
+        embedding_generator=mock_embedding_gen,
+        vector_store=mock_vector_store
+    )
 
     result = job.run_job()
 
@@ -222,10 +248,7 @@ def test_run_job_no_concepts_directory(
     assert "Concepts directory does not exist" in result["error_details"]
 
 
-@patch("aclarai_scheduler.concept_refresh.Neo4jGraphManager")
-@patch("aclarai_scheduler.concept_refresh.EmbeddingGenerator")
-@patch("aclarai_scheduler.concept_refresh.aclaraiVectorStore")
-def test_run_job_with_concept_files(_mock_vector_store, _mock_embedding_gen, _mock_neo4j):
+def test_run_job_with_concept_files():
     """Test run_job with actual concept files."""
     # Create temporary vault directory
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -237,6 +260,11 @@ def test_run_job_with_concept_files(_mock_vector_store, _mock_embedding_gen, _mo
         mock_config = MagicMock()
         mock_config.vault_path = str(vault_path)
 
+        # Create mocks for dependencies
+        mock_neo4j = Mock()
+        mock_embedding_gen = Mock()
+        mock_vector_store = MockVectorStoreForConcepts()
+
         # Create multiple test concept files
         concepts = [
             ("concept1.md", "# Concept 1\n\nFirst concept content."),
@@ -247,7 +275,12 @@ def test_run_job_with_concept_files(_mock_vector_store, _mock_embedding_gen, _mo
             with open(concepts_path / filename, "w") as f:
                 f.write(content)
 
-        job = ConceptEmbeddingRefreshJob(mock_config)
+        job = ConceptEmbeddingRefreshJob(
+            config=mock_config,
+            neo4j_manager=mock_neo4j,
+            embedding_generator=mock_embedding_gen,
+            vector_store=mock_vector_store
+        )
 
         # Mock the process_concept_file method
         job._process_concept_file = Mock(return_value=(True, True))
@@ -263,57 +296,63 @@ def test_run_job_with_concept_files(_mock_vector_store, _mock_embedding_gen, _mo
 
 def test_get_stored_embedding_hash_not_found():
     """Test getting stored embedding hash when concept doesn't exist."""
-    with (
-        patch("aclarai_scheduler.concept_refresh.Neo4jGraphManager"),
-        patch("aclarai_scheduler.concept_refresh.EmbeddingGenerator"),
-        patch("aclarai_scheduler.concept_refresh.aclaraiVectorStore"),
-    ):
-        mock_config = MagicMock()
-        mock_config.vault_path = "/tmp/test_vault"
+    mock_config = MagicMock()
+    mock_config.vault_path = "/tmp/test_vault"
 
-        # Mock Neo4j manager session
-        mock_session = MagicMock()
-        mock_result = MagicMock()
-        mock_result.single.return_value = None
-        mock_session.run.return_value = mock_result
+    # Mock Neo4j manager session
+    mock_session = MagicMock()
+    mock_result = MagicMock()
+    mock_result.single.return_value = None
+    mock_session.run.return_value = mock_result
 
-        mock_neo4j_manager = MagicMock()
-        mock_neo4j_manager.session.return_value.__enter__.return_value = mock_session
+    mock_neo4j_manager = MagicMock()
+    mock_neo4j_manager.session.return_value.__enter__.return_value = mock_session
 
-        job = ConceptEmbeddingRefreshJob(mock_config)
-        job.neo4j_manager = mock_neo4j_manager
+    # Create mocks for other dependencies
+    mock_embedding_gen = Mock()
+    mock_vector_store = MockVectorStoreForConcepts()
 
-        result = job._get_stored_embedding_hash("nonexistent_concept")
+    job = ConceptEmbeddingRefreshJob(
+        config=mock_config,
+        neo4j_manager=mock_neo4j_manager,
+        embedding_generator=mock_embedding_gen,
+        vector_store=mock_vector_store
+    )
 
-        assert result is None
+    result = job._get_stored_embedding_hash("nonexistent_concept")
+
+    assert result is None
 
 
 def test_get_stored_embedding_hash_found():
     """Test getting stored embedding hash when concept exists."""
-    with (
-        patch("aclarai_scheduler.concept_refresh.Neo4jGraphManager"),
-        patch("aclarai_scheduler.concept_refresh.EmbeddingGenerator"),
-        patch("aclarai_scheduler.concept_refresh.aclaraiVectorStore"),
-    ):
-        mock_config = MagicMock()
-        mock_config.vault_path = "/tmp/test_vault"
+    mock_config = MagicMock()
+    mock_config.vault_path = "/tmp/test_vault"
 
-        # Mock Neo4j manager session
-        mock_session = MagicMock()
-        mock_result = MagicMock()
-        mock_record = {"hash": "stored_hash_value"}
-        mock_result.single.return_value = mock_record
-        mock_session.run.return_value = mock_result
+    # Mock Neo4j manager session
+    mock_session = MagicMock()
+    mock_result = MagicMock()
+    mock_record = {"hash": "stored_hash_value"}
+    mock_result.single.return_value = mock_record
+    mock_session.run.return_value = mock_result
 
-        mock_neo4j_manager = MagicMock()
-        mock_neo4j_manager.session.return_value.__enter__.return_value = mock_session
+    mock_neo4j_manager = MagicMock()
+    mock_neo4j_manager.session.return_value.__enter__.return_value = mock_session
 
-        job = ConceptEmbeddingRefreshJob(mock_config)
-        job.neo4j_manager = mock_neo4j_manager
+    # Create mocks for other dependencies
+    mock_embedding_gen = Mock()
+    mock_vector_store = MockVectorStoreForConcepts()
 
-        result = job._get_stored_embedding_hash("existing_concept")
+    job = ConceptEmbeddingRefreshJob(
+        config=mock_config,
+        neo4j_manager=mock_neo4j_manager,
+        embedding_generator=mock_embedding_gen,
+        vector_store=mock_vector_store
+    )
 
-        assert result == "stored_hash_value"
+    result = job._get_stored_embedding_hash("existing_concept")
+
+    assert result == "stored_hash_value"
 
 
 if __name__ == "__main__":
@@ -324,6 +363,8 @@ if __name__ == "__main__":
         test_extract_semantic_text()
         test_extract_semantic_text_no_metadata()
         test_compute_hash()
+        test_get_stored_embedding_hash_not_found()
+        test_get_stored_embedding_hash_found()
         print("✓ All basic tests passed")
     except Exception as e:
         print(f"✗ Test failed: {e}")
