@@ -11,8 +11,8 @@ from typing import Tuple
 from aclarai_shared.graph.models import ClaimInput, ConceptInput
 from aclarai_shared.noun_phrase_extraction.models import NounPhraseCandidate
 
-from ..mocks.mock_neo4j_manager import MockNeo4jGraphManager
-from ..mocks.mock_vector_store import MockVectorStore
+from shared.tests.mocks.mock_neo4j_manager import MockNeo4jGraphManager
+from shared.tests.mocks.mock_vector_store import MockVectorStore
 
 logger = logging.getLogger(__name__)
 

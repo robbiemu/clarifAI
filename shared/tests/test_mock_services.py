@@ -14,7 +14,7 @@ class TestMockServices:
 
     def test_mock_neo4j_manager_basic_operations(self):
         """Test basic operations of MockNeo4jGraphManager."""
-        from tests.mocks import MockNeo4jGraphManager
+        from shared.tests.mocks import MockNeo4jGraphManager
 
         manager = MockNeo4jGraphManager()
         # Test initial state
@@ -52,7 +52,7 @@ class TestMockServices:
 
     def test_mock_vector_store_basic_operations(self):
         """Test basic operations of MockVectorStore."""
-        from tests.mocks import MockVectorStore
+        from shared.tests.mocks import MockVectorStore
 
         store = MockVectorStore()
         # Test initial state
@@ -89,7 +89,7 @@ class TestMockServices:
 
     def test_seeded_mock_services(self):
         """Test the seeded mock services utility."""
-        from tests.utils import get_seeded_mock_services
+        from shared.tests.utils import get_seeded_mock_services
 
         neo4j_manager, vector_store = get_seeded_mock_services()
         # Test that services are populated with golden data
@@ -107,7 +107,7 @@ class TestMockServices:
 
     def test_claim_concept_linker_with_mock_services(self):
         """Test ClaimConceptLinker can be initialized with mock services."""
-        from tests.utils import get_seeded_mock_services
+        from shared.tests.utils import get_seeded_mock_services
 
         neo4j_manager, vector_store = get_seeded_mock_services()
         # Test that ClaimConceptLinker accepts mock services
@@ -126,7 +126,7 @@ class TestMockServices:
 
     def test_claim_concept_linker_find_candidate_concepts(self):
         """Test ClaimConceptLinker can find candidate concepts using mock vector store."""
-        from tests.utils import get_seeded_mock_services
+        from shared.tests.utils import get_seeded_mock_services
 
         neo4j_manager, vector_store = get_seeded_mock_services()
         linker = ClaimConceptLinker(
@@ -148,7 +148,7 @@ class TestMockServices:
 
     def test_mock_services_isolation(self):
         """Test that mock services provide isolated environments."""
-        from tests.mocks import MockNeo4jGraphManager, MockVectorStore
+        from shared.tests.mocks import MockNeo4jGraphManager, MockVectorStore
 
         # Create two separate instances
         manager1 = MockNeo4jGraphManager()
@@ -180,7 +180,7 @@ class TestMockServices:
 
     def test_mock_services_clear_data(self):
         """Test that mock services can be cleared for test isolation."""
-        from tests.mocks import MockNeo4jGraphManager, MockVectorStore
+        from shared.tests.mocks import MockNeo4jGraphManager, MockVectorStore
 
         manager = MockNeo4jGraphManager()
         store = MockVectorStore()

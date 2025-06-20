@@ -15,7 +15,7 @@ from aclarai_shared.claim_concept_linking.models import (
 )
 from aclarai_shared.claim_concept_linking.orchestrator import ClaimConceptLinker
 
-from tests.utils import get_seeded_mock_services
+from shared.tests.utils import get_seeded_mock_services
 
 
 class MockClaimConceptNeo4jManager:
