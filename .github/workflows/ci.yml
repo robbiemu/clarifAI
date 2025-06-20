@@ -110,6 +110,41 @@ jobs:
     runs-on: ubuntu-latest
     # Security scan always runs - no conditions
 
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install uv
+      run: pip install uv
+        
+    - name: Cache Python virtual environment
+      uses: actions/cache@v4
+      id: cache-venv
+      with:
+        path: .venv
+        key: ${{ runner.os }}-python-3.11-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-python-3.11-
+          
+    - name: Install dependencies
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      run: |
+        uv venv
+        uv pip install -e ".[dev]"
+        uv pip install -e ./shared -e ./services/aclarai-core -e ./services/aclarai-ui -e ./services/scheduler -e ./services/vault-watcher
+        
+    - name: Run Bandit security check
+      run: |
+        source .venv/bin/activate
+        echo "Running Bandit security scan..."
+        bandit -r . -c pyproject.toml
+        echo "✅ Security scan completed successfully"
+
   test:
     name: Run Tests
     runs-on: ubuntu-latest
