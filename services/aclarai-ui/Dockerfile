@@ -9,18 +9,23 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    git \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better layer caching
-COPY pyproject.toml /app/
+# Install uv, the fast Python package installer
+RUN pip install uv
 
-# Install Python dependencies
-RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir -e .
+# Copy the entire project context into the image. This makes the root
+# pyproject.toml and all shared/service code available to the installer.
+# (Make sure you have a .dockerignore file at the root to exclude .git, etc.)
+COPY . .
 
-# Copy the service code
-COPY . /app/
+# Install all workspace dependencies using the root pyproject.toml, and the UI-specific dependencies from its own pyproject.toml
+RUN uv pip install . --system
+RUN uv pip install --system -e ./services/aclarai-ui
 
 # Create a non-root user for security
 RUN useradd -m -u 1000 aclarai && chown -R aclarai:aclarai /app

@@ -1,0 +1,23 @@
+# Python virtual environments
+.venv/
+venv/
+*.pyc
+__pycache__/
+
+# Git
+.git/
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
