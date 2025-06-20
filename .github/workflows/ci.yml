@@ -24,6 +24,7 @@ jobs:
     - uses: dorny/paths-filter@v2
       id: filter
       with:
+        list-files: shell
         base: ${{ github.base_ref }}
         filters: |
           python:
@@ -38,6 +39,29 @@ jobs:
           docker-compose:
             - 'docker-compose*.yml'
             - '.env.example'
+
+    - name: 1. See the direct output of the filter
+      run: |
+        echo "--- Filter Outputs ---"
+        echo "Python changes: ${{ steps.filter.outputs.python }}"
+        echo "Docker changes: ${{ steps.filter.outputs.docker }}"
+        echo "Docker-compose changes: ${{ steps.filter.outputs.docker-compose }}"
+        echo "----------------------"
+
+    - name: 2. See the list of changed files detected by the filter
+      run: |
+        echo "--- Changed Files Detected by Filter ---"
+        echo "Python files: ${{ steps.filter.outputs.python_files }}"
+        echo "Docker files: ${{ steps.filter.outputs.docker_files }}"
+        echo "Docker-compose files: ${{ steps.filter.outputs.docker-compose_files }}"
+        echo "----------------------------------------"
+
+    - name: 3. Manually verify with Git
+      run: |
+        echo "--- Manual Git Diff ---"
+        echo "Comparing HEAD against base ref: ${{ github.base_ref }}"
+        git diff --name-only ${{ github.base_ref }}...HEAD
+        echo "-----------------------"
 
   lint-and-format:
     name: Lint and Format
