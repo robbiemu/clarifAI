@@ -1,15 +1,14 @@
 """
 Data models for aclarai knowledge graph nodes.
-
 This module defines the data structures for Claims, Sentences, Blocks, and other
 graph entities, following the schema from technical_overview.md and
 graph_schema.cypher.
 """
 
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any
-import uuid
+from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -38,7 +37,6 @@ class ClaimInput:
     coverage_score: Optional[float] = None
     decontextualization_score: Optional[float] = None
     claim_id: Optional[str] = None  # Will generate if not provided
-
     # Properties derived from ClaimCandidate for testing/validation
     verifiable: bool = True
     self_contained: bool = True
@@ -64,7 +62,6 @@ class SentenceInput:
     ambiguous: Optional[bool] = None
     verifiable: Optional[bool] = None
     sentence_id: Optional[str] = None  # Will generate if not provided
-
     # Additional properties for testing/validation
     failed_decomposition: bool = False
     rejection_reason: Optional[str] = None

@@ -39,11 +39,21 @@ model:
     selection: null      # Uses default if not specified
     disambiguation: null # Uses default if not specified  
     decomposition: null  # Uses default if not specified
+  concept_linker: "gpt-3.5-turbo"
+  concept_summary: "gpt-4"
+  subject_summary: "gpt-3.5-turbo"
+  trending_concepts_agent: "gpt-4"
   fallback_plugin: "gpt-3.5-turbo"
 
 # Embedding configuration
 embedding:
-  # Models configuration
+  # Models configuration (following design_config_panel.md structure)
+  utterance: "sentence-transformers/all-MiniLM-L6-v2"
+  concept: "text-embedding-3-small" 
+  summary: "sentence-transformers/all-MiniLM-L6-v2"
+  fallback: "sentence-transformers/all-mpnet-base-v2"
+  
+  # Legacy models configuration for backward compatibility
   models:
     default: "sentence-transformers/all-MiniLM-L6-v2"
     # Alternative models can be configured here

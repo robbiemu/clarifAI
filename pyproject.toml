@@ -28,6 +28,8 @@ optional-dependencies = { dev = [
     "pre-commit>=3.7.0",
     "pytest>=8.4.0",
     "pytest-cov>=6.1.1",
+    "playwright>=1.48.0",
+    "pytest-playwright>=0.5.2",
     "ruff>=0.11.13",
 ]}
 
@@ -81,12 +83,23 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+namespace_packages = true
+explicit_package_bases = true
+exclude = [
+    "tests/",
+    "shared/tests/",
+    "services/aclarai-core/tests/",
+    "services/aclarai-ui/tests/",
+    "services/scheduler/tests/",
+    "services/vault-watcher/tests/"
+]
 
 # Pytest configuration
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = ["tests", "shared/tests"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "--cov=aclarai_shared --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml"
+addopts = "--cov=aclarai_shared --cov-report=term-missing --cov-report=xml --cov-config=pyproject.toml --import-mode=importlib"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
 ]

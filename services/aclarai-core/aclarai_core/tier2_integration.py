@@ -1,6 +1,5 @@
 """
 Tier 2 Summary Integration for aclarai Core Service.
-
 This module provides the integration point for the Tier 2 Summary Agent within
 the aclarai-core service, following the architectural patterns established
 for service integration.
@@ -9,7 +8,6 @@ for service integration.
 import logging
 from pathlib import Path
 from typing import List, Optional
-
 from aclarai_shared.config import aclaraiConfig, load_config
 from aclarai_shared.tier2_summary import Tier2SummaryAgent
 
@@ -19,7 +17,6 @@ logger = logging.getLogger(__name__)
 class Tier2SummaryService:
     """
     Service integration for Tier 2 Summary generation.
-
     Provides a high-level interface for generating Tier 2 summaries
     within the aclarai-core service context.
     """
@@ -27,15 +24,12 @@ class Tier2SummaryService:
     def __init__(self, config: Optional[aclaraiConfig] = None):
         """
         Initialize the Tier 2 Summary Service.
-
         Args:
             config: aclarai configuration (loads default if None)
         """
         self.config = config or load_config()
-
         # Initialize the core agent
         self.agent = Tier2SummaryAgent(config=self.config)
-
         logger.info(
             "Initialized Tier2SummaryService",
             extra={
@@ -51,14 +45,11 @@ class Tier2SummaryService:
     ) -> List[Path]:
         """
         Generate Tier 2 summaries for available content.
-
         This is the main entry point for Tier 2 summary generation that would
         typically be called from a scheduler or API endpoint.
-
         Args:
             output_dir: Directory to write summary files (uses config if not provided)
             file_prefix: Prefix for generated filenames
-
         Returns:
             List of paths to successfully written files
         """
@@ -71,13 +62,11 @@ class Tier2SummaryService:
                 "file_prefix": file_prefix,
             },
         )
-
         try:
             # Use the agent's complete workflow
             written_files = self.agent.process_and_generate_summaries(
                 output_dir=output_dir, file_prefix=file_prefix
             )
-
             logger.info(
                 "Completed Tier 2 summary generation",
                 extra={
@@ -87,9 +76,7 @@ class Tier2SummaryService:
                     "file_paths": [str(p) for p in written_files],
                 },
             )
-
             return written_files
-
         except Exception as e:
             logger.error(
                 "Failed to generate Tier 2 summaries",
@@ -104,7 +91,6 @@ class Tier2SummaryService:
     def get_tier2_output_directory(self) -> Path:
         """
         Get the configured Tier 2 output directory.
-
         Returns:
             Path to the Tier 2 directory
         """
@@ -116,10 +102,8 @@ class Tier2SummaryService:
 def run_tier2_summary_job() -> bool:
     """
     Standalone function to run Tier 2 summary generation.
-
     This function can be called from schedulers or command-line interfaces
     to generate Tier 2 summaries.
-
     Returns:
         True if successful, False otherwise
     """
@@ -130,13 +114,10 @@ def run_tier2_summary_job() -> bool:
             "filename.function_name": "tier2_integration.run_tier2_summary_job",
         },
     )
-
     try:
         service = Tier2SummaryService()
         written_files = service.generate_summaries()
-
         success = len(written_files) > 0
-
         logger.info(
             "Tier 2 summary job completed",
             extra={
@@ -146,9 +127,7 @@ def run_tier2_summary_job() -> bool:
                 "files_written": len(written_files),
             },
         )
-
         return success
-
     except Exception as e:
         logger.error(
             "Tier 2 summary job failed",

@@ -1,14 +1,13 @@
 """
 Data models for the Claimify pipeline.
-
 Defines the core data structures used throughout the Selection → Disambiguation → Decomposition
 pipeline, including input/output types and configuration models.
 """
 
 import logging
 from dataclasses import dataclass, field
-from typing import List, Optional
 from enum import Enum
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,6 @@ class NodeType(str, Enum):
 class SentenceChunk:
     """
     A sentence chunk to be processed by the Claimify pipeline.
-
     Represents individual sentences extracted from Tier 1 content,
     which serve as input to the Selection stage.
     """
@@ -39,7 +37,6 @@ class SentenceChunk:
 class ClaimifyContext:
     """
     Context window for Claimify processing.
-
     Contains preceding and following sentences to provide context
     during Selection and Disambiguation stages.
     """
@@ -161,24 +158,20 @@ class ClaimifyConfig:
     # Context window parameters
     context_window_p: int = 3  # Previous sentences
     context_window_f: int = 1  # Following sentences
-
     # Model configuration
     selection_model: Optional[str] = None
     disambiguation_model: Optional[str] = None
     decomposition_model: Optional[str] = None
     default_model: str = "gpt-3.5-turbo"
-
     # Processing parameters
     max_retries: int = 3
     timeout_seconds: int = 30
     temperature: float = 0.1
     max_tokens: int = 1000
-
     # Quality thresholds (to be added when threshold evaluation is implemented)
     selection_confidence_threshold: float = 0.5
     disambiguation_confidence_threshold: float = 0.5
     decomposition_confidence_threshold: float = 0.5
-
     # Logging configuration
     log_decisions: bool = True
     log_transformations: bool = True

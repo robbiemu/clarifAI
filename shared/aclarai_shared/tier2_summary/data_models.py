@@ -1,15 +1,14 @@
 """
 Data models for the Tier 2 Summary Agent.
-
 Defines the core data structures used for summary generation from grouped
 Claims and Sentences, following the architecture in on-writing_vault_documents.md.
 """
 
 import logging
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timezone
 import uuid
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,6 @@ logger = logging.getLogger(__name__)
 class SummaryInput:
     """
     Input data representing a grouped set of Claims and/or Sentences to summarize.
-
     This represents a semantically coherent cluster of content identified by
     vector search as described in the Tier 2 retrieval notes.
     """
@@ -56,11 +54,9 @@ class SummaryInput:
 class SummaryBlock:
     """
     Represents a single summary block to be written to Tier 2 Markdown.
-
     Follows the structure specified in on-writing_vault_documents.md:
     - <summary sentence> ^clm_<id>
     - ...
-
     <!-- aclarai:id=clm_<id> ver=N -->
     ^clm_<id>
     """
@@ -82,12 +78,10 @@ class SummaryBlock:
     def to_markdown(self) -> str:
         """
         Convert to Markdown format following the Tier 2 structure.
-
         Returns:
             Markdown string with summary content and metadata
         """
         lines = []
-
         # Summary content as bullet points
         summary_lines = self.summary_text.strip().split("\n")
         for line in summary_lines:
@@ -96,11 +90,9 @@ class SummaryBlock:
                 if not line.startswith("- "):
                     line = f"- {line}"
                 lines.append(line)
-
         # Add the summary ID anchor to the last line
         if lines:
             lines[-1] = f"{lines[-1]} ^{self.aclarai_id}"
-
         # Add concept wikilinks if any
         if self.linked_concepts:
             lines.append("")  # Empty line before concepts
@@ -108,13 +100,10 @@ class SummaryBlock:
                 f"[[{concept}]]" for concept in self.linked_concepts
             )
             lines.append(f"Related concepts: {concept_links}")
-
         lines.append("")  # Empty line before metadata
-
         # Add metadata comment
         lines.append(f"<!-- aclarai:id={self.aclarai_id} ver={self.version} -->")
         lines.append(f"^{self.aclarai_id}")
-
         return "\n".join(lines)
 
 
@@ -122,7 +111,6 @@ class SummaryBlock:
 class SummaryResult:
     """
     Result of Tier 2 summary generation for a file.
-
     Contains all summary blocks that should be written to the Tier 2 file,
     along with metadata about the processing.
     """
@@ -136,31 +124,25 @@ class SummaryResult:
     def to_markdown(self, title: Optional[str] = None) -> str:
         """
         Convert all summary blocks to a complete Tier 2 Markdown file.
-
         Args:
             title: Optional title for the file
-
         Returns:
             Complete Markdown content for the Tier 2 file
         """
         lines = []
-
         # Add title if provided
         if title:
             lines.append(f"# {title}")
             lines.append("")
-
         # Add file-level metadata if available
         if self.source_file_context:
             lines.append(f"<!-- aclarai:source_context={self.source_file_context} -->")
             lines.append("")
-
         # Add each summary block
         for i, block in enumerate(self.summary_blocks):
             if i > 0:
                 lines.append("")  # Empty line between blocks
             lines.append(block.to_markdown())
-
         return "\n".join(lines)
 
     @property

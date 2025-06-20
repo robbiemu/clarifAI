@@ -1,6 +1,5 @@
 """
 Noun phrase extractor for Claims and Summary nodes.
-
 This module implements the main NounPhraseExtractor class that:
 1. Fetches (:Claim) and (:Summary) nodes from Neo4j
 2. Extracts noun phrases using spaCy
@@ -11,15 +10,15 @@ This module implements the main NounPhraseExtractor class that:
 import logging
 import re
 import time
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 import spacy
 
 from ..config import aclaraiConfig, load_config
-from ..graph import Neo4jGraphManager
 from ..embedding import EmbeddingGenerator
-from .models import NounPhraseCandidate, ExtractionResult
+from ..graph import Neo4jGraphManager
 from .concept_candidates_store import ConceptCandidatesVectorStore
+from .models import ExtractionResult, NounPhraseCandidate
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,6 @@ class NounPhraseExtractor:
     """
     Extracts noun phrases from Claims and Summary nodes and stores them
     in the concept_candidates vector table for future concept detection.
-
     This class orchestrates the noun phrase extraction workflow by:
     - Fetching (:Claim) and (:Summary) nodes from the Neo4j graph
     - Using spaCy to extract and normalize noun phrases
@@ -42,28 +40,22 @@ class NounPhraseExtractor:
     ):
         """
         Initialize the noun phrase extractor.
-
         Args:
             config: aclarai configuration (loads default if None)
             spacy_model: spaCy model to use for extraction
         """
         if config is None:
             config = load_config()
-
         self.config = config
         self.spacy_model_name = spacy_model
-
         # Initialize dependencies
         self.neo4j_manager = Neo4jGraphManager(config)
         self.embedding_generator = EmbeddingGenerator(config)
-
         # Initialize spaCy model
         self._nlp = None
         self._initialize_spacy()
-
         # Initialize concept candidates vector store
         self.concept_candidates_store = ConceptCandidatesVectorStore(config)
-
         logger.info(
             f"Initialized NounPhraseExtractor with spaCy model: {self.spacy_model_name}",
             extra={
@@ -75,7 +67,6 @@ class NounPhraseExtractor:
     def extract_from_all_nodes(self) -> ExtractionResult:
         """
         Extract noun phrases from all (:Claim) and (:Summary) nodes.
-
         Returns:
             ExtractionResult with all extracted candidates and processing metrics
         """
@@ -86,18 +77,14 @@ class NounPhraseExtractor:
                 "filename.function_name": "noun_phrase_extraction.NounPhraseExtractor.extract_from_all_nodes",
             },
         )
-
         start_time = time.time()
         result = ExtractionResult()
-
         try:
             # Fetch all Claims and Summaries
             claims = self._fetch_claim_nodes()
             summaries = self._fetch_summary_nodes()
-
             all_nodes = claims + summaries
             result.total_nodes_processed = len(all_nodes)
-
             logger.info(
                 f"Processing {len(claims)} Claims and {len(summaries)} Summaries",
                 extra={
@@ -107,7 +94,6 @@ class NounPhraseExtractor:
                     "summaries_count": len(summaries),
                 },
             )
-
             # Extract noun phrases from each node
             for node in all_nodes:
                 try:
@@ -115,7 +101,6 @@ class NounPhraseExtractor:
                     result.candidates.extend(candidates)
                     result.successful_extractions += 1
                     result.total_phrases_extracted += len(candidates)
-
                 except Exception as e:
                     logger.error(
                         f"Failed to extract noun phrases from node {node.get('id')}",
@@ -127,14 +112,11 @@ class NounPhraseExtractor:
                         },
                     )
                     result.failed_extractions += 1
-
             # Store all candidates in vector database
             if result.candidates:
                 self._store_candidates(result.candidates)
-
             result.processing_time = time.time() - start_time
             result.model_used = self.spacy_model_name
-
             logger.info(
                 f"Noun phrase extraction completed: {result.total_phrases_extracted} phrases from {result.successful_extractions} nodes",
                 extra={
@@ -146,9 +128,7 @@ class NounPhraseExtractor:
                     "processing_time": result.processing_time,
                 },
             )
-
             return result
-
         except Exception as e:
             result.error = str(e)
             result.processing_time = time.time() - start_time
@@ -170,7 +150,6 @@ class NounPhraseExtractor:
             RETURN c.id as id, c.text as text, 'claim' as node_type
             """
             result = self.neo4j_manager.execute_query(query)
-
             claims = []
             for record in result:
                 claims.append(
@@ -180,7 +159,6 @@ class NounPhraseExtractor:
                         "node_type": record["node_type"],
                     }
                 )
-
             logger.debug(
                 f"Fetched {len(claims)} Claim nodes",
                 extra={
@@ -189,9 +167,7 @@ class NounPhraseExtractor:
                     "claims_count": len(claims),
                 },
             )
-
             return claims
-
         except Exception as e:
             logger.error(
                 f"Failed to fetch Claim nodes: {e}",
@@ -211,7 +187,6 @@ class NounPhraseExtractor:
             RETURN s.id as id, s.text as text, 'summary' as node_type
             """
             result = self.neo4j_manager.execute_query(query)
-
             summaries = []
             for record in result:
                 summaries.append(
@@ -221,7 +196,6 @@ class NounPhraseExtractor:
                         "node_type": record["node_type"],
                     }
                 )
-
             logger.debug(
                 f"Fetched {len(summaries)} Summary nodes",
                 extra={
@@ -230,9 +204,7 @@ class NounPhraseExtractor:
                     "summaries_count": len(summaries),
                 },
             )
-
             return summaries
-
         except Exception as e:
             logger.error(
                 f"Failed to fetch Summary nodes: {e}",
@@ -247,17 +219,14 @@ class NounPhraseExtractor:
     def _extract_from_node(self, node: Dict[str, Any]) -> List[NounPhraseCandidate]:
         """
         Extract noun phrases from a single node (Claim or Summary).
-
         Args:
             node: Dictionary containing node data (id, text, node_type)
-
         Returns:
             List of NounPhraseCandidate objects
         """
         text = node.get("text", "")
         node_id = node.get("id", "")
         node_type = node.get("node_type", "unknown")
-
         if not text or not node_id:
             logger.warning(
                 f"Skipping node with missing text or ID: {node_id}",
@@ -268,19 +237,15 @@ class NounPhraseExtractor:
                 },
             )
             return []
-
         # Extract noun phrases using spaCy
         noun_phrases = self._extract_noun_phrases(text)
-
         # Create candidates with normalization
         candidates = []
         for phrase in noun_phrases:
             normalized = self._normalize_phrase(phrase)
-
             # Skip if normalization resulted in empty or very short text
             if len(normalized.strip()) < 2:
                 continue
-
             candidate = NounPhraseCandidate(
                 text=phrase,
                 normalized_text=normalized,
@@ -290,7 +255,6 @@ class NounPhraseExtractor:
                 status="pending",
             )
             candidates.append(candidate)
-
         logger.debug(
             f"Extracted {len(candidates)} noun phrases from {node_type} {node_id}",
             extra={
@@ -301,16 +265,13 @@ class NounPhraseExtractor:
                 "phrases_count": len(candidates),
             },
         )
-
         return candidates
 
     def _extract_noun_phrases(self, text: str) -> List[str]:
         """
         Extract noun phrases from text using spaCy's noun_chunks.
-
         Args:
             text: Input text to process
-
         Returns:
             List of noun phrase strings
         """
@@ -323,22 +284,18 @@ class NounPhraseExtractor:
                 },
             )
             return []
-
         try:
             doc = self._nlp(text)
             noun_phrases = [
                 chunk.text.strip() for chunk in doc.noun_chunks if chunk.text.strip()
             ]
-
             # Filter out very short phrases (single characters, numbers only, etc.)
             filtered_phrases = [
                 phrase
                 for phrase in noun_phrases
                 if len(phrase) > 1 and not phrase.isdigit()
             ]
-
             return filtered_phrases
-
         except Exception as e:
             logger.error(
                 f"Failed to extract noun phrases from text: {e}",
@@ -358,36 +315,28 @@ class NounPhraseExtractor:
         - Lemmatize words
         - Strip punctuation
         - Trim whitespace
-
         Args:
             phrase: Original noun phrase
-
         Returns:
             Normalized phrase
         """
         if not phrase or not self._nlp:
             return ""
-
         try:
             # Process with spaCy for lemmatization
             doc = self._nlp(phrase.lower())
-
             # Extract lemmatized forms, skip punctuation and stop words
             lemmatized_tokens = []
             for token in doc:
                 # Skip punctuation, spaces, and very short tokens
                 if not token.is_punct and not token.is_space and len(token.lemma_) > 1:
                     lemmatized_tokens.append(token.lemma_)
-
             normalized = " ".join(lemmatized_tokens)
-
             # Additional cleanup - remove extra punctuation
             normalized = re.sub(r"[^\w\s]", "", normalized)
             normalized = re.sub(r"\s+", " ", normalized)  # Collapse multiple spaces
             normalized = normalized.strip()
-
             return normalized
-
         except Exception as e:
             logger.error(
                 f"Failed to normalize phrase '{phrase}': {e}",
@@ -404,13 +353,11 @@ class NounPhraseExtractor:
     def _store_candidates(self, candidates: List[NounPhraseCandidate]) -> None:
         """
         Store noun phrase candidates in the concept_candidates vector table.
-
         Args:
             candidates: List of candidates to store
         """
         if not candidates:
             return
-
         logger.info(
             f"Storing {len(candidates)} noun phrase candidates in concept_candidates vector table",
             extra={
@@ -419,13 +366,11 @@ class NounPhraseExtractor:
                 "candidates_count": len(candidates),
             },
         )
-
         try:
             # Store using the specialized concept candidates vector store
             successful_count = self.concept_candidates_store.store_candidates(
                 candidates
             )
-
             logger.info(
                 f"Successfully stored {successful_count}/{len(candidates)} concept candidates",
                 extra={
@@ -435,7 +380,6 @@ class NounPhraseExtractor:
                     "total_count": len(candidates),
                 },
             )
-
         except Exception as e:
             logger.error(
                 f"Failed to store noun phrase candidates: {e}",
@@ -454,7 +398,6 @@ class NounPhraseExtractor:
             raise ImportError(
                 "spaCy is not installed. Please install it with: pip install spacy"
             )
-
         try:
             self._nlp = spacy.load(self.spacy_model_name)
             logger.info(
@@ -478,4 +421,4 @@ class NounPhraseExtractor:
             raise ValueError(
                 f"spaCy model '{self.spacy_model_name}' not found. "
                 f"Please install it with: python -m spacy download {self.spacy_model_name}"
-            )
+            ) from None

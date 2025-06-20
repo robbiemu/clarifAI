@@ -1,205 +1,153 @@
-# aclarai Central Configuration File
-# This file contains all configurable parameters for the aclarai system
-# Following the architecture principle: Never hardcode values
-
-# Version and system info
-version: "0.1.0"
+version: 0.1.0
 config_version: 1
-
-# Database configurations
 databases:
   postgres:
-    # Connection settings (can be overridden by environment variables)
-    host: "postgres"  # POSTGRES_HOST
-    port: 5432        # POSTGRES_PORT
-    database: "aclarai"  # POSTGRES_DB
-    # User and password come from environment variables only
-    # POSTGRES_USER, POSTGRES_PASSWORD
-    
+    host: postgres
+    port: 5432
+    database: aclarai
   neo4j:
-    # Connection settings (can be overridden by environment variables)
-    host: "neo4j"     # NEO4J_HOST
-    port: 7687        # NEO4J_BOLT_PORT
-    # User and password come from environment variables only
-    # NEO4J_USER, NEO4J_PASSWORD
-    
+    host: neo4j
+    port: 7687
   rabbitmq:
-    # Connection settings (can be overridden by environment variables)
-    host: "rabbitmq"  # RABBITMQ_HOST
-    port: 5672        # RABBITMQ_PORT
-    # User and password come from environment variables only
-    # RABBITMQ_USER, RABBITMQ_PASSWORD
-
-# Vault and path configurations
+    host: rabbitmq
+    port: 5672
 paths:
-  vault: "/vault"
-  tier1: "conversations"    # Relative to vault path
-  tier2: "summaries"       # Relative to vault path
-  tier3: "concepts"        # Relative to vault path
-  settings: "/settings"
-
-# Model configuration (following design_config_panel.md structure)
+  vault: /vault
+  tier1: conversations
+  tier2: summaries
+  tier3: concepts
+  settings: /settings
 model:
   claimify:
-    default: "gpt-3.5-turbo"
-    selection: null      # Uses default if not specified
-    disambiguation: null # Uses default if not specified  
-    decomposition: null  # Uses default if not specified
-  fallback_plugin: "gpt-3.5-turbo"
-
-# Embedding configuration
+    default: gpt-3.5-turbo
+    selection: null
+    disambiguation: null
+    decomposition: null
+  concept_linker: gpt-3.5-turbo
+  concept_summary: gpt-4
+  subject_summary: gpt-3.5-turbo
+  trending_concepts_agent: gpt-4
+  fallback_plugin: gpt-3.5-turbo
 embedding:
-  # Models configuration
+  utterance: sentence-transformers/all-MiniLM-L6-v2
+  concept: text-embedding-3-small
+  summary: sentence-transformers/all-MiniLM-L6-v2
+  fallback: sentence-transformers/all-mpnet-base-v2
   models:
-    default: "sentence-transformers/all-MiniLM-L6-v2"
-    # Alternative models can be configured here
-    # large: "sentence-transformers/all-mpnet-base-v2"
-    # multilingual: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-  
-  # Embedding settings
-  device: "auto"  # "auto", "cpu", "cuda", "mps"
+    default: sentence-transformers/all-MiniLM-L6-v2
+  device: auto
   batch_size: 32
-  
-  # PGVector settings
   pgvector:
-    collection_name: "utterances"
-    embed_dim: 384  # Dimension for all-MiniLM-L6-v2
-    # Index settings for pgvector
-    index_type: "ivfflat"
-    index_lists: 100  # Number of lists for IVFFlat index
-  
-  # Chunking configuration
+    collection_name: utterances
+    embed_dim: 384
+    index_type: ivfflat
+    index_lists: 100
   chunking:
-    # SentenceSplitter parameters following on-sentence_splitting.md
     chunk_size: 300
     chunk_overlap: 30
     keep_separator: true
-    
-    # Post-processing rules for coherent chunks
-    merge_colon_endings: true    # Merge "text:" + "continuation" 
-    merge_short_prefixes: true   # Merge fragments < 5 tokens
-    min_chunk_tokens: 5          # Minimum tokens per chunk
-
-# Threshold configuration (following design_config_panel.md structure)
+    merge_colon_endings: true
+    merge_short_prefixes: true
+    min_chunk_tokens: 5
+noun_phrase_extraction:
+  spacy_model: en_core_web_sm
+  min_phrase_length: 2
+  filter_digits_only: true
+  concept_candidates:
+    collection_name: concept_candidates
+    status_field: status
+    default_status: pending
 threshold:
-  concept_merge: 0.90
-  claim_link_strength: 0.60
-
-# Window configuration (following design_config_panel.md structure)
+  concept_merge: 0.9
+  claim_link_strength: 0.6
+  summary_grouping_similarity: 0.8
 window:
   claimify:
-    p: 3  # Previous sentences
-    f: 1  # Following sentences
-
-# Processing configuration
+    p: 3
+    f: 1
 processing:
-  # Global LLM parameters
   temperature: 0.1
   max_tokens: 1000
   timeout_seconds: 30
-  
-  # Claimify pipeline configuration
   claimify:
     max_retries: 3
-    
-    # Logging configuration
     logging:
       log_decisions: true
       log_transformations: true
       log_timing: true
-      
-  # Batch sizes for various operations
   batch_sizes:
-    embedding: 50      # Documents to embed at once
-    chunking: 100      # Documents to chunk at once
-    
-  # Retry configuration following on-error-handling-and-resilience.md
+    embedding: 50
+    chunking: 100
   retries:
     max_attempts: 3
     backoff_factor: 2
     max_wait_time: 60
-
-# Concept detection configuration  
 concepts:
-  # Vector index settings for concept candidates
   candidates:
-    collection_name: "concept_candidates"
-    similarity_threshold: 0.9  # For detecting existing concepts
-    
-  # Canonical concepts vector store
+    collection_name: concept_candidates
+    similarity_threshold: 0.9
   canonical:
-    collection_name: "concepts"
-    similarity_threshold: 0.95  # For merging similar concepts
-
-# Logging configuration
+    collection_name: concepts
+    similarity_threshold: 0.95
 logging:
-  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
-  format: "structured"  # "structured" or "simple"
-  
-  # Service identification for structured logs
-  service_name: "aclarai"
-  
-  # Log to stdout/stderr following idea-logging.md
+  level: INFO
+  format: structured
+  service_name: aclarai
   handlers:
-    - type: "console"
-      stream: "stdout"
-
-# Plugin configuration
+  - type: console
+    stream: stdout
 plugins:
-  # Plugin discovery and loading
   auto_discover: true
   plugin_directories:
-    - "shared/aclarai_shared/plugins"
-  
-  # Default plugin settings
+  - shared/aclarai_shared/plugins
   default_plugin:
     enabled: true
     llm_fallback: true
-
-# Vault watcher configuration
-vault_watcher:
-  # File watching settings
-  batch_interval: 2.0      # Seconds to batch file events
-  max_batch_size: 50       # Maximum events per batch
-  
-  # RabbitMQ settings for dirty block notifications
-  rabbitmq:
-    queue_name: "aclarai_dirty_blocks"
-    exchange: ""           # Use default exchange
-    routing_key: "aclarai_dirty_blocks"
-    
-  # File filtering
-  file_patterns:
-    include: ["*.md"]      # Only monitor markdown files
-    exclude: [".*", "*.tmp", "*~"]  # Ignore temp/hidden files
-
-# Scheduler configuration
 scheduler:
-  # Job configurations
   jobs:
     concept_embedding_refresh:
       enabled: true
-      cron: "0 3 * * *"  # 3 AM daily
-      description: "Refresh concept embeddings from Tier 3 pages"
-    
+      cron: 0 3 * * *
+      description: Refresh concept embeddings from Tier 3 pages
     vault_sync:
       enabled: true
-      cron: "*/30 * * * *"  # Every 30 minutes
-      description: "Sync vault files with knowledge graph"
-
-# Feature flags
+      cron: '*/30 * * * *'
+      description: Sync vault files with knowledge graph
 features:
-  # Sprint 2 features
   embedding_enabled: true
   chunking_enabled: true
   pgvector_enabled: true
-  
-  # Future features (disabled for MVP)
   evaluation_agents: false
   concept_linking: false
   tier2_generation: false
-
-# Development and testing
+vault_watcher:
+  watch:
+    batch_interval: 2.0
+    max_batch_size: 50
+    file_patterns:
+    - '*.md'
+    ignore_patterns:
+    - .*
+    - '*~'
+    - '*.tmp'
+    - .obsidian/*
+  rabbitmq:
+    queue_name: aclarai_dirty_blocks
+    exchange: ''
+    routing_key: aclarai_dirty_blocks
+    durable: true
+    connection_timeout: 30
+    retry_attempts: 3
+    retry_delay: 5
+  batch_interval: 2.0
+  max_batch_size: 50
+  file_patterns:
+    include:
+    - '*.md'
+    exclude:
+    - .*
+    - '*.tmp'
+    - '*~'
 development:
   debug: false
   test_mode: false

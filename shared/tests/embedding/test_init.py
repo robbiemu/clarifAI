@@ -35,7 +35,6 @@ class TestEmbeddingInit:
             original_text="This is the original full text for testing.",  # Required
             text="This is the chunked text part.",  # Required
         )
-
         # Assert the fields that were actually set and exist
         assert metadata.aclarai_block_id == "block_test_001"
         assert metadata.chunk_index == 0
@@ -55,7 +54,6 @@ class TestEmbeddingInit:
             original_text="Original text before chunking for embedding test.",
             text="Test content",  # This corresponds to the old "content"
         )
-
         # 2. Now create the EmbeddedChunk instance using the test_meta
         chunk = models.EmbeddedChunk(
             chunk_metadata=test_meta,  # Pass the ChunkMetadata object
@@ -63,7 +61,6 @@ class TestEmbeddingInit:
             model_name="test_embedding_model",  # Required
             embedding_dim=3,  # Required (should match len(embedding))
         )
-
         # 3. Assert based on the actual structure
         # Access "content" via chunk_metadata.text
         assert chunk.chunk_metadata.text == "Test content"

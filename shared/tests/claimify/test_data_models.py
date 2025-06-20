@@ -1,25 +1,24 @@
 """
 Tests for Claimify pipeline data models.
-
 Tests the core data structures used throughout the Claimify pipeline.
 """
 
-import pytest
-import sys
 import os
+import sys
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-
 from aclarai_shared.claimify.data_models import (
-    SentenceChunk,
-    ClaimifyContext,
-    SelectionResult,
-    DisambiguationResult,
     ClaimCandidate,
-    DecompositionResult,
-    ClaimifyResult,
     ClaimifyConfig,
+    ClaimifyContext,
+    ClaimifyResult,
+    DecompositionResult,
+    DisambiguationResult,
     NodeType,
+    SelectionResult,
+    SentenceChunk,
 )
 
 
@@ -31,7 +30,6 @@ def test_sentence_chunk_creation():
         chunk_id="chunk_001",
         sentence_index=0,
     )
-
     assert chunk.text == "This is a test sentence."
     assert chunk.source_id == "blk_001"
     assert chunk.chunk_id == "chunk_001"
@@ -78,7 +76,6 @@ def test_context_creation(current_sentence, preceding_sentence, following_senten
         preceding_sentences=[preceding_sentence],
         following_sentences=[following_sentence],
     )
-
     assert context.current_sentence == current_sentence
     assert len(context.preceding_sentences) == 1
     assert len(context.following_sentences) == 1
@@ -88,7 +85,6 @@ def test_context_creation(current_sentence, preceding_sentence, following_senten
 def test_empty_context(current_sentence):
     """Test context with no surrounding sentences."""
     context = ClaimifyContext(current_sentence=current_sentence)
-
     assert len(context.preceding_sentences) == 0
     assert len(context.following_sentences) == 0
     assert context.context_window_size == (0, 0)
@@ -103,7 +99,6 @@ def test_valid_claim_candidate():
         is_verifiable=True,
         confidence=0.9,
     )
-
     assert candidate.passes_criteria is True
     assert candidate.node_type == NodeType.CLAIM
 
@@ -117,7 +112,6 @@ def test_invalid_claim_candidate():
         is_verifiable=True,
         confidence=0.6,
     )
-
     assert candidate.passes_criteria is False
     assert candidate.node_type == NodeType.SENTENCE
 
@@ -131,7 +125,6 @@ def test_partial_failure():
         is_verifiable=False,  # Not specific enough to be verifiable
         confidence=0.7,
     )
-
     assert candidate.passes_criteria is False
     assert candidate.node_type == NodeType.SENTENCE
 
@@ -144,19 +137,16 @@ def test_decomposition_result_filtering():
         is_self_contained=True,
         is_verifiable=True,
     )
-
     invalid_claim = ClaimCandidate(
         text="It was problematic.",
         is_atomic=True,
         is_self_contained=False,  # "It" is ambiguous
         is_verifiable=True,
     )
-
     result = DecompositionResult(
         original_text="The system reported an error. It was problematic.",
         claim_candidates=[valid_claim, invalid_claim],
     )
-
     assert len(result.valid_claims) == 1
     assert len(result.sentence_nodes) == 1
     assert result.valid_claims[0].text == "The system reported an error."
@@ -187,13 +177,11 @@ def test_unprocessed_result(test_sentence, test_context):
         is_selected=False,
         reasoning="No verifiable content found",
     )
-
     result = ClaimifyResult(
         original_chunk=test_sentence,
         context=test_context,
         selection_result=selection_result,
     )
-
     assert result.was_processed is False
     assert len(result.final_claims) == 0
     assert len(result.final_sentences) == 0
@@ -206,25 +194,21 @@ def test_processed_result_with_claims(test_sentence, test_context):
         is_selected=True,
         reasoning="Contains verifiable error information",
     )
-
     disambiguation_result = DisambiguationResult(
         original_sentence=test_sentence,
         disambiguated_text="The user received an error from the system.",
         changes_made=[],
     )
-
     valid_claim = ClaimCandidate(
         text="The user received an error from the system.",
         is_atomic=True,
         is_self_contained=True,
         is_verifiable=True,
     )
-
     decomposition_result = DecompositionResult(
         original_text="The user received an error from the system.",
         claim_candidates=[valid_claim],
     )
-
     result = ClaimifyResult(
         original_chunk=test_sentence,
         context=test_context,
@@ -232,7 +216,6 @@ def test_processed_result_with_claims(test_sentence, test_context):
         disambiguation_result=disambiguation_result,
         decomposition_result=decomposition_result,
     )
-
     assert result.was_processed is True
     assert len(result.final_claims) == 1
     assert len(result.final_sentences) == 0
@@ -242,7 +225,6 @@ def test_processed_result_with_claims(test_sentence, test_context):
 def test_default_config():
     """Test default configuration values."""
     config = ClaimifyConfig()
-
     assert config.context_window_p == 3
     assert config.context_window_f == 1
     assert config.default_model == "gpt-3.5-turbo"
@@ -261,7 +243,6 @@ def test_custom_config():
         decomposition_model="gpt-4",
         temperature=0.2,
     )
-
     assert config.context_window_p == 5
     assert config.context_window_f == 2
     assert config.get_model_for_stage("selection") == "gpt-4"
@@ -276,7 +257,6 @@ def test_model_fallback():
         default_model="custom-model",
         selection_model="gpt-4",  # Only selection model configured
     )
-
     assert config.get_model_for_stage("selection") == "gpt-4"
     assert config.get_model_for_stage("disambiguation") == "custom-model"
     assert config.get_model_for_stage("decomposition") == "custom-model"

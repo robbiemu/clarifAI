@@ -1,6 +1,5 @@
 """
 RabbitMQ publisher for dirty block notifications.
-
 This module handles publishing dirty block messages to RabbitMQ queues
 for downstream processing by the sync_vault_to_graph job.
 """
@@ -8,14 +7,13 @@ for downstream processing by the sync_vault_to_graph job.
 import json
 import logging
 import time
-from typing import Dict, Any, Optional
 from pathlib import Path
-import pika
-from pika.exceptions import AMQPChannelError
+from typing import Any, Dict, Optional
 
+import pika
 from aclarai_shared.config import aclaraiConfig
 from aclarai_shared.mq import RabbitMQManager
-
+from pika.exceptions import AMQPChannelError
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +21,6 @@ logger = logging.getLogger(__name__)
 class DirtyBlockPublisher:
     """
     Publisher for sending dirty block notifications to RabbitMQ.
-
     Publishes messages to the aclarai_dirty_blocks queue when blocks
     are detected as dirty (created, modified, or deleted).
     """
@@ -38,7 +35,6 @@ class DirtyBlockPublisher:
     ):
         """
         Initialize the RabbitMQ publisher.
-
         Args:
             rabbitmq_host: RabbitMQ host address
             rabbitmq_port: RabbitMQ port (default 5672)
@@ -47,7 +43,6 @@ class DirtyBlockPublisher:
             queue_name: Name of the queue to publish to
         """
         self.queue_name = queue_name
-
         # Create a minimal config object for the RabbitMQ manager
         # This preserves the existing interface while using the shared manager
         config = aclaraiConfig()
@@ -55,9 +50,7 @@ class DirtyBlockPublisher:
         config.rabbitmq_port = rabbitmq_port
         config.rabbitmq_user = rabbitmq_user
         config.rabbitmq_password = rabbitmq_password
-
         self.rabbitmq_manager = RabbitMQManager(config, "vault-watcher")
-
         logger.info(
             "vault_watcher.DirtyBlockPublisher: Initialized RabbitMQ publisher",
             extra={
@@ -83,7 +76,6 @@ class DirtyBlockPublisher:
     ) -> None:
         """
         Publish dirty block notifications.
-
         Args:
             file_path: Path to the file containing dirty blocks
             dirty_blocks: Dictionary with 'added', 'modified', 'deleted' block lists
@@ -108,7 +100,6 @@ class DirtyBlockPublisher:
                     },
                 )
                 return
-
         # Publish messages for each type of change
         for change_type in ["added", "modified", "deleted"]:
             blocks = dirty_blocks.get(change_type, [])
@@ -121,12 +112,10 @@ class DirtyBlockPublisher:
     ) -> Dict[str, Any]:
         """
         Create a message for a dirty block.
-
         Args:
             file_path: Path to the file containing the block
             change_type: Type of change ('added', 'modified', 'deleted')
             block: Block information dictionary
-
         Returns:
             Message dictionary ready for JSON serialization
         """
@@ -138,7 +127,6 @@ class DirtyBlockPublisher:
             "version": block.get("version", block.get("new_version")),
             "block_type": block["block_type"],
         }
-
         # Add version-specific information for modifications
         if change_type == "modified":
             message["old_version"] = block.get("old_version")
@@ -147,20 +135,17 @@ class DirtyBlockPublisher:
             message["new_hash"] = block.get("new_hash")
         elif change_type in ["added", "deleted"]:
             message["content_hash"] = block["content_hash"]
-
         return message
 
     def _publish_message(self, message: Dict[str, Any]) -> None:
         """
         Publish a single message to RabbitMQ.
-
         Args:
             message: The message dictionary to publish
         """
         try:
             message_json = json.dumps(message)
             channel = self.rabbitmq_manager.get_channel()
-
             channel.basic_publish(
                 exchange="",  # Use default exchange
                 routing_key=self.queue_name,
@@ -170,7 +155,6 @@ class DirtyBlockPublisher:
                     content_type="application/json",
                 ),
             )
-
             logger.debug(
                 "vault_watcher.DirtyBlockPublisher: Published dirty block message",
                 extra={
@@ -181,7 +165,6 @@ class DirtyBlockPublisher:
                     "file_path": message["file_path"],
                 },
             )
-
         except AMQPChannelError as e:
             logger.error(
                 f"vault_watcher.DirtyBlockPublisher: Channel error publishing message: {e}",
@@ -204,7 +187,6 @@ class DirtyBlockPublisher:
                         "filename.function_name": "rabbitmq_publisher._publish_message",
                     },
                 )
-
         except Exception as e:
             logger.error(
                 f"vault_watcher.DirtyBlockPublisher: Unexpected error publishing message: {e}",

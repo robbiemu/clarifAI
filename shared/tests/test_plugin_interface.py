@@ -33,11 +33,9 @@ class TestMarkdownOutput:
         assert output.title == "Test Title"
         assert output.markdown_text == "# Test Content"
         assert output.metadata == {"test": "data"}
-
         # Test Plugin abstract class has required methods
         assert hasattr(Plugin, "can_accept")
         assert hasattr(Plugin, "convert")
-
         # Test UnknownFormatError exception can be raised
         try:
             raise UnknownFormatError("Test error")
@@ -52,7 +50,6 @@ class TestMarkdownOutput:
             "markdown_text": "# Test Content\n\nThis is a test.",
             "metadata": None,
         }
-
         assert output_data["title"] == "Test Title"
         assert output_data["markdown_text"] == "# Test Content\n\nThis is a test."
         assert output_data["metadata"] is None
@@ -64,13 +61,11 @@ class TestMarkdownOutput:
             "created_at": "2024-01-01T10:00:00Z",
             "message_count": 5,
         }
-
         output_data = {
             "title": "Chat with Metadata",
             "markdown_text": "# Chat\n\nalice: hello\nbob: hi",
             "metadata": metadata,
         }
-
         assert output_data["title"] == "Chat with Metadata"
         assert output_data["metadata"] == metadata
         assert output_data["metadata"]["participants"] == ["alice", "bob"]
@@ -85,15 +80,12 @@ class TestPluginInterface:
         interface_path = os.path.join(
             os.path.dirname(__file__), "../aclarai_shared/plugin_interface.py"
         )
-
         with open(interface_path, "r") as f:
             content = f.read()
-
         # Check for abstract base class implementation
         assert "from abc import ABC, abstractmethod" in content
         assert "class Plugin(ABC):" in content
         assert "@abstractmethod" in content
-
         # Check for required method signatures
         assert "def can_accept(self, raw_input: str) -> bool:" in content
         assert (
@@ -106,10 +98,8 @@ class TestPluginInterface:
         interface_path = os.path.join(
             os.path.dirname(__file__), "../aclarai_shared/plugin_interface.py"
         )
-
         with open(interface_path, "r") as f:
             content = f.read()
-
         # Check for exception class
         assert "class UnknownFormatError" in content
         assert "Exception" in content

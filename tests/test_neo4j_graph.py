@@ -1,6 +1,5 @@
 """
 Tests for Neo4j graph management functionality.
-
 These tests verify the creation and management of Claim and Sentence nodes
 in the knowledge graph.
 """
@@ -27,7 +26,6 @@ models_path = (
     Path(__file__).parent.parent / "shared" / "aclarai_shared" / "graph" / "models.py"
 )
 models = load_module_from_path("models", models_path)
-
 # Import the classes we need for testing
 ClaimInput = models.ClaimInput
 SentenceInput = models.SentenceInput
@@ -75,9 +73,7 @@ class TestGraphModels:
             coverage_score=0.8,
             decontextualization_score=0.7,
         )
-
         claim = Claim.from_input(claim_input)
-
         assert claim.claim_id == claim_input.claim_id
         assert claim.text == claim_input.text
         assert claim.entailed_score == 0.9
@@ -90,9 +86,7 @@ class TestGraphModels:
         """Test converting Claim to dictionary."""
         claim_input = ClaimInput(text="Test claim", block_id="block123")
         claim = Claim.from_input(claim_input)
-
         claim_dict = claim.to_dict()
-
         assert claim_dict["id"] == claim.claim_id
         assert claim_dict["text"] == claim.text
         assert claim_dict["version"] == 1
@@ -103,9 +97,7 @@ class TestGraphModels:
         sentence_input = SentenceInput(
             text="Test sentence", block_id="block123", ambiguous=True, verifiable=False
         )
-
         sentence = Sentence.from_input(sentence_input)
-
         assert sentence.sentence_id == sentence_input.sentence_id
         assert sentence.text == sentence_input.text
         assert sentence.ambiguous is True
@@ -117,9 +109,7 @@ class TestGraphModels:
         """Test converting Sentence to dictionary."""
         sentence_input = SentenceInput(text="Test sentence", block_id="block123")
         sentence = Sentence.from_input(sentence_input)
-
         sentence_dict = sentence.to_dict()
-
         assert sentence_dict["id"] == sentence.sentence_id
         assert sentence_dict["text"] == sentence.text
         assert sentence_dict["version"] == 1
@@ -200,9 +190,7 @@ class TestNeo4jManagerWithMockedDriver:
             ClaimInput(text="Test claim 1", block_id="block1"),
             ClaimInput(text="Test claim 2", block_id="block2"),
         ]
-
         claims = manager.create_claims(claim_inputs)
-
         assert len(claims) == 2
         assert isinstance(claims[0], Claim)
         assert isinstance(claims[1], Claim)
@@ -225,9 +213,7 @@ class TestNeo4jManagerWithMockedDriver:
             SentenceInput(text="Test sentence 1", block_id="block1", ambiguous=True),
             SentenceInput(text="Test sentence 2", block_id="block2", ambiguous=False),
         ]
-
         sentences = manager.create_sentences(sentence_inputs)
-
         assert len(sentences) == 2
         assert isinstance(sentences[0], Sentence)
         assert isinstance(sentences[1], Sentence)
@@ -261,11 +247,9 @@ class TestNeo4jManagerWithMockedDriver:
                 return [Sentence.from_input(si) for si in sentence_inputs]
 
         manager = MockNeo4jGraphManager()
-
         # Test empty claims
         claims = manager.create_claims([])
         assert claims == []
-
         # Test empty sentences
         sentences = manager.create_sentences([])
         assert sentences == []
@@ -284,11 +268,9 @@ class TestNeo4jManagerWithMockedDriver:
                 self._driver.close()
 
         manager = MockNeo4jGraphManager()
-
         # Test context manager protocol
         with manager as ctx_manager:
             assert ctx_manager == manager
-
         # Verify driver close was called
         manager._driver.close.assert_called()
 
@@ -301,7 +283,6 @@ class TestFailurePaths:
         # Test empty text - should be allowed by the model but caught by validation elsewhere
         claim_input = ClaimInput(text="", block_id="block123")
         assert claim_input.text == ""
-
         # Test missing block_id - this should be caught by dataclass requirements
         with pytest.raises(TypeError):
             ClaimInput(text="Test claim")  # Missing required block_id
@@ -311,7 +292,6 @@ class TestFailurePaths:
         # Test empty text - should be allowed by the model
         sentence_input = SentenceInput(text="", block_id="block123")
         assert sentence_input.text == ""
-
         # Test missing block_id - this should be caught by dataclass requirements
         with pytest.raises(TypeError):
             SentenceInput(text="Test sentence")  # Missing required block_id
@@ -326,10 +306,8 @@ class TestFailurePaths:
             coverage_score=None,
             decontextualization_score=None,
         )
-
         claim = Claim.from_input(claim_input)
         claim_dict = claim.to_dict()
-
         # Verify null scores are preserved
         assert claim_dict["entailed_score"] is None
         assert claim_dict["coverage_score"] is None
@@ -362,7 +340,6 @@ class TestFailurePaths:
         )
         claim = Claim.from_input(claim_input)
         claim_dict = claim.to_dict()
-
         # Verify all required properties are present
         required_claim_fields = {
             "id",
@@ -374,14 +351,12 @@ class TestFailurePaths:
             "timestamp",
         }
         assert required_claim_fields.issubset(claim_dict.keys())
-
         # Test Sentence model completeness
         sentence_input = SentenceInput(
             text="Test sentence", block_id="block123", ambiguous=True, verifiable=False
         )
         sentence = Sentence.from_input(sentence_input)
         sentence_dict = sentence.to_dict()
-
         required_sentence_fields = {
             "id",
             "text",
@@ -396,19 +371,14 @@ class TestFailurePaths:
 if __name__ == "__main__":
     # Run a simple test
     print("Running basic tests...")
-
     # Test model creation
     claim_input = ClaimInput(text="Test claim", block_id="block123")
     print(f"Created ClaimInput with ID: {claim_input.claim_id}")
-
     sentence_input = SentenceInput(text="Test sentence", block_id="block123")
     print(f"Created SentenceInput with ID: {sentence_input.sentence_id}")
-
     # Test object creation
     claim = Claim.from_input(claim_input)
     print(f"Created Claim: {claim.text} (version {claim.version})")
-
     sentence = Sentence.from_input(sentence_input)
     print(f"Created Sentence: {sentence.text} (version {sentence.version})")
-
     print("Basic tests passed!")

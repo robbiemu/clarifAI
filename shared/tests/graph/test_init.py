@@ -4,12 +4,12 @@ Tests for graph module initialization.
 
 from aclarai_shared.graph import (
     Claim,
-    Sentence,
     ClaimInput,
-    SentenceInput,
     Neo4jGraphManager,
+    Sentence,
+    SentenceInput,
+    models,
 )
-from aclarai_shared.graph import models
 
 
 class TestGraphInit:
@@ -43,7 +43,6 @@ class TestGraphInit:
         assert hasattr(graph_module, "__all__")
         assert isinstance(graph_module.__all__, list)
         assert len(graph_module.__all__) == 7
-
         expected_exports = [
             "Claim",
             "Sentence",
@@ -62,10 +61,18 @@ class TestGraphInit:
         # This exercises the actual import code in __init__.py
         from aclarai_shared.graph import (
             Claim as ImportedClaim,
-            Sentence as ImportedSentence,
+        )
+        from aclarai_shared.graph import (
             ClaimInput as ImportedClaimInput,
-            SentenceInput as ImportedSentenceInput,
+        )
+        from aclarai_shared.graph import (
             Neo4jGraphManager as ImportedNeo4jGraphManager,
+        )
+        from aclarai_shared.graph import (
+            Sentence as ImportedSentence,
+        )
+        from aclarai_shared.graph import (
+            SentenceInput as ImportedSentenceInput,
         )
 
         assert ImportedClaim is not None

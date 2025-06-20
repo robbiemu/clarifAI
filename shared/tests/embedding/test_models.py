@@ -2,9 +2,9 @@
 Tests for embedding models module.
 """
 
-from aclarai_shared.embedding.models import EmbeddingGenerator, EmbeddedChunk
+from aclarai_shared.config import EmbeddingConfig, aclaraiConfig
 from aclarai_shared.embedding.chunking import ChunkMetadata
-from aclarai_shared.config import aclaraiConfig, EmbeddingConfig
+from aclarai_shared.embedding.models import EmbeddedChunk, EmbeddingGenerator
 
 
 class TestEmbeddingGenerator:
@@ -19,9 +19,7 @@ class TestEmbeddingGenerator:
             batch_size=8,
             embed_dim=384,
         )
-
         generator = EmbeddingGenerator(config=config)
-
         assert generator.config == config
         assert generator.model_name == "sentence-transformers/all-MiniLM-L6-v2"
 
@@ -31,10 +29,8 @@ class TestEmbeddingGenerator:
         config.embedding = EmbeddingConfig(
             default_model="sentence-transformers/all-MiniLM-L6-v2"
         )
-
         custom_model = "sentence-transformers/all-mpnet-base-v2"
         generator = EmbeddingGenerator(config=config, model_name=custom_model)
-
         assert generator.model_name == custom_model
 
     def test_embed_chunks(self):
@@ -42,7 +38,6 @@ class TestEmbeddingGenerator:
         config = aclaraiConfig()
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
-
         chunks = [
             ChunkMetadata(
                 aclarai_block_id="blk_1",
@@ -57,7 +52,6 @@ class TestEmbeddingGenerator:
                 text="Chunk text 2",
             ),
         ]
-
         embedded_chunks = generator.embed_chunks(chunks)
         assert len(embedded_chunks) == 2
         for embedded_chunk in embedded_chunks:
@@ -69,14 +63,12 @@ class TestEmbeddingGenerator:
         config = aclaraiConfig()
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
-
         chunk = ChunkMetadata(
             aclarai_block_id="blk_single",
             chunk_index=0,
             original_text="Original single text",
             text="Single chunk text",
         )
-
         embedded_chunk = generator.embed_single_chunk(chunk)
         assert isinstance(embedded_chunk, EmbeddedChunk)
         assert embedded_chunk.chunk_metadata == chunk
@@ -86,7 +78,6 @@ class TestEmbeddingGenerator:
         config = aclaraiConfig()
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
-
         embedding = generator.embed_text("Test text for embedding")
         assert isinstance(embedding, list)
         assert all(isinstance(x, (int, float)) for x in embedding)
@@ -96,7 +87,6 @@ class TestEmbeddingGenerator:
         config = aclaraiConfig()
         config.embedding = EmbeddingConfig(embed_dim=512)
         generator = EmbeddingGenerator(config=config)
-
         dim = generator.get_embedding_dimension()
         assert isinstance(dim, int)
         assert dim > 0
@@ -106,7 +96,6 @@ class TestEmbeddingGenerator:
         config = aclaraiConfig()
         config.embedding = EmbeddingConfig(embed_dim=384)
         generator = EmbeddingGenerator(config=config)
-
         # Create mock embedded chunks
         chunk_metadata = ChunkMetadata(
             aclarai_block_id="blk_test",
@@ -114,7 +103,6 @@ class TestEmbeddingGenerator:
             original_text="Test original",
             text="Test text",
         )
-
         embedded_chunks = [
             EmbeddedChunk(
                 chunk_metadata=chunk_metadata,
@@ -123,9 +111,7 @@ class TestEmbeddingGenerator:
                 embedding_dim=3,
             )
         ]
-
         validation_report = generator.validate_embeddings(embedded_chunks)
-
         assert isinstance(validation_report, dict)
         assert "status" in validation_report
         assert "total_chunks" in validation_report
@@ -136,9 +122,7 @@ class TestEmbeddingGenerator:
         config = aclaraiConfig()
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
-
         validation_report = generator.validate_embeddings([])
-
         assert validation_report["status"] == "error"
         assert "No embedded chunks" in validation_report["message"]
 
@@ -147,7 +131,6 @@ class TestEmbeddingGenerator:
         config = aclaraiConfig()
         config.embedding = EmbeddingConfig()
         generator = EmbeddingGenerator(config=config)
-
         model = generator._initialize_embedding_model()
         # Should be a BaseEmbedding instance
         assert model is not None
@@ -157,7 +140,6 @@ class TestEmbeddingGenerator:
         config = aclaraiConfig()
         config.embedding = EmbeddingConfig(device="cpu")
         generator = EmbeddingGenerator(config=config)
-
         device = generator._get_device()
         assert isinstance(device, str)
         assert device in ["cpu", "cuda", "mps"]
@@ -167,7 +149,6 @@ class TestEmbeddingGenerator:
         config = aclaraiConfig()
         config.embedding = EmbeddingConfig(device="auto")
         generator = EmbeddingGenerator(config=config)
-
         device = generator._get_device()
         assert isinstance(device, str)
         assert device in ["cpu", "cuda", "mps"]
@@ -177,9 +158,7 @@ class TestEmbeddingGenerator:
         config = aclaraiConfig()
         config.embedding = EmbeddingConfig(batch_size=2)
         generator = EmbeddingGenerator(config=config)
-
         texts = ["Text 1", "Text 2", "Text 3"]
-
         embeddings = generator._embed_texts_batch(texts)
         assert len(embeddings) == 3
         assert all(isinstance(emb, list) for emb in embeddings)
@@ -196,14 +175,12 @@ class TestEmbeddedChunk:
             original_text="Original text",
             text="Chunk text",
         )
-
         embedded_chunk = EmbeddedChunk(
             chunk_metadata=chunk_metadata,
             embedding=[0.1, 0.2, 0.3, 0.4],
             model_name="test-model",
             embedding_dim=4,
         )
-
         assert embedded_chunk.chunk_metadata == chunk_metadata
         assert embedded_chunk.embedding == [0.1, 0.2, 0.3, 0.4]
         assert embedded_chunk.model_name == "test-model"
@@ -217,21 +194,18 @@ class TestEmbeddedChunk:
             original_text="Original text",
             text="Chunk text",
         )
-
         chunk1 = EmbeddedChunk(
             chunk_metadata=chunk_metadata,
             embedding=[0.1, 0.2],
             model_name="test-model",
             embedding_dim=2,
         )
-
         chunk2 = EmbeddedChunk(
             chunk_metadata=chunk_metadata,
             embedding=[0.1, 0.2],
             model_name="test-model",
             embedding_dim=2,
         )
-
         assert chunk1 == chunk2
 
     def test_embedded_chunk_different_embeddings(self):
@@ -242,19 +216,16 @@ class TestEmbeddedChunk:
             original_text="Original text",
             text="Chunk text",
         )
-
         chunk1 = EmbeddedChunk(
             chunk_metadata=chunk_metadata,
             embedding=[0.1, 0.2],
             model_name="test-model",
             embedding_dim=2,
         )
-
         chunk2 = EmbeddedChunk(
             chunk_metadata=chunk_metadata,
             embedding=[0.3, 0.4],
             model_name="test-model",
             embedding_dim=2,
         )
-
         assert chunk1 != chunk2

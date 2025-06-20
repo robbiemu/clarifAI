@@ -1,14 +1,13 @@
 """
 Data models for noun phrase extraction.
-
 This module defines the data structures used for noun phrase extraction
 and storage in the concept_candidates vector table.
 """
 
 import logging
 from dataclasses import dataclass, field
-from typing import List, Optional
 from datetime import datetime, timezone
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +16,6 @@ logger = logging.getLogger(__name__)
 class NounPhraseCandidate:
     """
     Represents a noun phrase extracted from a Claim or Summary node.
-
     This corresponds to an entry that will be stored in the concept_candidates
     vector table with metadata for future deduplication and promotion.
     """
@@ -41,7 +39,6 @@ class NounPhraseCandidate:
 class ExtractionResult:
     """
     Result of noun phrase extraction from a batch of Claims and Summaries.
-
     Contains all extracted candidates and metadata about the processing.
     """
 

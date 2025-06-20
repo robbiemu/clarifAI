@@ -1,6 +1,5 @@
 """
 Tier 2 Summary Agent implementation.
-
 This agent aggregates and summarizes selected Tier 1 blocks into semantically
 coherent groupings, as specified in docs/arch/on-writing_vault_documents.md.
 """
@@ -8,17 +7,17 @@ coherent groupings, as specified in docs/arch/on-writing_vault_documents.md.
 import logging
 import time
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from llama_index.core.llms import LLM
 from llama_index.llms.openai import OpenAI
 
-from ..config import aclaraiConfig
-from ..graph.neo4j_manager import Neo4jGraphManager
-from ..embedding.storage import aclaraiVectorStore
-from ..import_system import write_file_atomically
 from ..claim_concept_linking.neo4j_operations import ClaimConceptNeo4jManager
-from .data_models import SummaryInput, SummaryBlock, SummaryResult, generate_summary_id
+from ..config import aclaraiConfig
+from ..embedding.storage import aclaraiVectorStore
+from ..graph.neo4j_manager import Neo4jGraphManager
+from ..import_system import write_file_atomically
+from .data_models import SummaryBlock, SummaryInput, SummaryResult, generate_summary_id
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,6 @@ logger = logging.getLogger(__name__)
 class Tier2SummaryAgent:
     """
     Agent for generating Tier 2 summaries from grouped Claims and Sentences.
-
     This agent:
     1. Retrieves grouped Claims/Sentences using vector similarity
     2. Generates coherent summaries using LLM
@@ -43,7 +41,6 @@ class Tier2SummaryAgent:
     ):
         """
         Initialize the Tier 2 Summary Agent.
-
         Args:
             config: aclarai configuration
             neo4j_manager: Neo4j graph manager for retrieving claims/sentences
@@ -51,7 +48,6 @@ class Tier2SummaryAgent:
             llm: Language model for summary generation
         """
         self.config = config or aclaraiConfig()
-
         # Check if tier2_generation is enabled in configuration
         tier2_enabled = self.config.features.get("tier2_generation", False)
         if not tier2_enabled:
@@ -63,10 +59,8 @@ class Tier2SummaryAgent:
                     "tier2_generation": tier2_enabled,
                 },
             )
-
         self.neo4j_manager = neo4j_manager
         self.embedding_storage = embedding_storage
-
         # Initialize claim-concept linking manager for retrieving linked concepts
         # Only initialize if config is available and has neo4j configuration
         try:
@@ -81,7 +75,6 @@ class Tier2SummaryAgent:
                 },
             )
             self.claim_concept_manager = None
-
         # Initialize LLM
         if llm is not None:
             self.llm = llm
@@ -93,7 +86,6 @@ class Tier2SummaryAgent:
                 temperature=self.config.llm.temperature,
                 max_tokens=self.config.llm.max_tokens,
             )
-
         logger.info(
             "Initialized Tier2SummaryAgent",
             extra={
@@ -108,7 +100,6 @@ class Tier2SummaryAgent:
     def _is_enabled(self) -> bool:
         """
         Check if Tier 2 summary generation is enabled in configuration.
-
         Returns:
             True if enabled, False otherwise
         """
@@ -117,7 +108,6 @@ class Tier2SummaryAgent:
     def _retry_with_backoff(self, func, *args, **kwargs):
         """
         Execute function with retry logic and exponential backoff.
-
         Following guidelines from docs/arch/on-error-handling-and-resilience.md
         for handling transient errors from LLM APIs and Neo4j.
         """
@@ -136,7 +126,6 @@ class Tier2SummaryAgent:
             .get("retries", {})
             .get("max_wait_time", 60)
         )
-
         for attempt in range(max_attempts):
             try:
                 logger.debug(
@@ -152,7 +141,6 @@ class Tier2SummaryAgent:
             except Exception as e:
                 # Check if it's a transient error that should be retried
                 is_transient = self._is_transient_error(e)
-
                 if attempt == max_attempts - 1 or not is_transient:
                     error_msg = (
                         "Operation failed after retries"
@@ -170,7 +158,6 @@ class Tier2SummaryAgent:
                         },
                     )
                     raise
-
                 wait_time = min(backoff_factor**attempt, max_wait_time)
                 logger.warning(
                     "Transient error occurred, retrying",
@@ -187,10 +174,8 @@ class Tier2SummaryAgent:
     def _is_transient_error(self, error: Exception) -> bool:
         """
         Determine if an error is transient and should be retried.
-
         Args:
             error: The exception that occurred
-
         Returns:
             True if error is transient, False otherwise
         """
@@ -206,7 +191,6 @@ class Tier2SummaryAgent:
             "retry",
             "busy",
         ]
-
         error_str = str(error).lower()
         return any(pattern in error_str for pattern in transient_patterns)
 
@@ -218,16 +202,13 @@ class Tier2SummaryAgent:
     ) -> List[SummaryInput]:
         """
         Retrieve grouped Claims and Sentences using vector similarity.
-
         This implements the non-agentic retrieval process described in
         on-writing_vault_documents.md using pg_vector_search and semantic
         neighborhoods based on utterance embeddings.
-
         Args:
             similarity_threshold: Minimum cosine similarity for grouping (uses config if None)
             max_groups: Maximum number of groups to return
             min_group_size: Minimum items per group
-
         Returns:
             List of SummaryInput objects representing semantic groups
         """
@@ -240,7 +221,6 @@ class Tier2SummaryAgent:
                 },
             )
             return []
-
         if not self.embedding_storage:
             logger.warning(
                 "No embedding storage configured - cannot perform similarity search",
@@ -250,17 +230,13 @@ class Tier2SummaryAgent:
                 },
             )
             return []
-
         # Use configured threshold if not provided
         if similarity_threshold is None:
             similarity_threshold = self.config.threshold.summary_grouping_similarity
-
         start_time = time.time()
-
         try:
             # Get high-quality Claims nodes as seeds for similarity search
             seed_claims = self._retry_with_backoff(self._get_high_quality_claims)
-
             if not seed_claims:
                 logger.warning(
                     "No high-quality claims found to use as seeds",
@@ -270,7 +246,6 @@ class Tier2SummaryAgent:
                     },
                 )
                 return []
-
             logger.info(
                 "Retrieved seed claims for semantic grouping",
                 extra={
@@ -280,14 +255,11 @@ class Tier2SummaryAgent:
                     "similarity_threshold": similarity_threshold,
                 },
             )
-
             # Build semantic neighborhoods using vector similarity
             groups = self._build_semantic_neighborhoods(
                 seed_claims, similarity_threshold, max_groups, min_group_size
             )
-
             processing_time = time.time() - start_time
-
             logger.info(
                 "Created semantic neighborhoods for summarization",
                 extra={
@@ -297,9 +269,7 @@ class Tier2SummaryAgent:
                     "processing_time": processing_time,
                 },
             )
-
             return groups
-
         except Exception as e:
             logger.error(
                 "Failed to retrieve grouped content",
@@ -314,7 +284,6 @@ class Tier2SummaryAgent:
     def _get_high_quality_claims(self) -> List[Dict[str, Any]]:
         """
         Retrieve high-quality Claim nodes from Neo4j to use as seeds.
-
         High-quality claims are those with good evaluation scores that can
         serve as seeds for finding semantically related content.
         """
@@ -323,11 +292,11 @@ class Tier2SummaryAgent:
             # These serve as "seeds" for finding semantic neighborhoods
             query = """
             MATCH (c:Claim)-[:REFERENCES]->(b:Block)
-            WHERE c.entailed_score IS NOT NULL 
-              AND c.coverage_score IS NOT NULL 
+            WHERE c.entailed_score IS NOT NULL
+              AND c.coverage_score IS NOT NULL
               AND c.decontextualization_score IS NOT NULL
               AND c.entailed_score > 0.7
-              AND c.coverage_score > 0.7  
+              AND c.coverage_score > 0.7
               AND c.decontextualization_score > 0.7
             RETURN c.id as id, c.text as text, c.entailed_score as entailed_score,
                    c.coverage_score as coverage_score, c.decontextualization_score as decontextualization_score,
@@ -337,7 +306,6 @@ class Tier2SummaryAgent:
             LIMIT 50
             """
             result = self.neo4j_manager.execute_query(query)
-
             claims = []
             for record in result:
                 claims.append(
@@ -356,7 +324,6 @@ class Tier2SummaryAgent:
                         "node_type": "claim",
                     }
                 )
-
             logger.info(
                 "Retrieved high-quality claims as seeds",
                 extra={
@@ -365,9 +332,7 @@ class Tier2SummaryAgent:
                     "claims_count": len(claims),
                 },
             )
-
             return claims
-
         except Exception as e:
             logger.error(
                 "Failed to retrieve high-quality claims from Neo4j",
@@ -388,7 +353,6 @@ class Tier2SummaryAgent:
     ) -> List[SummaryInput]:
         """
         Build semantic neighborhoods using vector similarity search.
-
         This implements the core strategy described in the comment:
         1. Use high-quality Claims as seeds
         2. For each seed, query utterances vector store for similar content
@@ -397,17 +361,13 @@ class Tier2SummaryAgent:
         """
         groups = []
         processed_block_ids = set()  # Track to avoid duplicates
-
         for seed_claim in seed_claims[:max_groups]:  # Limit seeds to max_groups
             if len(groups) >= max_groups:
                 break
-
             seed_text = seed_claim.get("source_block_text") or seed_claim.get("text")
             seed_block_id = seed_claim.get("source_block_id")
-
             if not seed_text or seed_block_id in processed_block_ids:
                 continue
-
             try:
                 # Perform vector similarity search on utterances vector store
                 similar_chunks = self.embedding_storage.similarity_search(
@@ -415,26 +375,21 @@ class Tier2SummaryAgent:
                     top_k=20,  # Get more candidates than needed
                     similarity_threshold=similarity_threshold,
                 )
-
                 if not similar_chunks:
                     continue
-
                 # Extract block IDs from similar chunks
                 similar_block_ids = []
-                for chunk_metadata, score in similar_chunks:
+                for chunk_metadata, _score in similar_chunks:
                     block_id = chunk_metadata.get("aclarai_id")
                     if block_id and block_id not in processed_block_ids:
                         similar_block_ids.append(block_id)
                         processed_block_ids.add(block_id)
-
                 if len(similar_block_ids) < min_group_size:
                     continue
-
                 # Get Claims and Sentences associated with these blocks
                 group_claims, group_sentences = (
                     self._get_claims_and_sentences_for_blocks(similar_block_ids)
                 )
-
                 # Create the semantic neighborhood group
                 if group_claims or group_sentences:
                     summary_input = SummaryInput(
@@ -443,7 +398,6 @@ class Tier2SummaryAgent:
                         group_context=f"Semantic neighborhood for: {seed_claim.get('text', '')[:50]}...",
                     )
                     groups.append(summary_input)
-
                     logger.debug(
                         "Created semantic neighborhood",
                         extra={
@@ -455,7 +409,6 @@ class Tier2SummaryAgent:
                             "group_sentences_count": len(group_sentences),
                         },
                     )
-
             except Exception as e:
                 logger.warning(
                     "Failed to build semantic neighborhood for seed",
@@ -467,7 +420,6 @@ class Tier2SummaryAgent:
                     },
                 )
                 continue
-
         return groups
 
     def _get_claims_and_sentences_for_blocks(
@@ -475,10 +427,8 @@ class Tier2SummaryAgent:
     ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         """
         Retrieve Claims and Sentences associated with specific block IDs.
-
         Args:
             block_ids: List of aclarai_id values for blocks
-
         Returns:
             Tuple of (claims, sentences) lists
         """
@@ -495,7 +445,6 @@ class Tier2SummaryAgent:
             claims_result = self.neo4j_manager.execute_query(
                 claims_query, block_ids=block_ids
             )
-
             claims = []
             for record in claims_result:
                 claims.append(
@@ -513,7 +462,6 @@ class Tier2SummaryAgent:
                         "node_type": "claim",
                     }
                 )
-
             # Get Sentences that reference these blocks
             sentences_query = """
             MATCH (s:Sentence)-[:REFERENCES]->(b:Block)
@@ -525,7 +473,6 @@ class Tier2SummaryAgent:
             sentences_result = self.neo4j_manager.execute_query(
                 sentences_query, block_ids=block_ids
             )
-
             sentences = []
             for record in sentences_result:
                 sentences.append(
@@ -540,9 +487,7 @@ class Tier2SummaryAgent:
                         "node_type": "sentence",
                     }
                 )
-
             return claims, sentences
-
         except Exception as e:
             logger.error(
                 "Failed to retrieve claims and sentences for blocks",
@@ -558,25 +503,20 @@ class Tier2SummaryAgent:
     def generate_summary(self, summary_input: SummaryInput) -> SummaryResult:
         """
         Generate a summary from grouped Claims and Sentences.
-
         Args:
             summary_input: Grouped content to summarize
-
         Returns:
             SummaryResult with generated summary blocks
         """
         start_time = time.time()
-
         if not summary_input.all_texts:
             return SummaryResult(
                 error="No content to summarize",
                 processing_time=time.time() - start_time,
             )
-
         try:
             # Create summary prompt
             prompt = self._create_summary_prompt(summary_input)
-
             logger.debug(
                 "Generating summary for content items",
                 extra={
@@ -592,10 +532,8 @@ class Tier2SummaryAgent:
 
             response = self._retry_with_backoff(_generate_llm_response)
             summary_text = response.text.strip()
-
             # Get linked concepts for this summary
             linked_concepts = self._get_linked_concepts_for_summary(summary_input)
-
             # Create summary block
             summary_block = SummaryBlock(
                 summary_text=summary_text,
@@ -603,16 +541,13 @@ class Tier2SummaryAgent:
                 source_block_ids=summary_input.source_block_ids,
                 linked_concepts=linked_concepts,
             )
-
             processing_time = time.time() - start_time
-
             result = SummaryResult(
                 summary_blocks=[summary_block],
                 source_file_context=summary_input.group_context,
                 processing_time=processing_time,
                 model_used=getattr(self.llm, "model", "unknown"),
             )
-
             logger.info(
                 "Generated summary successfully",
                 extra={
@@ -622,12 +557,9 @@ class Tier2SummaryAgent:
                     "processing_time": processing_time,
                 },
             )
-
             return result
-
         except Exception as e:
             processing_time = time.time() - start_time
-
             logger.error(
                 "Failed to generate summary",
                 extra={
@@ -637,16 +569,13 @@ class Tier2SummaryAgent:
                     "processing_time": processing_time,
                 },
             )
-
             return SummaryResult(error=str(e), processing_time=processing_time)
 
     def _create_summary_prompt(self, summary_input: SummaryInput) -> str:
         """
         Create a prompt for LLM summary generation.
-
         Args:
             summary_input: Content to summarize
-
         Returns:
             Formatted prompt string
         """
@@ -662,12 +591,9 @@ class Tier2SummaryAgent:
             "",
             "Content to summarize:",
         ]
-
         for i, text in enumerate(summary_input.all_texts, 1):
             prompt_parts.append(f"{i}. {text}")
-
         prompt_parts.extend(["", "Summary (as bullet points):"])
-
         return "\n".join(prompt_parts)
 
     def _get_linked_concepts_for_summary(
@@ -675,16 +601,13 @@ class Tier2SummaryAgent:
     ) -> List[str]:
         """
         Get concept names linked to the claims in this summary.
-
         Args:
             summary_input: The summary input containing claims
-
         Returns:
             List of unique concept text values for wikilinks
         """
         if not summary_input.claims or self.claim_concept_manager is None:
             return []
-
         try:
             # Extract claim IDs
             claim_ids = [
@@ -692,15 +615,13 @@ class Tier2SummaryAgent:
             ]
             if not claim_ids:
                 return []
-
             # Get concepts linked to these claims
             concepts_mapping = self.claim_concept_manager.get_concepts_for_claims(
                 claim_ids
             )
-
             # Extract unique concept texts, prioritizing higher strength relationships
             concept_texts = set()
-            for claim_id, concepts in concepts_mapping.items():
+            for _claim_id, concepts in concepts_mapping.items():
                 # Sort by strength descending, take top concepts to avoid over-linking
                 sorted_concepts = sorted(
                     concepts, key=lambda x: x.get("strength", 0.0), reverse=True
@@ -710,9 +631,7 @@ class Tier2SummaryAgent:
                     concept_text = concept.get("concept_text", "").strip()
                     if concept_text:
                         concept_texts.add(concept_text)
-
             result = list(concept_texts)
-
             logger.debug(
                 "Retrieved linked concepts for summary",
                 extra={
@@ -722,9 +641,7 @@ class Tier2SummaryAgent:
                     "concept_count": len(result),
                 },
             )
-
             return result
-
         except Exception as e:
             logger.warning(
                 "Failed to retrieve linked concepts for summary",
@@ -744,12 +661,10 @@ class Tier2SummaryAgent:
     ) -> bool:
         """
         Write summary result to a Tier 2 Markdown file using atomic writes.
-
         Args:
             summary_result: Generated summary to write
             output_path: Path where to write the file
             title: Optional title for the file
-
         Returns:
             True if successful, False otherwise
         """
@@ -764,14 +679,11 @@ class Tier2SummaryAgent:
                 },
             )
             return False
-
         try:
             # Generate Markdown content
             markdown_content = summary_result.to_markdown(title=title)
-
             # Write atomically using existing function
             write_file_atomically(Path(output_path), markdown_content)
-
             logger.info(
                 "Successfully wrote Tier 2 summary file",
                 extra={
@@ -781,9 +693,7 @@ class Tier2SummaryAgent:
                     "summary_blocks_count": len(summary_result.summary_blocks),
                 },
             )
-
             return True
-
         except Exception as e:
             logger.error(
                 "Failed to write summary file",
@@ -803,11 +713,9 @@ class Tier2SummaryAgent:
     ) -> List[Path]:
         """
         Complete workflow: retrieve content, generate summaries, and write files.
-
         Args:
             output_dir: Directory to write summary files (uses config if not provided)
             file_prefix: Prefix for generated filenames
-
         Returns:
             List of paths to successfully written files
         """
@@ -821,19 +729,15 @@ class Tier2SummaryAgent:
                 },
             )
             return []
-
         if output_dir is None:
             # Use configured Tier 2 path
             vault_path = Path(self.config.paths.vault)
             tier2_path = self.config.paths.tier2
             output_dir = vault_path / tier2_path
-
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
-
         start_time = time.time()
         written_files = []
-
         logger.info(
             "Starting Tier 2 summary generation process",
             extra={
@@ -842,11 +746,9 @@ class Tier2SummaryAgent:
                 "output_dir": str(output_dir),
             },
         )
-
         try:
             # Retrieve grouped content
             groups = self.retrieve_grouped_content()
-
             if not groups:
                 logger.warning(
                     "No content groups found for summarization",
@@ -856,18 +758,15 @@ class Tier2SummaryAgent:
                     },
                 )
                 return written_files
-
             # Generate summaries for each group
             for i, group in enumerate(groups):
                 try:
                     # Generate summary
                     summary_result = self.generate_summary(group)
-
                     if summary_result.is_successful:
                         # Create filename
                         filename = f"{file_prefix}_{i + 1:03d}.md"
                         output_path = output_dir / filename
-
                         # Write file
                         title = f"Tier 2 Summary {i + 1}"
                         if self.write_summary_file(summary_result, output_path, title):
@@ -882,7 +781,6 @@ class Tier2SummaryAgent:
                                 "error": summary_result.error,
                             },
                         )
-
                 except Exception as e:
                     logger.error(
                         "Error processing group",
@@ -893,9 +791,7 @@ class Tier2SummaryAgent:
                             "error": str(e),
                         },
                     )
-
             processing_time = time.time() - start_time
-
             logger.info(
                 "Completed Tier 2 summary generation",
                 extra={
@@ -906,12 +802,9 @@ class Tier2SummaryAgent:
                     "processing_time": processing_time,
                 },
             )
-
             return written_files
-
         except Exception as e:
             processing_time = time.time() - start_time
-
             logger.error(
                 "Failed to complete summary generation process",
                 extra={
@@ -921,5 +814,4 @@ class Tier2SummaryAgent:
                     "processing_time": processing_time,
                 },
             )
-
             return written_files

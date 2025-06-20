@@ -1,15 +1,14 @@
 """
 Shared configuration system for aclarai services.
-
 This module provides environment variable injection from .env files with
 fallback logic for external database connections using host.docker.internal.
 """
 
-import os
 import logging
-from typing import Optional, List, Dict, Any
-from pathlib import Path
+import os
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 try:
     from dotenv import load_dotenv
@@ -20,7 +19,6 @@ except ImportError:
 
 
 import yaml
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,13 +31,11 @@ class EmbeddingConfig:
     default_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     device: str = "auto"
     batch_size: int = 32
-
     # PGVector settings
     collection_name: str = "utterances"
     embed_dim: int = 384
     index_type: str = "ivfflat"
     index_lists: int = 100
-
     # Chunking settings
     chunk_size: int = 300
     chunk_overlap: int = 30
@@ -56,7 +52,6 @@ class ConceptsConfig:
     # Concept candidates settings
     candidates_collection: str = "concept_candidates"
     similarity_threshold: float = 0.9
-
     # Canonical concepts settings
     canonical_collection: str = "concepts"
     merge_threshold: float = 0.95
@@ -68,11 +63,9 @@ class NounPhraseExtractionConfig:
 
     # spaCy model configuration
     spacy_model: str = "en_core_web_sm"
-
     # Normalization settings
     min_phrase_length: int = 2
     filter_digits_only: bool = True
-
     # Vector storage settings for concept_candidates
     concept_candidates_collection: str = "concept_candidates"
     status_field: str = "status"
@@ -85,10 +78,8 @@ class ThresholdConfig:
 
     # Cosine similarity threshold for merging candidates
     concept_merge: float = 0.90
-
     # Minimum link strength to create graph edge
     claim_link_strength: float = 0.60
-
     # Cosine similarity for grouping utterances for Tier 2 summaries
     summary_grouping_similarity: float = 0.80
 
@@ -157,7 +148,6 @@ class aclaraiConfig:
         default_factory=lambda: DatabaseConfig("", 0, "", "")
     )
     neo4j: DatabaseConfig = field(default_factory=lambda: DatabaseConfig("", 0, "", ""))
-
     # New configuration sections
     embedding: EmbeddingConfig = field(default_factory=EmbeddingConfig)
     concepts: ConceptsConfig = field(default_factory=ConceptsConfig)
@@ -166,26 +156,21 @@ class aclaraiConfig:
     )
     threshold: ThresholdConfig = field(default_factory=ThresholdConfig)
     vault_watcher: VaultWatcherConfig = field(default_factory=VaultWatcherConfig)
-
     # Message broker configuration
     rabbitmq_host: str = "rabbitmq"
     rabbitmq_port: int = 5672
     rabbitmq_user: str = "user"
     rabbitmq_password: str = ""
-
     # Service configuration
     vault_path: str = "/vault"
     settings_path: str = "/settings"
     log_level: str = "INFO"
     debug: bool = False
-
     # AI/ML configuration
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
-
     # Vault structure configuration
     paths: VaultPaths = field(default_factory=VaultPaths)
-
     # Feature flags
     features: Dict[str, Any] = field(default_factory=dict)
 
@@ -195,14 +180,12 @@ class aclaraiConfig:
     ) -> "aclaraiConfig":
         """
         Create configuration from environment variables and YAML config file.
-
         Args:
             env_file: Path to .env file (optional, defaults to searching for .env)
             config_file: Path to YAML config file (optional, defaults to settings/aclarai.config.yaml)
         """
         # Load YAML configuration first
         yaml_config = cls._load_yaml_config(config_file)
-
         # Load .env file if specified or found
         if env_file:
             load_dotenv(env_file)
@@ -215,14 +198,12 @@ class aclaraiConfig:
                     logger.info(f"Loading environment variables from {env_path}")
                     load_dotenv(env_path)
                     break
-
         # PostgreSQL configuration with fallback
         postgres_config = yaml_config.get("databases", {}).get("postgres", {})
         postgres_host = os.getenv(
             "POSTGRES_HOST", postgres_config.get("host", "postgres")
         )
         postgres_host = cls._apply_host_fallback(postgres_host)
-
         postgres = DatabaseConfig(
             host=postgres_host,
             port=int(os.getenv("POSTGRES_PORT", postgres_config.get("port", "5432"))),
@@ -232,19 +213,16 @@ class aclaraiConfig:
                 "POSTGRES_DB", postgres_config.get("database", "aclarai")
             ),
         )
-
         # Neo4j configuration with fallback
         neo4j_config = yaml_config.get("databases", {}).get("neo4j", {})
         neo4j_host = os.getenv("NEO4J_HOST", neo4j_config.get("host", "neo4j"))
         neo4j_host = cls._apply_host_fallback(neo4j_host)
-
         neo4j = DatabaseConfig(
             host=neo4j_host,
             port=int(os.getenv("NEO4J_BOLT_PORT", neo4j_config.get("port", "7687"))),
             user=os.getenv("NEO4J_USER", "neo4j"),
             password=os.getenv("NEO4J_PASSWORD", ""),
         )
-
         # Load embedding configuration from YAML
         embedding_config = yaml_config.get("embedding", {})
         embedding = EmbeddingConfig(
@@ -276,7 +254,6 @@ class aclaraiConfig:
                 "min_chunk_tokens", 5
             ),
         )
-
         # Load concepts configuration from YAML
         concepts_config = yaml_config.get("concepts", {})
         concepts = ConceptsConfig(
@@ -293,7 +270,6 @@ class aclaraiConfig:
                 "similarity_threshold", 0.95
             ),
         )
-
         # Load noun phrase extraction configuration from YAML
         noun_phrase_config = yaml_config.get("noun_phrase_extraction", {})
         noun_phrase_extraction = NounPhraseExtractionConfig(
@@ -310,7 +286,6 @@ class aclaraiConfig:
                 "default_status", "pending"
             ),
         )
-
         # Load threshold configuration from YAML
         threshold_config = yaml_config.get("threshold", {})
         threshold = ThresholdConfig(
@@ -320,14 +295,12 @@ class aclaraiConfig:
                 "summary_grouping_similarity", 0.80
             ),
         )
-
         # Load paths configuration from YAML
         paths_config = yaml_config.get("paths", {})
         vault_path = os.getenv("VAULT_PATH", paths_config.get("vault", "/vault"))
         settings_path = os.getenv(
             "SETTINGS_PATH", paths_config.get("settings", "/settings")
         )
-
         # Vault paths configuration (from main branch)
         paths = VaultPaths(
             vault=vault_path,
@@ -343,10 +316,8 @@ class aclaraiConfig:
                 "VAULT_LOGS_PATH", paths_config.get("logs", ".aclarai/import_logs")
             ),
         )
-
         # Load features configuration from YAML
         features_config = yaml_config.get("features", {})
-
         # Load vault watcher configuration from YAML
         vault_watcher_config = yaml_config.get("vault_watcher", {})
         vault_watcher = VaultWatcherConfig(
@@ -360,7 +331,6 @@ class aclaraiConfig:
                 "routing_key", "aclarai_dirty_blocks"
             ),
         )
-
         return cls(
             postgres=postgres,
             neo4j=neo4j,
@@ -391,15 +361,12 @@ class aclaraiConfig:
         if yaml is None:
             logger.warning("PyYAML not available, skipping YAML config loading")
             return {}
-
         # Load default configuration first
         default_config = cls._load_default_config()
-
         # Find user configuration file
         user_config_file = config_file
         if user_config_file is None:
             user_config_file = cls._find_user_config_file()
-
         # Load user configuration if it exists
         user_config = {}
         if user_config_file and Path(user_config_file).exists():
@@ -412,7 +379,6 @@ class aclaraiConfig:
                 user_config = {}
         else:
             logger.info("No user YAML configuration file found, using defaults only")
-
         # Deep merge user config over default config
         merged_config = cls._deep_merge_configs(default_config, user_config)
         return merged_config
@@ -422,21 +388,17 @@ class aclaraiConfig:
         """Load the default configuration file."""
         if yaml is None:
             return {}
-
         # Look for aclarai.config.default.yaml in shared package directory
         current_path = Path.cwd()
         search_paths = []
-
         # Priority 1: same directory as this module (shared package)
         module_path = Path(__file__).parent
         search_paths.append(module_path / "aclarai.config.default.yaml")
-
         # Priority 2: in shared/ directory relative to current working directory
         for path in [current_path] + list(current_path.parents):
             search_paths.append(
                 path / "shared" / "aclarai_shared" / "aclarai.config.default.yaml"
             )
-
         for config_path in search_paths:
             if config_path.exists():
                 logger.debug(f"Loading default configuration from {config_path}")
@@ -448,7 +410,6 @@ class aclaraiConfig:
                         f"Failed to load default config from {config_path}: {e}"
                     )
                     continue
-
         logger.warning("No default configuration file found, using hardcoded defaults")
         return {}
 
@@ -457,19 +418,15 @@ class aclaraiConfig:
         """Find the user configuration file."""
         current_path = Path.cwd()
         search_paths = []
-
         # Priority 1: settings directory in current and parent directories
         for path in [current_path] + list(current_path.parents):
             search_paths.append(path / "settings" / "aclarai.config.yaml")
-
         # Priority 2: root level in current and parent directories
         for path in [current_path] + list(current_path.parents):
             search_paths.append(path / "aclarai.config.yaml")
-
         for config_path in search_paths:
             if config_path.exists():
                 return str(config_path)
-
         return None
 
     @staticmethod
@@ -478,11 +435,9 @@ class aclaraiConfig:
     ) -> Dict[str, Any]:
         """
         Deep merge user configuration over default configuration.
-
         Args:
             default: Default configuration dictionary
             user: User configuration dictionary
-
         Returns:
             Merged configuration dictionary
         """
@@ -510,19 +465,16 @@ class aclaraiConfig:
     def _apply_host_fallback(host: str) -> str:
         """
         Apply host.docker.internal fallback for external database connections.
-
         If the host appears to be external (not a Docker service name),
         and we're running in a Docker container, use host.docker.internal.
         """
         # If explicitly set to host.docker.internal, keep it
         if host == "host.docker.internal":
             return host
-
         # Check if we're running in Docker by looking for typical indicators
         running_in_docker = (
             os.path.exists("/.dockerenv") or os.getenv("DOCKER_CONTAINER") == "true"
         )
-
         # List of common Docker service names (internal services)
         docker_services = {
             "postgres",
@@ -532,20 +484,14 @@ class aclaraiConfig:
             "vault-watcher",
             "scheduler",
         }
-
-        # If running in Docker and host is not localhost/127.0.0.1 and not a known service
+        # If running in Docker and host is not localhost/127.0.0.1, not a known service and if it's an IP address or external hostname
         if (
             running_in_docker
             and host not in docker_services
             and host not in ("localhost", "127.0.0.1")
+            and aclaraiConfig._is_external_host(host)
         ):
-            # Check if it's an IP address or external hostname
-            if aclaraiConfig._is_external_host(host):
-                logger.info(
-                    f"Applying host.docker.internal fallback for external host: {host}"
-                )
-                return "host.docker.internal"
-
+            return "host.docker.internal"
         return host
 
     @staticmethod
@@ -557,36 +503,27 @@ class aclaraiConfig:
         ip_pattern = re.compile(r"^(\d{1,3}\.){3}\d{1,3}$")
         if ip_pattern.match(host):
             return True
-
         # Check if it contains dots (likely FQDN)
-        if "." in host and not host.startswith("localhost"):
-            return True
-
-        return False
+        return bool("." in host and not host.startswith("localhost"))
 
     def validate_required_vars(
         self, required_vars: Optional[List[str]] = None
     ) -> List[str]:
         """
         Validate that required environment variables are set.
-
         Args:
             required_vars: List of required variable names (optional)
-
         Returns:
             List of missing variables
         """
         if required_vars is None:
             required_vars = ["POSTGRES_PASSWORD", "NEO4J_PASSWORD"]
-
         missing_vars = []
-
         # Check environment variables directly
         for var in required_vars:
             value = os.getenv(var)
             if not value:
                 missing_vars.append(var)
-
         # Only check config if no direct env vars were specified
         if not required_vars or len(missing_vars) == len(required_vars):
             # Additional validation for database connections via config
@@ -594,7 +531,6 @@ class aclaraiConfig:
                 missing_vars.append("POSTGRES_PASSWORD (via config)")
             if not self.neo4j.password and "NEO4J_PASSWORD" not in missing_vars:
                 missing_vars.append("NEO4J_PASSWORD (via config)")
-
         return list(set(missing_vars))  # Remove duplicates
 
     def setup_logging(self):
@@ -604,7 +540,6 @@ class aclaraiConfig:
             level=log_level,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
-
         if self.debug:
             logging.getLogger().setLevel(logging.DEBUG)
 
@@ -617,35 +552,29 @@ def load_config(
 ) -> aclaraiConfig:
     """
     Load aclarai configuration with validation.
-
     Args:
         env_file: Path to .env file (optional)
         config_file: Path to YAML config file (optional)
         validate: Whether to validate required variables
         required_vars: List of required variables to validate
-
     Returns:
         aclaraiConfig instance
-
     Raises:
         ValueError: If required variables are missing
     """
     config = aclaraiConfig.from_env(env_file, config_file)
-
     # Validate required environment variables for security
     if validate:
         # Check other required vars (this will include database passwords)
         missing_vars = config.validate_required_vars(required_vars)
-
         if missing_vars:
             # Remove duplicates and sort for consistent output
-            missing_vars = sorted(list(set(missing_vars)))
+            missing_vars = sorted(set(missing_vars))
             error_msg = (
                 f"Missing required environment variables: {', '.join(missing_vars)}. "
                 f"Please check your .env file or environment configuration."
             )
             logger.error(error_msg)
             raise ValueError(error_msg)
-
     config.setup_logging()
     return config

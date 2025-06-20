@@ -20,10 +20,10 @@ class TestClaimInput:
         """Test that the graph models classes are properly implemented."""
         # Import the actual classes instead of checking strings in files
         from aclarai_shared.graph.models import (
-            ClaimInput,
-            SentenceInput,
             Claim,
+            ClaimInput,
             Sentence,
+            SentenceInput,
         )
 
         # Test ClaimInput can be instantiated and has expected properties
@@ -33,17 +33,14 @@ class TestClaimInput:
         assert hasattr(claim_input, "entailed_score")
         assert hasattr(claim_input, "coverage_score")
         assert hasattr(claim_input, "decontextualization_score")
-
         # Test SentenceInput can be instantiated
         sentence_input = SentenceInput(text="Test sentence", block_id="block_456")
         assert sentence_input.text == "Test sentence"
         assert sentence_input.block_id == "block_456"
-
         # Test Claim can be created from ClaimInput
         claim = Claim.from_input(claim_input)
         assert claim.text == "Test claim"
         assert claim.claim_id == claim_input.claim_id
-
         # Test Sentence can be created from SentenceInput
         sentence = Sentence.from_input(sentence_input)
         assert sentence.text == "Test sentence"
@@ -60,7 +57,6 @@ class TestClaimInput:
             "decontextualization_score": None,
             "claim_id": "claim_abc123def456",
         }
-
         assert claim_data["text"] == "The Earth is round"
         assert claim_data["block_id"] == "block_123"
         assert claim_data["entailed_score"] is None
@@ -79,7 +75,6 @@ class TestClaimInput:
             "decontextualization_score": 0.7,
             "claim_id": "claim_def456ghi789",
         }
-
         assert claim_data["text"] == "Water boils at 100°C"
         assert claim_data["block_id"] == "block_456"
         assert claim_data["entailed_score"] == 0.8
@@ -99,7 +94,6 @@ class TestSentenceInput:
             "verifiable": None,
             "sentence_id": "sentence_abc123def456",
         }
-
         assert sentence_data["text"] == "This is a test sentence."
         assert sentence_data["block_id"] == "block_123"
         assert sentence_data["ambiguous"] is None
@@ -116,7 +110,6 @@ class TestSentenceInput:
             "verifiable": False,
             "sentence_id": "sentence_def456ghi789",
         }
-
         assert sentence_data["ambiguous"] is True
         assert sentence_data["verifiable"] is False
 
@@ -129,18 +122,14 @@ class TestClaimAndSentenceModels:
         models_path = os.path.join(
             os.path.dirname(__file__), "../../aclarai_shared/graph/models.py"
         )
-
         with open(models_path, "r") as f:
             content = f.read()
-
         # Check for Claim class and its methods
         assert "class Claim" in content
         assert "def from_input" in content
         assert "def to_dict" in content
-
         # Check for Sentence class and its methods
         assert "class Sentence" in content
-
         # Check for expected attributes
         assert "timestamp:" in content
         assert "version:" in content
@@ -152,7 +141,6 @@ class TestClaimAndSentenceModels:
         assert claim_id.startswith("claim_")
         hex_part = claim_id[6:]
         assert len(hex_part) == 12
-
         # Test sentence ID format
         sentence_id = "sentence_abc123def456"
         assert sentence_id.startswith("sentence_")
@@ -164,11 +152,9 @@ class TestClaimAndSentenceModels:
         # Test UTC timezone creation
         utc_time = datetime.now(timezone.utc)
         assert utc_time.tzinfo == timezone.utc
-
         # Test ISO format conversion
         iso_string = utc_time.isoformat().replace("+00:00", "Z")
         assert iso_string.endswith("Z")
-
         # Test parsing back
         parsed_time = datetime.fromisoformat(iso_string.replace("Z", "+00:00"))
         assert parsed_time.tzinfo == timezone.utc

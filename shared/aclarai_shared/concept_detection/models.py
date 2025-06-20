@@ -1,14 +1,13 @@
 """
 Data models for concept detection using hnswlib.
-
 This module defines the data structures used for concept similarity detection
 and the decision logic for merging vs promoting concept candidates.
 """
 
 import logging
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,6 @@ class SimilarityMatch:
 class ConceptDetectionResult:
     """
     Result of concept detection for a single candidate.
-
     Contains the recommended action and any similarity matches found.
     """
 

@@ -3,18 +3,18 @@ Integration tests for ConceptProcessor with Tier 3 file generation.
 """
 
 import tempfile
-import pytest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import Mock, patch
-from datetime import datetime, timezone
 
-from aclarai_shared.config import aclaraiConfig, VaultPaths
-from aclarai_shared.graph.models import Concept
+import pytest
 from aclarai_shared.concept_detection.models import (
     ConceptAction,
-    ConceptDetectionResult,
     ConceptDetectionBatch,
+    ConceptDetectionResult,
 )
+from aclarai_shared.config import VaultPaths, aclaraiConfig
+from aclarai_shared.graph.models import Concept
 from aclarai_shared.tier3_concept import ConceptFileWriter
 
 
@@ -41,7 +41,6 @@ def mock_embedding_models():
 class TestConceptProcessorTier3Integration:
     """
     Test ConceptProcessor integration with Tier 3 file creation.
-
     Note: These tests mock dependencies to avoid network access requirements.
     """
 
@@ -58,19 +57,14 @@ class TestConceptProcessorTier3Integration:
             config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
             )
-
             # Setup mocks
             mock_store_instance = Mock()
             mock_store_instance.update_candidate_status.return_value = True
-
             mock_extractor_instance = Mock()
-
             mock_detector_instance = Mock()
-
             # Setup ConceptFileWriter mock
             mock_concept_file_writer_instance = Mock()
             mock_concept_file_writer_instance.write_concept_file.return_value = True
-
             # Mock concept detection results with a promoted concept
             promoted_result = ConceptDetectionResult(
                 candidate_id="test_candidate_1",
@@ -79,7 +73,6 @@ class TestConceptProcessorTier3Integration:
                 confidence=0.95,
                 reason="No similar concepts found",
             )
-
             detection_batch = ConceptDetectionBatch(
                 results=[promoted_result],
                 total_processed=1,
@@ -88,14 +81,11 @@ class TestConceptProcessorTier3Integration:
                 processing_time=0.1,
                 error=None,
             )
-
             mock_detector_instance.process_candidates_batch.return_value = (
                 detection_batch
             )
-
             # Mock Neo4j manager to return created concepts
             mock_neo4j_instance = Mock()
-
             created_concept = Concept(
                 concept_id="concept_test123",
                 text="machine learning",
@@ -106,9 +96,7 @@ class TestConceptProcessorTier3Integration:
                 version=1,
                 timestamp=datetime.now(timezone.utc),
             )
-
             mock_neo4j_instance.create_concepts.return_value = [created_concept]
-
             # Initialize ConceptProcessor with mocked dependencies
             processor = ConceptProcessor(
                 config=config,
@@ -118,7 +106,6 @@ class TestConceptProcessorTier3Integration:
                 concept_file_writer=mock_concept_file_writer_instance,
                 neo4j_manager=mock_neo4j_instance,
             )
-
             # Create candidate metadata map
             candidate_metadata_map = {
                 "test_candidate_1": {
@@ -128,18 +115,15 @@ class TestConceptProcessorTier3Integration:
                     "text": "machine learning",
                 }
             }
-
             # Call the method that updates candidate statuses
             updates = processor._update_candidate_statuses(
                 detection_batch, candidate_metadata_map
             )
-
             # Verify Neo4j concept creation was called
             mock_neo4j_instance.create_concepts.assert_called_once()
             created_concepts_arg = mock_neo4j_instance.create_concepts.call_args[0][0]
             assert len(created_concepts_arg) == 1
             assert created_concepts_arg[0].text == "machine learning"
-
             # Verify ConceptFileWriter.write_concept_file was called with the created concept
             mock_concept_file_writer_instance.write_concept_file.assert_called_once()
             written_concept = (
@@ -147,7 +131,6 @@ class TestConceptProcessorTier3Integration:
             )
             assert written_concept.concept_id == "concept_test123"
             assert written_concept.text == "machine learning"
-
             # Verify updates include concept_id
             assert len(updates) == 1
             assert updates[0]["concept_id"] == "concept_test123"
@@ -165,19 +148,14 @@ class TestConceptProcessorTier3Integration:
             config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
             )
-
             # Setup mocks
             mock_store_instance = Mock()
             mock_store_instance.update_candidate_status.return_value = True
-
             mock_extractor_instance = Mock()
-
             mock_detector_instance = Mock()
-
             # Setup ConceptFileWriter mock
             mock_concept_file_writer_instance = Mock()
             mock_concept_file_writer_instance.write_concept_file.return_value = True
-
             # Mock concept detection results with a merged concept (no promotion)
             from aclarai_shared.concept_detection.models import SimilarityMatch
 
@@ -188,7 +166,6 @@ class TestConceptProcessorTier3Integration:
                 similarity_score=0.95,
                 matched_text="machine learning",
             )
-
             merged_result = ConceptDetectionResult(
                 candidate_id="test_candidate_1",
                 candidate_text="machine learning",
@@ -197,7 +174,6 @@ class TestConceptProcessorTier3Integration:
                 confidence=0.95,
                 reason="Similar concept found",
             )
-
             detection_batch = ConceptDetectionBatch(
                 results=[merged_result],
                 total_processed=1,
@@ -206,14 +182,11 @@ class TestConceptProcessorTier3Integration:
                 processing_time=0.1,
                 error=None,
             )
-
             mock_detector_instance.process_candidates_batch.return_value = (
                 detection_batch
             )
-
             # Mock Neo4j manager (should not be called)
             mock_neo4j_instance = Mock()
-
             # Initialize ConceptProcessor with mocked dependencies
             processor = ConceptProcessor(
                 config=config,
@@ -223,7 +196,6 @@ class TestConceptProcessorTier3Integration:
                 concept_file_writer=mock_concept_file_writer_instance,
                 neo4j_manager=mock_neo4j_instance,
             )
-
             # Create candidate metadata map
             candidate_metadata_map = {
                 "test_candidate_1": {
@@ -233,18 +205,14 @@ class TestConceptProcessorTier3Integration:
                     "text": "machine learning",
                 }
             }
-
             # Call the method that updates candidate statuses
             updates = processor._update_candidate_statuses(
                 detection_batch, candidate_metadata_map
             )
-
             # Verify Neo4j concept creation was NOT called (no promoted concepts)
             mock_neo4j_instance.create_concepts.assert_not_called()
-
             # Verify ConceptFileWriter was NOT called (no promoted concepts)
             mock_concept_file_writer_instance.write_concept_file.assert_not_called()
-
             # Verify updates don't include concept_id for merged concepts
             assert len(updates) == 1
             assert "concept_id" not in updates[0]
@@ -262,10 +230,8 @@ class TestConceptFileWriterIntegration:
             config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
             )
-
             # Initialize ConceptFileWriter
             writer = ConceptFileWriter(config)
-
             # Create a test concept
             concept = Concept(
                 concept_id="concept_test123",
@@ -277,18 +243,15 @@ class TestConceptFileWriterIntegration:
                 version=1,
                 timestamp=datetime.now(timezone.utc),
             )
-
             # Write the concept file
             success = writer.write_concept_file(concept)
             assert success, "ConceptFileWriter should return True for successful write"
-
             # Verify Tier 3 file was created
             concepts_dir = Path(temp_dir) / "concepts"
             expected_file = concepts_dir / "machine_learning.md"
             assert expected_file.exists(), (
                 f"Expected file {expected_file} was not created"
             )
-
             # Verify file content
             content = expected_file.read_text()
             assert "## Concept: machine learning" in content
@@ -302,9 +265,7 @@ class TestConceptFileWriterIntegration:
         config = aclaraiConfig(
             vault_path="/nonexistent/path", paths=VaultPaths(concepts="concepts")
         )
-
         writer = ConceptFileWriter(config)
-
         concept = Concept(
             concept_id="concept_test123",
             text="machine learning",
@@ -315,7 +276,6 @@ class TestConceptFileWriterIntegration:
             version=1,
             timestamp=datetime.now(timezone.utc),
         )
-
         # Write should fail gracefully and return False
         success = writer.write_concept_file(concept)
         assert not success, "ConceptFileWriter should return False for failed write"
@@ -326,9 +286,7 @@ class TestConceptFileWriterIntegration:
             config = aclaraiConfig(
                 vault_path=temp_dir, paths=VaultPaths(concepts="concepts")
             )
-
             writer = ConceptFileWriter(config)
-
             # Create multiple test concepts
             concepts = [
                 Concept(
@@ -352,22 +310,18 @@ class TestConceptFileWriterIntegration:
                     timestamp=datetime.now(timezone.utc),
                 ),
             ]
-
             # Write all concepts
             for concept in concepts:
                 success = writer.write_concept_file(concept)
                 assert success, f"Failed to write concept file for {concept.text}"
-
             # Verify all files were created
             concepts_dir = Path(temp_dir) / "concepts"
             assert (concepts_dir / "machine_learning.md").exists()
             assert (concepts_dir / "artificial_intelligence.md").exists()
-
             # Verify each file has correct content
             ml_content = (concepts_dir / "machine_learning.md").read_text()
             assert "## Concept: machine learning" in ml_content
             assert "concept_ml123" in ml_content
-
             ai_content = (concepts_dir / "artificial_intelligence.md").read_text()
             assert "## Concept: artificial intelligence" in ai_content
             assert "concept_ai456" in ai_content

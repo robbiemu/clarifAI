@@ -1,6 +1,5 @@
 """
 Vault utilities for aclarai.
-
 This module provides shared utilities for working with vault files and blocks.
 """
 

@@ -2,16 +2,17 @@
 Tests for plugin utility functions.
 """
 
-import pytest
-import tempfile
-from pathlib import Path
-from datetime import datetime
 import logging
+import tempfile
+from abc import ABC, abstractmethod
 
 # Create local versions of the classes and functions to test
 from dataclasses import dataclass
-from typing import Dict, Any, List, Optional
-from abc import ABC, abstractmethod
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import pytest
 
 
 @dataclass
@@ -49,12 +50,10 @@ def ensure_defaults(md: MarkdownOutput, path: Path) -> MarkdownOutput:
         meta.get("created_at")
         or datetime.fromtimestamp(path.stat().st_mtime).isoformat()
     )
-
     # Only generate title if the original title is empty or None
     title = md.title
     if not title:
         title = meta.get("title") or f"Conversation last modified at {created}"
-
     return MarkdownOutput(
         title=title,
         markdown_text=md.markdown_text,
@@ -73,7 +72,6 @@ def convert_file_to_markdowns(
 ) -> List[MarkdownOutput]:
     """Main conversion function that tries plugins in order until one succeeds."""
     raw_input = input_path.read_text(encoding="utf-8")
-
     for plugin in registry:
         if plugin.can_accept(raw_input):
             try:
@@ -88,7 +86,6 @@ def convert_file_to_markdowns(
                     str(e),
                 )
                 # Continue to next plugin that accepts the input
-
     raise UnknownFormatError(f"No plugin could handle file: {input_path}")
 
 
@@ -99,13 +96,10 @@ class TestEnsureDefaults:
         """Test ensure_defaults with empty metadata."""
         with tempfile.NamedTemporaryFile() as temp_file:
             path = Path(temp_file.name)
-
             md = MarkdownOutput(
                 title="Test Title", markdown_text="Test content", metadata=None
             )
-
             result = ensure_defaults(md, path)
-
             assert result.title == "Test Title"
             assert result.markdown_text == "Test content"
             assert result.metadata is not None
@@ -118,21 +112,17 @@ class TestEnsureDefaults:
         """Test ensure_defaults with existing metadata."""
         with tempfile.NamedTemporaryFile() as temp_file:
             path = Path(temp_file.name)
-
             existing_meta = {
                 "participants": ["alice", "bob"],
                 "message_count": 5,
                 "custom_field": "custom_value",
             }
-
             md = MarkdownOutput(
                 title="Chat Log",
                 markdown_text="alice: hi\nbob: hello",
                 metadata=existing_meta,
             )
-
             result = ensure_defaults(md, path)
-
             assert result.title == "Chat Log"
             assert result.metadata["participants"] == ["alice", "bob"]
             assert result.metadata["message_count"] == 5
@@ -144,14 +134,11 @@ class TestEnsureDefaults:
         """Test ensure_defaults with empty title."""
         with tempfile.NamedTemporaryFile() as temp_file:
             path = Path(temp_file.name)
-
             md = MarkdownOutput(
                 title="",  # Empty title
                 markdown_text="Content without title",
             )
-
             result = ensure_defaults(md, path)
-
             # Should generate fallback title
             assert result.title.startswith("Conversation last modified at")
             assert "created_at" in result.metadata
@@ -160,11 +147,8 @@ class TestEnsureDefaults:
         """Test ensure_defaults with None title."""
         with tempfile.NamedTemporaryFile() as temp_file:
             path = Path(temp_file.name)
-
             md = MarkdownOutput(title=None, markdown_text="Content without title")
-
             result = ensure_defaults(md, path)
-
             # Should generate fallback title
             assert result.title.startswith("Conversation last modified at")
 
@@ -172,60 +156,48 @@ class TestEnsureDefaults:
         """Test ensure_defaults using title from metadata when original title is empty."""
         with tempfile.NamedTemporaryFile() as temp_file:
             path = Path(temp_file.name)
-
             md = MarkdownOutput(
                 title="",
                 markdown_text="Content",
                 metadata={"title": "Title from metadata"},
             )
-
             result = ensure_defaults(md, path)
-
             assert result.title == "Title from metadata"
 
     def test_ensure_defaults_created_at_from_metadata(self):
         """Test ensure_defaults using created_at from metadata."""
         with tempfile.NamedTemporaryFile() as temp_file:
             path = Path(temp_file.name)
-
             custom_time = "2024-01-01T12:00:00"
             md = MarkdownOutput(
                 title="Test",
                 markdown_text="Content",
                 metadata={"created_at": custom_time},
             )
-
             result = ensure_defaults(md, path)
-
             assert result.metadata["created_at"] == custom_time
 
     def test_ensure_defaults_duration_sec(self):
         """Test ensure_defaults with duration_sec metadata."""
         with tempfile.NamedTemporaryFile() as temp_file:
             path = Path(temp_file.name)
-
             md = MarkdownOutput(
                 title="Test", markdown_text="Content", metadata={"duration_sec": 300}
             )
-
             result = ensure_defaults(md, path)
-
             assert result.metadata["duration_sec"] == 300
 
     def test_ensure_defaults_plugin_metadata(self):
         """Test ensure_defaults with custom plugin_metadata."""
         with tempfile.NamedTemporaryFile() as temp_file:
             path = Path(temp_file.name)
-
             plugin_meta = {"source": "test_plugin", "version": "1.0"}
             md = MarkdownOutput(
                 title="Test",
                 markdown_text="Content",
                 metadata={"plugin_metadata": plugin_meta},
             )
-
             result = ensure_defaults(md, path)
-
             assert result.metadata["plugin_metadata"] == plugin_meta
 
 
@@ -239,7 +211,7 @@ class TestConvertFileToMarkdowns:
             def can_accept(self, raw_input: str) -> bool:
                 return "test_content" in raw_input
 
-            def convert(self, raw_input: str, path: Path) -> list:
+            def convert(self, raw_input: str, _path: Path) -> list:
                 return [
                     MarkdownOutput(
                         title="Converted", markdown_text=f"# Converted\n\n{raw_input}"
@@ -252,18 +224,15 @@ class TestConvertFileToMarkdowns:
             temp_file.write("test_content here")
             temp_file.flush()
             path = Path(temp_file.name)
-
             try:
                 registry = [WorkingPlugin()]
                 result = convert_file_to_markdowns(path, registry)
-
                 assert len(result) == 1
                 assert result[0].title == "Converted"
                 assert "test_content here" in result[0].markdown_text
                 # Should have defaults applied
                 assert "created_at" in result[0].metadata
                 assert result[0].metadata["participants"] == ["user", "assistant"]
-
             finally:
                 path.unlink()
 
@@ -271,10 +240,10 @@ class TestConvertFileToMarkdowns:
         """Test file conversion with no accepting plugins."""
 
         class RejectingPlugin(Plugin):
-            def can_accept(self, raw_input: str) -> bool:
+            def can_accept(self, _raw_input: str) -> bool:
                 return False
 
-            def convert(self, raw_input: str, path: Path) -> list:
+            def convert(self, _raw_input: str, _path: Path) -> list:
                 return []
 
         with tempfile.NamedTemporaryFile(
@@ -283,15 +252,12 @@ class TestConvertFileToMarkdowns:
             temp_file.write("some content")
             temp_file.flush()
             path = Path(temp_file.name)
-
             try:
                 registry = [RejectingPlugin()]
-
                 with pytest.raises(
                     UnknownFormatError, match="No plugin could handle file"
                 ):
                     convert_file_to_markdowns(path, registry)
-
             finally:
                 path.unlink()
 
@@ -299,17 +265,17 @@ class TestConvertFileToMarkdowns:
         """Test that plugin failures are handled and next plugin is tried."""
 
         class FailingPlugin(Plugin):
-            def can_accept(self, raw_input: str) -> bool:
+            def can_accept(self, _raw_input: str) -> bool:
                 return True
 
-            def convert(self, raw_input: str, path: Path) -> list:
+            def convert(self, _raw_input: str, _path: Path) -> list:
                 raise RuntimeError("Plugin failed")
 
         class WorkingPlugin(Plugin):
-            def can_accept(self, raw_input: str) -> bool:
+            def can_accept(self, _raw_input: str) -> bool:
                 return True
 
-            def convert(self, raw_input: str, path: Path) -> list:
+            def convert(self, _raw_input: str, _path: Path) -> list:
                 return [MarkdownOutput(title="Success", markdown_text="Worked")]
 
         with tempfile.NamedTemporaryFile(
@@ -318,14 +284,11 @@ class TestConvertFileToMarkdowns:
             temp_file.write("test content")
             temp_file.flush()
             path = Path(temp_file.name)
-
             try:
                 registry = [FailingPlugin(), WorkingPlugin()]
                 result = convert_file_to_markdowns(path, registry)
-
                 assert len(result) == 1
                 assert result[0].title == "Success"
-
             finally:
                 path.unlink()
 
@@ -337,13 +300,10 @@ class TestConvertFileToMarkdowns:
             temp_file.write("content")
             temp_file.flush()
             path = Path(temp_file.name)
-
             try:
                 registry = []
-
                 with pytest.raises(UnknownFormatError):
                     convert_file_to_markdowns(path, registry)
-
             finally:
                 path.unlink()
 
@@ -351,10 +311,10 @@ class TestConvertFileToMarkdowns:
         """Test file conversion that produces multiple outputs."""
 
         class MultiOutputPlugin(Plugin):
-            def can_accept(self, raw_input: str) -> bool:
+            def can_accept(self, _raw_input: str) -> bool:
                 return True
 
-            def convert(self, raw_input: str, path: Path) -> list:
+            def convert(self, _raw_input: str, _path: Path) -> list:
                 return [
                     MarkdownOutput(title="First", markdown_text="First output"),
                     MarkdownOutput(title="Second", markdown_text="Second output"),
@@ -366,18 +326,15 @@ class TestConvertFileToMarkdowns:
             temp_file.write("content")
             temp_file.flush()
             path = Path(temp_file.name)
-
             try:
                 registry = [MultiOutputPlugin()]
                 result = convert_file_to_markdowns(path, registry)
-
                 assert len(result) == 2
                 assert result[0].title == "First"
                 assert result[1].title == "Second"
                 # Both should have defaults applied
                 for output in result:
                     assert "created_at" in output.metadata
-
             finally:
                 path.unlink()
 
@@ -388,7 +345,7 @@ class TestConvertFileToMarkdowns:
             def can_accept(self, raw_input: str) -> bool:
                 return "特殊" in raw_input
 
-            def convert(self, raw_input: str, path: Path) -> list:
+            def convert(self, raw_input: str, _path: Path) -> list:
                 return [MarkdownOutput(title="UTF-8", markdown_text=raw_input)]
 
         with tempfile.NamedTemporaryFile(
@@ -398,13 +355,10 @@ class TestConvertFileToMarkdowns:
             temp_file.write(utf8_content)
             temp_file.flush()
             path = Path(temp_file.name)
-
             try:
                 registry = [TextPlugin()]
                 result = convert_file_to_markdowns(path, registry)
-
                 assert len(result) == 1
                 assert utf8_content in result[0].markdown_text
-
             finally:
                 path.unlink()

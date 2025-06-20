@@ -109,7 +109,6 @@ class TestEmbeddingConfig:
     def test_embedding_config_defaults(self):
         """Test EmbeddingConfig default values."""
         config = EmbeddingConfig()
-
         assert config.default_model == "sentence-transformers/all-MiniLM-L6-v2"
         assert config.device == "auto"
         assert config.batch_size == 32
@@ -129,7 +128,6 @@ class TestEmbeddingConfig:
         config = EmbeddingConfig(
             default_model="custom/model", device="cuda", batch_size=64, embed_dim=768
         )
-
         assert config.default_model == "custom/model"
         assert config.device == "cuda"
         assert config.batch_size == 64
@@ -144,7 +142,6 @@ class TestConceptsConfig:
     def test_concepts_config_defaults(self):
         """Test ConceptsConfig default values."""
         config = ConceptsConfig()
-
         assert config.candidates_collection == "concept_candidates"
         assert config.similarity_threshold == 0.9
         assert config.canonical_collection == "concepts"
@@ -158,7 +155,6 @@ class TestConceptsConfig:
             canonical_collection="custom_concepts",
             merge_threshold=0.9,
         )
-
         assert config.candidates_collection == "custom_candidates"
         assert config.similarity_threshold == 0.85
         assert config.canonical_collection == "custom_concepts"
@@ -171,7 +167,6 @@ class TestPathsConfig:
     def test_paths_config_defaults(self):
         """Test PathsConfig default values."""
         config = PathsConfig()
-
         assert config.vault == "/vault"
         assert config.tier1 == "conversations"
         assert config.tier2 == "summaries"
@@ -183,7 +178,6 @@ class TestPathsConfig:
         config = PathsConfig(
             vault="/custom/vault", tier1="chats", tier2="abstracts", tier3="topics"
         )
-
         assert config.vault == "/custom/vault"
         assert config.tier1 == "chats"
         assert config.tier2 == "abstracts"
@@ -202,7 +196,6 @@ class TestDatabaseConfig:
             password="testpass",
             database="testdb",
         )
-
         assert config.host == "localhost"
         assert config.port == 5432
         assert config.user == "testuser"
@@ -214,7 +207,6 @@ class TestDatabaseConfig:
         config = DatabaseConfig(
             host="db.example.com", port=3306, user="user", password="pass"
         )
-
         assert config.database == ""
 
     def test_get_connection_url_with_database(self):
@@ -226,7 +218,6 @@ class TestDatabaseConfig:
             password="testpass",
             database="testdb",
         )
-
         url = config.get_connection_url()
         expected = "postgresql://testuser:testpass@localhost:5432/testdb"
         assert url == expected
@@ -236,7 +227,6 @@ class TestDatabaseConfig:
         config = DatabaseConfig(
             host="localhost", port=5432, user="testuser", password="testpass"
         )
-
         url = config.get_connection_url()
         expected = "postgresql://testuser:testpass@localhost:5432"
         assert url == expected
@@ -246,7 +236,6 @@ class TestDatabaseConfig:
         config = DatabaseConfig(
             host="localhost", port=3306, user="root", password="secret", database="mydb"
         )
-
         url = config.get_connection_url("mysql")
         expected = "mysql://root:secret@localhost:3306/mydb"
         assert url == expected
@@ -256,7 +245,6 @@ class TestDatabaseConfig:
         config = DatabaseConfig(
             host="neo4j.example.com", port=7687, user="neo4j", password="password"
         )
-
         url = config.get_neo4j_bolt_url()
         expected = "bolt://neo4j.example.com:7687"
         assert url == expected
@@ -268,7 +256,6 @@ class TestVaultPaths:
     def test_vault_paths_defaults(self):
         """Test VaultPaths default values."""
         paths = VaultPaths()
-
         assert paths.vault == "/vault"
         assert paths.settings == "/settings"
         assert paths.tier1 == "tier1"
@@ -286,7 +273,6 @@ class TestVaultPaths:
             concepts="concepts",
             logs="logs",
         )
-
         assert paths.vault == "/custom/vault"
         assert paths.settings == "/custom/settings"
         assert paths.tier1 == "conversations"
@@ -301,14 +287,12 @@ class TestaclaraiConfig:
     def test_aclarai_config_defaults(self):
         """Test aclaraiConfig default values."""
         config = aclaraiConfig()
-
         # Check default factory instances
         assert isinstance(config.postgres, DatabaseConfig)
         assert isinstance(config.neo4j, DatabaseConfig)
         assert isinstance(config.embedding, EmbeddingConfig)
         assert isinstance(config.concepts, ConceptsConfig)
         assert isinstance(config.paths, VaultPaths)
-
         # Check simple defaults
         assert config.rabbitmq_host == "rabbitmq"
         assert config.rabbitmq_port == 5672
@@ -325,7 +309,6 @@ class TestaclaraiConfig:
         """Test aclaraiConfig with custom values."""
         postgres_config = DatabaseConfig("pg.host", 5432, "pguser", "pgpass", "pgdb")
         neo4j_config = DatabaseConfig("neo4j.host", 7687, "neo4j", "neo4jpass")
-
         config = aclaraiConfig(
             postgres=postgres_config,
             neo4j=neo4j_config,
@@ -336,7 +319,6 @@ class TestaclaraiConfig:
             debug=True,
             openai_api_key="sk-test123",
         )
-
         assert config.postgres == postgres_config
         assert config.neo4j == neo4j_config
         assert config.rabbitmq_host == "custom.rabbit"
@@ -349,17 +331,14 @@ class TestaclaraiConfig:
     def test_aclarai_config_nested_defaults(self):
         """Test that nested configs have proper defaults."""
         config = aclaraiConfig()
-
         # Check embedding config defaults
         assert (
             config.embedding.default_model == "sentence-transformers/all-MiniLM-L6-v2"
         )
         assert config.embedding.batch_size == 32
-
         # Check concepts config defaults
         assert config.concepts.similarity_threshold == 0.9
         assert config.concepts.merge_threshold == 0.95
-
         # Check paths defaults
         assert config.paths.vault == "/vault"
         assert config.paths.tier1 == "tier1"
@@ -368,14 +347,12 @@ class TestaclaraiConfig:
         """Test that different aclaraiConfig instances have separate nested objects."""
         config1 = aclaraiConfig()
         config2 = aclaraiConfig()
-
         # They should be separate instances
         assert config1.embedding is not config2.embedding
         assert config1.concepts is not config2.concepts
         assert config1.paths is not config2.paths
         assert config1.postgres is not config2.postgres
         assert config1.neo4j is not config2.neo4j
-
         # But should have same default values
         assert config1.embedding.batch_size == config2.embedding.batch_size
         assert (

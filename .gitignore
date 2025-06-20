@@ -227,3 +227,4 @@ cython_debug/
 
 # Demo files - for development and testing only
 demo_*.py
+project_bundle.zip

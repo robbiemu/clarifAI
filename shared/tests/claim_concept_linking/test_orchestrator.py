@@ -1,21 +1,21 @@
 """
 Tests for claim-concept linking orchestrator.
-
 This module tests the main ClaimConceptLinker orchestrator class that coordinates
 the full end-to-end process from fetching claims to updating Markdown files.
 """
 
-import pytest
 from unittest.mock import patch
 
-from aclarai_shared.claim_concept_linking.orchestrator import ClaimConceptLinker
+import pytest
 from aclarai_shared.claim_concept_linking.models import (
-    ClaimConceptPair,
     ClaimConceptLinkResult,
+    ClaimConceptPair,
     ConceptCandidate,
     RelationshipType,
 )
-from tests.utils import get_seeded_mock_services
+from aclarai_shared.claim_concept_linking.orchestrator import ClaimConceptLinker
+
+from shared.tests.utils import get_seeded_mock_services
 
 
 class MockClaimConceptNeo4jManager:
@@ -59,7 +59,7 @@ class MockClaimConceptNeo4jManager:
             "summary_text": f"Summary for {claim_id}",
         }
 
-    def create_claim_concept_relationship(self, link_result):
+    def create_claim_concept_relationship(self, _link_result):
         """Mock relationship creation - always succeeds."""
         return True
 
@@ -75,12 +75,10 @@ class TestClaimConceptLinkerOrchestrator:
         """Test ClaimConceptLinker initialization with mock services."""
         neo4j_manager, vector_store = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         assert linker.neo4j_manager is mock_claim_concept_manager
         assert linker.vector_store is vector_store
         assert linker.agent is None  # Should have mock classification logic
@@ -89,47 +87,42 @@ class TestClaimConceptLinkerOrchestrator:
     def test_init_with_config_only(self):
         """Test ClaimConceptLinker initialization with config only."""
         # Mock dependencies to avoid real service initialization
-        with patch(
-            "aclarai_shared.claim_concept_linking.orchestrator.ClaimConceptNeo4jManager"
-        ) as mock_neo4j:
-            with patch(
+        with (
+            patch(
+                "aclarai_shared.claim_concept_linking.orchestrator.ClaimConceptNeo4jManager"
+            ) as mock_neo4j,
+            patch(
                 "aclarai_shared.claim_concept_linking.orchestrator.ClaimConceptLinkerAgent"
-            ) as mock_agent:
-                with patch(
-                    "aclarai_shared.claim_concept_linking.orchestrator.Tier2MarkdownUpdater"
-                ) as mock_updater:
-                    linker = ClaimConceptLinker()
-
-                    # Should have attempted to initialize components that aren't injected
-                    mock_neo4j.assert_called_once()
-                    mock_agent.assert_called_once()
-                    mock_updater.assert_called_once()
-
-                    # Vector store should remain None when not injected
-                    assert linker.vector_store is None
+            ) as mock_agent,
+            patch(
+                "aclarai_shared.claim_concept_linking.orchestrator.Tier2MarkdownUpdater"
+            ) as mock_updater,
+        ):
+            linker = ClaimConceptLinker()
+            # Should have attempted to initialize components that aren't injected
+            mock_neo4j.assert_called_once()
+            mock_agent.assert_called_once()
+            mock_updater.assert_called_once()
+            # Vector store should remain None when not injected
+            assert linker.vector_store is None
 
     def test_find_candidate_concepts_vector(self):
         """Test vector-based candidate concept finding."""
         neo4j_manager, vector_store = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         # Test claim similar to seeded concepts
         claim = {
             "id": "test_claim_1",
             "text": "CUDA runtime error occurred during model training",
         }
-
         candidates = linker._find_candidate_concepts_vector(claim, threshold=0.1)
-
         assert isinstance(candidates, list)
         # Should find relevant candidates from golden dataset
         assert len(candidates) > 0
-
         # Verify candidate structure
         candidate = candidates[0]
         assert isinstance(candidate, ConceptCandidate)
@@ -142,12 +135,10 @@ class TestClaimConceptLinkerOrchestrator:
         """Test claim-concept pair creation."""
         neo4j_manager, vector_store = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         claim = {
             "id": "test_claim_1",
             "text": "GPU training failed",
@@ -155,15 +146,12 @@ class TestClaimConceptLinkerOrchestrator:
             "coverage_score": 0.85,
             "decontextualization_score": 0.78,
         }
-
         candidate = ConceptCandidate(
             concept_id="concept_gpu_error",
             concept_text="GPU Error",
             similarity_score=0.92,
         )
-
         pair = linker._create_claim_concept_pair(claim, candidate)
-
         assert isinstance(pair, ClaimConceptPair)
         assert pair.claim_id == "test_claim_1"
         assert pair.claim_text == "GPU training failed"
@@ -177,12 +165,10 @@ class TestClaimConceptLinkerOrchestrator:
         """Test link result creation from classification."""
         neo4j_manager, vector_store = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         pair = ClaimConceptPair(
             claim_id="test_claim_1",
             claim_text="GPU error occurred",
@@ -204,7 +190,6 @@ class TestClaimConceptLinkerOrchestrator:
 
         classification = MockClassification()
         link_result = linker._create_link_result(pair, classification)
-
         assert isinstance(link_result, ClaimConceptLinkResult)
         assert link_result.claim_id == "test_claim_1"
         assert link_result.concept_id == "concept_gpu_error"
@@ -218,17 +203,14 @@ class TestClaimConceptLinkerOrchestrator:
         """Test the public find_candidate_concepts API."""
         neo4j_manager, vector_store = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         # Test finding candidates
         results = linker.find_candidate_concepts(
             query_text="GPU error occurred", top_k=3, similarity_threshold=0.1
         )
-
         assert isinstance(results, list)
         if results:  # If results found
             # Verify structure
@@ -245,18 +227,15 @@ class TestClaimConceptLinkerOrchestrator:
 
         # Create mock manager with no claims
         class EmptyMockClaimConceptNeo4jManager(MockClaimConceptNeo4jManager):
-            def fetch_unlinked_claims(self, limit=100):
+            def fetch_unlinked_claims(self, _limit=100):
                 return []  # No claims
 
         mock_claim_concept_manager = EmptyMockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         results = linker.link_claims_to_concepts()
-
         assert isinstance(results, dict)
         assert results["claims_fetched"] == 0
         assert results["claims_processed"] == 0
@@ -275,14 +254,11 @@ class TestClaimConceptLinkerOrchestrator:
         mock_claim_concept_manager = NoConceptsMockClaimConceptNeo4jManager(
             neo4j_manager
         )
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         results = linker.link_claims_to_concepts()
-
         assert isinstance(results, dict)
         assert results["claims_fetched"] > 0  # Should have claims
         assert results["concepts_available"] == 0
@@ -293,16 +269,13 @@ class TestClaimConceptLinkerOrchestrator:
         """Integration test for the full claim-concept linking process."""
         neo4j_manager, vector_store = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         results = linker.link_claims_to_concepts(
             max_claims=2, similarity_threshold=0.1, strength_threshold=0.5
         )
-
         # Verify results structure
         assert isinstance(results, dict)
         expected_keys = [
@@ -318,21 +291,17 @@ class TestClaimConceptLinkerOrchestrator:
         ]
         for key in expected_keys:
             assert key in results
-
         # Should have processed some claims and concepts
         assert results["claims_fetched"] > 0
         assert results["concepts_available"] > 0
         assert results["claims_processed"] >= 0
-
         # Should have created some relationships (depends on similarity thresholds)
         # Note: Due to mock data and similarity thresholds, we may or may not get matches
         assert results["links_created"] >= 0
         assert results["relationships_created"] == results["links_created"]
-
         # Markdown file updates should match links created (when no real updater)
         assert results["files_updated"] >= 0
         assert results["markdown_files_updated"] == results["files_updated"]
-
         # Should not have fatal errors
         if results["errors"]:
             # Errors can occur but shouldn't be fatal
@@ -343,17 +312,14 @@ class TestClaimConceptLinkerOrchestrator:
         """Test linking process with high similarity/strength thresholds."""
         neo4j_manager, vector_store = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         # Use very high thresholds that should prevent most matches
         results = linker.link_claims_to_concepts(
             max_claims=2, similarity_threshold=0.99, strength_threshold=0.95
         )
-
         assert isinstance(results, dict)
         assert results["claims_fetched"] > 0
         assert results["concepts_available"] > 0
@@ -364,7 +330,6 @@ class TestClaimConceptLinkerOrchestrator:
         """Test error handling during the linking process."""
         neo4j_manager, vector_store = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         # Create a linker that will have an error in vector search
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
@@ -372,13 +337,11 @@ class TestClaimConceptLinkerOrchestrator:
         )
 
         # Mock vector store to raise exception
-        def failing_vector_search(*args, **kwargs):
+        def failing_vector_search(*_args, **_kwargs):
             raise Exception("Mock vector search failure")
 
         linker.vector_store.find_similar_candidates = failing_vector_search
-
         results = linker.link_claims_to_concepts(max_claims=1)
-
         # Should handle errors gracefully
         assert isinstance(results, dict)
         assert "errors" in results
@@ -388,14 +351,11 @@ class TestClaimConceptLinkerOrchestrator:
         """Test candidate finding when vector store is not available."""
         neo4j_manager, _ = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=None,  # No vector store
         )
-
         results = linker.find_candidate_concepts("test query")
-
         # Should return empty results gracefully
         assert isinstance(results, list)
         assert len(results) == 0
@@ -408,12 +368,10 @@ class TestClaimConceptLinkerEdgeCases:
         """Test error handling for invalid relationship types."""
         neo4j_manager, vector_store = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         pair = ClaimConceptPair(
             claim_id="test_claim",
             claim_text="Test claim",
@@ -431,7 +389,6 @@ class TestClaimConceptLinkerEdgeCases:
                 return None  # Invalid relationship
 
         classification = InvalidClassification()
-
         with pytest.raises(ValueError, match="Invalid relationship type"):
             linker._create_link_result(pair, classification)
 
@@ -439,12 +396,10 @@ class TestClaimConceptLinkerEdgeCases:
         """Test proper handling of null evaluation scores."""
         neo4j_manager, vector_store = get_seeded_mock_services()
         mock_claim_concept_manager = MockClaimConceptNeo4jManager(neo4j_manager)
-
         linker = ClaimConceptLinker(
             neo4j_manager=mock_claim_concept_manager,
             vector_store=vector_store,
         )
-
         # Claim with null scores
         claim = {
             "id": "test_claim_null_scores",
@@ -453,15 +408,12 @@ class TestClaimConceptLinkerEdgeCases:
             "coverage_score": None,
             "decontextualization_score": None,
         }
-
         candidate = ConceptCandidate(
             concept_id="concept_test",
             concept_text="Test Concept",
             similarity_score=0.85,
         )
-
         pair = linker._create_claim_concept_pair(claim, candidate)
-
         # Should handle null scores gracefully
         assert pair.entailed_score is None
         assert pair.coverage_score is None
@@ -478,6 +430,5 @@ class TestClaimConceptLinkerEdgeCases:
 
         classification = MockClassification()
         link_result = linker._create_link_result(pair, classification)
-
         assert link_result.entailed_score is None
         assert link_result.coverage_score is None

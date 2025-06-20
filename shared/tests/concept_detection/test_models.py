@@ -2,9 +2,9 @@
 
 from aclarai_shared.concept_detection.models import (
     ConceptAction,
-    SimilarityMatch,
-    ConceptDetectionResult,
     ConceptDetectionBatch,
+    ConceptDetectionResult,
+    SimilarityMatch,
 )
 
 
@@ -26,7 +26,6 @@ class TestConceptDetectionModels:
             matched_text="machine learning",
             metadata={"source": "test"},
         )
-
         assert match.candidate_id == "cand_123"
         assert match.matched_concept_id == "concept_456"
         assert match.matched_candidate_id is None
@@ -59,14 +58,12 @@ class TestConceptDetectionModels:
                 matched_text="text3",
             ),
         ]
-
         result = ConceptDetectionResult(
             candidate_id="cand_1",
             candidate_text="test",
             action=ConceptAction.MERGED,
             similarity_matches=matches,
         )
-
         best_match = result.best_match
         assert best_match is not None
         assert best_match.similarity_score == 0.9
@@ -77,7 +74,6 @@ class TestConceptDetectionModels:
         result = ConceptDetectionResult(
             candidate_id="cand_1", candidate_text="test", action=ConceptAction.PROMOTED
         )
-
         assert result.best_match is None
         assert len(result.similarity_matches) == 0
 
@@ -100,7 +96,6 @@ class TestConceptDetectionModels:
                 action=ConceptAction.MERGED,
             ),
         ]
-
         batch = ConceptDetectionBatch(
             results=results,
             total_processed=3,
@@ -108,7 +103,6 @@ class TestConceptDetectionModels:
             promoted_count=1,
             processing_time=1.5,
         )
-
         assert batch.is_successful
         assert batch.merge_rate == 2 / 3
         assert batch.promotion_rate == 1 / 3
@@ -116,7 +110,6 @@ class TestConceptDetectionModels:
     def test_concept_detection_batch_with_error(self):
         """Test ConceptDetectionBatch with error."""
         batch = ConceptDetectionBatch(total_processed=5, error="Processing failed")
-
         assert not batch.is_successful
         assert batch.merge_rate == 0.0  # No counts set
         assert batch.promotion_rate == 0.0
@@ -126,6 +119,5 @@ class TestConceptDetectionModels:
         batch = ConceptDetectionBatch(
             total_processed=0, merged_count=0, promoted_count=0
         )
-
         assert batch.merge_rate == 0.0
         assert batch.promotion_rate == 0.0

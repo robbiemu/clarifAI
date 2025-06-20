@@ -1,10 +1,8 @@
 """
 PGVector store integration for aclarai embeddings.
-
 This module provides PostgreSQL vector storage using LlamaIndex's PGVectorStore
 for utterance chunk embeddings. Includes metadata handling, indexing, and
 similarity search capabilities.
-
 Key Features:
 - LlamaIndex PGVectorStore integration
 - Automatic table and index creation
@@ -16,17 +14,16 @@ Key Features:
 
 import logging
 import re
-from typing import List, Optional, Dict, Any, Tuple
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
 
+from llama_index.core import Settings, VectorStoreIndex
+from llama_index.core.schema import Document
+from llama_index.vector_stores.postgres import PGVectorStore
 from sqlalchemy import (
     create_engine,
     text,
 )
-
-from llama_index.core import VectorStoreIndex, Settings
-from llama_index.core.schema import Document
-from llama_index.vector_stores.postgres import PGVectorStore
 
 from ..config import aclaraiConfig
 from .models import EmbeddedChunk, EmbeddingGenerator
@@ -48,7 +45,6 @@ class VectorStoreMetrics:
 class aclaraiVectorStore:
     """
     PostgreSQL vector store for aclarai utterance embeddings using PGVectorStore.
-
     This class provides a high-level interface for storing and querying utterance
     embeddings following the architecture from docs/arch/idea-embedding_in_vectordb.md
     """
@@ -56,7 +52,6 @@ class aclaraiVectorStore:
     def __init__(self, config: Optional[aclaraiConfig] = None):
         """
         Initialize the vector store.
-
         Args:
             config: aclarai configuration (loads default if None)
         """
@@ -64,14 +59,11 @@ class aclaraiVectorStore:
             from ..config import load_config
 
             config = load_config(validate=True)  # Require DB credentials
-
         self.config = config
-
         # Build connection string
         self.connection_string = config.postgres.get_connection_url(
             "postgresql+psycopg2"
         )
-
         # Initialize database engine
         self.engine = create_engine(
             self.connection_string,
@@ -79,24 +71,19 @@ class aclaraiVectorStore:
             pool_recycle=3600,
             echo=config.debug,
         )
-
         # Initialize PGVectorStore
         self.vector_store = self._initialize_pgvector_store()
-
         # Initialize embedding generator with configured model
         self.embedding_generator = EmbeddingGenerator(config=config)
-
         # Set LlamaIndex global embedding model IMMEDIATELY to prevent default OpenAI dependency
         # This ensures VectorStoreIndex doesn't try to import llama-index-embeddings-openai
         # We set this as early as possible to prevent any race conditions
         Settings.embed_model = self.embedding_generator.embedding_model
-
         # Initialize LlamaIndex VectorStoreIndex with configured embedding model
         # Pass embed_model explicitly as additional safety to avoid any fallback to Settings.embed_model
         self.vector_index = VectorStoreIndex.from_vector_store(
             self.vector_store, embed_model=self.embedding_generator.embedding_model
         )
-
         logger.info(
             f"Initialized aclaraiVectorStore with collection: {config.embedding.collection_name}, "
             f"dimension: {config.embedding.embed_dim}"
@@ -105,13 +92,10 @@ class aclaraiVectorStore:
     def _validate_table_name(self, table_name: str) -> str:
         """
         Validate and sanitize table name to prevent SQL injection.
-
         Args:
             table_name: The table name to validate
-
         Returns:
             Sanitized table name
-
         Raises:
             ValueError: If table name is invalid
         """
@@ -121,11 +105,9 @@ class aclaraiVectorStore:
             raise ValueError(
                 f"Invalid table name: {table_name}. Only alphanumeric characters, underscores, and hyphens are allowed."
             )
-
         # Limit length to prevent issues
         if len(table_name) > 63:  # PostgreSQL identifier limit
             raise ValueError(f"Table name too long: {table_name} (max 63 characters)")
-
         return table_name
 
     def store_embeddings(
@@ -133,10 +115,8 @@ class aclaraiVectorStore:
     ) -> VectorStoreMetrics:
         """
         Store embedded chunks in the vector database.
-
         Args:
             embedded_chunks: List of EmbeddedChunk objects to store
-
         Returns:
             VectorStoreMetrics with operation results
         """
@@ -145,15 +125,11 @@ class aclaraiVectorStore:
             return VectorStoreMetrics(
                 total_vectors=0, successful_inserts=0, failed_inserts=0
             )
-
         logger.info(f"Storing {len(embedded_chunks)} embedded chunks in vector store")
-
         # Convert embedded chunks to Documents for LlamaIndex
         documents = self._convert_to_documents(embedded_chunks)
-
         successful_inserts = 0
         failed_inserts = 0
-
         try:
             # Use LlamaIndex to insert documents
             # This handles embedding storage and metadata automatically
@@ -164,15 +140,12 @@ class aclaraiVectorStore:
                 except Exception as e:
                     logger.error(f"Failed to insert document {doc.doc_id}: {e}")
                     failed_inserts += 1
-
             logger.info(
                 f"Storage complete: {successful_inserts} successful, {failed_inserts} failed"
             )
-
         except Exception as e:
             logger.error(f"Failed to store embeddings: {e}")
             failed_inserts = len(embedded_chunks)
-
         return VectorStoreMetrics(
             total_vectors=len(embedded_chunks),
             successful_inserts=successful_inserts,
@@ -188,45 +161,37 @@ class aclaraiVectorStore:
     ) -> List[Tuple[Dict[str, Any], float]]:
         """
         Perform similarity search for utterance chunks.
-
         Args:
             query_text: Text to search for
             top_k: Number of results to return
             similarity_threshold: Minimum similarity score (optional)
             filter_metadata: Metadata filters (optional)
-
         Returns:
             List of (metadata, similarity_score) tuples
         """
         logger.debug(
             f"Performing similarity search: query='{query_text[:50]}...', top_k={top_k}"
         )
-
         try:
             # Use LlamaIndex query engine for similarity search
             query_engine = self.vector_index.as_query_engine(
                 similarity_top_k=top_k,
                 response_mode="no_text",  # We just want the nodes, not generated text
             )
-
             response = query_engine.query(query_text)
-
             # Extract results with similarity scores
             results = []
             if hasattr(response, "source_nodes"):
                 for node in response.source_nodes:
                     metadata = node.node.metadata
                     score = getattr(node, "score", 0.0)
-
-                    # Apply similarity threshold if specified
-                    if similarity_threshold is None or score >= similarity_threshold:
-                        # Apply metadata filters if specified
-                        if self._matches_filter(metadata, filter_metadata):
-                            results.append((metadata, score))
-
+                    # Apply similarity threshold and metadata filters if specified
+                    if (
+                        similarity_threshold is None or score >= similarity_threshold
+                    ) and self._matches_filter(metadata, filter_metadata):
+                        results.append((metadata, score))
             logger.debug(f"Similarity search returned {len(results)} results")
             return results
-
         except Exception as e:
             logger.error(f"Similarity search failed: {e}")
             return []
@@ -236,16 +201,13 @@ class aclaraiVectorStore:
     ) -> Optional[Dict[str, Any]]:
         """
         Retrieve a specific chunk by its aclarai block ID and chunk index.
-
         Args:
             aclarai_block_id: The aclarai:id of the source block
             chunk_index: The chunk index within the block
-
         Returns:
             Chunk metadata if found, None otherwise
         """
         logger.debug(f"Retrieving chunk: {aclarai_block_id}[{chunk_index}]")
-
         try:
             # Use metadata filter to find specific chunk
             results = self.similarity_search(
@@ -256,13 +218,11 @@ class aclaraiVectorStore:
                     "chunk_index": chunk_index,
                 },
             )
-
             if results:
                 return results[0][0]  # Return metadata
             else:
                 logger.debug(f"Chunk not found: {aclarai_block_id}[{chunk_index}]")
                 return None
-
         except Exception as e:
             logger.error(
                 f"Failed to retrieve chunk {aclarai_block_id}[{chunk_index}]: {e}"
@@ -272,15 +232,12 @@ class aclaraiVectorStore:
     def get_chunks_by_block_id(self, aclarai_block_id: str) -> List[Dict[str, Any]]:
         """
         Retrieve all chunks for a specific aclarai block ID.
-
         Args:
             aclarai_block_id: The aclarai:id of the source block
-
         Returns:
             List of chunk metadata dictionaries
         """
         logger.debug(f"Retrieving all chunks for block: {aclarai_block_id}")
-
         try:
             # Use metadata filter to find all chunks for this block
             results = self.similarity_search(
@@ -288,14 +245,11 @@ class aclaraiVectorStore:
                 top_k=100,  # Reasonable upper limit for chunks per block
                 filter_metadata={"aclarai_block_id": aclarai_block_id},
             )
-
             # Extract just the metadata and sort by chunk_index
             chunks = [result[0] for result in results]
             chunks.sort(key=lambda x: x.get("chunk_index", 0))
-
             logger.debug(f"Retrieved {len(chunks)} chunks for block {aclarai_block_id}")
             return chunks
-
         except Exception as e:
             logger.error(f"Failed to retrieve chunks for block {aclarai_block_id}: {e}")
             return []
@@ -303,23 +257,18 @@ class aclaraiVectorStore:
     def delete_chunks_by_block_id(self, aclarai_block_id: str) -> int:
         """
         Delete all chunks for a specific aclarai block ID.
-
         Args:
             aclarai_block_id: The aclarai:id of the source block
-
         Returns:
             Number of chunks deleted
         """
         logger.info(f"Deleting chunks for block: {aclarai_block_id}")
-
         try:
             # First get all chunks to know what to delete
             chunks = self.get_chunks_by_block_id(aclarai_block_id)
-
             if not chunks:
                 logger.debug(f"No chunks found to delete for block {aclarai_block_id}")
                 return 0
-
             # Delete each chunk by its document ID
             deleted_count = 0
             for chunk in chunks:
@@ -330,10 +279,8 @@ class aclaraiVectorStore:
                         deleted_count += 1
                     except Exception as e:
                         logger.error(f"Failed to delete chunk {doc_id}: {e}")
-
             logger.info(f"Deleted {deleted_count} chunks for block {aclarai_block_id}")
             return deleted_count
-
         except Exception as e:
             logger.error(f"Failed to delete chunks for block {aclarai_block_id}: {e}")
             return 0
@@ -341,7 +288,6 @@ class aclaraiVectorStore:
     def get_store_metrics(self) -> VectorStoreMetrics:
         """
         Get metrics about the vector store.
-
         Returns:
             VectorStoreMetrics with current statistics
         """
@@ -351,30 +297,26 @@ class aclaraiVectorStore:
                 table_name = self._validate_table_name(
                     self.config.embedding.collection_name
                 )
-
                 # Get total count
                 # Table name is validated above to prevent SQL injection
                 count_query = text(f"""
-                    SELECT COUNT(*) as total_vectors 
+                    SELECT COUNT(*) as total_vectors
                     FROM {table_name}
                 """)  # nosec B608
                 result = conn.execute(count_query)
                 total_vectors = result.fetchone()[0]
-
                 # Get table size
                 size_query = text("""
                     SELECT pg_size_pretty(pg_total_relation_size(:table_name))
                 """)
                 size_result = conn.execute(size_query, {"table_name": table_name})
                 size_str = size_result.fetchone()[0]
-
                 return VectorStoreMetrics(
                     total_vectors=total_vectors,
                     successful_inserts=total_vectors,  # Approximate
                     failed_inserts=0,
                     index_size_mb=self._parse_size_to_mb(size_str),
                 )
-
         except Exception as e:
             logger.error(f"Failed to get store metrics: {e}")
             return VectorStoreMetrics(
@@ -384,14 +326,12 @@ class aclaraiVectorStore:
     def _initialize_pgvector_store(self) -> PGVectorStore:
         """
         Initialize the PGVectorStore with proper configuration.
-
         Returns:
             Configured PGVectorStore instance
         """
         try:
             # Ensure pgvector extension is enabled
             self._ensure_pgvector_extension()
-
             # Initialize PGVectorStore
             vector_store = PGVectorStore.from_params(
                 database=self.config.postgres.database,
@@ -407,12 +347,10 @@ class aclaraiVectorStore:
                     "hnsw_ef_search": 40,
                 },
             )
-
             logger.info(
                 f"Initialized PGVectorStore with table: {self.config.embedding.collection_name}"
             )
             return vector_store
-
         except Exception as e:
             logger.error(f"Failed to initialize PGVectorStore: {e}")
             raise
@@ -433,15 +371,12 @@ class aclaraiVectorStore:
     ) -> List[Document]:
         """
         Convert EmbeddedChunk objects to LlamaIndex Documents.
-
         Args:
             embedded_chunks: List of embedded chunks
-
         Returns:
             List of Document objects for LlamaIndex
         """
         documents = []
-
         for chunk in embedded_chunks:
             metadata = {
                 "aclarai_block_id": chunk.chunk_metadata.aclarai_block_id,
@@ -450,16 +385,13 @@ class aclaraiVectorStore:
                 "model_name": chunk.model_name,
                 "embedding_dim": chunk.embedding_dim,
             }
-
             # Create Document with embedding
             doc = Document(
                 text=chunk.chunk_metadata.text,
                 metadata=metadata,
                 embedding=chunk.embedding,
             )
-
             documents.append(doc)
-
         return documents
 
     def _matches_filter(
@@ -467,30 +399,21 @@ class aclaraiVectorStore:
     ) -> bool:
         """
         Check if metadata matches the provided filter.
-
         Args:
             metadata: Metadata to check
             filter_metadata: Filter criteria
-
         Returns:
             True if metadata matches filter, False otherwise
         """
         if filter_metadata is None:
             return True
-
-        for key, value in filter_metadata.items():
-            if metadata.get(key) != value:
-                return False
-
-        return True
+        return all(metadata.get(key) == value for key, value in filter_metadata.items())
 
     def _parse_size_to_mb(self, size_str: str) -> Optional[float]:
         """
         Parse PostgreSQL size string to MB.
-
         Args:
             size_str: Size string from PostgreSQL (e.g., "123 kB", "4567 MB")
-
         Returns:
             Size in MB or None if parsing fails
         """
@@ -498,10 +421,8 @@ class aclaraiVectorStore:
             parts = size_str.strip().split()
             if len(parts) != 2:
                 return None
-
             value, unit = parts
             value = float(value)
-
             unit = unit.upper()
             if unit == "BYTES":
                 return value / (1024 * 1024)
@@ -513,6 +434,5 @@ class aclaraiVectorStore:
                 return value * 1024
             else:
                 return None
-
         except (ValueError, IndexError):
             return None

@@ -1,16 +1,15 @@
 """
 Claimify to Neo4j integration utilities.
-
 Provides functionality to convert Claimify pipeline results into Neo4j input data
 and persist them to the knowledge graph.
 """
 
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
-from .data_models import ClaimCandidate, ClaimifyResult, SentenceChunk
 from ..graph.models import ClaimInput, SentenceInput
 from ..graph.neo4j_manager import Neo4jGraphManager
+from .data_models import ClaimCandidate, ClaimifyResult, SentenceChunk
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,6 @@ logger = logging.getLogger(__name__)
 class ClaimifyGraphIntegration:
     """
     Integrates Claimify pipeline results with Neo4j graph storage.
-
     Handles the conversion of Claimify output (ClaimCandidate objects) into
     Neo4j input data (ClaimInput, SentenceInput) and manages persistence
     to the knowledge graph.
@@ -27,7 +25,6 @@ class ClaimifyGraphIntegration:
     def __init__(self, graph_manager: Neo4jGraphManager):
         """
         Initialize the integration with a graph manager.
-
         Args:
             graph_manager: Neo4jGraphManager instance for database operations
         """
@@ -38,17 +35,14 @@ class ClaimifyGraphIntegration:
     ) -> Tuple[int, int, List[str]]:
         """
         Persist Claimify pipeline results to Neo4j.
-
         Args:
             results: List of ClaimifyResult objects from pipeline processing
-
         Returns:
             Tuple of (claims_created, sentences_created, errors)
         """
         claim_inputs = []
         sentence_inputs = []
         errors = []
-
         # Convert results to Neo4j input data
         for result in results:
             try:
@@ -61,11 +55,9 @@ class ClaimifyGraphIntegration:
                 logger.error(
                     f"[integration.ClaimifyGraphIntegration.persist_claimify_results] {error_msg}"
                 )
-
         # Persist to Neo4j
         claims_created = 0
         sentences_created = 0
-
         if claim_inputs:
             try:
                 created_claims = self.graph_manager.create_claims(claim_inputs)
@@ -79,7 +71,6 @@ class ClaimifyGraphIntegration:
                 logger.error(
                     f"[integration.ClaimifyGraphIntegration.persist_claimify_results] {error_msg}"
                 )
-
         if sentence_inputs:
             try:
                 created_sentences = self.graph_manager.create_sentences(sentence_inputs)
@@ -93,7 +84,6 @@ class ClaimifyGraphIntegration:
                 logger.error(
                     f"[integration.ClaimifyGraphIntegration.persist_claimify_results] {error_msg}"
                 )
-
         return claims_created, sentences_created, errors
 
     def _convert_result_to_inputs(
@@ -101,16 +91,13 @@ class ClaimifyGraphIntegration:
     ) -> Tuple[List[ClaimInput], List[SentenceInput]]:
         """
         Convert a single ClaimifyResult to Neo4j input objects.
-
         Args:
             result: ClaimifyResult from pipeline processing
-
         Returns:
             Tuple of (claim_inputs, sentence_inputs)
         """
         claim_inputs = []
         sentence_inputs = []
-
         # Handle successful processing with claims/sentences
         if result.was_processed and result.decomposition_result:
             # Convert valid claims to ClaimInput objects
@@ -119,7 +106,6 @@ class ClaimifyGraphIntegration:
                     claim_candidate, result.original_chunk
                 )
                 claim_inputs.append(claim_input)
-
             # Convert rejected candidates to SentenceInput objects
             for sentence_candidate in result.final_sentences:
                 sentence_input = self._create_sentence_input(
@@ -128,7 +114,6 @@ class ClaimifyGraphIntegration:
                     rejection_reason="Failed decomposition criteria",
                 )
                 sentence_inputs.append(sentence_input)
-
         # Handle sentences that were not selected for processing
         elif not result.was_processed:
             # Create a SentenceInput for the original chunk
@@ -137,7 +122,6 @@ class ClaimifyGraphIntegration:
                 rejection_reason="Not selected by Selection agent",
             )
             sentence_inputs.append(sentence_input)
-
         return claim_inputs, sentence_inputs
 
     def _create_claim_input(
@@ -145,11 +129,9 @@ class ClaimifyGraphIntegration:
     ) -> ClaimInput:
         """
         Create a ClaimInput from a ClaimCandidate.
-
         Args:
             claim_candidate: Valid claim from decomposition
             source_chunk: Original sentence chunk
-
         Returns:
             ClaimInput object for Neo4j persistence
         """
@@ -173,12 +155,10 @@ class ClaimifyGraphIntegration:
     ) -> SentenceInput:
         """
         Create a SentenceInput from a rejected ClaimCandidate.
-
         Args:
             sentence_candidate: Claim candidate that failed criteria
             source_chunk: Original sentence chunk
             rejection_reason: Why this became a sentence instead of claim
-
         Returns:
             SentenceInput object for Neo4j persistence
         """
@@ -197,11 +177,9 @@ class ClaimifyGraphIntegration:
     ) -> SentenceInput:
         """
         Create a SentenceInput directly from a sentence chunk.
-
         Args:
             source_chunk: Original sentence chunk that wasn't processed
             rejection_reason: Why this wasn't processed
-
         Returns:
             SentenceInput object for Neo4j persistence
         """
@@ -216,13 +194,11 @@ class ClaimifyGraphIntegration:
         )
 
 
-def create_graph_manager_from_config(config: dict) -> Neo4jGraphManager:
+def create_graph_manager_from_config(_config: dict) -> Neo4jGraphManager:
     """
     Create a Neo4jGraphManager from configuration.
-
     Args:
         config: Configuration dictionary with Neo4j settings
-
     Returns:
         Configured Neo4jGraphManager instance
     """
@@ -230,10 +206,7 @@ def create_graph_manager_from_config(config: dict) -> Neo4jGraphManager:
     from ..config import load_config
 
     aclarai_config = load_config(validate=False)
-
     manager = Neo4jGraphManager(config=aclarai_config)
-
     # Apply schema if not already applied
     manager.setup_schema()
-
     return manager

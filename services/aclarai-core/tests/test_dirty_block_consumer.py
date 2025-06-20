@@ -1,6 +1,5 @@
 """
 Tests for the dirty block consumer functionality.
-
 These tests validate the reactive sync loop implementation including
 version checking, conflict detection, and proper graph updates.
 """
@@ -8,7 +7,6 @@ version checking, conflict detection, and proper graph updates.
 import pytest
 from unittest.mock import Mock, patch
 from pathlib import Path
-
 from aclarai_core.dirty_block_consumer import DirtyBlockConsumer
 
 
@@ -55,34 +53,24 @@ class TestDirtyBlockConsumer:
         """Test extraction of aclarai blocks from markdown content."""
         content = """
 Some text before.
-
 This is a claim. <!-- aclarai:id=clm_abc123 ver=2 -->
 ^clm_abc123
-
 Another claim here. <!-- aclarai:id=clm_def456 ver=1 -->
 ^clm_def456
-
 ## File-level document
-
 Some content for the whole file.
-
 <!-- aclarai:id=file_summary ver=3 -->
 """
-
         blocks = consumer.block_parser.extract_aclarai_blocks(content)
-
         assert len(blocks) == 3
-
         # Check first inline block
         assert blocks[0]["aclarai_id"] == "clm_abc123"
         assert blocks[0]["version"] == 2
         assert "This is a claim." in blocks[0]["semantic_text"]
-
         # Check second inline block
         assert blocks[1]["aclarai_id"] == "clm_def456"
         assert blocks[1]["version"] == 1
         assert "Another claim here." in blocks[1]["semantic_text"]
-
         # Check file-level block
         assert blocks[2]["aclarai_id"] == "file_summary"
         assert blocks[2]["version"] == 3
@@ -94,14 +82,11 @@ Some content for the whole file.
         text1 = "This is some text."
         text2 = "This   is    some   text."  # Different whitespace
         text3 = "This is some other text."
-
         hash1 = consumer.block_parser.calculate_content_hash(text1)
         hash2 = consumer.block_parser.calculate_content_hash(text2)
         hash3 = consumer.block_parser.calculate_content_hash(text3)
-
         # Same content with different whitespace should have same hash
         assert hash1 == hash2
-
         # Different content should have different hash
         assert hash1 != hash3
 
@@ -110,21 +95,15 @@ Some content for the whole file.
     def test_read_block_from_file(self, mock_open, mock_exists, consumer):
         """Test reading a specific block from file."""
         mock_exists.return_value = True
-
         file_content = """
 Some content.
-
 This is the target claim. <!-- aclarai:id=clm_target ver=2 -->
 ^clm_target
-
 Another claim. <!-- aclarai:id=clm_other ver=1 -->
 ^clm_other
 """
-
         mock_open.return_value.__enter__.return_value.read.return_value = file_content
-
         block = consumer._read_block_from_file(Path("test.md"), "clm_target")
-
         assert block is not None
         assert block["aclarai_id"] == "clm_target"
         assert block["version"] == 2
@@ -138,13 +117,10 @@ Another claim. <!-- aclarai:id=clm_other ver=1 -->
             "semantic_text": "This is a new claim.",
             "content_hash": "abc123",
         }
-
         # Mock graph manager to return None (block doesn't exist)
         consumer._get_block_from_graph = Mock(return_value=None)
         consumer._create_block_in_graph = Mock()
-
         result = consumer._sync_block_with_graph(block, Path("test.md"))
-
         assert result is True
         consumer._get_block_from_graph.assert_called_once_with("clm_new123")
         consumer._create_block_in_graph.assert_called_once()
@@ -157,19 +133,15 @@ Another claim. <!-- aclarai:id=clm_other ver=1 -->
             "semantic_text": "This is an existing claim.",
             "content_hash": "same_hash",
         }
-
         existing_block = {
             "id": "clm_existing",
             "version": 2,
             "hash": "same_hash",  # Same hash = no change
             "text": "This is an existing claim.",
         }
-
         consumer._get_block_from_graph = Mock(return_value=existing_block)
         consumer._update_block_in_graph = Mock()
-
         result = consumer._sync_block_with_graph(block, Path("test.md"))
-
         assert result is True
         # Should not call update since content is unchanged
         consumer._update_block_in_graph.assert_not_called()
@@ -182,19 +154,15 @@ Another claim. <!-- aclarai:id=clm_other ver=1 -->
             "semantic_text": "This is a conflicted claim.",
             "content_hash": "new_hash",
         }
-
         existing_block = {
             "id": "clm_conflict",
             "version": 3,  # Graph version 3 > vault version 1
             "hash": "old_hash",
             "text": "Previous version",
         }
-
         consumer._get_block_from_graph = Mock(return_value=existing_block)
         consumer._update_block_in_graph = Mock()
-
         result = consumer._sync_block_with_graph(block, Path("test.md"))
-
         assert result is True  # Don't fail, but skip update
         # Should not call update due to version conflict
         consumer._update_block_in_graph.assert_not_called()
@@ -207,19 +175,15 @@ Another claim. <!-- aclarai:id=clm_other ver=1 -->
             "semantic_text": "This is an updated claim.",
             "content_hash": "new_hash",
         }
-
         existing_block = {
             "id": "clm_update",
             "version": 2,  # Graph version 2 < vault version 3
             "hash": "old_hash",
             "text": "Previous version",
         }
-
         consumer._get_block_from_graph = Mock(return_value=existing_block)
         consumer._update_block_in_graph = Mock()
-
         result = consumer._sync_block_with_graph(block, Path("test.md"))
-
         assert result is True
         # Should call update since vault is newer
         consumer._update_block_in_graph.assert_called_once()
@@ -228,17 +192,14 @@ Another claim. <!-- aclarai:id=clm_other ver=1 -->
     def test_update_block_increments_version(self, mock_datetime, consumer):
         """Test that updating a block increments the graph version."""
         mock_datetime.utcnow.return_value.isoformat.return_value = "2024-01-01T00:00:00"
-
         block = {
             "aclarai_id": "clm_increment",
             "semantic_text": "Updated text",
             "content_hash": "new_hash",
         }
-
         existing_block = {
             "version": 5  # Current graph version
         }
-
         # Mock the graph manager
         mock_session = Mock()
         consumer.graph_manager.session.return_value.__enter__.return_value = (
@@ -247,9 +208,7 @@ Another claim. <!-- aclarai:id=clm_other ver=1 -->
         consumer.graph_manager._retry_with_backoff = Mock(
             side_effect=lambda func: func()
         )
-
         consumer._update_block_in_graph(block, existing_block, Path("test.md"))
-
         # Verify the Cypher query was called with incremented version (5 + 1 = 6)
         mock_session.run.assert_called_once()
         call_args = mock_session.run.call_args
@@ -265,7 +224,6 @@ Another claim. <!-- aclarai:id=clm_other ver=1 -->
             "file_path": "test.md",
             "change_type": "deleted",
         }
-
         # Should skip deleted blocks and return success
         result = consumer._process_dirty_block(message)
         assert result is True
@@ -279,19 +237,15 @@ Another claim. <!-- aclarai:id=clm_other ver=1 -->
             "file_path": "test.md",
             "change_type": "modified",
         }
-
         mock_block = {
             "aclarai_id": "clm_modified",
             "version": 2,
             "semantic_text": "Modified text",
             "content_hash": "hash123",
         }
-
         mock_read.return_value = mock_block
         mock_sync.return_value = True
-
         result = consumer._process_dirty_block(message)
-
         assert result is True
         mock_read.assert_called_once_with(Path("test.md"), "clm_modified")
         mock_sync.assert_called_once_with(mock_block, Path("test.md"))
@@ -302,6 +256,5 @@ Another claim. <!-- aclarai:id=clm_other ver=1 -->
             "aclarai_id": "clm_test",
             # Missing file_path and change_type
         }
-
         result = consumer._process_dirty_block(message)
         assert result is False

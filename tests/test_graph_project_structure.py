@@ -1,6 +1,5 @@
 """
 Test project structure and requirements for the Neo4j graph implementation.
-
 These tests ensure that all files exist and contain the required functionality
 as specified in the implementation requirements.
 """
@@ -23,9 +22,7 @@ class TestGraphProjectStructure:
     def test_required_files_exist(self):
         """Ensure all required module files are present."""
         base_path = Path(__file__).parent.parent / "shared" / "aclarai_shared" / "graph"
-
         required_files = ["__init__.py", "models.py", "neo4j_manager.py"]
-
         for file_name in required_files:
             file_path = base_path / file_name
             assert file_path.is_file(), f"Required file is missing: {file_path}"
@@ -40,11 +37,9 @@ class TestGraphProjectStructure:
             / "graph"
             / "neo4j_manager.py"
         )
-
         # Read file content to check for required methods
         with open(manager_path, "r") as f:
             content = f.read()
-
         required_methods = [
             "setup_schema",
             "create_claims",
@@ -53,7 +48,6 @@ class TestGraphProjectStructure:
             "get_sentence_by_id",
             "count_nodes",
         ]
-
         for method in required_methods:
             assert f"def {method}" in content, (
                 f"Neo4jGraphManager missing required method: {method}"
@@ -68,10 +62,8 @@ class TestGraphProjectStructure:
             / "graph"
             / "neo4j_manager.py"
         )
-
         with open(manager_path, "r") as f:
             content = f.read()
-
         # Check for batch operations with UNWIND
         assert "UNWIND" in content, (
             "Neo4jGraphManager should use UNWIND for batch operations"
@@ -89,10 +81,8 @@ class TestGraphProjectStructure:
             / "graph"
             / "neo4j_manager.py"
         )
-
         with open(manager_path, "r") as f:
             content = f.read()
-
         # Check for schema creation
         assert "CREATE CONSTRAINT" in content, (
             "Neo4jGraphManager should create constraints"
@@ -113,7 +103,6 @@ class TestGraphDataModelStructure:
             / "models.py"
         )
         models = load_module_from_path("models", models_path)
-
         # Create test objects
         claim_input = models.ClaimInput(
             text="Test claim",
@@ -124,7 +113,6 @@ class TestGraphDataModelStructure:
         )
         claim = models.Claim.from_input(claim_input)
         claim_dict = claim.to_dict()
-
         # Check for properties required by technical_overview.md
         required_fields = {
             "id",
@@ -149,14 +137,12 @@ class TestGraphDataModelStructure:
             / "models.py"
         )
         models = load_module_from_path("models", models_path)
-
         # Create test objects
         sentence_input = models.SentenceInput(
             text="Test sentence", block_id="block123", ambiguous=True, verifiable=False
         )
         sentence = models.Sentence.from_input(sentence_input)
         sentence_dict = sentence.to_dict()
-
         required_fields = {
             "id",
             "text",
@@ -179,7 +165,6 @@ class TestGraphDataModelStructure:
             / "models.py"
         )
         models = load_module_from_path("models", models_path)
-
         # Test required fields
         claim_input = models.ClaimInput(
             text="Test claim",
@@ -188,7 +173,6 @@ class TestGraphDataModelStructure:
             coverage_score=0.8,
             decontextualization_score=0.7,
         )
-
         # Check field presence
         assert hasattr(claim_input, "text"), "ClaimInput missing text field"
         assert hasattr(claim_input, "block_id"), "ClaimInput missing block_id field"
@@ -202,7 +186,6 @@ class TestGraphDataModelStructure:
             "ClaimInput missing decontextualization_score field"
         )
         assert hasattr(claim_input, "claim_id"), "ClaimInput missing claim_id field"
-
         # Check ID generation
         assert claim_input.claim_id.startswith("claim_"), (
             "ClaimInput claim_id should start with 'claim_'"
@@ -218,12 +201,10 @@ class TestGraphDataModelStructure:
             / "models.py"
         )
         models = load_module_from_path("models", models_path)
-
         # Test required fields
         sentence_input = models.SentenceInput(
             text="Test sentence", block_id="block123", ambiguous=True
         )
-
         # Check field presence
         assert hasattr(sentence_input, "text"), "SentenceInput missing text field"
         assert hasattr(sentence_input, "block_id"), (
@@ -235,7 +216,6 @@ class TestGraphDataModelStructure:
         assert hasattr(sentence_input, "sentence_id"), (
             "SentenceInput missing sentence_id field"
         )
-
         # Check ID generation
         assert sentence_input.sentence_id.startswith("sentence_"), (
             "SentenceInput sentence_id should start with 'sentence_'"
@@ -251,19 +231,15 @@ class TestGraphDataModelStructure:
             / "models.py"
         )
         models = load_module_from_path("models", models_path)
-
         # Test Claim metadata
         claim_input = models.ClaimInput(text="Test claim", block_id="block123")
         claim = models.Claim.from_input(claim_input)
-
         assert hasattr(claim, "version"), "Claim missing version field"
         assert hasattr(claim, "timestamp"), "Claim missing timestamp field"
         assert claim.version == 1, "Claim version should default to 1"
-
         # Test Sentence metadata
         sentence_input = models.SentenceInput(text="Test sentence", block_id="block123")
         sentence = models.Sentence.from_input(sentence_input)
-
         assert hasattr(sentence, "version"), "Sentence missing version field"
         assert hasattr(sentence, "timestamp"), "Sentence missing timestamp field"
         assert sentence.version == 1, "Sentence version should default to 1"
@@ -278,17 +254,13 @@ class TestGraphDataModelStructure:
             / "models.py"
         )
         models = load_module_from_path("models", models_path)
-
         # Create test objects
         claim_input = models.ClaimInput(text="Test", block_id="block123")
         claim = models.Claim.from_input(claim_input)
-
         sentence_input = models.SentenceInput(text="Test", block_id="block123")
         sentence = models.Sentence.from_input(sentence_input)
-
         # Validate Claim schema compliance with technical overview
         claim_dict = claim.to_dict()
-
         technical_overview_claim_props = [
             "id",  # claim_id in the spec
             "text",
@@ -296,26 +268,21 @@ class TestGraphDataModelStructure:
             "coverage_score",
             "decontextualization_score",
         ]
-
         for prop in technical_overview_claim_props:
             assert prop in claim_dict, (
                 f"Claim missing property from technical_overview.md: {prop}"
             )
-
         # Check for additional metadata requirements
         metadata_props = ["version", "timestamp"]
         for prop in metadata_props:
             assert prop in claim_dict, f"Claim missing metadata property: {prop}"
-
         # Validate Sentence schema compliance
         sentence_dict = sentence.to_dict()
-
         technical_overview_sentence_props = [
             "id",  # sentence_id in the spec
             "text",
             "ambiguous",
         ]
-
         for prop in technical_overview_sentence_props:
             assert prop in sentence_dict, (
                 f"Sentence missing property from technical_overview.md: {prop}"

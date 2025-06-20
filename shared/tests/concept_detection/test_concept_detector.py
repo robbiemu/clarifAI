@@ -1,21 +1,25 @@
 """
 Tests for concept detection using hnswlib.
-
 This module tests the core functionality of concept detection including
 similarity matching and merge/promote decision logic.
 """
 
-import pytest
 from unittest.mock import Mock, patch
 
+import pytest
 from aclarai_shared.concept_detection import (
-    ConceptDetector,
     ConceptDetectionResult,
+    ConceptDetector,
     SimilarityMatch,
 )
 from aclarai_shared.concept_detection.models import ConceptAction
+from aclarai_shared.config import (
+    ConceptsConfig,
+    EmbeddingConfig,
+    NounPhraseExtractionConfig,
+    aclaraiConfig,
+)
 from aclarai_shared.noun_phrase_extraction.models import NounPhraseCandidate
-from aclarai_shared.config import aclaraiConfig, ConceptsConfig
 
 
 class TestConceptDetector:
@@ -27,29 +31,41 @@ class TestConceptDetector:
         config = Mock(spec=aclaraiConfig)
         config.concepts = Mock(spec=ConceptsConfig)
         config.concepts.similarity_threshold = 0.9
+        config.noun_phrase_extraction = Mock(spec=NounPhraseExtractionConfig)
+        config.noun_phrase_extraction.concept_candidates_collection = "mock_collection"
+        config.embedding = Mock(spec=EmbeddingConfig)
+        config.embedding.default_model = "mock-model"
+        config.embedding.embed_dim = 384
+        config.embedding.device = "cpu"
+        config.embedding.batch_size = 32
+
         return config
 
     @pytest.fixture
-    def mock_candidates_store(self):
-        """Mock concept candidates store."""
+    def detector(self, mock_config):
+        """Create a ConceptDetector instance with mocked dependencies."""
         with patch(
             "aclarai_shared.concept_detection.detector.ConceptCandidatesVectorStore"
         ) as mock_store_class:
-            mock_store = Mock()
-            mock_store.embed_dim = 384  # Typical embedding dimension
-            mock_store.get_candidates_by_status.return_value = []
-            mock_store_class.return_value = mock_store
-            yield mock_store
+            # Create a mock instance of the vector store
+            mock_store_instance = Mock()
+            mock_store_instance.embed_dim = 384  # Set expected dimension
+            mock_store_instance.get_candidates_by_status.return_value = []
 
-    @pytest.fixture
-    def detector(self, mock_config, mock_candidates_store):
-        """Create a ConceptDetector instance for testing."""
-        with patch(
-            "aclarai_shared.concept_detection.detector.load_config",
-            return_value=mock_config,
-        ):
-            detector = ConceptDetector(config=mock_config)
-            return detector
+            # Configure the patch to return our mock instance
+            mock_store_class.return_value = mock_store_instance
+
+            # Now, when ConceptDetector is initialized, it will get our mock store
+            with patch(
+                "aclarai_shared.concept_detection.detector.load_config",
+                return_value=mock_config,
+            ):
+                detector = ConceptDetector(config=mock_config)
+
+                # Attach the mock store to the detector instance so tests can access it
+                detector.mock_candidates_store = mock_store_instance
+
+                yield detector
 
     @pytest.fixture
     def sample_candidate(self):
@@ -104,9 +120,7 @@ class TestConceptDetector:
         """Test HNSW index initialization."""
         mock_index = Mock()
         mock_hnswlib_index.return_value = mock_index
-
         detector._initialize_index(max_elements=1000)
-
         mock_hnswlib_index.assert_called_once_with(space="cosine", dim=384)
         mock_index.init_index.assert_called_once_with(
             max_elements=1000, M=16, ef_construction=200, random_seed=42
@@ -114,17 +128,15 @@ class TestConceptDetector:
         mock_index.set_ef.assert_called_once_with(50)
         assert detector.index == mock_index
 
-    def test_build_index_empty_candidates(self, detector, mock_candidates_store):
+    def test_build_index_empty_candidates(self, detector):
         """Test building index with no candidates."""
-        mock_candidates_store.get_candidates_by_status.return_value = []
-
+        detector.mock_candidates_store.get_candidates_by_status.return_value = []
         with patch.object(detector, "_initialize_index") as mock_init:
             result = detector.build_index_from_candidates()
-
             assert result == 0
             mock_init.assert_called_once_with(max_elements=1000)
 
-    def test_build_index_with_candidates(self, detector, mock_candidates_store):
+    def test_build_index_with_candidates(self, detector):
         """Test building index with candidates."""
         # Mock candidates data
         mock_candidates = [
@@ -141,20 +153,16 @@ class TestConceptDetector:
                 "status": "pending",
             },
         ]
-
         # Configure the mock store to return our test candidates
         detector.candidates_store.get_candidates_by_status.return_value = (
             mock_candidates
         )
-
         with patch(
             "aclarai_shared.concept_detection.detector.hnswlib.Index"
         ) as mock_hnswlib:
             mock_index = Mock()
             mock_hnswlib.return_value = mock_index
-
             result = detector.build_index_from_candidates()
-
             assert result == 2
             # Verify the mock was used
             mock_hnswlib.assert_called_once_with(space="cosine", dim=384)
@@ -168,9 +176,7 @@ class TestConceptDetector:
             result = detector.find_similar_candidates(sample_candidate)
             assert result == []
 
-    def test_find_similar_candidates_no_embedding(
-        self, detector, mock_candidates_store
-    ):
+    def test_find_similar_candidates_no_embedding(self, detector):
         """Test finding similar candidates for candidate without embedding."""
         candidate_no_embedding = NounPhraseCandidate(
             text="test",
@@ -181,7 +187,6 @@ class TestConceptDetector:
             embedding=None,
             status="pending",
         )
-
         detector.index = Mock()  # Mock index exists
         result = detector.find_similar_candidates(candidate_no_embedding)
         assert result == []
@@ -190,7 +195,6 @@ class TestConceptDetector:
         """Test concept action detection when candidate should be promoted."""
         with patch.object(detector, "find_similar_candidates", return_value=[]):
             result = detector.detect_concept_action(sample_candidate)
-
             assert result.action == ConceptAction.PROMOTED
             assert result.confidence == 1.0
             assert "No similar candidates found" in result.reason
@@ -207,12 +211,10 @@ class TestConceptDetector:
             matched_text="machine learning algorithms",
             metadata={},
         )
-
         with patch.object(
             detector, "find_similar_candidates", return_value=[mock_match]
         ):
             result = detector.detect_concept_action(sample_candidate)
-
             assert result.action == ConceptAction.MERGED
             assert result.confidence == 0.95
             assert "Found similar candidate" in result.reason
@@ -229,12 +231,10 @@ class TestConceptDetector:
             matched_text="neural networks",
             metadata={},
         )
-
         with patch.object(
             detector, "find_similar_candidates", return_value=[mock_match]
         ):
             result = detector.detect_concept_action(sample_candidate)
-
             assert result.action == ConceptAction.PROMOTED
             assert "Best similarity 0.700 < 0.9" in result.reason
             assert len(result.similarity_matches) == 1
@@ -261,7 +261,6 @@ class TestConceptDetector:
                 status="pending",
             ),
         ]
-
         # Mock the individual detection results
         mock_results = [
             ConceptDetectionResult(
@@ -277,13 +276,11 @@ class TestConceptDetector:
                 confidence=0.95,
             ),
         ]
-
         with (
             patch.object(detector, "build_index_from_candidates"),
             patch.object(detector, "detect_concept_action", side_effect=mock_results),
         ):
             batch_result = detector.process_candidates_batch(candidates)
-
             assert batch_result.is_successful
             assert batch_result.total_processed == 2
             assert batch_result.merged_count == 1
@@ -291,13 +288,17 @@ class TestConceptDetector:
             assert len(batch_result.results) == 2
             assert batch_result.processing_time is not None
 
-    def test_similarity_threshold_from_config(self, mock_config, mock_candidates_store):
+    def test_similarity_threshold_from_config(self, mock_config):
         """Test that similarity threshold is correctly read from config."""
         mock_config.concepts.similarity_threshold = 0.85
-
-        with patch(
-            "aclarai_shared.concept_detection.detector.load_config",
-            return_value=mock_config,
+        with (
+            patch(
+                "aclarai_shared.concept_detection.detector.ConceptCandidatesVectorStore"
+            ),
+            patch(
+                "aclarai_shared.concept_detection.detector.load_config",
+                return_value=mock_config,
+            ),
         ):
             detector = ConceptDetector(config=mock_config)
             assert detector.similarity_threshold == 0.85
@@ -308,7 +309,6 @@ class TestConceptDetector:
             detector, "find_similar_candidates", side_effect=Exception("Test error")
         ):
             result = detector.detect_concept_action(sample_candidate)
-
             assert result.action == ConceptAction.PROMOTED  # Fallback
             assert result.confidence == 0.0
             assert "Error during detection" in result.reason
@@ -316,12 +316,10 @@ class TestConceptDetector:
     def test_batch_error_handling(self, detector):
         """Test error handling during batch processing."""
         candidates = [Mock()]
-
         with patch.object(
             detector, "build_index_from_candidates", side_effect=Exception("Test error")
         ):
             batch_result = detector.process_candidates_batch(candidates)
-
             assert not batch_result.is_successful
             assert "Test error" in batch_result.error
             assert batch_result.total_processed == 1

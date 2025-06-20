@@ -2,8 +2,8 @@
 Comprehensive tests for graph module initialization.
 """
 
-from aclarai_shared.graph import models, neo4j_manager
 import aclarai_shared.graph as graph_module
+from aclarai_shared.graph import models, neo4j_manager
 
 
 class TestGraphModuleInit:
@@ -36,11 +36,9 @@ class TestGraphModuleInit:
         claim_input = ClaimInput(text="Test claim", block_id="blk_123")
         assert claim_input.text == "Test claim"
         assert claim_input.block_id == "blk_123"
-
         sentence_input = SentenceInput(text="Test sentence", block_id="blk_456")
         assert sentence_input.text == "Test sentence"
         assert sentence_input.block_id == "blk_456"
-
         # Test that classes can be imported
         assert ClaimInput is not None
         assert SentenceInput is not None
@@ -54,10 +52,8 @@ class TestGraphModuleInit:
             os.path.dirname(__file__), "../../aclarai_shared/graph/__init__.py"
         )
         assert os.path.exists(init_path)
-
         # Read the file to ensure it has content
         with open(init_path, "r") as f:
             content = f.read()
-
         # Should have some imports or content
         assert len(content.strip()) > 0

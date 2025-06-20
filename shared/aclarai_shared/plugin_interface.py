@@ -5,7 +5,7 @@ Base plugin interface and data structures for aclarai format conversion.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -24,10 +24,8 @@ class Plugin(ABC):
     def can_accept(self, raw_input: str) -> bool:
         """
         Determine if this plugin can handle the given input.
-
         Args:
             raw_input: The raw text content of the file
-
         Returns:
             True if this plugin can process the input, False otherwise
         """
@@ -37,11 +35,9 @@ class Plugin(ABC):
     def convert(self, raw_input: str, path: Path) -> List[MarkdownOutput]:
         """
         Convert the raw input to one or more MarkdownOutput objects.
-
         Args:
             raw_input: The raw text content of the file
             path: Path to the input file
-
         Returns:
             List of MarkdownOutput objects representing conversations
         """
