@@ -13,7 +13,7 @@ from aclarai_ui.config_panel import create_configuration_panel
 
 # Try to import Playwright, skip tests if not available
 try:
-    from playwright.sync_api import Page, expect
+    from playwright.sync_api import Page, expect, sync_playwright
 
     playwright_available = True
 except ImportError:
@@ -21,10 +21,30 @@ except ImportError:
     # Create dummy fixtures for when Playwright is not available
     Page = None
     expect = None
+    sync_playwright = None
+
+
+def check_browser_available() -> bool:
+    """Check if Playwright browser binaries are available."""
+    if not playwright_available:
+        return False
+
+    try:
+        with sync_playwright() as p:
+            # Try to launch chromium to see if browsers are installed
+            browser = p.chromium.launch(headless=True)
+            browser.close()
+            return True
+    except Exception:
+        return False
+
+
+# Check both package and browser availability
+browsers_available = check_browser_available()
 
 pytestmark = pytest.mark.skipif(
-    not playwright_available,
-    reason="Playwright not available - install with 'uv sync --extra dev && uv run playwright install'",
+    not playwright_available or not browsers_available,
+    reason="Playwright not available or browsers not installed - install with 'uv sync --extra dev && uv run playwright install'",
 )
 
 
