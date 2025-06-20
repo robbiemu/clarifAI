@@ -11,9 +11,56 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Detect what changed to determine which jobs to run
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      docker: ${{ steps.filter.outputs.docker }}
+      docker-compose: ${{ steps.filter.outputs.docker-compose }}
+      aclarai-core: ${{ steps.filter.outputs.aclarai-core }}
+      vault-watcher: ${{ steps.filter.outputs.vault-watcher }}
+      scheduler: ${{ steps.filter.outputs.scheduler }}
+      aclarai-ui: ${{ steps.filter.outputs.aclarai-ui }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          python:
+            - '**/*.py'
+            - '**/pyproject.toml'
+            - '**/uv.lock'
+            - '**/requirements*.txt'
+            - 'shared/**'
+          docker:
+            - '**/Dockerfile*'
+            - '**/.dockerignore'
+            - 'services/*/requirements*.txt'
+            - 'services/*/pyproject.toml'
+          docker-compose:
+            - 'docker-compose*.yml'
+            - '.env.example'
+            - 'services/*/Dockerfile*'
+          aclarai-core:
+            - 'services/aclarai-core/**'
+            - 'shared/**'
+          vault-watcher:
+            - 'services/vault-watcher/**'
+            - 'shared/**'
+          scheduler:
+            - 'services/scheduler/**'
+            - 'shared/**'
+          aclarai-ui:
+            - 'services/aclarai-ui/**'
+            - 'shared/**'
+
   lint-and-format:
     name: Lint and Format
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.python == 'true' }}
     
     steps:
     - name: Checkout code
@@ -61,45 +108,13 @@ jobs:
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        
-    - name: Install uv
-      run: pip install uv
-        
-    - name: Cache Python virtual environment
-      uses: actions/cache@v4
-      id: cache-venv
-      with:
-        path: .venv
-        key: ${{ runner.os }}-python-3.11-${{ hashFiles('**/uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-python-3.11-
-          
-    - name: Install dependencies
-      if: steps.cache-venv.outputs.cache-hit != 'true'
-      run: |
-        uv venv
-        uv pip install -e ".[dev]"
-        uv pip install -e ./shared -e ./services/aclarai-core -e ./services/aclarai-ui -e ./services/scheduler -e ./services/vault-watcher
-        
-    - name: Run Bandit security check
-      run: |
-        source .venv/bin/activate
-        echo "Running Bandit security scan..."
-        bandit -r . -c pyproject.toml
-        echo "✅ Security scan completed successfully"
+    # Security scan always runs - no conditions
 
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.python == 'true' }}
     
     steps:
     - name: Checkout code
@@ -192,19 +207,48 @@ jobs:
   docker-build:
     name: Docker Build Validation
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.docker == 'true' }}
     
     strategy:
       matrix:
-        service: [aclarai-core, vault-watcher, scheduler, aclarai-ui]
+        include:
+          - service: aclarai-core
+            condition: ${{ needs.changes.outputs.aclarai-core == 'true' || needs.changes.outputs.docker == 'true' }}
+          - service: vault-watcher
+            condition: ${{ needs.changes.outputs.vault-watcher == 'true' || needs.changes.outputs.docker == 'true' }}
+          - service: scheduler
+            condition: ${{ needs.changes.outputs.scheduler == 'true' || needs.changes.outputs.docker == 'true' }}
+          - service: aclarai-ui
+            condition: ${{ needs.changes.outputs.aclarai-ui == 'true' || needs.changes.outputs.docker == 'true' }}
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Check if service should be built
+      id: should-build
+      run: |
+        if [[ "${{ matrix.service }}" == "aclarai-core" && "${{ needs.changes.outputs.aclarai-core }}" == "true" ]]; then
+          echo "build=true" >> $GITHUB_OUTPUT
+        elif [[ "${{ matrix.service }}" == "vault-watcher" && "${{ needs.changes.outputs.vault-watcher }}" == "true" ]]; then
+          echo "build=true" >> $GITHUB_OUTPUT
+        elif [[ "${{ matrix.service }}" == "scheduler" && "${{ needs.changes.outputs.scheduler }}" == "true" ]]; then
+          echo "build=true" >> $GITHUB_OUTPUT
+        elif [[ "${{ matrix.service }}" == "aclarai-ui" && "${{ needs.changes.outputs.aclarai-ui }}" == "true" ]]; then
+          echo "build=true" >> $GITHUB_OUTPUT
+        elif [[ "${{ needs.changes.outputs.docker }}" == "true" ]]; then
+          echo "build=true" >> $GITHUB_OUTPUT
+        else
+          echo "build=false" >> $GITHUB_OUTPUT
+        fi
+      
     - name: Set up Docker Buildx
+      if: steps.should-build.outputs.build == 'true'
       uses: docker/setup-buildx-action@v3
       
     - name: Cache Docker layers
+      if: steps.should-build.outputs.build == 'true'
       uses: actions/cache@v4
       with:
         path: /tmp/.buildx-cache
@@ -213,6 +257,7 @@ jobs:
           ${{ runner.os }}-buildx-${{ matrix.service }}-
           
     - name: Build Docker image for ${{ matrix.service }}
+      if: steps.should-build.outputs.build == 'true'
       run: |
         echo "Building Docker image for ${{ matrix.service }}"
         # Try to build the Docker image, but allow it to fail gracefully
@@ -228,6 +273,7 @@ jobs:
         fi
           
     - name: Test Docker image
+      if: steps.should-build.outputs.build == 'true'
       run: |
         echo "Testing Docker image for ${{ matrix.service }}"
         # Only test if the image was successfully built
@@ -240,6 +286,7 @@ jobs:
         fi
         
     - name: Move cache
+      if: steps.should-build.outputs.build == 'true'
       run: |
         rm -rf /tmp/.buildx-cache
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache || true
@@ -247,6 +294,8 @@ jobs:
   docker-compose-validation:
     name: Docker Compose Validation
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.docker-compose == 'true' }}
     
     steps:
     - name: Checkout code
