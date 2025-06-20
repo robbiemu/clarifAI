@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Command-line utility for installing default prompt templates.
-
 This script can be used during Docker builds or manual installation to ensure
 default prompt files are available for user customization.
 """
@@ -49,9 +48,7 @@ def main():
         action="store_true",
         help="Install all available default prompts",
     )
-
     args = parser.parse_args()
-
     try:
         if args.all:
             count = install_all_default_prompts(
@@ -79,7 +76,6 @@ def main():
                 print("Installed default conversation_extraction prompt")
             else:
                 print("Conversation extraction prompt already exists")
-
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

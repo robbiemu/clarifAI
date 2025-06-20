@@ -3,8 +3,9 @@ Tests for embedding module pipeline and initialization.
 """
 
 import os
-import pytest
 from unittest.mock import Mock
+
+import pytest
 
 
 class TestEmbeddingResult:
@@ -17,7 +18,6 @@ class TestEmbeddingResult:
         mock_metrics.total_vectors = 100
         mock_metrics.successful_inserts = 95
         mock_metrics.failed_inserts = 5
-
         # This tests the structure without actually importing
         result_data = {
             "success": True,
@@ -28,7 +28,6 @@ class TestEmbeddingResult:
             "metrics": mock_metrics,
             "errors": ["Test error"],
         }
-
         assert result_data["success"] is True
         assert result_data["total_chunks"] == 100
         assert result_data["embedded_chunks"] == 95
@@ -43,7 +42,6 @@ class TestEmbeddingResult:
         mock_metrics.total_vectors = 0
         mock_metrics.successful_inserts = 0
         mock_metrics.failed_inserts = 0
-
         result_data = {
             "success": False,
             "total_chunks": 0,
@@ -53,7 +51,6 @@ class TestEmbeddingResult:
             "metrics": mock_metrics,
             "errors": [],
         }
-
         assert result_data["success"] is False
         assert result_data["total_chunks"] == 0
         assert len(result_data["errors"]) == 0
@@ -179,7 +176,6 @@ class TestEmbeddingModuleImports:
             "offset_start": 0,
             "offset_end": 100,
         }
-
         assert metadata_data["aclarai_block_id"] == "blk_456"
         assert metadata_data["chunk_index"] == 0
         assert metadata_data["original_text"] == "Original test text"
@@ -200,14 +196,12 @@ class TestEmbeddingModuleImports:
             "offset_start": 0,
             "offset_end": 100,
         }
-
         chunk_data = {
             "chunk_metadata": metadata_data,
             "embedding": [0.1, 0.2, 0.3],
             "model_name": "test-model",
             "embedding_dim": 3,
         }
-
         assert chunk_data["chunk_metadata"] == metadata_data
         assert chunk_data["embedding"] == [0.1, 0.2, 0.3]
         assert chunk_data["model_name"] == "test-model"

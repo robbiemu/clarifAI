@@ -2,13 +2,13 @@
 Tests for embedding storage components.
 """
 
-import pytest
 from unittest.mock import Mock, patch
 
-from aclarai_shared.embedding.storage import aclaraiVectorStore, VectorStoreMetrics
-from aclarai_shared.embedding.models import EmbeddedChunk
+import pytest
+from aclarai_shared.config import DatabaseConfig, aclaraiConfig
 from aclarai_shared.embedding.chunking import ChunkMetadata
-from aclarai_shared.config import aclaraiConfig, DatabaseConfig
+from aclarai_shared.embedding.models import EmbeddedChunk
+from aclarai_shared.embedding.storage import VectorStoreMetrics, aclaraiVectorStore
 
 
 class TestVectorStoreMetrics:
@@ -19,7 +19,6 @@ class TestVectorStoreMetrics:
         metrics = VectorStoreMetrics(
             total_vectors=100, successful_inserts=95, failed_inserts=5
         )
-
         assert metrics.total_vectors == 100
         assert metrics.successful_inserts == 95
         assert metrics.failed_inserts == 5
@@ -27,7 +26,6 @@ class TestVectorStoreMetrics:
     def test_vector_store_metrics_default(self):
         """Test VectorStoreMetrics with defaults."""
         metrics = VectorStoreMetrics(50, 45, 5)
-
         assert metrics.total_vectors == 50
         assert metrics.successful_inserts == 45
         assert metrics.failed_inserts == 5
@@ -37,7 +35,6 @@ class TestVectorStoreMetrics:
         metrics1 = VectorStoreMetrics(10, 8, 2)
         metrics2 = VectorStoreMetrics(10, 8, 2)
         metrics3 = VectorStoreMetrics(10, 9, 1)
-
         assert metrics1 == metrics2
         assert metrics1 != metrics3
 
@@ -55,7 +52,6 @@ class TestaclaraiVectorStore:
             user="test_user",
             password="test_pass",
         )
-
         with (
             patch(
                 "aclarai_shared.embedding.storage.create_engine"
@@ -69,7 +65,6 @@ class TestaclaraiVectorStore:
             mock_engine.connect.return_value.__exit__ = Mock()
             mock_create_engine.return_value = mock_engine
             mock_load_config.return_value = config
-
             vector_store = aclaraiVectorStore(config=config)
             assert vector_store.config == config
 
@@ -84,7 +79,6 @@ class TestaclaraiVectorStore:
             user="test_user",
             password="test_pass",
         )
-
         # Integration test - requires real PostgreSQL service
         vector_store = aclaraiVectorStore(config=config)
         assert vector_store.config == config
@@ -99,7 +93,6 @@ class TestaclaraiVectorStore:
             password="test_pass",
             database="test_db",
         )
-
         # Create test embedded chunks
         chunk_metadata = ChunkMetadata(
             aclarai_block_id="blk_store_test",
@@ -107,7 +100,6 @@ class TestaclaraiVectorStore:
             original_text="Test original text",
             text="Test chunk text",
         )
-
         embedded_chunks = [
             EmbeddedChunk(
                 chunk_metadata=chunk_metadata,
@@ -116,7 +108,6 @@ class TestaclaraiVectorStore:
                 embedding_dim=3,
             )
         ]
-
         with (
             patch(
                 "aclarai_shared.embedding.storage.create_engine"
@@ -130,9 +121,7 @@ class TestaclaraiVectorStore:
             mock_engine.connect.return_value.__exit__ = Mock()
             mock_create_engine.return_value = mock_engine
             mock_load_config.return_value = config
-
             vector_store = aclaraiVectorStore(config=config)
-
             # Mock the store_embeddings return value
             with patch.object(
                 vector_store,
@@ -153,7 +142,6 @@ class TestaclaraiVectorStore:
             password="test_pass",
             database="test_db",
         )
-
         # Create test embedded chunks
         chunk_metadata = ChunkMetadata(
             aclarai_block_id="blk_store_test",
@@ -161,7 +149,6 @@ class TestaclaraiVectorStore:
             original_text="Test original text",
             text="Test chunk text",
         )
-
         embedded_chunks = [
             EmbeddedChunk(
                 chunk_metadata=chunk_metadata,
@@ -170,7 +157,6 @@ class TestaclaraiVectorStore:
                 embedding_dim=3,
             )
         ]
-
         # Integration test - requires real PostgreSQL service
         vector_store = aclaraiVectorStore(config=config)
         metrics = vector_store.store_embeddings(embedded_chunks)
@@ -186,7 +172,6 @@ class TestaclaraiVectorStore:
             password="test_pass",
             database="test_db",
         )
-
         with (
             patch(
                 "aclarai_shared.embedding.storage.create_engine"
@@ -200,9 +185,7 @@ class TestaclaraiVectorStore:
             mock_engine.connect.return_value.__exit__ = Mock()
             mock_create_engine.return_value = mock_engine
             mock_load_config.return_value = config
-
             vector_store = aclaraiVectorStore(config=config)
-
             # Mock the store_embeddings return value
             with patch.object(
                 vector_store,
@@ -225,7 +208,6 @@ class TestaclaraiVectorStore:
             password="test_pass",
             database="test_db",
         )
-
         # Integration test - requires real PostgreSQL service
         vector_store = aclaraiVectorStore(config=config)
         metrics = vector_store.store_embeddings([])
@@ -243,7 +225,6 @@ class TestaclaraiVectorStore:
             password="test_pass",
             database="test_db",
         )
-
         with (
             patch(
                 "aclarai_shared.embedding.storage.create_engine"
@@ -257,9 +238,7 @@ class TestaclaraiVectorStore:
             mock_engine.connect.return_value.__exit__ = Mock()
             mock_create_engine.return_value = mock_engine
             mock_load_config.return_value = config
-
             vector_store = aclaraiVectorStore(config=config)
-
             # Mock the similarity_search return value
             with patch.object(vector_store, "similarity_search", return_value=[]):
                 results = vector_store.similarity_search("test query", top_k=5)
@@ -276,7 +255,6 @@ class TestaclaraiVectorStore:
             password="test_pass",
             database="test_db",
         )
-
         # Integration test - requires real PostgreSQL service
         vector_store = aclaraiVectorStore(config=config)
         results = vector_store.similarity_search("test query", top_k=5)
@@ -292,7 +270,6 @@ class TestaclaraiVectorStore:
             password="test_pass",
             database="test_db",
         )
-
         with (
             patch(
                 "aclarai_shared.embedding.storage.create_engine"
@@ -306,9 +283,7 @@ class TestaclaraiVectorStore:
             mock_engine.connect.return_value.__exit__ = Mock()
             mock_create_engine.return_value = mock_engine
             mock_load_config.return_value = config
-
             vector_store = aclaraiVectorStore(config=config)
-
             # Mock the delete_chunks_by_block_id return value
             with patch.object(
                 vector_store, "delete_chunks_by_block_id", return_value=0
@@ -327,7 +302,6 @@ class TestaclaraiVectorStore:
             password="test_pass",
             database="test_db",
         )
-
         # Integration test - requires real PostgreSQL service
         vector_store = aclaraiVectorStore(config=config)
         deleted_count = vector_store.delete_chunks_by_block_id("test_block_id")
@@ -343,7 +317,6 @@ class TestaclaraiVectorStore:
             password="test_pass",
             database="test_db",
         )
-
         with (
             patch(
                 "aclarai_shared.embedding.storage.create_engine"
@@ -357,9 +330,7 @@ class TestaclaraiVectorStore:
             mock_engine.connect.return_value.__exit__ = Mock()
             mock_create_engine.return_value = mock_engine
             mock_load_config.return_value = config
-
             vector_store = aclaraiVectorStore(config=config)
-
             # Mock the get_store_metrics return value
             with patch.object(
                 vector_store,
@@ -380,7 +351,6 @@ class TestaclaraiVectorStore:
             password="test_pass",
             database="test_db",
         )
-
         # Integration test - requires real PostgreSQL service
         vector_store = aclaraiVectorStore(config=config)
         metrics = vector_store.get_store_metrics()

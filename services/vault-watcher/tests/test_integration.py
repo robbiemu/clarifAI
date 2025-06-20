@@ -4,9 +4,10 @@ Integration tests for the vault watcher service.
 
 import tempfile
 import time
-import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
+
+import pytest
 from aclarai_vault_watcher.file_watcher import BatchedFileWatcher
 from aclarai_vault_watcher.main import VaultWatcherService
 
@@ -33,7 +34,6 @@ class TestFileWatcher:
     def test_file_watcher_initialization(self, file_watcher):
         """Test that file watcher can be initialized properly."""
         watcher, temp_dir = file_watcher
-
         assert watcher.vault_path == Path(temp_dir)
         assert watcher.batch_interval == 0.1
         assert watcher.max_batch_size == 5
@@ -42,11 +42,9 @@ class TestFileWatcher:
     def test_file_watcher_start_stop(self, file_watcher):
         """Test starting and stopping the file watcher."""
         watcher, _ = file_watcher
-
         # Should start without errors
         watcher.start()
         assert watcher._observer is not None
-
         # Should stop without errors
         watcher.stop()
         assert watcher._observer is None
@@ -55,30 +53,23 @@ class TestFileWatcher:
         """Test that file events are properly batched."""
         watcher, temp_dir = file_watcher
         vault_path = Path(temp_dir)
-
         # Create smaller batching parameters for faster test
         watcher.batch_interval = 0.05  # Very short interval
         watcher.max_batch_size = 2
-
         # Create test files
         test_file1 = vault_path / "test1.md"
         test_file2 = vault_path / "test2.md"
-
         test_file1.write_text("# Test file 1")
         test_file2.write_text("# Test file 2")
-
         # Don't start the watcher - just test the batching logic directly
         # to avoid watchdog observer threading issues
-
         # Simulate file events directly to avoid filesystem timing issues
         watcher._add_event("created", test_file1)
         assert watcher.callback.call_count == 0  # Should not have called yet
-
         watcher._add_event("created", test_file2)
         # Should trigger batch processing due to max_batch_size=2
         # Give minimal time for processing
         time.sleep(0.1)
-
         # Verify callback was called
         assert watcher.callback.call_count >= 1
 
@@ -95,10 +86,8 @@ class TestVaultWatcherService:
         mock_config.vault_watcher.batch_interval = 2.0
         mock_config.vault_watcher.max_batch_size = 50
         mock_config.rabbitmq_host = "localhost"
-
         with patch("aclarai_vault_watcher.main.DirtyBlockPublisher") as mock_publisher:
             service = VaultWatcherService(mock_config)
-
             assert service.config == mock_config
             assert service.block_parser is not None
             assert service.file_watcher is not None
@@ -114,18 +103,14 @@ class TestVaultWatcherService:
         mock_config.vault_watcher.batch_interval = 2.0
         mock_config.vault_watcher.max_batch_size = 50
         mock_config.rabbitmq_host = "localhost"
-
         mock_publisher_instance = Mock()
         mock_publisher.return_value = mock_publisher_instance
-
         service = VaultWatcherService(mock_config)
-
         with (
             patch.object(service.file_watcher, "start"),
             patch.object(service, "_perform_initial_scan"),
         ):
             service.start()
-
             # Should connect to publisher but not create directories
             mock_publisher_instance.connect.assert_called_once()
 
@@ -133,7 +118,6 @@ class TestVaultWatcherService:
         """Test integration of file change handling."""
         with tempfile.TemporaryDirectory() as temp_dir:
             vault_path = Path(temp_dir)
-
             # Create a mock config
             mock_config = Mock()
             mock_config.paths = Mock()
@@ -142,36 +126,27 @@ class TestVaultWatcherService:
             mock_config.vault_watcher.batch_interval = 0.1
             mock_config.vault_watcher.max_batch_size = 5
             mock_config.rabbitmq_host = "localhost"
-
             with patch(
                 "aclarai_vault_watcher.main.DirtyBlockPublisher"
             ) as mock_publisher:
                 mock_publisher_instance = Mock()
                 mock_publisher.return_value = mock_publisher_instance
-
                 service = VaultWatcherService(mock_config)
-
                 # Create a test file with aclarai blocks
                 test_file = vault_path / "test.md"
                 test_content = """
 # Test Document
-
 This is a test claim. <!-- aclarai:id=clm_test123 ver=1 -->
 ^clm_test123
                 """.strip()
-
                 test_file.write_text(test_content)
-
                 # Simulate file creation
                 service._handle_file_created(test_file)
-
                 # Verify that publisher was called
                 mock_publisher_instance.publish_dirty_blocks.assert_called_once()
-
                 # Check the call arguments
                 call_args = mock_publisher_instance.publish_dirty_blocks.call_args
                 file_path, dirty_blocks = call_args[0]
-
                 assert file_path == test_file
                 assert len(dirty_blocks["added"]) == 1
                 assert dirty_blocks["added"][0]["aclarai_id"] == "clm_test123"

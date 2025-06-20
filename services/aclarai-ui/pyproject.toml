@@ -23,6 +23,3 @@ aclarai-ui = "aclarai_ui.main:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["aclarai_ui"]
-
-[tool.ruff]
-# Service-specific ruff config

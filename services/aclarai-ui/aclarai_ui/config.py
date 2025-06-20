@@ -1,5 +1,4 @@
 """Configuration management for aclarai UI service.
-
 This module handles configuration settings for the UI service, including
 paths and other configurable parameters. Settings can be provided via
 environment variables with sensible defaults.
@@ -8,6 +7,7 @@ environment variables with sensible defaults.
 import os
 from dataclasses import dataclass
 from typing import Dict
+
 from aclarai_shared import aclaraiConfig
 
 
@@ -20,12 +20,10 @@ class UIConfig:
     summaries_path: str = "vault"
     concepts_path: str = "vault"
     logs_path: str = ".aclarai/import_logs"
-
     # UI-specific settings
     server_host: str = "0.0.0.0"
     server_port: int = 7860
     debug_mode: bool = False
-
     # Shared configuration access
     _shared_config: aclaraiConfig = None
 
@@ -34,14 +32,14 @@ class UIConfig:
         """Create configuration from environment variables with defaults."""
         return cls(
             # Vault paths (following documented patterns)
-            tier1_path=os.getenv("aclarai_TIER1_PATH", "vault/tier1"),
-            summaries_path=os.getenv("aclarai_SUMMARIES_PATH", "vault"),
-            concepts_path=os.getenv("aclarai_CONCEPTS_PATH", "vault"),
-            logs_path=os.getenv("aclarai_LOGS_PATH", ".aclarai/import_logs"),
+            tier1_path=os.getenv("ACLARAI_TIER1_PATH", "vault/tier1"),
+            summaries_path=os.getenv("ACLARAI_SUMMARIES_PATH", "vault"),
+            concepts_path=os.getenv("ACLARAI_CONCEPTS_PATH", "vault"),
+            logs_path=os.getenv("ACLARAI_LOGS_PATH", ".aclarai/import_logs"),
             # Server configuration
-            server_host=os.getenv("aclarai_UI_HOST", "0.0.0.0"),
-            server_port=int(os.getenv("aclarai_UI_PORT", "7860")),
-            debug_mode=os.getenv("aclarai_UI_DEBUG", "false").lower() == "true",
+            server_host=os.getenv("ACLARAI_UI_HOST", "0.0.0.0"),
+            server_port=int(os.getenv("ACLARAI_UI_PORT", "7860")),
+            debug_mode=os.getenv("ACLARAI_UI_DEBUG", "false").lower() == "true",
         )
 
     @property

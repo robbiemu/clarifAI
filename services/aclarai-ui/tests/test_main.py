@@ -8,14 +8,13 @@ from pathlib import Path
 # Add the service directory to the path for testing
 service_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(service_dir))
-
 # ruff: noqa: E402
 from aclarai_ui.main import (
     ImportStatus,
-    detect_file_format,
-    simulate_plugin_orchestrator,
     clear_import_queue,
     create_import_interface,
+    detect_file_format,
+    simulate_plugin_orchestrator,
 )
 
 
@@ -37,7 +36,6 @@ class TestImportStatus:
         """Test adding a file to the import queue."""
         status = ImportStatus()
         status.add_file("test.json", "/path/to/test.json")
-
         assert len(status.import_queue) == 1
         assert status.import_queue[0]["filename"] == "test.json"
         assert status.import_queue[0]["path"] == "/path/to/test.json"
@@ -50,7 +48,6 @@ class TestImportStatus:
         status = ImportStatus()
         status.add_file("test.json", "/path/to/test.json")
         status.update_file_status("test.json", "✅ Imported", "chatgpt_json")
-
         assert status.import_queue[0]["status"] == "✅ Imported"
         assert status.import_queue[0]["detector"] == "chatgpt_json"
 
@@ -65,9 +62,7 @@ class TestImportStatus:
         status = ImportStatus()
         status.add_file("test.json", "/path/to/test.json")
         status.update_file_status("test.json", "✅ Imported", "chatgpt_json")
-
         result = status.format_queue_display()
-
         # Check that it contains the expected table structure
         assert "| Filename | Status | Detector | Time |" in result
         assert "test.json" in result
@@ -83,19 +78,14 @@ class TestImportStatus:
     def test_get_summary_with_files(self):
         """Test getting summary with processed files."""
         status = ImportStatus()
-
         # Add and process some files
         status.add_file("imported.json", "/path/to/imported.json")
         status.update_file_status("imported.json", "✅ Imported", "chatgpt_json")
-
         status.add_file("failed.txt", "/path/to/failed.txt")
         status.update_file_status("failed.txt", "❌ Failed", "None")
-
         status.add_file("fallback.csv", "/path/to/fallback.csv")
         status.update_file_status("fallback.csv", "⚠️ Fallback", "fallback_llm")
-
         result = status.get_summary()
-
         # Check summary content
         assert "## 📊 Import Summary" in result
         assert "**Total Files Processed:** 3" in result
@@ -165,15 +155,12 @@ class TestPluginOrchestrator:
         # Create a temporary file for testing
         with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as temp_file:
             temp_path = temp_file.name
-
         try:
             # Start with fresh import status
             import_status = ImportStatus()
-
             queue_display, summary_display, updated_status = (
                 simulate_plugin_orchestrator(temp_path, import_status)
             )
-
             # Check that the file was processed
             assert (
                 "test" in queue_display.lower()
@@ -190,21 +177,17 @@ class TestPluginOrchestrator:
         # Create a temporary file for testing
         with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as temp_file:
             temp_path = temp_file.name
-
         try:
             # Start with fresh import status
             import_status = ImportStatus()
-
             # Process the file once
             _, _, updated_status = simulate_plugin_orchestrator(
                 temp_path, import_status
             )
-
             # Process the same file again (should be detected as duplicate)
             queue_display, summary_display, final_status = simulate_plugin_orchestrator(
                 temp_path, updated_status
             )
-
             # Check that duplicate was detected
             assert "Skipped" in queue_display or "Duplicate" in queue_display
         finally:
@@ -218,7 +201,6 @@ class TestInterfaceCreation:
     def test_create_import_interface(self):
         """Test that the import interface can be created successfully."""
         interface = create_import_interface()
-
         # Basic checks that interface was created
         assert interface is not None
         assert hasattr(interface, "launch")
@@ -227,7 +209,6 @@ class TestInterfaceCreation:
         """Test that interface contains expected components."""
         # This test checks that the interface creation doesn't raise errors
         # We can't test Gradio components directly without a browser context
-
         # Simply verify that the function completes without error
         # The actual interface testing would require a browser environment
         try:
@@ -248,17 +229,13 @@ class TestClearQueue:
         import_status = ImportStatus()
         import_status.add_file("test1.json", "/path/to/test1.json")
         import_status.add_file("test2.txt", "/path/to/test2.txt")
-
         # Verify files were added
         assert len(import_status.import_queue) == 2
-
         # Clear the queue
         queue_display, summary_display, new_status = clear_import_queue(import_status)
-
         # Verify queue was cleared
         assert queue_display == "Import queue cleared."
         assert summary_display == ""
-
         # Verify new status was reset
         assert len(new_status.import_queue) == 0
 
@@ -274,7 +251,6 @@ class TestEdgeCases:
         detector_lower, status_lower = detect_file_format(
             "/path/to/file.json", "file.json"
         )
-
         assert detector_upper == detector_lower
         assert status_upper == status_lower
 
@@ -282,10 +258,8 @@ class TestEdgeCases:
         """Test updating status of non-existent file."""
         status = ImportStatus()
         status.add_file("existing.json", "/path/to/existing.json")
-
         # Try to update a file that doesn't exist
         status.update_file_status("nonexistent.json", "✅ Imported", "test_plugin")
-
         # Verify that the existing file wasn't affected
         assert status.import_queue[0]["filename"] == "existing.json"
         assert status.import_queue[0]["status"] == "Processing..."
@@ -296,13 +270,10 @@ class TestEdgeCases:
         status = ImportStatus()
         status.add_file("test.json", "/path1/test.json")
         status.add_file("test.json", "/path2/test.json")
-
         # Both files should be in the queue
         assert len(status.import_queue) == 2
-
         # Update status of first occurrence
         status.update_file_status("test.json", "✅ Imported", "chatgpt_json")
-
         # Only the first occurrence should be updated
         assert status.import_queue[0]["status"] == "✅ Imported"
         assert status.import_queue[1]["status"] == "Processing..."

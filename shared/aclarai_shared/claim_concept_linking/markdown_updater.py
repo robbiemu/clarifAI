@@ -1,6 +1,5 @@
 """
 Markdown updater for Tier 2 files with concept wikilinks.
-
 This module handles updating Tier 2 Markdown files to include [[wikilinks]]
 for linked concepts, following the atomic write patterns from
 docs/arch/on-filehandle_conflicts.md.
@@ -9,7 +8,7 @@ docs/arch/on-filehandle_conflicts.md.
 import logging
 import re
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from ..config import aclaraiConfig, load_config
 from ..import_system import write_file_atomically
@@ -21,7 +20,6 @@ logger = logging.getLogger(__name__)
 class Tier2MarkdownUpdater:
     """
     Updates Tier 2 Markdown files with concept wikilinks.
-
     This class handles finding Tier 2 files that contain linked claims
     and adding [[concept]] wikilinks while preserving aclarai:id anchors
     and incrementing version numbers.
@@ -30,24 +28,20 @@ class Tier2MarkdownUpdater:
     def __init__(self, config: Optional[aclaraiConfig] = None, neo4j_manager=None):
         """
         Initialize the Tier 2 Markdown updater.
-
         Args:
             config: aclarai configuration (loads default if None)
             neo4j_manager: Neo4j manager for database queries
         """
         self.config = config or load_config()
         self.neo4j_manager = neo4j_manager
-
         # Get vault and Tier 2 directory paths
         self.vault_path = Path(self.config.vault_path)
-
         # Tier 2 summaries are typically in the root or a summaries subdirectory
         tier2_path = getattr(self.config.paths, "tier2", None) or ""
         if tier2_path:
             self.tier2_dir = self.vault_path / tier2_path
         else:
             self.tier2_dir = self.vault_path  # Default to vault root
-
         logger.info(
             f"Initialized Tier2MarkdownUpdater for directory: {self.tier2_dir}",
             extra={
@@ -62,10 +56,8 @@ class Tier2MarkdownUpdater:
     ) -> Dict[str, Any]:
         """
         Update Tier 2 Markdown files with concept wikilinks.
-
         Args:
             link_results: List of successful claim-concept links
-
         Returns:
             Dictionary with update statistics
         """
@@ -75,19 +67,15 @@ class Tier2MarkdownUpdater:
             "links_added": 0,
             "errors": [],
         }
-
         # Group links by aclarai_id to process files efficiently
         links_by_file = self._group_links_by_file(link_results)
-
         for aclarai_id, file_links in links_by_file.items():
             try:
                 updated = self._update_single_file(aclarai_id, file_links)
                 stats["files_processed"] += 1
-
                 if updated:
                     stats["files_updated"] += 1
                     stats["links_added"] += len(file_links)
-
             except Exception as e:
                 error_msg = f"Failed to update file for {aclarai_id}: {e}"
                 stats["errors"].append(error_msg)
@@ -100,7 +88,6 @@ class Tier2MarkdownUpdater:
                         "error": str(e),
                     },
                 )
-
         logger.info(
             "Completed Tier 2 file updates",
             extra={
@@ -109,7 +96,6 @@ class Tier2MarkdownUpdater:
                 **stats,
             },
         )
-
         return stats
 
     def _group_links_by_file(
@@ -117,10 +103,8 @@ class Tier2MarkdownUpdater:
     ) -> Dict[str, List[ClaimConceptLinkResult]]:
         """
         Group link results by the aclarai_id of their source file.
-
         Args:
             link_results: List of link results
-
         Returns:
             Dictionary mapping aclarai_id to list of links for that file
         """
@@ -134,13 +118,10 @@ class Tier2MarkdownUpdater:
                 },
             )
             return {}
-
         # Extract claim IDs from link results
         claim_ids = [link.claim_id for link in link_results]
-
         # Get source file mapping from Neo4j
         claim_to_file = self.neo4j_manager.get_claims_source_files(claim_ids)
-
         # Group link results by file
         links_by_file = {}
         for link in link_results:
@@ -158,7 +139,6 @@ class Tier2MarkdownUpdater:
                         "claim_id": link.claim_id,
                     },
                 )
-
         logger.info(
             f"Grouped {len(link_results)} links into {len(links_by_file)} files",
             extra={
@@ -168,7 +148,6 @@ class Tier2MarkdownUpdater:
                 "file_count": len(links_by_file),
             },
         )
-
         return links_by_file
 
     def _update_single_file(
@@ -176,11 +155,9 @@ class Tier2MarkdownUpdater:
     ) -> bool:
         """
         Update a single Tier 2 file with concept wikilinks.
-
         Args:
             aclarai_id: The aclarai_id of the file to update
             file_links: List of links to add to this file
-
         Returns:
             True if file was updated, False otherwise
         """
@@ -196,23 +173,18 @@ class Tier2MarkdownUpdater:
                 },
             )
             return False
-
         try:
             # Read the current file content
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
-
             # Update content with wikilinks
             updated_content = self._add_wikilinks_to_content(content, file_links)
-
             # Only write if content changed
             if updated_content != content:
                 # Increment version in the content
                 updated_content = self._increment_version(updated_content)
-
                 # Write atomically
                 write_file_atomically(file_path, updated_content)
-
                 logger.info(
                     f"Updated file with concept wikilinks: {file_path.name}",
                     extra={
@@ -224,9 +196,7 @@ class Tier2MarkdownUpdater:
                     },
                 )
                 return True
-
             return False
-
         except Exception as e:
             logger.error(
                 f"Failed to update file {file_path}: {e}",
@@ -243,10 +213,8 @@ class Tier2MarkdownUpdater:
     def _find_file_by_aclarai_id(self, aclarai_id: str) -> Optional[Path]:
         """
         Find the Tier 2 file containing the given aclarai_id.
-
         Args:
             aclarai_id: The aclarai_id to search for
-
         Returns:
             Path to the file if found, None otherwise
         """
@@ -255,11 +223,9 @@ class Tier2MarkdownUpdater:
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
-
                 # Look for the aclarai_id in the content
                 if f"aclarai:id={aclarai_id}" in content:
                     return file_path
-
             except Exception as e:
                 logger.debug(
                     f"Error reading file {file_path}: {e}",
@@ -270,7 +236,6 @@ class Tier2MarkdownUpdater:
                         "error": str(e),
                     },
                 )
-
         return None
 
     def _add_wikilinks_to_content(
@@ -278,22 +243,17 @@ class Tier2MarkdownUpdater:
     ) -> str:
         """
         Add concept wikilinks to the content.
-
         This method finds text passages that match linked claims and adds
         [[concept]] wikilinks for the concepts they reference.
-
         Args:
             content: The original file content
             file_links: List of links for this file
-
         Returns:
             Updated content with wikilinks added
         """
         updated_content = content
-
         # Extract unique concepts to link
         concepts_to_link = {link.concept_id for link in file_links}
-
         # For each concept, add a wikilink
         # This is a simple implementation - in practice we'd want more
         # sophisticated text matching and placement
@@ -306,12 +266,10 @@ class Tier2MarkdownUpdater:
                     # For now, use the concept_id as placeholder
                     concept_text = concept_id
                     break
-
             if concept_text:
                 # Add wikilink at the end of relevant sections
                 # This is a placeholder implementation
                 wikilink = f"[[{concept_text}]]"
-
                 # Only add if not already present
                 if wikilink not in updated_content:
                     # Find a good place to insert the link
@@ -327,16 +285,13 @@ class Tier2MarkdownUpdater:
                         )
                     else:
                         updated_content += f"\n\nSee also: {wikilink}"
-
         return updated_content
 
     def _increment_version(self, content: str) -> str:
         """
         Increment the version number in the aclarai metadata.
-
         Args:
             content: The file content
-
         Returns:
             Content with incremented version
         """
@@ -350,5 +305,4 @@ class Tier2MarkdownUpdater:
             return f"{aclarai_part} ver={new_version}"
 
         updated_content = re.sub(version_pattern, increment_match, content)
-
         return updated_content

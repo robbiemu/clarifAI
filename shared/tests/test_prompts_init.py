@@ -20,13 +20,10 @@ class TestPromptsInit:
         init_path = os.path.join(
             os.path.dirname(__file__), "../aclarai_shared/prompts/__init__.py"
         )
-
         with open(init_path, "r") as f:
             content = f.read()
-
         # Check for expected docstring
         assert "Prompt templates for plugin system." in content
-
         # Check that it's a minimal module (no exports)
         assert "__all__" not in content or "__all__ = []" in content
 
@@ -37,7 +34,6 @@ class TestPromptsInit:
         )
         assert os.path.exists(prompts_dir)
         assert os.path.isdir(prompts_dir)
-
         # Check that __init__.py exists
         init_file = os.path.join(prompts_dir, "__init__.py")
         assert os.path.exists(init_file)

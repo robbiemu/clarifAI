@@ -19,6 +19,3 @@ dependencies = [
     "pgvector>=0.3.0",
     "neo4j>=5.0.0",
 ]
-
-[tool.ruff]
-# Service-specific ruff config

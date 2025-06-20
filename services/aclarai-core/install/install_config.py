@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Command-line utility for installing default configuration files.
-
 This script can be used during Docker builds or manual installation to ensure
 default configuration files are available for user customization.
 """
@@ -33,12 +32,9 @@ def main():
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Enable verbose logging"
     )
-
     args = parser.parse_args()
-
     try:
         success = install_default_config(force=args.force)
-
         if success:
             print("✅ Configuration installation complete!")
             if args.force:
@@ -48,7 +44,6 @@ def main():
         else:
             print("❌ Configuration installation failed.")
             sys.exit(1)
-
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

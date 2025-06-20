@@ -1,14 +1,13 @@
 """
 Data models for claim-concept linking.
-
 This module defines the data structures used for linking claims to concepts,
 following the schema from docs/arch/on-linking_claims_to_concepts.md.
 """
 
 from dataclasses import dataclass
-from enum import Enum
-from typing import Optional, Dict, Any
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, Optional
 
 
 class RelationshipType(Enum):
@@ -27,11 +26,9 @@ class ClaimConceptPair:
     claim_text: str
     concept_id: str
     concept_text: str
-
     # Optional context for better classification
     source_sentence: Optional[str] = None
     summary_block: Optional[str] = None
-
     # Claim properties (may be null during Sprint 5)
     entailed_score: Optional[float] = None
     coverage_score: Optional[float] = None
@@ -46,11 +43,9 @@ class ClaimConceptLinkResult:
     concept_id: str
     relationship: RelationshipType
     strength: float  # 0.0 to 1.0
-
     # Scores from the claim (copied during linking)
     entailed_score: Optional[float] = None
     coverage_score: Optional[float] = None
-
     # Metadata
     classified_at: Optional[datetime] = None
     agent_model: Optional[str] = None
@@ -113,7 +108,6 @@ class ConceptCandidate:
     concept_id: str
     concept_text: str
     similarity_score: float  # Cosine similarity from vector search
-
     # Metadata from the concept
     source_node_id: Optional[str] = None
     source_node_type: Optional[str] = None

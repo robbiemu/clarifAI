@@ -2,7 +2,7 @@
 
 try:
     from .default_plugin import DefaultPlugin
-    from .utils import ensure_defaults, convert_file_to_markdowns
+    from .utils import convert_file_to_markdowns, ensure_defaults
 
     __all__ = ["DefaultPlugin", "ensure_defaults", "convert_file_to_markdowns"]
 except ImportError:
@@ -13,7 +13,7 @@ except ImportError:
     def ensure_defaults(*args, **kwargs):
         pass
 
-    def convert_file_to_markdowns(*args, **kwargs):
+    def convert_file_to_markdowns(*_args, **_kwargs):
         return []
 
     __all__ = ["DefaultPlugin", "ensure_defaults", "convert_file_to_markdowns"]

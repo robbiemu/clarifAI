@@ -1,19 +1,18 @@
 """Pytest configuration for aclarai-ui tests."""
 
-import pytest
-import sys
 import os
+import sys
+
+import pytest
 
 # Add the aclarai_ui module to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 try:
     from playwright.sync_api import sync_playwright
 
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
-
 # Only configure Playwright fixtures if it's available
 if PLAYWRIGHT_AVAILABLE:
 
@@ -31,7 +30,6 @@ if PLAYWRIGHT_AVAILABLE:
         """Provide a page instance for testing."""
         if browser is None:
             pytest.skip("Browser not available")
-
         context = browser.new_context()
         page = context.new_page()
         yield page

@@ -1,22 +1,21 @@
 """
 Tests for Claimify to Neo4j integration.
-
 Tests the integration between the Claimify pipeline and Neo4j graph persistence,
 including conversion of pipeline results to graph inputs and end-to-end workflows.
 """
 
-import pytest
 import os
 from unittest.mock import Mock
 
+import pytest
 from aclarai_shared.claimify.data_models import (
-    SentenceChunk,
+    ClaimCandidate,
     ClaimifyContext,
     ClaimifyResult,
-    ClaimCandidate,
-    SelectionResult,
-    DisambiguationResult,
     DecompositionResult,
+    DisambiguationResult,
+    SelectionResult,
+    SentenceChunk,
 )
 from aclarai_shared.claimify.integration import (
     ClaimifyGraphIntegration,
@@ -88,13 +87,11 @@ class TestClaimifyGraphIntegration:
             is_verifiable=True,
             confidence=0.95,
         )
-
         # Create decomposition result with valid claim
         decomposition_result = DecompositionResult(
             original_text="The system failed at startup.",
             claim_candidates=[valid_claim],
         )
-
         # Create a successful claimify result
         result = ClaimifyResult(
             original_chunk=test_chunk,
@@ -104,10 +101,8 @@ class TestClaimifyGraphIntegration:
             ),
             decomposition_result=decomposition_result,
         )
-
         # Convert to inputs
         claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
-
         # Check claim properties
         assert len(claim_inputs) == 1
         claim = claim_inputs[0]
@@ -119,7 +114,9 @@ class TestClaimifyGraphIntegration:
         assert claim.context_complete
 
     @pytest.mark.integration
-    def test_convert_successful_claim_result_integration(self, integration, test_chunk):
+    def test_convert_successful_claim_result_integration(
+        self, _integration, _test_chunk
+    ):
         """Integration test for successful claim result conversion."""
         # Integration test - requires real Neo4j service
         pytest.skip("Integration tests require real database setup")
@@ -135,11 +132,9 @@ class TestClaimifyGraphIntegration:
             is_verifiable=True,
             confidence=0.3,
         )
-
         decomposition_result = DecompositionResult(
             original_text="It failed again.", claim_candidates=[failed_candidate]
         )
-
         result = ClaimifyResult(
             original_chunk=test_chunk,
             context=ClaimifyContext(current_sentence=test_chunk),
@@ -148,14 +143,11 @@ class TestClaimifyGraphIntegration:
             ),
             decomposition_result=decomposition_result,
         )
-
         # Convert to graph inputs
         claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
-
         # Should have no claims, one sentence
         assert len(claim_inputs) == 0
         assert len(sentence_inputs) == 1
-
         # Check sentence properties
         sentence = sentence_inputs[0]
         assert isinstance(sentence, SentenceInput)
@@ -166,7 +158,7 @@ class TestClaimifyGraphIntegration:
         assert not sentence.failed_decomposition  # Was atomic
 
     @pytest.mark.integration
-    def test_convert_failed_claim_result_integration(self, integration, test_chunk):
+    def test_convert_failed_claim_result_integration(self, _integration, _test_chunk):
         """Integration test for failed claim result conversion."""
         # Integration test - requires real Neo4j service
         pytest.skip("Integration tests require real database setup")
@@ -183,14 +175,11 @@ class TestClaimifyGraphIntegration:
             ),
             # No decomposition result since it wasn't selected
         )
-
         # Convert to graph inputs
         claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
-
         # Should have no claims, one sentence
         assert len(claim_inputs) == 0
         assert len(sentence_inputs) == 1
-
         # Check sentence properties
         sentence = sentence_inputs[0]
         assert isinstance(sentence, SentenceInput)
@@ -202,7 +191,7 @@ class TestClaimifyGraphIntegration:
         assert sentence.rejection_reason == "Not selected by Selection agent"
 
     @pytest.mark.integration
-    def test_convert_unprocessed_result_integration(self, integration, test_chunk):
+    def test_convert_unprocessed_result_integration(self, _integration, _test_chunk):
         """Integration test for unprocessed result conversion."""
         # Integration test - requires real Neo4j service
         pytest.skip("Integration tests require real database setup")
@@ -217,9 +206,7 @@ class TestClaimifyGraphIntegration:
             is_verifiable=True,
             confidence=0.95,
         )
-
         claim_input = integration._create_claim_input(claim_candidate, test_chunk)
-
         assert isinstance(claim_input, ClaimInput)
         assert claim_input.text == "The error occurred at 10:30 AM."
         assert claim_input.block_id == "blk_001"
@@ -232,7 +219,7 @@ class TestClaimifyGraphIntegration:
         assert claim_input.id.startswith("claim_")
 
     @pytest.mark.integration
-    def test_create_claim_input_integration(self, integration, test_chunk):
+    def test_create_claim_input_integration(self, _integration, _test_chunk):
         """Integration test for claim input creation."""
         # Integration test - requires real Neo4j service
         pytest.skip("Integration tests require real database setup")
@@ -246,11 +233,9 @@ class TestClaimifyGraphIntegration:
             is_self_contained=False,  # Ambiguous
             is_verifiable=True,
         )
-
         sentence_input = integration._create_sentence_input(
             sentence_candidate, test_chunk, rejection_reason="Ambiguous pronoun"
         )
-
         assert isinstance(sentence_input, SentenceInput)
         assert sentence_input.text == "It was problematic."
         assert sentence_input.block_id == "blk_001"
@@ -261,7 +246,7 @@ class TestClaimifyGraphIntegration:
         assert sentence_input.id.startswith("sentence_")
 
     @pytest.mark.integration
-    def test_create_sentence_input_integration(self, integration, test_chunk):
+    def test_create_sentence_input_integration(self, _integration, _test_chunk):
         """Integration test for sentence input creation."""
         # Integration test - requires real Neo4j service
         pytest.skip("Integration tests require real database setup")
@@ -272,7 +257,6 @@ class TestClaimifyGraphIntegration:
         sentence_input = integration._create_sentence_input_from_chunk(
             test_chunk, rejection_reason="Failed selection"
         )
-
         assert isinstance(sentence_input, SentenceInput)
         assert sentence_input.text == "The system failed at startup."
         assert sentence_input.block_id == "blk_001"
@@ -283,7 +267,7 @@ class TestClaimifyGraphIntegration:
 
     @pytest.mark.integration
     def test_create_sentence_input_from_chunk_integration(
-        self, integration, test_chunk
+        self, _integration, _test_chunk
     ):
         """Integration test for sentence input creation from chunk."""
         # Integration test - requires real Neo4j service
@@ -330,7 +314,6 @@ class TestCreateGraphManagerFromConfigStructure:
             "../../aclarai_shared/claimify/integration.py",
         )
         assert os.path.exists(manager_path)
-
         with open(manager_path, "r") as f:
             content = f.read()
             assert "def create_graph_manager_from_config" in content
@@ -343,7 +326,6 @@ class TestCreateGraphManagerFromConfigStructure:
             "../../aclarai_shared/claimify/integration.py",
         )
         assert os.path.exists(integration_path)
-
         with open(integration_path, "r") as f:
             content = f.read()
             assert "create_graph_manager_from_config" in content
@@ -365,12 +347,10 @@ class TestCreateGraphManagerFromConfigStructure:
             is_verifiable=True,
             confidence=0.9,
         )
-
         decomposition_result = DecompositionResult(
             original_text="The system failed at startup.",
             claim_candidates=[claim_candidate],
         )
-
         result = ClaimifyResult(
             original_chunk=test_chunk,
             context=test_context,
@@ -380,14 +360,11 @@ class TestCreateGraphManagerFromConfigStructure:
             ),
             decomposition_result=decomposition_result,
         )
-
         # Convert to graph inputs
         claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
-
         # Should have one claim, no sentences
         assert len(claim_inputs) == 1
         assert len(sentence_inputs) == 0
-
         # Check claim properties
         claim = claim_inputs[0]
         assert isinstance(claim, ClaimInput)
@@ -407,11 +384,9 @@ class TestCreateGraphManagerFromConfigStructure:
             is_verifiable=True,
             confidence=0.3,
         )
-
         decomposition_result = DecompositionResult(
             original_text="It failed again.", claim_candidates=[failed_candidate]
         )
-
         result = ClaimifyResult(
             original_chunk=test_chunk,
             context=test_context,
@@ -419,14 +394,11 @@ class TestCreateGraphManagerFromConfigStructure:
             disambiguation_result=DisambiguationResult(test_chunk, "It failed again."),
             decomposition_result=decomposition_result,
         )
-
         # Convert to graph inputs
         claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
-
         # Should have no claims, one sentence
         assert len(claim_inputs) == 0
         assert len(sentence_inputs) == 1
-
         # Check sentence properties
         sentence = sentence_inputs[0]
         assert isinstance(sentence, SentenceInput)
@@ -447,19 +419,16 @@ class TestCreateGraphManagerFromConfigStructure:
             is_self_contained=True,
             is_verifiable=True,
         )
-
         invalid_claim = ClaimCandidate(
             text="This is ambiguous.",
             is_atomic=False,
             is_self_contained=False,
             is_verifiable=False,
         )
-
         decomposition_result = DecompositionResult(
             original_text="Complex sentence with multiple parts.",
             claim_candidates=[valid_claim, invalid_claim],
         )
-
         result = ClaimifyResult(
             original_chunk=test_chunk,
             context=test_context,
@@ -469,18 +438,14 @@ class TestCreateGraphManagerFromConfigStructure:
             ),
             decomposition_result=decomposition_result,
         )
-
         # Convert to graph inputs
         claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
-
         # Should have one claim, one sentence
         assert len(claim_inputs) == 1
         assert len(sentence_inputs) == 1
-
         # Check that valid claim became ClaimInput
         claim = claim_inputs[0]
         assert claim.text == "The database connection failed."
-
         # Check that invalid claim became SentenceInput
         sentence = sentence_inputs[0]
         assert sentence.text == "This is ambiguous."
@@ -493,14 +458,11 @@ class TestCreateGraphManagerFromConfigStructure:
             context=test_context,
             selection_result=SelectionResult(test_chunk, is_selected=False),
         )
-
         # Convert to graph inputs
         claim_inputs, sentence_inputs = integration._convert_result_to_inputs(result)
-
         # Should have no claims, one sentence from original chunk
         assert len(claim_inputs) == 0
         assert len(sentence_inputs) == 1
-
         # Check sentence properties
         sentence = sentence_inputs[0]
         assert sentence.text == "The system failed at startup."
@@ -514,7 +476,6 @@ class TestCreateGraphManagerFromConfigStructure:
         claims_created, sentences_created, errors = (
             integration.persist_claimify_results([])
         )
-
         assert claims_created == 0
         assert sentences_created == 0
         assert len(errors) == 0
@@ -530,24 +491,20 @@ class TestCreateGraphManagerFromConfigStructure:
             is_self_contained=True,
             is_verifiable=True,
         )
-
         decomposition_result = DecompositionResult(
             original_text="Server responded with 500 error.",
             claim_candidates=[claim_candidate],
         )
-
         result = ClaimifyResult(
             original_chunk=test_chunk,
             context=test_context,
             selection_result=SelectionResult(test_chunk, is_selected=True),
             decomposition_result=decomposition_result,
         )
-
         # Persist results
         claims_created, sentences_created, errors = (
             integration.persist_claimify_results([result])
         )
-
         assert claims_created == 1
         assert sentences_created == 0
         assert len(errors) == 0
@@ -562,12 +519,10 @@ class TestCreateGraphManagerFromConfigStructure:
             context=test_context,
             selection_result=SelectionResult(test_chunk, is_selected=False),
         )
-
         # Persist results
         claims_created, sentences_created, errors = (
             integration.persist_claimify_results([result])
         )
-
         assert claims_created == 0
         assert sentences_created == 1
         assert len(errors) == 0
@@ -581,9 +536,7 @@ class TestCreateGraphManagerFromConfigStructure:
             is_verifiable=True,
             confidence=0.95,
         )
-
         claim_input = integration._create_claim_input(claim_candidate, test_chunk)
-
         assert isinstance(claim_input, ClaimInput)
         assert claim_input.text == "The error occurred at 10:30 AM."
         assert claim_input.block_id == "blk_001"
@@ -603,11 +556,9 @@ class TestCreateGraphManagerFromConfigStructure:
             is_self_contained=False,
             is_verifiable=True,
         )
-
         sentence_input = integration._create_sentence_input(
             sentence_candidate, test_chunk, rejection_reason="Ambiguous pronoun"
         )
-
         assert isinstance(sentence_input, SentenceInput)
         assert sentence_input.text == "It was problematic."
         assert sentence_input.block_id == "blk_001"
@@ -622,7 +573,6 @@ class TestCreateGraphManagerFromConfigStructure:
         sentence_input = integration._create_sentence_input_from_chunk(
             test_chunk, rejection_reason="Failed selection"
         )
-
         assert isinstance(sentence_input, SentenceInput)
         assert sentence_input.text == "The system failed at startup."
         assert sentence_input.block_id == "blk_001"

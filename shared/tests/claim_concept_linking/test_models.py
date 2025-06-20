@@ -3,12 +3,12 @@
 from datetime import datetime
 
 from aclarai_shared.claim_concept_linking.models import (
-    RelationshipType,
-    ClaimConceptPair,
-    ClaimConceptLinkResult,
-    LinkingError,
     AgentClassificationResult,
+    ClaimConceptLinkResult,
+    ClaimConceptPair,
     ConceptCandidate,
+    LinkingError,
+    RelationshipType,
 )
 
 
@@ -33,7 +33,6 @@ class TestClaimConceptPair:
             concept_id="concept_456",
             concept_text="memory error",
         )
-
         assert pair.claim_id == "claim_123"
         assert pair.claim_text == "The system crashed due to memory overflow."
         assert pair.concept_id == "concept_456"
@@ -57,7 +56,6 @@ class TestClaimConceptPair:
             coverage_score=0.92,
             decontextualization_score=0.78,
         )
-
         assert (
             pair.source_sentence
             == "The application reported a fatal error and terminated."
@@ -78,7 +76,6 @@ class TestClaimConceptPair:
             coverage_score=None,
             decontextualization_score=None,
         )
-
         assert pair.entailed_score is None
         assert pair.coverage_score is None
         assert pair.decontextualization_score is None
@@ -95,7 +92,6 @@ class TestClaimConceptLinkResult:
             relationship=RelationshipType.SUPPORTS_CONCEPT,
             strength=0.89,
         )
-
         assert result.claim_id == "claim_123"
         assert result.concept_id == "concept_456"
         assert result.relationship == RelationshipType.SUPPORTS_CONCEPT
@@ -116,7 +112,6 @@ class TestClaimConceptLinkResult:
             coverage_score=0.82,
             agent_model="gpt-4o",
         )
-
         assert result.entailed_score == 0.78
         assert result.coverage_score == 0.82
         assert result.agent_model == "gpt-4o"
@@ -131,7 +126,6 @@ class TestClaimConceptLinkResult:
             entailed_score=None,
             coverage_score=None,
         )
-
         assert result.entailed_score is None
         assert result.coverage_score is None
 
@@ -148,9 +142,7 @@ class TestClaimConceptLinkResult:
             classified_at=timestamp,
             agent_model="gpt-4o",
         )
-
         properties = result.to_neo4j_properties()
-
         expected = {
             "strength": 0.89,
             "entailed_score": 0.78,
@@ -158,7 +150,6 @@ class TestClaimConceptLinkResult:
             "classified_at": "2024-01-15T10:30:00",
             "agent_model": "gpt-4o",
         }
-
         assert properties == expected
 
     def test_to_neo4j_properties_with_nulls(self):
@@ -175,12 +166,9 @@ class TestClaimConceptLinkResult:
             classified_at=timestamp,  # Use fixed timestamp
             agent_model=None,
         )
-
         # Manually set to None after creation to test null handling
         result.classified_at = None
-
         properties = result.to_neo4j_properties()
-
         assert properties["strength"] == 0.65
         assert properties["entailed_score"] is None
         assert properties["coverage_score"] is None
@@ -199,7 +187,6 @@ class TestLinkingError:
             error_type="classification_failed",
             error_message="LLM returned invalid JSON",
         )
-
         assert error.claim_id == "claim_123"
         assert error.concept_id == "concept_456"
         assert error.error_type == "classification_failed"
@@ -213,7 +200,6 @@ class TestLinkingError:
             error_type="no_candidates",
             error_message="No concept candidates found",
         )
-
         assert error.claim_id == "claim_123"
         assert error.concept_id is None
         assert error.error_type == "no_candidates"
@@ -230,7 +216,6 @@ class TestAgentClassificationResult:
             entailed_score=0.78,
             coverage_score=0.82,
         )
-
         assert result.relation == "SUPPORTS_CONCEPT"
         assert result.strength == 0.89
         assert result.entailed_score == 0.78
@@ -242,7 +227,6 @@ class TestAgentClassificationResult:
             relation="MENTIONS_CONCEPT",
             strength=0.65,
         )
-
         relationship = result.to_relationship_type()
         assert relationship == RelationshipType.MENTIONS_CONCEPT
 
@@ -252,7 +236,6 @@ class TestAgentClassificationResult:
             relation="INVALID_RELATION",
             strength=0.50,
         )
-
         relationship = result.to_relationship_type()
         assert relationship is None
 
@@ -264,7 +247,6 @@ class TestAgentClassificationResult:
             entailed_score=None,
             coverage_score=None,
         )
-
         assert result.entailed_score is None
         assert result.coverage_score is None
 
@@ -279,7 +261,6 @@ class TestConceptCandidate:
             concept_text="memory error",
             similarity_score=0.85,
         )
-
         assert candidate.concept_id == "concept_456"
         assert candidate.concept_text == "memory error"
         assert candidate.similarity_score == 0.85
@@ -297,7 +278,6 @@ class TestConceptCandidate:
             source_node_type="claim",
             aclarai_id="blk_abc123",
         )
-
         assert candidate.source_node_id == "claim_789"
         assert candidate.source_node_type == "claim"
         assert candidate.aclarai_id == "blk_abc123"

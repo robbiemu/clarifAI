@@ -4,8 +4,9 @@ Tests for the shared configuration system.
 
 import os
 import tempfile
+
 import pytest
-from aclarai_shared.config import aclaraiConfig, DatabaseConfig, load_config
+from aclarai_shared.config import DatabaseConfig, aclaraiConfig, load_config
 
 
 class TestDatabaseConfig:
@@ -20,7 +21,6 @@ class TestDatabaseConfig:
             password="fake_test_password_abcd1234",
             database="testdb",
         )
-
         expected = (
             "postgresql://testuser:fake_test_password_abcd1234@localhost:5432/testdb"
         )
@@ -34,7 +34,6 @@ class TestDatabaseConfig:
             user="neo4j",
             password="fake_test_neo4j_password_5678",
         )
-
         expected = "bolt://localhost:7687"
         assert db_config.get_neo4j_bolt_url() == expected
 
@@ -63,7 +62,6 @@ class TestaclaraiConfig:
             "DEBUG",
             "DOCKER_CONTAINER",
         ]
-
         for var in self.env_vars:
             if var in os.environ:
                 self.original_env[var] = os.environ[var]
@@ -75,7 +73,6 @@ class TestaclaraiConfig:
         for var in self.env_vars:
             if var in os.environ:
                 del os.environ[var]
-
         # Then restore original values
         for var, value in self.original_env.items():
             os.environ[var] = value
@@ -83,16 +80,13 @@ class TestaclaraiConfig:
     def test_from_env_with_defaults(self):
         """Test configuration creation with default values."""
         config = aclaraiConfig.from_env()
-
         assert config.postgres.host == "postgres"
         assert config.postgres.port == 5432
         assert config.postgres.user == "aclarai"
         assert config.postgres.database == "aclarai"
-
         assert config.neo4j.host == "neo4j"
         assert config.neo4j.port == 7687
         assert config.neo4j.user == "neo4j"
-
         assert config.rabbitmq_host == "rabbitmq"
         assert config.rabbitmq_port == 5672
         assert config.vault_path == "/vault"
@@ -109,9 +103,7 @@ class TestaclaraiConfig:
         os.environ["NEO4J_PASSWORD"] = "fake_test_neo4j_password_def0"
         os.environ["LOG_LEVEL"] = "DEBUG"
         os.environ["DEBUG"] = "true"
-
         config = aclaraiConfig.from_env()
-
         assert config.postgres.host == "custom-postgres"
         assert config.postgres.port == 5433
         assert config.postgres.user == "custom_user"
@@ -129,10 +121,8 @@ class TestaclaraiConfig:
             f.write("NEO4J_PASSWORD=fake_test_file_neo4j_password_abc789\n")
             f.write("DEBUG=true\n")
             env_file = f.name
-
         try:
             config = aclaraiConfig.from_env(env_file)
-
             assert config.postgres.host == "file-postgres"
             assert config.postgres.password == "fake_test_file_password_xyz123"
             assert config.neo4j.password == "fake_test_file_neo4j_password_abc789"
@@ -145,9 +135,7 @@ class TestaclaraiConfig:
         # Mock running in Docker
         os.environ["DOCKER_CONTAINER"] = "true"
         os.environ["POSTGRES_HOST"] = "192.168.1.100"
-
         config = aclaraiConfig.from_env()
-
         # Should apply fallback for external IP
         assert config.postgres.host == "host.docker.internal"
 
@@ -155,18 +143,14 @@ class TestaclaraiConfig:
         """Test that Docker service names are not changed."""
         os.environ["DOCKER_CONTAINER"] = "true"
         os.environ["POSTGRES_HOST"] = "postgres"
-
         config = aclaraiConfig.from_env()
-
         # Should keep Docker service name
         assert config.postgres.host == "postgres"
 
     def test_validate_required_vars_missing(self):
         """Test validation with missing required variables."""
         config = aclaraiConfig.from_env()
-
         missing = config.validate_required_vars()
-
         # Should report missing passwords
         assert "POSTGRES_PASSWORD" in missing
         assert "NEO4J_PASSWORD" in missing
@@ -175,11 +159,8 @@ class TestaclaraiConfig:
         """Test validation with all required variables present."""
         os.environ["POSTGRES_PASSWORD"] = "fake_test_validation_password_567"
         os.environ["NEO4J_PASSWORD"] = "fake_test_validation_neo4j_password_890"
-
         config = aclaraiConfig.from_env()
-
         missing = config.validate_required_vars()
-
         # Should not report any missing variables
         assert len(missing) == 0
 

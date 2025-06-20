@@ -3,8 +3,9 @@ Tests for embedding module __init__.py file.
 """
 
 import os
-import pytest
 from unittest.mock import Mock
+
+import pytest
 
 
 class TestEmbeddingInitFile:
@@ -22,11 +23,9 @@ class TestEmbeddingInitFile:
         init_path = os.path.join(
             os.path.dirname(__file__), "../../aclarai_shared/embedding/__init__.py"
         )
-
         # Check for expected attributes in the file content
         with open(init_path, "r") as f:
             content = f.read()
-
         expected_all = [
             "UtteranceChunker",
             "ChunkMetadata",
@@ -36,7 +35,6 @@ class TestEmbeddingInitFile:
             "VectorStoreMetrics",
             "EmbeddingPipeline",
         ]
-
         # Check that __all__ contains expected items
         for item in expected_all:
             assert f'"{item}"' in content or f"'{item}'" in content
@@ -48,7 +46,6 @@ class TestEmbeddingInitFile:
         mock_metrics.total_vectors = 10
         mock_metrics.successful_inserts = 8
         mock_metrics.failed_inserts = 2
-
         result_data = {
             "success": True,
             "total_chunks": 10,
@@ -58,7 +55,6 @@ class TestEmbeddingInitFile:
             "metrics": mock_metrics,
             "errors": ["test error"],
         }
-
         assert result_data["success"] is True
         assert result_data["total_chunks"] == 10
         assert result_data["embedded_chunks"] == 8
@@ -73,10 +69,8 @@ class TestEmbeddingInitFile:
         init_path = os.path.join(
             os.path.dirname(__file__), "../../aclarai_shared/embedding/__init__.py"
         )
-
         with open(init_path, "r") as f:
             content = f.read()
-
         # Check that EmbeddingPipeline class is defined
         assert "class EmbeddingPipeline" in content
 
@@ -92,10 +86,8 @@ class TestEmbeddingInitFile:
         init_path = os.path.join(
             os.path.dirname(__file__), "../../aclarai_shared/embedding/__init__.py"
         )
-
         with open(init_path, "r") as f:
             content = f.read()
-
         # Check that EmbeddingPipeline class is defined
         assert "class EmbeddingPipeline" in content
 
@@ -111,10 +103,8 @@ class TestEmbeddingInitFile:
         init_path = os.path.join(
             os.path.dirname(__file__), "../../aclarai_shared/embedding/__init__.py"
         )
-
         with open(init_path, "r") as f:
             content = f.read()
-
         # Check that both classes are defined
         assert "class EmbeddingPipeline" in content
         assert "class EmbeddingResult" in content

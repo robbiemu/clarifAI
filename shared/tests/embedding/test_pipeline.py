@@ -1,23 +1,20 @@
 """
 Tests for aclarai embedding pipeline functionality.
-
 These tests verify the complete embedding pipeline including chunking,
 embedding generation, and vector storage.
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+from aclarai_shared.config import EmbeddingConfig, aclaraiConfig
 from aclarai_shared.embedding import (
     EmbeddingPipeline,
     EmbeddingResult,
+    VectorStoreMetrics,
 )
 from aclarai_shared.embedding.chunking import ChunkMetadata
-
-from aclarai_shared.embedding import VectorStoreMetrics
-
-
 from aclarai_shared.embedding.models import EmbeddedChunk
-from aclarai_shared.config import aclaraiConfig, EmbeddingConfig
 
 
 @pytest.fixture
@@ -39,7 +36,6 @@ def mock_pipeline_components():
     mock_chunker = Mock()
     mock_embedding_generator = Mock()
     mock_vector_store = Mock()
-
     return mock_chunker, mock_embedding_generator, mock_vector_store
 
 
@@ -51,7 +47,6 @@ def test_embedding_pipeline_initialization(mock_config):
         patch("aclarai_shared.embedding.aclaraiVectorStore") as mock_store_class,
     ):
         pipeline = EmbeddingPipeline(mock_config)
-
         assert pipeline.config == mock_config
         mock_chunker_class.assert_called_once_with(mock_config)
         mock_generator_class.assert_called_once_with(mock_config)
@@ -65,16 +60,13 @@ def test_process_tier1_content_success(mock_config):
         ChunkMetadata("blk_001", 0, "Original text 1", "Chunk text 1"),
         ChunkMetadata("blk_002", 0, "Original text 2", "Chunk text 2"),
     ]
-
     mock_embedded_chunks = [
         EmbeddedChunk(mock_chunks[0], [0.1] * 384, "test-model", 384),
         EmbeddedChunk(mock_chunks[1], [0.2] * 384, "test-model", 384),
     ]
-
     mock_metrics = VectorStoreMetrics(
         total_vectors=2, successful_inserts=2, failed_inserts=0
     )
-
     with (
         patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
         patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
@@ -83,18 +75,14 @@ def test_process_tier1_content_success(mock_config):
         # Setup mock methods
         mock_chunker = mock_chunker_class.return_value
         mock_chunker.chunk_tier1_blocks.return_value = mock_chunks
-
         mock_generator = mock_generator_class.return_value
         mock_generator.embed_chunks.return_value = mock_embedded_chunks
         mock_generator.validate_embeddings.return_value = {"status": "success"}
-
         mock_store = mock_store_class.return_value
         mock_store.store_embeddings.return_value = mock_metrics
-
         # Test the pipeline
         pipeline = EmbeddingPipeline(mock_config)
         result = pipeline.process_tier1_content("test tier1 content")
-
         # Verify results
         assert result.success is True
         assert result.total_chunks == 2
@@ -114,10 +102,8 @@ def test_process_tier1_content_no_chunks(mock_config):
         # Setup chunker to return no chunks
         mock_chunker = mock_chunker_class.return_value
         mock_chunker.chunk_tier1_blocks.return_value = []
-
         pipeline = EmbeddingPipeline(mock_config)
         result = pipeline.process_tier1_content("empty content")
-
         # Verify failure result
         assert result.success is False
         assert result.total_chunks == 0
@@ -127,7 +113,6 @@ def test_process_tier1_content_no_chunks(mock_config):
 def test_process_tier1_content_embedding_failure(mock_config):
     """Test processing when embedding generation fails."""
     mock_chunks = [ChunkMetadata("blk_001", 0, "Original", "Chunk")]
-
     with (
         patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
         patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
@@ -136,13 +121,10 @@ def test_process_tier1_content_embedding_failure(mock_config):
         # Setup chunker to return chunks but generator to fail
         mock_chunker = mock_chunker_class.return_value
         mock_chunker.chunk_tier1_blocks.return_value = mock_chunks
-
         mock_generator = mock_generator_class.return_value
         mock_generator.embed_chunks.return_value = []  # No embeddings generated
-
         pipeline = EmbeddingPipeline(mock_config)
         result = pipeline.process_tier1_content("test content")
-
         # Verify failure result
         assert result.success is False
         assert result.total_chunks == 1
@@ -157,7 +139,6 @@ def test_process_single_block_success(mock_config):
         EmbeddedChunk(mock_chunks[0], [0.1] * 384, "test-model", 384)
     ]
     mock_metrics = VectorStoreMetrics(1, 1, 0)
-
     with (
         patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
         patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
@@ -166,22 +147,17 @@ def test_process_single_block_success(mock_config):
         # Setup mocks
         mock_chunker = mock_chunker_class.return_value
         mock_chunker.chunk_utterance_block.return_value = mock_chunks
-
         mock_generator = mock_generator_class.return_value
         mock_generator.embed_chunks.return_value = mock_embedded_chunks
-
         mock_store = mock_store_class.return_value
         mock_store.delete_chunks_by_block_id.return_value = 0
         mock_store.store_embeddings.return_value = mock_metrics
-
         pipeline = EmbeddingPipeline(mock_config)
         result = pipeline.process_single_block("Test text", "blk_test")
-
         # Verify results
         assert result.success is True
         assert result.total_chunks == 1
         assert result.stored_chunks == 1
-
         # Verify delete was called for replacement
         mock_store.delete_chunks_by_block_id.assert_called_once_with("blk_test")
 
@@ -193,7 +169,6 @@ def test_process_single_block_with_replacement(mock_config):
         EmbeddedChunk(mock_chunks[0], [0.1] * 384, "test-model", 384)
     ]
     mock_metrics = VectorStoreMetrics(1, 1, 0)
-
     with (
         patch("aclarai_shared.embedding.UtteranceChunker") as mock_chunker_class,
         patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
@@ -201,21 +176,17 @@ def test_process_single_block_with_replacement(mock_config):
     ):
         mock_chunker = mock_chunker_class.return_value
         mock_chunker.chunk_utterance_block.return_value = mock_chunks
-
         mock_generator = mock_generator_class.return_value
         mock_generator.embed_chunks.return_value = mock_embedded_chunks
-
         mock_store = mock_store_class.return_value
         mock_store.delete_chunks_by_block_id.return_value = (
             2  # 2 existing chunks deleted
         )
         mock_store.store_embeddings.return_value = mock_metrics
-
         pipeline = EmbeddingPipeline(mock_config)
         result = pipeline.process_single_block(
             "New text", "blk_replace", replace_existing=True
         )
-
         assert result.success is True
         mock_store.delete_chunks_by_block_id.assert_called_once_with("blk_replace")
 
@@ -240,7 +211,6 @@ def test_search_similar_chunks(mock_config):
             0.87,
         ),
     ]
-
     with (
         patch("aclarai_shared.embedding.UtteranceChunker"),
         patch("aclarai_shared.embedding.EmbeddingGenerator"),
@@ -248,15 +218,12 @@ def test_search_similar_chunks(mock_config):
     ):
         mock_store = mock_store_class.return_value
         mock_store.similarity_search.return_value = mock_search_results
-
         pipeline = EmbeddingPipeline(mock_config)
         results = pipeline.search_similar_chunks("test query", top_k=5)
-
         assert len(results) == 2
         assert results[0]["similarity_score"] == 0.95
         assert results[0]["aclarai_block_id"] == "blk_001"
         assert results[1]["similarity_score"] == 0.87
-
         mock_store.similarity_search.assert_called_once_with(
             query_text="test query", top_k=5, similarity_threshold=None
         )
@@ -265,7 +232,6 @@ def test_search_similar_chunks(mock_config):
 def test_get_pipeline_status(mock_config):
     """Test pipeline status reporting."""
     mock_metrics = VectorStoreMetrics(100, 100, 0)
-
     with (
         patch("aclarai_shared.embedding.UtteranceChunker"),
         patch("aclarai_shared.embedding.EmbeddingGenerator") as mock_generator_class,
@@ -273,14 +239,11 @@ def test_get_pipeline_status(mock_config):
     ):
         mock_store = mock_store_class.return_value
         mock_store.get_store_metrics.return_value = mock_metrics
-
         mock_generator = mock_generator_class.return_value
         mock_generator.embed_text.return_value = [0.1] * 384
         mock_generator.model_name = "test-model"
-
         pipeline = EmbeddingPipeline(mock_config)
         status = pipeline.get_pipeline_status()
-
         assert status["overall_status"] == "healthy"
         assert status["components"]["vector_store"]["status"] == "healthy"
         assert status["components"]["vector_store"]["total_vectors"] == 100
@@ -299,10 +262,8 @@ def test_pipeline_exception_handling(mock_config):
         # Setup chunker to raise an exception
         mock_chunker = mock_chunker_class.return_value
         mock_chunker.chunk_tier1_blocks.side_effect = Exception("Test exception")
-
         pipeline = EmbeddingPipeline(mock_config)
         result = pipeline.process_tier1_content("test content")
-
         # Verify graceful failure
         assert result.success is False
         assert len(result.errors) > 0
@@ -321,7 +282,6 @@ def test_embedding_result_dataclass():
         metrics=metrics,
         errors=["Warning: some chunks failed"],
     )
-
     assert result.success is True
     assert result.total_chunks == 10
     assert result.embedded_chunks == 10

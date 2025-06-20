@@ -11,6 +11,3 @@ dependencies = [
     "apscheduler>=3.10.0",
     "python-dotenv>=1.0.0"
 ]
-
-[tool.ruff]
-# Service-specific ruff config

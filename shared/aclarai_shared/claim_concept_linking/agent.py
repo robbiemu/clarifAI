@@ -1,6 +1,5 @@
 """
 LLM agent for claim-concept relationship classification.
-
 This module implements the ClaimConceptLinkerAgent that uses an LLM to classify
 the relationship between claims and concepts, following the prompt structure
 defined in docs/arch/on-linking_claims_to_concepts.md.
@@ -14,8 +13,8 @@ from llama_index.llms.openai import OpenAI
 
 from ..config import aclaraiConfig, load_config
 from .models import (
-    ClaimConceptPair,
     AgentClassificationResult,
+    ClaimConceptPair,
     RelationshipType,
 )
 
@@ -25,7 +24,6 @@ logger = logging.getLogger(__name__)
 class ClaimConceptLinkerAgent:
     """
     LLM agent for classifying relationships between claims and concepts.
-
     This agent analyzes claim-concept pairs and classifies their relationship
     as SUPPORTS_CONCEPT, MENTIONS_CONCEPT, or CONTRADICTS_CONCEPT.
     """
@@ -33,15 +31,12 @@ class ClaimConceptLinkerAgent:
     def __init__(self, config: Optional[aclaraiConfig] = None):
         """
         Initialize the claim-concept linker agent.
-
         Args:
             config: aclarai configuration (loads default if None)
         """
         self.config = config or load_config()
-
         # Get LLM configuration
         llm_config = self.config.llm
-
         # Initialize LLM
         if llm_config.provider == "openai":
             self.llm = OpenAI(
@@ -51,10 +46,8 @@ class ClaimConceptLinkerAgent:
             )
         else:
             raise ValueError(f"Unsupported LLM provider: {llm_config.provider}")
-
         # Store model name for metadata
         self.model_name = llm_config.model
-
         logger.info(
             f"Initialized ClaimConceptLinkerAgent with model: {self.model_name}",
             extra={
@@ -69,23 +62,18 @@ class ClaimConceptLinkerAgent:
     ) -> Optional[AgentClassificationResult]:
         """
         Classify the relationship between a claim and concept.
-
         Args:
             pair: The claim-concept pair to analyze
-
         Returns:
             AgentClassificationResult if successful, None if failed
         """
         try:
             # Build the prompt
             prompt = self._build_classification_prompt(pair)
-
             # Get LLM response
             response = self.llm.complete(prompt)
-
             # Parse the JSON response
             result = self._parse_agent_response(response.text)
-
             if result:
                 logger.debug(
                     "Successfully classified claim-concept relationship",
@@ -98,9 +86,7 @@ class ClaimConceptLinkerAgent:
                         "strength": result.strength,
                     },
                 )
-
             return result
-
         except Exception as e:
             logger.error(
                 f"Failed to classify claim-concept relationship: {e}",
@@ -117,10 +103,8 @@ class ClaimConceptLinkerAgent:
     def _build_classification_prompt(self, pair: ClaimConceptPair) -> str:
         """
         Build the classification prompt from the claim-concept pair.
-
         Args:
             pair: The claim-concept pair
-
         Returns:
             The formatted prompt string
         """
@@ -134,17 +118,13 @@ class ClaimConceptLinkerAgent:
             "Concept:",
             f'"{pair.concept_text}"',
         ]
-
         # Add context if available
         if pair.source_sentence or pair.summary_block:
             prompt_lines.extend(["", "Context (optional):"])
-
             if pair.source_sentence:
                 prompt_lines.append(f'- Source sentence: "{pair.source_sentence}"')
-
             if pair.summary_block:
                 prompt_lines.append(f'- Summary block: "{pair.summary_block}"')
-
         # Add instructions
         prompt_lines.extend(
             [
@@ -168,7 +148,6 @@ class ClaimConceptLinkerAgent:
                 "}",
             ]
         )
-
         return "\n".join(prompt_lines)
 
     def _parse_agent_response(
@@ -176,21 +155,17 @@ class ClaimConceptLinkerAgent:
     ) -> Optional[AgentClassificationResult]:
         """
         Parse the agent's JSON response into a result object.
-
         Args:
             response_text: Raw response text from the LLM
-
         Returns:
             AgentClassificationResult if parsing successful, None otherwise
         """
         try:
             # Extract JSON from response (handle cases where LLM includes extra text)
             response_text = response_text.strip()
-
             # Find JSON content
             start_idx = response_text.find("{")
             end_idx = response_text.rfind("}") + 1
-
             if start_idx == -1 or end_idx == 0:
                 logger.error(
                     "No JSON found in agent response",
@@ -203,10 +178,8 @@ class ClaimConceptLinkerAgent:
                     },
                 )
                 return None
-
             json_str = response_text[start_idx:end_idx]
             data = json.loads(json_str)
-
             # Validate required fields
             if "relation" not in data or "strength" not in data:
                 logger.error(
@@ -218,7 +191,6 @@ class ClaimConceptLinkerAgent:
                     },
                 )
                 return None
-
             # Validate relation type
             relation = data["relation"]
             if relation not in [rt.value for rt in RelationshipType]:
@@ -231,7 +203,6 @@ class ClaimConceptLinkerAgent:
                     },
                 )
                 return None
-
             # Validate strength
             strength = float(data["strength"])
             if not (0.0 <= strength <= 1.0):
@@ -244,31 +215,26 @@ class ClaimConceptLinkerAgent:
                     },
                 )
                 strength = max(0.0, min(1.0, strength))
-
             # Extract optional scores
             entailed_score = data.get("entailed_score")
             coverage_score = data.get("coverage_score")
-
             # Validate scores if present
             if entailed_score is not None:
                 entailed_score = float(entailed_score)
                 if not (0.0 <= entailed_score <= 1.0):
                     logger.warning(f"entailed_score out of range: {entailed_score}")
                     entailed_score = max(0.0, min(1.0, entailed_score))
-
             if coverage_score is not None:
                 coverage_score = float(coverage_score)
                 if not (0.0 <= coverage_score <= 1.0):
                     logger.warning(f"coverage_score out of range: {coverage_score}")
                     coverage_score = max(0.0, min(1.0, coverage_score))
-
             return AgentClassificationResult(
                 relation=relation,
                 strength=strength,
                 entailed_score=entailed_score,
                 coverage_score=coverage_score,
             )
-
         except json.JSONDecodeError as e:
             logger.error(
                 f"Failed to parse JSON response: {e}",
@@ -280,7 +246,6 @@ class ClaimConceptLinkerAgent:
                 },
             )
             return None
-
         except (ValueError, TypeError) as e:
             logger.error(
                 f"Failed to validate response data: {e}",

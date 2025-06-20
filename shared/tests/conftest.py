@@ -17,7 +17,6 @@ def pytest_collection_modifyitems(config, items):
     if config.getoption("-m") == "integration":
         # Integration mode - run only integration tests
         return
-
     # Unit test mode - skip integration tests by default
     skip_integration = pytest.mark.skip(
         reason="integration tests require -m integration flag"

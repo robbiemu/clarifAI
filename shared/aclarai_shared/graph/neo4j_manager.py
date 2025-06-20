@@ -1,6 +1,5 @@
 """
 Neo4j Graph Manager for aclarai knowledge graph operations.
-
 This module provides the main interface for creating and managing
 Claim and Sentence nodes in Neo4j, following the architectural patterns
 from docs/arch/idea-neo4J-ineteraction.md.
@@ -8,14 +7,14 @@ from docs/arch/idea-neo4J-ineteraction.md.
 
 import logging
 import time
-from typing import List, Dict, Any, Optional
 from contextlib import contextmanager
+from typing import Any, Dict, List, Optional
 
-from neo4j import GraphDatabase, Driver
-from neo4j.exceptions import ServiceUnavailable, AuthError, TransientError
+from neo4j import Driver, GraphDatabase
+from neo4j.exceptions import AuthError, ServiceUnavailable, TransientError
 
 from ..config import aclaraiConfig
-from .models import Claim, Sentence, ClaimInput, SentenceInput, Concept, ConceptInput
+from .models import Claim, ClaimInput, Concept, ConceptInput, Sentence, SentenceInput
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,6 @@ logger = logging.getLogger(__name__)
 class Neo4jGraphManager:
     """
     Manager for Neo4j graph operations following aclarai architecture.
-
     Handles creation of Claim and Sentence nodes with proper relationships
     and indexing as specified in the technical requirements.
     """
@@ -31,7 +29,6 @@ class Neo4jGraphManager:
     def __init__(self, config: Optional[aclaraiConfig] = None):
         """
         Initialize Neo4j connection.
-
         Args:
             config: aclarai configuration (loads default if None)
         """
@@ -39,14 +36,11 @@ class Neo4jGraphManager:
             from ..config import load_config
 
             config = load_config(validate=False)
-
         self.config = config
         self._driver: Optional[Driver] = None
-
         # Connection details
         self.uri = config.neo4j.get_neo4j_bolt_url()
         self.auth = (config.neo4j.user, config.neo4j.password)
-
         logger.info(
             f"neo4j_manager.__init__: Initialized Neo4jGraphManager for {self.uri}",
             extra={
@@ -105,7 +99,6 @@ class Neo4jGraphManager:
     def _retry_with_backoff(self, func, *args, **kwargs):
         """
         Execute function with retry logic and exponential backoff.
-
         Following guidelines from docs/arch/on-error-handling-and-resilience.md
         for handling transient Neo4j errors.
         """
@@ -124,7 +117,6 @@ class Neo4jGraphManager:
             .get("retries", {})
             .get("max_wait_time", 60)
         )
-
         for attempt in range(max_attempts):
             try:
                 logger.debug(
@@ -145,7 +137,6 @@ class Neo4jGraphManager:
                         },
                     )
                     raise
-
                 wait_time = min(backoff_factor**attempt, max_wait_time)
                 logger.warning(
                     f"neo4j_manager._retry_with_backoff: Transient error on attempt {attempt + 1}, "
@@ -170,7 +161,6 @@ class Neo4jGraphManager:
     def setup_schema(self):
         """
         Set up Neo4j schema with constraints and indexes.
-
         Creates constraints and indexes as specified in graph_schema.cypher
         and technical requirements.
         """
@@ -223,10 +213,8 @@ class Neo4jGraphManager:
     def create_claims(self, claim_inputs: List[ClaimInput]) -> List[Claim]:
         """
         Create Claim nodes in batch with ORIGINATES_FROM relationships.
-
         Args:
             claim_inputs: List of ClaimInput objects
-
         Returns:
             List of created Claim objects
         """
@@ -239,17 +227,14 @@ class Neo4jGraphManager:
                 },
             )
             return []
-
         # Convert inputs to Claim objects
         claims = [Claim.from_input(claim_input) for claim_input in claim_inputs]
-
         # Prepare data for batch creation
         claims_data = []
-        for claim, claim_input in zip(claims, claim_inputs):
+        for claim, claim_input in zip(claims, claim_inputs, strict=False):
             claim_dict = claim.to_dict()
             claim_dict["block_id"] = claim_input.block_id
             claims_data.append(claim_dict)
-
         logger.info(
             f"neo4j_manager.create_claims: Preparing to create {len(claims_data)} claims",
             extra={
@@ -258,7 +243,6 @@ class Neo4jGraphManager:
                 "claims_count": len(claims_data),
             },
         )
-
         # Batch create using UNWIND (following architecture guidelines)
         cypher_query = """
         UNWIND $claims_data AS data
@@ -292,7 +276,6 @@ class Neo4jGraphManager:
                 },
             )
             return claims
-
         except Exception as e:
             logger.error(
                 f"neo4j_manager.create_claims: Failed to create Claims: {e}",
@@ -308,10 +291,8 @@ class Neo4jGraphManager:
     def create_sentences(self, sentence_inputs: List[SentenceInput]) -> List[Sentence]:
         """
         Create Sentence nodes in batch with ORIGINATES_FROM relationships.
-
         Args:
             sentence_inputs: List of SentenceInput objects
-
         Returns:
             List of created Sentence objects
         """
@@ -324,19 +305,16 @@ class Neo4jGraphManager:
                 },
             )
             return []
-
         # Convert inputs to Sentence objects
         sentences = [
             Sentence.from_input(sentence_input) for sentence_input in sentence_inputs
         ]
-
         # Prepare data for batch creation
         sentences_data = []
-        for sentence, sentence_input in zip(sentences, sentence_inputs):
+        for sentence, sentence_input in zip(sentences, sentence_inputs, strict=False):
             sentence_dict = sentence.to_dict()
             sentence_dict["block_id"] = sentence_input.block_id
             sentences_data.append(sentence_dict)
-
         logger.info(
             f"neo4j_manager.create_sentences: Preparing to create {len(sentences_data)} sentences",
             extra={
@@ -345,7 +323,6 @@ class Neo4jGraphManager:
                 "sentences_count": len(sentences_data),
             },
         )
-
         # Batch create using UNWIND
         cypher_query = """
         UNWIND $sentences_data AS data
@@ -380,7 +357,6 @@ class Neo4jGraphManager:
                 },
             )
             return sentences
-
         except Exception as e:
             logger.error(
                 f"neo4j_manager.create_sentences: Failed to create Sentences: {e}",
@@ -396,10 +372,8 @@ class Neo4jGraphManager:
     def get_claim_by_id(self, claim_id: str) -> Optional[Dict[str, Any]]:
         """
         Retrieve a Claim node by ID.
-
         Args:
             claim_id: The claim ID to search for
-
         Returns:
             Claim node data as dictionary, or None if not found
         """
@@ -437,7 +411,6 @@ class Neo4jGraphManager:
                     },
                 )
             return result
-
         except Exception as e:
             logger.error(
                 f"neo4j_manager.get_claim_by_id: Failed to get Claim {claim_id}: {e}",
@@ -453,10 +426,8 @@ class Neo4jGraphManager:
     def get_sentence_by_id(self, sentence_id: str) -> Optional[Dict[str, Any]]:
         """
         Retrieve a Sentence node by ID.
-
         Args:
             sentence_id: The sentence ID to search for
-
         Returns:
             Sentence node data as dictionary, or None if not found
         """
@@ -494,7 +465,6 @@ class Neo4jGraphManager:
                     },
                 )
             return result
-
         except Exception as e:
             logger.error(
                 f"neo4j_manager.get_sentence_by_id: Failed to get Sentence {sentence_id}: {e}",
@@ -510,7 +480,6 @@ class Neo4jGraphManager:
     def count_nodes(self) -> Dict[str, int]:
         """
         Get count of nodes for monitoring/validation.
-
         Returns:
             Dictionary with node counts
         """
@@ -547,7 +516,6 @@ class Neo4jGraphManager:
                 },
             )
             return result
-
         except Exception as e:
             logger.error(
                 f"neo4j_manager.count_nodes: Failed to count nodes: {e}",
@@ -562,13 +530,10 @@ class Neo4jGraphManager:
     def create_concepts(self, concept_inputs: List[ConceptInput]) -> List[Concept]:
         """
         Create Concept nodes in the knowledge graph with proper indexing.
-
         Args:
             concept_inputs: List of ConceptInput objects to create
-
         Returns:
             List of created Concept objects
-
         Raises:
             Neo4jError: If concept creation fails
         """
@@ -581,7 +546,6 @@ class Neo4jGraphManager:
                 },
             )
             return []
-
         logger.info(
             f"create_concepts: Creating {len(concept_inputs)} Concept nodes",
             extra={
@@ -594,20 +558,16 @@ class Neo4jGraphManager:
         def _execute_concept_creation():
             with self.session() as session:
                 concepts = []
-
                 for concept_input in concept_inputs:
                     concept = Concept.from_input(concept_input)
                     concept_data = concept.to_dict()
-
                     # Create Concept node with proper indexing
                     cypher = """
                     CREATE (c:Concept $concept_data)
                     RETURN c
                     """
-
                     result = session.run(cypher, concept_data=concept_data)
                     record = result.single()
-
                     if record:
                         concepts.append(concept)
                         logger.debug(
@@ -628,7 +588,6 @@ class Neo4jGraphManager:
                                 "concept_id": concept.concept_id,
                             },
                         )
-
                 logger.info(
                     f"create_concepts: Successfully created {len(concepts)} Concept nodes",
                     extra={
@@ -637,7 +596,6 @@ class Neo4jGraphManager:
                         "created_count": len(concepts),
                     },
                 )
-
                 return concepts
 
         return self._retry_with_backoff(_execute_concept_creation)

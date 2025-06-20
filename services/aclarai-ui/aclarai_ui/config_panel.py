@@ -1,20 +1,19 @@
 """Configuration Panel for aclarai UI.
-
 This module implements the configuration panel that allows users to:
 - View and edit model selections for different aclarai agents
 - Adjust processing thresholds and parameters
 - Configure context window settings
 - Persist changes to settings/aclarai.config.yaml
-
 Follows the design specification from docs/arch/design_config_panel.md
 """
 
-import gradio as gr
-import logging
-import yaml
 import copy
+import logging
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Any, Dict, Tuple
+
+import gradio as gr
+import yaml
 
 logger = logging.getLogger("aclarai-ui.config_panel")
 
@@ -39,16 +38,13 @@ class ConfigurationManager:
             if self.default_config_path.exists():
                 with open(self.default_config_path, "r") as f:
                     default_config = yaml.safe_load(f) or {}
-
             # Load user configuration
             user_config = {}
             if self.config_path.exists():
                 with open(self.config_path, "r") as f:
                     user_config = yaml.safe_load(f) or {}
-
             # Deep merge user config over default config
             merged_config = self._deep_merge_configs(default_config, user_config)
-
             logger.info(
                 "Configuration loaded successfully",
                 extra={
@@ -58,9 +54,7 @@ class ConfigurationManager:
                     "config_file": str(self.config_path),
                 },
             )
-
             return merged_config
-
         except Exception as e:
             logger.error(
                 "Failed to load configuration",
@@ -80,16 +74,12 @@ class ConfigurationManager:
         try:
             # Ensure the settings directory exists
             self.config_path.parent.mkdir(parents=True, exist_ok=True)
-
             # Write to temporary file first (atomic write pattern)
             temp_path = self.config_path.with_suffix(".tmp")
-
             with open(temp_path, "w") as f:
                 yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
-
             # Atomic rename
             temp_path.rename(self.config_path)
-
             logger.info(
                 "Configuration saved successfully",
                 extra={
@@ -99,9 +89,7 @@ class ConfigurationManager:
                     "config_file": str(self.config_path),
                 },
             )
-
             return True
-
         except Exception as e:
             logger.error(
                 "Failed to save configuration",
@@ -177,9 +165,7 @@ def validate_model_name(model_name: str) -> Tuple[bool, str]:
     """Validate model name format."""
     if not model_name or not model_name.strip():
         return False, "Model name cannot be empty"
-
     model_name = model_name.strip()
-
     # Allow common model formats
     valid_patterns = [
         lambda x: x.startswith("gpt-"),  # OpenAI GPT models
@@ -193,10 +179,8 @@ def validate_model_name(model_name: str) -> Tuple[bool, str]:
         lambda x: x.startswith("text-embedding-"),  # OpenAI embeddings
         lambda x: "/" in x and not x.startswith("/"),  # HuggingFace models
     ]
-
     if any(pattern(model_name) for pattern in valid_patterns):
         return True, ""
-
     return False, f"Invalid model name format: {model_name}"
 
 
@@ -207,10 +191,8 @@ def validate_threshold(
     try:
         if not isinstance(value, (int, float)):
             return False, "Threshold must be a number"
-
         if value < min_val or value > max_val:
             return False, f"Threshold must be between {min_val} and {max_val}"
-
         return True, ""
     except Exception:
         return False, "Invalid threshold value"
@@ -223,10 +205,8 @@ def validate_window_param(
     try:
         if not isinstance(value, int):
             return False, "Window parameter must be an integer"
-
         if value < min_val or value > max_val:
             return False, f"Window parameter must be between {min_val} and {max_val}"
-
         return True, ""
     except Exception:
         return False, "Invalid window parameter value"
@@ -242,11 +222,9 @@ def create_configuration_panel() -> gr.Blocks:
         """Load current configuration values for UI display."""
         try:
             config = config_manager.load_config()
-
             # Extract model configurations
             model_config = config.get("model", {})
             claimify_config = model_config.get("claimify", {})
-
             claimify_default = claimify_config.get("default", "gpt-3.5-turbo")
             claimify_selection = claimify_config.get("selection") or claimify_default
             claimify_disambiguation = (
@@ -255,7 +233,6 @@ def create_configuration_panel() -> gr.Blocks:
             claimify_decomposition = (
                 claimify_config.get("decomposition") or claimify_default
             )
-
             concept_linker = model_config.get("concept_linker", "gpt-3.5-turbo")
             concept_summary = model_config.get("concept_summary", "gpt-4")
             subject_summary = model_config.get("subject_summary", "gpt-3.5-turbo")
@@ -263,7 +240,6 @@ def create_configuration_panel() -> gr.Blocks:
                 "trending_concepts_agent", "gpt-4"
             )
             fallback_plugin = model_config.get("fallback_plugin", "gpt-3.5-turbo")
-
             # Extract embedding configurations
             embedding_config = config.get("embedding", {})
             utterance_embedding = embedding_config.get(
@@ -272,18 +248,15 @@ def create_configuration_panel() -> gr.Blocks:
             concept_embedding = embedding_config.get(
                 "concept", "text-embedding-3-small"
             )
-
             # Extract threshold configurations
             threshold_config = config.get("threshold", {})
             concept_merge = threshold_config.get("concept_merge", 0.90)
             claim_link_strength = threshold_config.get("claim_link_strength", 0.60)
-
             # Extract window configurations
             window_config = config.get("window", {})
             claimify_window = window_config.get("claimify", {})
             window_p = claimify_window.get("p", 3)
             window_f = claimify_window.get("f", 1)
-
             return (
                 claimify_default,
                 claimify_selection,
@@ -301,7 +274,6 @@ def create_configuration_panel() -> gr.Blocks:
                 window_p,
                 window_f,
             )
-
         except Exception as e:
             logger.error(
                 "Failed to load current configuration for UI",
@@ -353,7 +325,6 @@ def create_configuration_panel() -> gr.Blocks:
         try:
             # Validate all inputs
             validation_errors = []
-
             # Validate model names
             models_to_validate = [
                 ("Claimify Default", claimify_default),
@@ -368,30 +339,24 @@ def create_configuration_panel() -> gr.Blocks:
                 ("Utterance Embedding", utterance_embedding),
                 ("Concept Embedding", concept_embedding),
             ]
-
             for name, model in models_to_validate:
                 is_valid, error = validate_model_name(model)
                 if not is_valid:
                     validation_errors.append(f"{name}: {error}")
-
             # Validate thresholds
             is_valid, error = validate_threshold(concept_merge)
             if not is_valid:
                 validation_errors.append(f"Concept Merge Threshold: {error}")
-
             is_valid, error = validate_threshold(claim_link_strength)
             if not is_valid:
                 validation_errors.append(f"Claim Link Strength: {error}")
-
             # Validate window parameters
             is_valid, error = validate_window_param(window_p)
             if not is_valid:
                 validation_errors.append(f"Window Previous (p): {error}")
-
             is_valid, error = validate_window_param(window_f)
             if not is_valid:
                 validation_errors.append(f"Window Following (f): {error}")
-
             if validation_errors:
                 error_msg = "❌ **Validation Errors:**\n" + "\n".join(
                     f"- {error}" for error in validation_errors
@@ -406,14 +371,11 @@ def create_configuration_panel() -> gr.Blocks:
                     },
                 )
                 return error_msg
-
             # Load current configuration to preserve other settings
             current_config = config_manager.load_config()
-
             # Update with new values
             if "model" not in current_config:
                 current_config["model"] = {}
-
             current_config["model"]["claimify"] = {
                 "default": claimify_default.strip(),
                 "selection": claimify_selection.strip()
@@ -426,7 +388,6 @@ def create_configuration_panel() -> gr.Blocks:
                 if claimify_decomposition.strip() != claimify_default.strip()
                 else None,
             }
-
             current_config["model"]["concept_linker"] = concept_linker.strip()
             current_config["model"]["concept_summary"] = concept_summary.strip()
             current_config["model"]["subject_summary"] = subject_summary.strip()
@@ -434,30 +395,22 @@ def create_configuration_panel() -> gr.Blocks:
                 trending_concepts_agent.strip()
             )
             current_config["model"]["fallback_plugin"] = fallback_plugin.strip()
-
             if "embedding" not in current_config:
                 current_config["embedding"] = {}
-
             current_config["embedding"]["utterance"] = utterance_embedding.strip()
             current_config["embedding"]["concept"] = concept_embedding.strip()
-
             if "threshold" not in current_config:
                 current_config["threshold"] = {}
-
             current_config["threshold"]["concept_merge"] = concept_merge
             current_config["threshold"]["claim_link_strength"] = claim_link_strength
-
             if "window" not in current_config:
                 current_config["window"] = {}
             if "claimify" not in current_config["window"]:
                 current_config["window"]["claimify"] = {}
-
             current_config["window"]["claimify"]["p"] = window_p
             current_config["window"]["claimify"]["f"] = window_f
-
             # Save to file
             success = config_manager.save_config(current_config)
-
             if success:
                 logger.info(
                     "Configuration saved successfully",
@@ -470,7 +423,6 @@ def create_configuration_panel() -> gr.Blocks:
                 return "✅ **Configuration saved successfully!**\n\nChanges have been written to `settings/aclarai.config.yaml`."
             else:
                 return "❌ **Failed to save configuration.** Please check the logs for details."
-
         except Exception as e:
             logger.error(
                 "Failed to save configuration",
@@ -490,20 +442,16 @@ def create_configuration_panel() -> gr.Blocks:
     ) as interface:
         gr.Markdown("# ⚙️ aclarai Configuration Panel")
         gr.Markdown(
-            """Configure aclarai's core system parameters including model selections, processing thresholds, 
+            """Configure aclarai's core system parameters including model selections, processing thresholds,
             and context window settings. Changes are automatically saved to `settings/aclarai.config.yaml`."""
         )
-
         # Load initial values
         initial_values = load_current_config()
-
         # Model & Embedding Settings Section
         with gr.Group():
             gr.Markdown("## 🤖 Model & Embedding Settings")
-
             with gr.Group():
                 gr.Markdown("### 🔮 Claimify Models")
-
                 with gr.Row():
                     claimify_default_input = gr.Textbox(
                         label="Default Model",
@@ -517,7 +465,6 @@ def create_configuration_panel() -> gr.Blocks:
                         placeholder="claude-3-opus",
                         info="Model for Claimify selection stage",
                     )
-
                 with gr.Row():
                     claimify_disambiguation_input = gr.Textbox(
                         label="Disambiguation Model",
@@ -531,10 +478,8 @@ def create_configuration_panel() -> gr.Blocks:
                         placeholder="gpt-4",
                         info="Model for Claimify decomposition",
                     )
-
             with gr.Group():
                 gr.Markdown("### 🧠 Agent Models")
-
                 with gr.Row():
                     concept_linker_input = gr.Textbox(
                         label="Concept Linker",
@@ -548,7 +493,6 @@ def create_configuration_panel() -> gr.Blocks:
                         placeholder="gpt-4",
                         info="Generates individual [[Concept]] Markdown pages",
                     )
-
                 with gr.Row():
                     subject_summary_input = gr.Textbox(
                         label="Subject Summary",
@@ -562,17 +506,14 @@ def create_configuration_panel() -> gr.Blocks:
                         placeholder="gpt-4",
                         info="Writes newsletter-style blurbs for Top/Trending Concepts",
                     )
-
                 fallback_plugin_input = gr.Textbox(
                     label="Fallback Plugin",
                     value=initial_values[8],
                     placeholder="openrouter:gemma-2b",
                     info="Used when format detection fails",
                 )
-
             with gr.Group():
                 gr.Markdown("### 🧬 Embedding Models")
-
                 with gr.Row():
                     utterance_embedding_input = gr.Textbox(
                         label="Utterance Embeddings",
@@ -586,11 +527,9 @@ def create_configuration_panel() -> gr.Blocks:
                         placeholder="text-embedding-3-small",
                         info="Embeddings for Tier 3 concept files",
                     )
-
         # Thresholds & Parameters Section
         with gr.Group():
             gr.Markdown("## 📏 Thresholds & Parameters")
-
             with gr.Row():
                 concept_merge_input = gr.Number(
                     label="Concept Merge Threshold",
@@ -608,11 +547,9 @@ def create_configuration_panel() -> gr.Blocks:
                     step=0.01,
                     info="Minimum link strength to create graph edge",
                 )
-
             with gr.Group():
                 gr.Markdown("### 🪟 Context Window Parameters")
                 gr.Markdown("Configure context window size for Claimify processing.")
-
                 with gr.Row():
                     window_p_input = gr.Number(
                         label="Previous Sentences (p)",
@@ -630,15 +567,12 @@ def create_configuration_panel() -> gr.Blocks:
                         step=1,
                         info="Number of following sentences to include in context",
                     )
-
         # Save Section
         with gr.Group():
             gr.Markdown("## 💾 Save Configuration")
-
             with gr.Row():
                 save_btn = gr.Button("💾 Save Changes", variant="primary", size="lg")
                 reload_btn = gr.Button("🔄 Reload from File", variant="secondary")
-
             save_status = gr.Markdown(
                 value="Make changes above and click **Save Changes** to persist to `settings/aclarai.config.yaml`.",
                 label="Status",
@@ -687,7 +621,6 @@ def create_configuration_panel() -> gr.Blocks:
             ],
             outputs=[save_status],
         )
-
         # Reload button click handler
         reload_btn.click(
             fn=reload_configuration,
@@ -710,7 +643,6 @@ def create_configuration_panel() -> gr.Blocks:
                 save_status,
             ],
         )
-
     return interface
 
 

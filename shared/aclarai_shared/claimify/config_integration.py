@@ -1,13 +1,12 @@
 """
 Configuration integration for Claimify pipeline.
-
 This module extracts and applies configuration options for the Claimify pipeline
 from the main aclarai configuration file.
 """
 
 import logging
-from typing import Dict, Any, Optional
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 from .data_models import ClaimifyConfig
 
@@ -17,10 +16,8 @@ logger = logging.getLogger(__name__)
 def load_claimify_config_from_yaml(config_data: Dict[str, Any]) -> ClaimifyConfig:
     """
     Load ClaimifyConfig from YAML configuration data.
-
     Args:
         config_data: Dictionary containing parsed YAML configuration
-
     Returns:
         ClaimifyConfig instance with settings from YAML
     """
@@ -29,7 +26,6 @@ def load_claimify_config_from_yaml(config_data: Dict[str, Any]) -> ClaimifyConfi
     claimify_window = window_config.get("claimify", {})
     context_window_p = claimify_window.get("p", 3)
     context_window_f = claimify_window.get("f", 1)
-
     # Model settings (following design_config_panel.md structure)
     model_config = config_data.get("model", {})
     claimify_models = model_config.get("claimify", {})
@@ -37,11 +33,9 @@ def load_claimify_config_from_yaml(config_data: Dict[str, Any]) -> ClaimifyConfi
     disambiguation_model = claimify_models.get("disambiguation")
     decomposition_model = claimify_models.get("decomposition")
     claimify_default = claimify_models.get("default")
-
     # Fall back to global processing config if claimify-specific values not set
     if not claimify_default:
         claimify_default = model_config.get("fallback_plugin", "gpt-3.5-turbo")
-
     # Processing settings (check global processing first, then claimify-specific)
     processing_config = config_data.get("processing", {})
     claimify_processing = processing_config.get("claimify", {})
@@ -49,19 +43,16 @@ def load_claimify_config_from_yaml(config_data: Dict[str, Any]) -> ClaimifyConfi
     timeout_seconds = processing_config.get("timeout_seconds", 30)
     temperature = processing_config.get("temperature", 0.1)
     max_tokens = processing_config.get("max_tokens", 1000)
-
     # Threshold settings (to be implemented when threshold evaluation is added)
     # For now, these return default values as the thresholds are not yet configured
     selection_confidence_threshold = 0.5
     disambiguation_confidence_threshold = 0.5
     decomposition_confidence_threshold = 0.5
-
     # Logging settings
     logging_config = claimify_processing.get("logging", {})
     log_decisions = logging_config.get("log_decisions", True)
     log_transformations = logging_config.get("log_transformations", True)
     log_timing = logging_config.get("log_timing", True)
-
     return ClaimifyConfig(
         context_window_p=context_window_p,
         context_window_f=context_window_f,
@@ -85,10 +76,8 @@ def load_claimify_config_from_yaml(config_data: Dict[str, Any]) -> ClaimifyConfi
 def load_claimify_config_from_file(config_file: Optional[str] = None) -> ClaimifyConfig:
     """
     Load ClaimifyConfig from YAML configuration file.
-
     Args:
         config_file: Path to YAML config file (optional, will search for default)
-
     Returns:
         ClaimifyConfig instance
     """
@@ -99,25 +88,20 @@ def load_claimify_config_from_file(config_file: Optional[str] = None) -> Claimif
             "[config_integration.load_claimify_config_from_file] PyYAML not available, using default Claimify configuration"
         )
         return ClaimifyConfig()
-
     if config_file is None:
         # Look for default config file
         current_path = Path.cwd()
         search_paths = []
-
         # Priority 1: settings directory
         for path in [current_path] + list(current_path.parents):
             search_paths.append(path / "settings" / "aclarai.config.yaml")
-
         # Priority 2: root level in current and parent directories
         for path in [current_path] + list(current_path.parents):
             search_paths.append(path / "aclarai.config.yaml")
-
         for config_path in search_paths:
             if config_path.exists():
                 config_file = str(config_path)
                 break
-
     if config_file and Path(config_file).exists():
         logger.info(
             f"[config_integration.load_claimify_config_from_file] Loading Claimify configuration from {config_file}"
@@ -141,28 +125,23 @@ def load_claimify_config_from_file(config_file: Optional[str] = None) -> Claimif
 def get_model_config_for_stage(config_data: Dict[str, Any], stage: str) -> str:
     """
     Get the configured model for a specific Claimify stage.
-
     Args:
         config_data: Configuration dictionary
         stage: Stage name ("selection", "disambiguation", "decomposition")
-
     Returns:
         Model name for the stage
     """
     # Get model config following design_config_panel.md structure
     model_config = config_data.get("model", {})
     claimify_models = model_config.get("claimify", {})
-
     # Get stage-specific model or fall back to default
     stage_model = claimify_models.get(stage)
     if stage_model:
         return stage_model
-
     # Fall back to claimify default
     claimify_default = claimify_models.get("default")
     if claimify_default:
         return claimify_default
-
     # Use global fallback_plugin model if no claimify-specific config
     fallback_plugin = model_config.get("fallback_plugin")
     return fallback_plugin
