@@ -463,32 +463,6 @@ def test_update_vector_store_with_failed_insert():
         assert "Failed to insert new embedding" in str(e)
 
 
-def _check_service_availability():
-    """
-    Check if required services (Neo4j, PostgreSQL) are available.
-    Returns (available, skip_reason).
-    """
-    import socket
-
-    def check_port(host, port, timeout=5):
-        """Check if a port is open on the given host."""
-        try:
-            socket.create_connection((host, port), timeout=timeout)
-            return True
-        except (socket.error, socket.timeout):
-            return False
-
-    # Check Neo4j (port 7687)
-    if not check_port("localhost", 7687):
-        return False, "Neo4j service not available on localhost:7687"
-
-    # Check PostgreSQL (port 5432)
-    if not check_port("localhost", 5432):
-        return False, "PostgreSQL service not available on localhost:5432"
-
-    return True, None
-
-
 @pytest.mark.integration
 def test_concept_embedding_refresh_job_end_to_end():
     """
@@ -502,11 +476,6 @@ def test_concept_embedding_refresh_job_end_to_end():
 
     Requires: Running Neo4j and PostgreSQL services (e.g., via docker-compose up postgres neo4j)
     """
-    # First check if required services are available
-    services_available, skip_reason = _check_service_availability()
-    if not services_available:
-        pytest.skip(f"Integration test skipped - {skip_reason}")
-
     # Create temporary vault directory
     with tempfile.TemporaryDirectory() as temp_dir:
         vault_path = Path(temp_dir)
@@ -641,28 +610,6 @@ Deep learning models consist of:
             # If services were available but test still failed, this is a real failure
             print(f"Integration test failed with services available: {e}")
             raise
-
-
-@pytest.mark.integration
-def test_service_availability_check():
-    """
-    Test the service availability check function.
-
-    This test demonstrates that the integration test can detect when services
-    are or aren't available and provides appropriate feedback.
-    """
-    available, reason = _check_service_availability()
-
-    if available:
-        print("✓ Services are available - integration tests can run")
-        assert reason is None
-    else:
-        print(f"✗ Services not available: {reason}")
-        assert reason is not None
-        assert isinstance(reason, str)
-        assert "not available" in reason.lower()
-
-    # This test always passes - it just reports service availability
 
 
 if __name__ == "__main__":

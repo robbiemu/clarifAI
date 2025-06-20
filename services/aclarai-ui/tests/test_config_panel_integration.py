@@ -14,7 +14,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from aclarai_ui.config_panel import create_configuration_panel
 
 
-@pytest.mark.integration
 class TestConfigurationPanelIntegration:
     """Integration tests for configuration panel UI using Playwright."""
 
@@ -82,6 +81,7 @@ class TestConfigurationPanelIntegration:
 
             yield config_path, default_path, default_config
 
+    @pytest.mark.integration
     def test_configuration_panel_loads(self, page: Page, gradio_app):
         """Test that the configuration panel loads correctly."""
         page.goto(gradio_app)
@@ -96,6 +96,7 @@ class TestConfigurationPanelIntegration:
         expect(page.locator("text=Model & Embedding Settings")).to_be_visible()
         expect(page.locator("text=Thresholds & Parameters")).to_be_visible()
 
+    @pytest.mark.integration
     def test_model_input_validation(self, page: Page, gradio_app):
         """Test that model input validation works in the UI."""
         page.goto(gradio_app)
@@ -120,6 +121,7 @@ class TestConfigurationPanelIntegration:
         expect(page.locator("text=Validation Errors")).to_be_visible()
         expect(page.locator("text=Claimify Default")).to_be_visible()
 
+    @pytest.mark.integration
     def test_threshold_input_validation(self, page: Page, gradio_app):
         """Test that threshold input validation works in the UI."""
         page.goto(gradio_app)
@@ -141,6 +143,7 @@ class TestConfigurationPanelIntegration:
         # Check that validation error appears
         expect(page.locator("text=Validation Errors")).to_be_visible()
 
+    @pytest.mark.integration
     def test_window_parameter_validation(self, page: Page, gradio_app):
         """Test that window parameter validation works in the UI."""
         page.goto(gradio_app)
@@ -160,6 +163,7 @@ class TestConfigurationPanelIntegration:
         # Check that validation error appears
         expect(page.locator("text=Validation Errors")).to_be_visible()
 
+    @pytest.mark.integration
     def test_successful_configuration_save(self, page: Page, gradio_app):
         """Test that valid configuration can be saved successfully."""
         page.goto(gradio_app)
@@ -185,6 +189,7 @@ class TestConfigurationPanelIntegration:
         # Check that success message appears
         expect(page.locator("text=Configuration saved successfully")).to_be_visible()
 
+    @pytest.mark.integration
     def test_reload_configuration(self, page: Page, gradio_app):
         """Test that configuration can be reloaded from file."""
         page.goto(gradio_app)
@@ -212,6 +217,7 @@ class TestConfigurationPanelIntegration:
         # Check that reload message appears
         expect(page.locator("text=Configuration reloaded")).to_be_visible()
 
+    @pytest.mark.integration
     def test_all_input_fields_present(self, page: Page, gradio_app):
         """Test that all expected input fields are present in the UI."""
         page.goto(gradio_app)
@@ -241,6 +247,7 @@ class TestConfigurationPanelIntegration:
         for label in expected_labels:
             expect(page.locator(f"text={label}")).to_be_visible()
 
+    @pytest.mark.integration
     def test_buttons_present_and_functional(self, page: Page, gradio_app):
         """Test that save and reload buttons are present and clickable."""
         page.goto(gradio_app)

@@ -334,7 +334,6 @@ class TestConceptProcessor:
         assert updates[1]["confidence"] == 0.95
 
 
-@pytest.mark.integration
 class TestConceptProcessorIntegration:
     """Integration tests for ConceptProcessor with real services."""
 
@@ -349,68 +348,59 @@ class TestConceptProcessorIntegration:
                 "Integration tests require RUN_INTEGRATION_TESTS environment variable"
             )
 
+    @pytest.mark.integration
     def test_concept_processing_integration(self):
         """Test the complete concept processing workflow with real services."""
         from aclarai_shared.config import load_config
 
-        try:
-            # Load real configuration
-            config = load_config(validate=False)
+        # Load real configuration
+        config = load_config(validate=False)
 
-            # Create concept processor
-            processor = ConceptProcessor(config)
+        # Create concept processor
+        processor = ConceptProcessor(config)
 
-            # Test block processing
-            sample_block = {
-                "aclarai_id": "blk_integration_test_123",
-                "semantic_text": "Machine learning and artificial intelligence are transformative technologies.",
-                "content_hash": "integration_test_hash",
-                "version": 1,
-            }
+        # Test block processing
+        sample_block = {
+            "aclarai_id": "blk_integration_test_123",
+            "semantic_text": "Machine learning and artificial intelligence are transformative technologies.",
+            "content_hash": "integration_test_hash",
+            "version": 1,
+        }
 
-            # Process the block
-            result = processor.process_block_for_concepts(sample_block, "claim")
+        # Process the block
+        result = processor.process_block_for_concepts(sample_block, "claim")
 
-            # Verify the result structure
-            assert isinstance(result, dict)
-            assert "success" in result
-            assert "aclarai_id" in result
-            assert "candidates_extracted" in result
-            assert "concept_actions" in result
+        # Verify the result structure
+        assert isinstance(result, dict)
+        assert "success" in result
+        assert "aclarai_id" in result
+        assert "candidates_extracted" in result
+        assert "concept_actions" in result
 
-            # Test statistics
-            stats = processor.get_concept_statistics()
-            assert isinstance(stats, dict)
-            assert "total_candidates" in stats
+        # Test statistics
+        stats = processor.get_concept_statistics()
+        assert isinstance(stats, dict)
+        assert "total_candidates" in stats
 
-        except Exception as e:
-            # Log the error but don't fail the test if services are unavailable
-            logger.error(f"Integration test failed due to service unavailability: {e}")
-            pytest.skip(f"Integration test skipped: {e}")
-
+    @pytest.mark.integration
     def test_concept_index_building_integration(self):
         """Test concept index building with real services."""
         from aclarai_shared.config import load_config
 
-        try:
-            # Load real configuration
-            config = load_config(validate=False)
+        # Load real configuration
+        config = load_config(validate=False)
 
-            # Create concept processor
-            processor = ConceptProcessor(config)
+        # Create concept processor
+        processor = ConceptProcessor(config)
 
-            # Test index building
-            items_added = processor.build_concept_index()
+        # Test index building
+        items_added = processor.build_concept_index()
 
-            # Verify the result
-            assert isinstance(items_added, int)
-            assert items_added >= 0
+        # Verify the result
+        assert isinstance(items_added, int)
+        assert items_added >= 0
 
-        except Exception as e:
-            # Log the error but don't fail the test if services are unavailable
-            logger.error(f"Integration test failed due to service unavailability: {e}")
-            pytest.skip(f"Integration test skipped: {e}")
-
+    @pytest.mark.integration
     def test_status_persistence_integration(self):
         """Test that candidate status updates are properly persisted."""
         from aclarai_shared.config import load_config
@@ -421,65 +411,59 @@ class TestConceptProcessorIntegration:
             ConceptAction,
         )
 
-        try:
-            # Load real configuration
-            config = load_config(validate=False)
+        # Load real configuration
+        config = load_config(validate=False)
 
-            # Create concept processor
-            processor = ConceptProcessor(config)
+        # Create concept processor
+        processor = ConceptProcessor(config)
 
-            # Create a test candidate
-            test_candidate = NounPhraseCandidate(
-                text="integration test concept",
-                normalized_text="integration test concept",
-                source_node_id="blk_test_integration",
-                source_node_type="claim",
-                aclarai_id="blk_test_integration",
-                embedding=[0.1] * 384,
+        # Create a test candidate
+        test_candidate = NounPhraseCandidate(
+            text="integration test concept",
+            normalized_text="integration test concept",
+            source_node_id="blk_test_integration",
+            source_node_type="claim",
+            aclarai_id="blk_test_integration",
+            embedding=[0.1] * 384,
+        )
+
+        # Store the candidate
+        stored_count = processor.candidates_store.store_candidates([test_candidate])
+        assert stored_count == 1
+
+        # Create mock detection results
+        detection_results = [
+            ConceptDetectionResult(
+                candidate_id="integration_test_1",
+                candidate_text="integration test concept",
+                action=ConceptAction.PROMOTED,
+                confidence=1.0,
+                reason="Integration test promotion",
             )
+        ]
 
-            # Store the candidate
-            stored_count = processor.candidates_store.store_candidates([test_candidate])
-            assert stored_count == 1
+        detection_batch = ConceptDetectionBatch(
+            results=detection_results,
+            total_processed=1,
+            merged_count=0,
+            promoted_count=1,
+            processing_time=0.1,
+        )
 
-            # Create mock detection results
-            detection_results = [
-                ConceptDetectionResult(
-                    candidate_id="integration_test_1",
-                    candidate_text="integration test concept",
-                    action=ConceptAction.PROMOTED,
-                    confidence=1.0,
-                    reason="Integration test promotion",
-                )
-            ]
-
-            detection_batch = ConceptDetectionBatch(
-                results=detection_results,
-                total_processed=1,
-                merged_count=0,
-                promoted_count=1,
-                processing_time=0.1,
-            )
-
-            # Update candidate statuses
-            candidate_metadata_map = {
-                "integration_test_1": {
-                    "source_node_id": "blk_test_integration",
-                    "source_node_type": "claim",
-                    "aclarai_id": "blk_test_integration",
-                    "text": "integration test concept",
-                }
+        # Update candidate statuses
+        candidate_metadata_map = {
+            "integration_test_1": {
+                "source_node_id": "blk_test_integration",
+                "source_node_type": "claim",
+                "aclarai_id": "blk_test_integration",
+                "text": "integration test concept",
             }
-            updates = processor._update_candidate_statuses(
-                detection_batch, candidate_metadata_map
-            )
+        }
+        updates = processor._update_candidate_statuses(
+            detection_batch, candidate_metadata_map
+        )
 
-            # Verify updates were applied
-            assert (
-                len(updates) >= 0
-            )  # May be 0 if candidate not found, which is okay for integration test
-
-        except Exception as e:
-            # Log the error but don't fail the test if services are unavailable
-            logger.error(f"Integration test failed due to service unavailability: {e}")
-            pytest.skip(f"Integration test skipped: {e}")
+        # Verify updates were applied
+        assert (
+            len(updates) >= 0
+        )  # May be 0 if candidate not found, which is okay for integration test
