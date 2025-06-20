@@ -11,6 +11,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Always run security scan first
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install Bandit only
+      run: pip install bandit[toml]
+        
+    - name: Run Bandit security check
+      run: |
+        echo "Running Bandit security scan..."
+        bandit -r . -c pyproject.toml
+        echo "✅ Security scan completed successfully"
+
   # Detect what changed to determine which jobs to run
   changes:
     runs-on: ubuntu-latest
