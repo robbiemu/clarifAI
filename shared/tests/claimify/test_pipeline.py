@@ -91,7 +91,7 @@ def test_sentences():
 class TestClaimifyPipeline:
     """Test ClaimifyPipeline functionality."""
 
-    def test_pipeline_initialization(self, _config):
+    def test_pipeline_initialization(self):
         """Test pipeline initialization with configuration."""
         # Test with custom config
         custom_config = ClaimifyConfig(

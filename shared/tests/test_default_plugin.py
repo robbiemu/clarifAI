@@ -434,7 +434,7 @@ rules:
         loader = PromptLoader()
         default_path, user_path = loader._find_template_files("conversation_extraction")
         # Verify we found the user customization
-        assert user_path == custom_prompt_file
+        assert user_path.resolve() == custom_prompt_file.resolve()
         # Verify the template loads correctly with deep merge
         template = loader.load_template("conversation_extraction")
         # Check that custom fields override defaults

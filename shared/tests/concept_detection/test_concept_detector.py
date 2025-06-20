@@ -13,7 +13,12 @@ from aclarai_shared.concept_detection import (
     SimilarityMatch,
 )
 from aclarai_shared.concept_detection.models import ConceptAction
-from aclarai_shared.config import ConceptsConfig, aclaraiConfig
+from aclarai_shared.config import (
+    ConceptsConfig,
+    EmbeddingConfig,
+    NounPhraseExtractionConfig,
+    aclaraiConfig,
+)
 from aclarai_shared.noun_phrase_extraction.models import NounPhraseCandidate
 
 
@@ -26,29 +31,41 @@ class TestConceptDetector:
         config = Mock(spec=aclaraiConfig)
         config.concepts = Mock(spec=ConceptsConfig)
         config.concepts.similarity_threshold = 0.9
+        config.noun_phrase_extraction = Mock(spec=NounPhraseExtractionConfig)
+        config.noun_phrase_extraction.concept_candidates_collection = "mock_collection"
+        config.embedding = Mock(spec=EmbeddingConfig)
+        config.embedding.default_model = "mock-model"
+        config.embedding.embed_dim = 384
+        config.embedding.device = "cpu"
+        config.embedding.batch_size = 32
+
         return config
 
     @pytest.fixture
-    def mock_candidates_store(self):
-        """Mock concept candidates store."""
+    def detector(self, mock_config):
+        """Create a ConceptDetector instance with mocked dependencies."""
         with patch(
             "aclarai_shared.concept_detection.detector.ConceptCandidatesVectorStore"
         ) as mock_store_class:
-            mock_store = Mock()
-            mock_store.embed_dim = 384  # Typical embedding dimension
-            mock_store.get_candidates_by_status.return_value = []
-            mock_store_class.return_value = mock_store
-            yield mock_store
+            # Create a mock instance of the vector store
+            mock_store_instance = Mock()
+            mock_store_instance.embed_dim = 384  # Set expected dimension
+            mock_store_instance.get_candidates_by_status.return_value = []
 
-    @pytest.fixture
-    def detector(self, mock_config, _mock_candidates_store):
-        """Create a ConceptDetector instance for testing."""
-        with patch(
-            "aclarai_shared.concept_detection.detector.load_config",
-            return_value=mock_config,
-        ):
-            detector = ConceptDetector(config=mock_config)
-            return detector
+            # Configure the patch to return our mock instance
+            mock_store_class.return_value = mock_store_instance
+
+            # Now, when ConceptDetector is initialized, it will get our mock store
+            with patch(
+                "aclarai_shared.concept_detection.detector.load_config",
+                return_value=mock_config,
+            ):
+                detector = ConceptDetector(config=mock_config)
+
+                # Attach the mock store to the detector instance so tests can access it
+                detector.mock_candidates_store = mock_store_instance
+
+                yield detector
 
     @pytest.fixture
     def sample_candidate(self):
@@ -111,15 +128,15 @@ class TestConceptDetector:
         mock_index.set_ef.assert_called_once_with(50)
         assert detector.index == mock_index
 
-    def test_build_index_empty_candidates(self, detector, mock_candidates_store):
+    def test_build_index_empty_candidates(self, detector):
         """Test building index with no candidates."""
-        mock_candidates_store.get_candidates_by_status.return_value = []
+        detector.mock_candidates_store.get_candidates_by_status.return_value = []
         with patch.object(detector, "_initialize_index") as mock_init:
             result = detector.build_index_from_candidates()
             assert result == 0
             mock_init.assert_called_once_with(max_elements=1000)
 
-    def test_build_index_with_candidates(self, detector, _mock_candidates_store):
+    def test_build_index_with_candidates(self, detector):
         """Test building index with candidates."""
         # Mock candidates data
         mock_candidates = [
@@ -159,9 +176,7 @@ class TestConceptDetector:
             result = detector.find_similar_candidates(sample_candidate)
             assert result == []
 
-    def test_find_similar_candidates_no_embedding(
-        self, detector, _mock_candidates_store
-    ):
+    def test_find_similar_candidates_no_embedding(self, detector):
         """Test finding similar candidates for candidate without embedding."""
         candidate_no_embedding = NounPhraseCandidate(
             text="test",
@@ -273,14 +288,17 @@ class TestConceptDetector:
             assert len(batch_result.results) == 2
             assert batch_result.processing_time is not None
 
-    def test_similarity_threshold_from_config(
-        self, mock_config, _mock_candidates_store
-    ):
+    def test_similarity_threshold_from_config(self, mock_config):
         """Test that similarity threshold is correctly read from config."""
         mock_config.concepts.similarity_threshold = 0.85
-        with patch(
-            "aclarai_shared.concept_detection.detector.load_config",
-            return_value=mock_config,
+        with (
+            patch(
+                "aclarai_shared.concept_detection.detector.ConceptCandidatesVectorStore"
+            ),
+            patch(
+                "aclarai_shared.concept_detection.detector.load_config",
+                return_value=mock_config,
+            ),
         ):
             detector = ConceptDetector(config=mock_config)
             assert detector.similarity_threshold == 0.85
