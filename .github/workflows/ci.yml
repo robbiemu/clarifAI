@@ -112,7 +112,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+      with:
+        # '0' means fetch all history for all branches and tags, to give the runner the data it needs to find commit A and correctly identify that the files changed in your PR are the ones modified
+        fetch-depth: 0
+
     - name: Restore venv cache
       uses: actions/cache@v4
       with:
