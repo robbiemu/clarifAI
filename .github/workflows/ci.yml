@@ -109,7 +109,7 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     # Security scan always runs - no conditions
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -119,28 +119,11 @@ jobs:
       with:
         python-version: '3.11'
         
-    - name: Install uv
-      run: pip install uv
-        
-    - name: Cache Python virtual environment
-      uses: actions/cache@v4
-      id: cache-venv
-      with:
-        path: .venv
-        key: ${{ runner.os }}-python-3.11-${{ hashFiles('**/uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-python-3.11-
-          
-    - name: Install dependencies
-      if: steps.cache-venv.outputs.cache-hit != 'true'
-      run: |
-        uv venv
-        uv pip install -e ".[dev]"
-        uv pip install -e ./shared -e ./services/aclarai-core -e ./services/aclarai-ui -e ./services/scheduler -e ./services/vault-watcher
+    - name: Install Bandit only
+      run: pip install bandit[toml]
         
     - name: Run Bandit security check
       run: |
-        source .venv/bin/activate
         echo "Running Bandit security scan..."
         bandit -r . -c pyproject.toml
         echo "✅ Security scan completed successfully"
@@ -243,19 +226,11 @@ jobs:
     name: Docker Build Validation
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ needs.changes.outputs.docker == 'true' }}
+    if: ${{ needs.changes.outputs.docker == 'true' || needs.changes.outputs.aclarai-core == 'true' || needs.changes.outputs.vault-watcher == 'true' || needs.changes.outputs.scheduler == 'true' || needs.changes.outputs.aclarai-ui == 'true' }}
     
     strategy:
       matrix:
-        include:
-          - service: aclarai-core
-            condition: ${{ needs.changes.outputs.aclarai-core == 'true' || needs.changes.outputs.docker == 'true' }}
-          - service: vault-watcher
-            condition: ${{ needs.changes.outputs.vault-watcher == 'true' || needs.changes.outputs.docker == 'true' }}
-          - service: scheduler
-            condition: ${{ needs.changes.outputs.scheduler == 'true' || needs.changes.outputs.docker == 'true' }}
-          - service: aclarai-ui
-            condition: ${{ needs.changes.outputs.aclarai-ui == 'true' || needs.changes.outputs.docker == 'true' }}
+        service: [aclarai-core, vault-watcher, scheduler, aclarai-ui]
     
     steps:
     - name: Checkout code
