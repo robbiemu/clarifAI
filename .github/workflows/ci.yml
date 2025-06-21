@@ -18,20 +18,18 @@ jobs:
       docker: ${{ steps.filter.outputs.docker }}
       docker-compose: ${{ steps.filter.outputs.docker-compose }}
     steps:
-    - name: Checkout PR Code
-      # This checks out the PR's code as a detached HEAD. This is fine.
+    - name: Checkout with full history for diffing
       uses: actions/checkout@v4
-
-    - name: Fetch Target Branch (${{ github.base_ref }})
-      # This is the key step. We manually fetch ONLY the target branch
-      # (e.g., 'main') and create a local branch with the same name.
-      run: git fetch --no-tags --prune --depth=1 origin ${{ github.base_ref }}:${{ github.base_ref }}
+      with:
+        # This is non-negotiable for this use case.
+        # It fetches the full history, guaranteeing a merge-base can be found.
+        fetch-depth: 0
 
     - name: Identify changed files
       uses: dorny/paths-filter@v2
       id: filter
       with:
-        # Now we can be certain that the base ref exists for comparison.
+        # With a full history, we can reliably compare against the base ref.
         base: ${{ github.base_ref }}
         filters: |
           python:
@@ -47,13 +45,12 @@ jobs:
             - 'docker-compose*.yml'
             - '.env.example'
 
-    # This debug step will now succeed.
+    # This debug step will now finally succeed.
     - name: Verify Git State
       run: |
         echo "--- Verifying Git State ---"
-        echo "--> All local branches:"
-        git branch -a
         echo "--> Manual Git Diff against ${{ github.base_ref }}:"
+        # The '...' operator is correct for finding changes since the merge-base
         git diff --name-only ${{ github.base_ref }}...HEAD
         echo "--------------------------"
 
