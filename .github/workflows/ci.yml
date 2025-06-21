@@ -18,19 +18,14 @@ jobs:
       docker: ${{ steps.filter.outputs.docker }}
       docker-compose: ${{ steps.filter.outputs.docker-compose }}
     steps:
-    - name: Checkout with full history
-      # We still need the history to find the common ancestor.
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+    # You only need a basic checkout. The filter uses the API, not the local git repo.
+    - uses: actions/checkout@v4
 
     - name: Identify changed files
       uses: dorny/paths-filter@v2
       id: filter
       with:
-        # THIS IS THE FIX: Use the full name of the remote-tracking branch.
-        # Git knows about 'origin/main', but not 'main'.
-        base: origin/${{ github.base_ref }}
+        # The action handles it automatically via the GitHub API.
         filters: |
           python:
             - '**/*.py'
@@ -45,15 +40,6 @@ jobs:
             - 'docker-compose*.yml'
             - '.env.example'
 
-    # This debug step will now work because we are using the correct ref name.
-    - name: Verify Git State
-      run: |
-        echo "--- Verifying Git State ---"
-        echo "--> All available branches:"
-        git branch -a
-        echo "--> Manual Git Diff against origin/${{ github.base_ref }}:"
-        git diff --name-only origin/${{ github.base_ref }}...HEAD
-        echo "--------------------------"
 
   lint-and-format:
     name: Lint and Format
