@@ -11,8 +11,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # This job runs fast and determines which other jobs should run.
-  # It runs in parallel with other jobs, not as a dependency.
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -20,11 +18,20 @@ jobs:
       docker: ${{ steps.filter.outputs.docker }}
       docker-compose: ${{ steps.filter.outputs.docker-compose }}
     steps:
-    - uses: actions/checkout@v4
-    - uses: dorny/paths-filter@v2
+    - name: Checkout PR Code
+      # This checks out the PR's code as a detached HEAD. This is fine.
+      uses: actions/checkout@v4
+
+    - name: Fetch Target Branch (${{ github.base_ref }})
+      # This is the key step. We manually fetch ONLY the target branch
+      # (e.g., 'main') and create a local branch with the same name.
+      run: git fetch --no-tags --prune --depth=1 origin ${{ github.base_ref }}:${{ github.base_ref }}
+
+    - name: Identify changed files
+      uses: dorny/paths-filter@v2
       id: filter
       with:
-        list-files: shell
+        # Now we can be certain that the base ref exists for comparison.
         base: ${{ github.base_ref }}
         filters: |
           python:
@@ -35,33 +42,20 @@ jobs:
           docker:
             - '**/Dockerfile*'
             - '**/.dockerignore'
-            - 'services/**' # A change in any service code should trigger a docker build validation
+            - 'services/**'
           docker-compose:
             - 'docker-compose*.yml'
             - '.env.example'
 
-    - name: 1. See the direct output of the filter
+    # This debug step will now succeed.
+    - name: Verify Git State
       run: |
-        echo "--- Filter Outputs ---"
-        echo "Python changes: ${{ steps.filter.outputs.python }}"
-        echo "Docker changes: ${{ steps.filter.outputs.docker }}"
-        echo "Docker-compose changes: ${{ steps.filter.outputs.docker-compose }}"
-        echo "----------------------"
-
-    - name: 2. See the list of changed files detected by the filter
-      run: |
-        echo "--- Changed Files Detected by Filter ---"
-        echo "Python files: ${{ steps.filter.outputs.python_files }}"
-        echo "Docker files: ${{ steps.filter.outputs.docker_files }}"
-        echo "Docker-compose files: ${{ steps.filter.outputs.docker-compose_files }}"
-        echo "----------------------------------------"
-
-    - name: 3. Manually verify with Git
-      run: |
-        echo "--- Manual Git Diff ---"
-        echo "Comparing HEAD against base ref: ${{ github.base_ref }}"
+        echo "--- Verifying Git State ---"
+        echo "--> All local branches:"
+        git branch -a
+        echo "--> Manual Git Diff against ${{ github.base_ref }}:"
         git diff --name-only ${{ github.base_ref }}...HEAD
-        echo "-----------------------"
+        echo "--------------------------"
 
   lint-and-format:
     name: Lint and Format
