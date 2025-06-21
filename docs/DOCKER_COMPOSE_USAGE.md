@@ -35,9 +35,8 @@ The Docker Compose stack includes the following services:
 
 3. **Install default configuration (optional):**
    ```bash
-   cd services/aclarai-core
-   python install/install_config.py
-   cd ../..
+   # Run the installer inside the running container
+   docker-compose exec aclarai-core python services/aclarai-core/install/install_config.py
    ```
    This creates `settings/aclarai.config.yaml` with default settings that you can customize.
 
@@ -135,8 +134,8 @@ aclarai uses a three-tier configuration system:
 On first startup, aclarai will automatically create `settings/aclarai.config.yaml` from the default template if it doesn't exist. You can also manually install it:
 
 ```bash
-cd services/aclarai-core
-python install/install_config.py
+# Run the installer inside the running container
+docker-compose exec aclarai-core python services/aclarai-core/install/install_config.py --force
 ```
 
 ### Configuration Files
@@ -152,8 +151,7 @@ If you need to reset your configuration:
 rm settings/aclarai.config.yaml
 
 # Or force reinstall
-cd services/aclarai-core
-python install/install_config.py --force
+docker-compose exec aclarai-core python services/aclarai-core/install/install_config.py --force
 ```
 
 ## Environment Variables

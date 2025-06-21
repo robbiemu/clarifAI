@@ -65,10 +65,9 @@ rm settings/aclarai.config.yaml
 ```
 
 #### Manual Installation
-Use the configuration installer script:
+Use the configuration installer script by executing it inside the running container:
 ```bash
-cd services/aclarai-core
-python install/install_config.py --force
+docker-compose exec aclarai-core python services/aclarai-core/install/install_config.py --force
 ```
 
 The `--force` flag will overwrite your existing `settings/aclarai.config.yaml` with a fresh copy of the default template, allowing you to start over with known-good settings.

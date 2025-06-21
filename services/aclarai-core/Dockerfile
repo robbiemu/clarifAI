@@ -9,20 +9,28 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the service code
-COPY . /app/
+# Install uv, the fast Python package installer
+RUN pip install uv
 
-# Install Python dependencies with trusted hosts for SSL issues
-RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --no-cache-dir -e .
+# Copy the entire project context into the image.
+# This makes the root pyproject.toml and all shared/service code available.
+COPY . .
+
+# Install all workspace dependencies using the root pyproject.toml.
+RUN uv pip install . --system
+# Install the specific dependencies from this subproject's pyproject.toml
+RUN uv pip install --system -e ./services/aclarai-core
+
 
 # Install default prompt templates to /settings/prompts (make them available for user customization)
 # /settings is mounted to the host, so users can access and modify these prompts
-RUN mkdir -p /settings/prompts && python install/install_prompts.py --all --prompts-dir /settings/prompts
+RUN mkdir -p /settings/prompts && python services/aclarai-core/install/install_prompts.py --all --prompts-dir /settings/prompts
 
 # Create a non-root user for security
 RUN useradd -m -u 1000 aclarai && chown -R aclarai:aclarai /app

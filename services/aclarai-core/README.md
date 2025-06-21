@@ -41,8 +41,11 @@ The `install/` directory contains scripts that are executed during the Docker bu
   1.  **Default Configuration Setup:** It ensures that a user configuration file exists by copying from the default template when needed.
   2.  **Configuration Restoration:** It provides a simple way for users to restore their configuration to default settings.
 
-  **Usage:**
+  **Usage (from project root, inside a container):**
   ```bash
-  python install/install_config.py
-  python install/install_config.py --force  # Restore defaults
+  # Example for prompts
+  docker-compose exec aclarai-core python services/aclarai-core/install/install_prompts.py --all
+
+  # Example for config
+  docker-compose exec aclarai-core python services/aclarai-core/install/install_config.py --force
   ```

@@ -11,9 +11,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      docker: ${{ steps.filter.outputs.docker }}
+      docker-compose: ${{ steps.filter.outputs.docker-compose }}
+    steps:
+    # You only need a basic checkout. The filter uses the API, not the local git repo.
+    - uses: actions/checkout@v4
+
+    - name: Identify changed files
+      uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        # The action handles it automatically via the GitHub API.
+        filters: |
+          python:
+            - '**/*.py'
+            - '**/pyproject.toml'
+            - '**/uv.lock'
+            - 'shared/**'
+          docker:
+            - '**/Dockerfile*'
+            - '**/.dockerignore'
+            - 'services/**'
+          docker-compose:
+            - 'docker-compose*.yml'
+            - '.env.example'
+
+
   lint-and-format:
     name: Lint and Format
     runs-on: ubuntu-latest
+    needs: changes # Needs the output from the changes job
+    if: needs.changes.outputs.python == 'true' # Only run if Python files changed
     
     steps:
     - name: Checkout code
@@ -33,243 +65,103 @@ jobs:
       with:
         path: .venv
         key: ${{ runner.os }}-python-3.11-${{ hashFiles('**/uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-python-3.11-
-          
+        
     - name: Install dependencies
-      if: steps.cache-venv.outputs.cache-hit != 'true'
+      # No cache-hit check needed; uv handles this efficiently.
       run: |
         uv venv
-        uv pip install -e ".[dev]"
-        uv pip install -e ./shared -e ./services/aclarai-core -e ./services/aclarai-ui -e ./services/scheduler -e ./services/vault-watcher
+        uv pip install -e ".[dev]" -e ./shared -e ./services/*
         
-    - name: Run Ruff linter
+    - name: Run Ruff linter and formatter
       run: |
-        source .venv/bin/activate
-        ruff check .
-      
-    - name: Run Ruff formatter check
-      run: |
-        source .venv/bin/activate
-        ruff format --check .
+        .venv/bin/ruff check .
+        .venv/bin/ruff format --check .
       
     - name: Run MyPy type checking
-      run: |
-        source .venv/bin/activate
-        mypy . || true  # Allow to pass for now, can be made strict later
+      run: .venv/bin/mypy . || true
 
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
+    needs: [changes, lint-and-format] # Depends on linting and the changes job
+    if: needs.changes.outputs.python == 'true' # Match the condition of its dependency
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        
-    - name: Install uv
-      run: pip install uv
-        
-    - name: Cache Python virtual environment
+    - name: Restore venv cache
       uses: actions/cache@v4
-      id: cache-venv
       with:
         path: .venv
         key: ${{ runner.os }}-python-3.11-${{ hashFiles('**/uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-python-3.11-
-          
-    - name: Install dependencies
-      if: steps.cache-venv.outputs.cache-hit != 'true'
-      run: |
-        uv venv
-        uv pip install -e ".[dev]"
-        uv pip install -e ./shared -e ./services/aclarai-core -e ./services/aclarai-ui -e ./services/scheduler -e ./services/vault-watcher
         
-    - name: Run Bandit security check
-      run: |
-        source .venv/bin/activate
-        echo "Running Bandit security scan..."
-        bandit -r . -c pyproject.toml
-        echo "✅ Security scan completed successfully"
+    - name: Run Bandit security scan
+      # Bandit is installed as a dev dependency, so it's already in the cached venv
+      run: .venv/bin/bandit -r . -c pyproject.toml
 
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    
+    needs: [changes, lint-and-format] # Depends on linting and the changes job
+    if: |
+      github.event_name == 'push' || 
+      (github.event_name == 'pull_request' && needs.changes.outputs.python == 'true')
+
+    env:
+      NEO4J_PASSWORD: fake_test_neo4j_password_123
+      POSTGRES_PASSWORD: fake_test_postgres_password_456
+      
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Set up Python
-      uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
-        
-    - name: Install uv
-      run: pip install uv
-        
-    - name: Cache Python virtual environment
+        # '0' means fetch all history for all branches and tags, to give the runner the data it needs to find commit A and correctly identify that the files changed in your PR are the ones modified
+        fetch-depth: 0
+
+    - name: Restore venv cache
       uses: actions/cache@v4
-      id: cache-venv
       with:
         path: .venv
         key: ${{ runner.os }}-python-3.11-${{ hashFiles('**/uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-python-3.11-
-          
-    - name: Install dependencies
-      if: steps.cache-venv.outputs.cache-hit != 'true'
-      run: |
-        uv venv
-        uv pip install -e ".[dev]"
-        uv pip install -e ./shared -e ./services/aclarai-core -e ./services/aclarai-ui -e ./services/scheduler -e ./services/vault-watcher
         
     - name: Run tests
-      env:
-        NEO4J_PASSWORD: fake_test_neo4j_password_123
-        POSTGRES_PASSWORD: fake_test_postgres_password_456
       run: |
-        source .venv/bin/activate
-        # Set PYTHONPATH to include all service directories
-        export PYTHONPATH="${PYTHONPATH}:$(pwd):$(pwd)/shared"
-        for service_dir in services/*/; do
-          if [ -d "$service_dir" ]; then
-            export PYTHONPATH="${PYTHONPATH}:$(pwd)/$service_dir"
-          fi
-        done
-        
-        # Run tests with verbose output - fail on any test failure
-        echo "Running tests with PYTHONPATH: $PYTHONPATH"
-        
-        # Track overall test result
-        OVERALL_EXIT_CODE=0
-        
-        # Run tests from different sections
-        echo "=== Running repository structure tests ==="
-        if ! python -m pytest tests/ -v --tb=short; then
-          echo "❌ Repository tests failed"
-          OVERALL_EXIT_CODE=1
-        else
-          echo "✅ Repository tests passed"
-        fi
-        
-        echo "=== Running shared module tests ==="
-        if ! python -m pytest shared/tests/ -v --tb=short; then
-          echo "❌ Shared module tests failed"
-          OVERALL_EXIT_CODE=1
-        else
-          echo "✅ Shared module tests passed"
-        fi
-        
-        echo "=== Testing individual service tests (if available) ==="
-        for service_dir in services/*/; do
-          if [ -d "$service_dir/tests" ]; then
-            echo "Testing $service_dir"
-            cd "$service_dir"
-            if ! python -m pytest tests/ -v --tb=short; then
-              echo "❌ Service $service_dir tests failed"
-              OVERALL_EXIT_CODE=1
-            else
-              echo "✅ Service $service_dir tests passed"
-            fi
-            cd - > /dev/null
-          fi
-        done
-        
-        echo "=== Test execution completed ==="
-        if [ $OVERALL_EXIT_CODE -ne 0 ]; then
-          echo "❌ Some tests failed - failing the CI job"
-          exit $OVERALL_EXIT_CODE
-        else
-          echo "✅ All tests passed"
-        fi
+        # Set PYTHONPATH to include the project root for pytest discovery
+        export PYTHONPATH=$(pwd)
+        .venv/bin/pytest -v --tb=short tests/ shared/tests/ services/
 
   docker-build:
     name: Docker Build Validation
     runs-on: ubuntu-latest
-    
+    needs: [changes, test] # Depends on tests passing and the changes job
+    if: needs.changes.outputs.docker == 'true' # Only run if Docker-related files changed
     strategy:
       matrix:
         service: [aclarai-core, vault-watcher, scheduler, aclarai-ui]
-    
+      fail-fast: false
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-      
-    - name: Cache Docker layers
-      uses: actions/cache@v4
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ matrix.service }}-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-${{ matrix.service }}-
-          
-    - name: Build Docker image for ${{ matrix.service }}
-      run: |
-        echo "Building Docker image for ${{ matrix.service }}"
-        # Try to build the Docker image, but allow it to fail gracefully
-        if docker build --tag aclarai-${{ matrix.service }}:test \
-          --cache-from type=local,src=/tmp/.buildx-cache \
-          --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
-          ./services/${{ matrix.service }}; then
-          echo "✅ Successfully built ${{ matrix.service }}"
-        else
-          echo "❌ Failed to build ${{ matrix.service }} - likely due to missing local dependencies"
-          echo "This is expected in CI for services with local dependencies"
-          exit 0  # Don't fail the CI for expected dependency issues
-        fi
-          
-    - name: Test Docker image
-      run: |
-        echo "Testing Docker image for ${{ matrix.service }}"
-        # Only test if the image was successfully built
-        if docker image inspect aclarai-${{ matrix.service }}:test > /dev/null 2>&1; then
-          echo "Testing image..."
-          docker run --rm aclarai-${{ matrix.service }}:test python --version
-          echo "✅ Image test completed for ${{ matrix.service }}"
-        else
-          echo "⚠️ Skipping image test for ${{ matrix.service }} - image not built"
-        fi
-        
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache || true
+    - name: Build Docker image
+      # This simplified build command is sufficient for validation.
+      # It doesn't need complex caching logic for a simple build check.
+      run: >
+        docker build --tag aclarai-${{ matrix.service }}:test ./services/${{ matrix.service }}
 
   docker-compose-validation:
     name: Docker Compose Validation
     runs-on: ubuntu-latest
+    needs: [changes, test]
+    if: needs.changes.outputs.docker-compose == 'true'
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Copy environment file
-      run: cp .env.example .env
-      
-    - name: Validate docker-compose.yml
-      run: docker compose config
-      
-    - name: Test docker-compose build
+    - name: Validate docker-compose
       run: |
-        echo "Testing docker-compose build for all services"
-        # Test docker-compose build but allow partial failures due to local dependencies
-        if docker compose build --parallel; then
-          echo "✅ All services built successfully via docker-compose"
-        else
-          echo "⚠️ Some services failed to build via docker-compose"
-          echo "This is expected for services with local dependencies in CI"
-          echo "Checking if docker-compose config is still valid..."
-          docker compose config > /dev/null && echo "✅ docker-compose config is valid"
-        fi
+        cp .env.example .env
+        docker compose config --quiet

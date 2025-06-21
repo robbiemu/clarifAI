@@ -47,7 +47,9 @@ services:
       retries: 5
 
   aclarai-core:  # Main processing pipeline: claim extraction, summarization, linking
-    build: ./services/aclarai-core
+    build:
+      context: .  # Set build context to the project root
+      dockerfile: ./services/aclarai-core/Dockerfile
     depends_on:
       - postgres
       - neo4j
@@ -64,7 +66,9 @@ services:
       - RABBITMQ_HOST=rabbitmq 
 
   vault-watcher:  # Watches vault for Markdown edits and emits dirty blocks
-    build: ./services/vault-watcher
+    build:
+      context: .  
+      dockerfile: ./services/vault-watcher/Dockerfile
     depends_on:
       - aclarai-core
     volumes:
@@ -80,7 +84,9 @@ services:
       - RABBITMQ_HOST=rabbitmq 
 
   scheduler:  # Runs periodic jobs: concept hygiene, vault sync, reprocessing
-    build: ./services/scheduler
+    build:
+      context: .  
+      dockerfile: ./services/scheduler/Dockerfile
     depends_on:
       - aclarai-core
     volumes:
@@ -95,7 +101,9 @@ services:
       - SETTINGS_PATH=/settings
 
   aclarai-ui:  # Web interface for aclarai
-    build: ./services/aclarai-ui
+    build:
+      context: .  
+      dockerfile: ./services/aclarai-ui/Dockerfile
     depends_on:
       - aclarai-core
     volumes:
