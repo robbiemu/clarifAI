@@ -18,19 +18,19 @@ jobs:
       docker: ${{ steps.filter.outputs.docker }}
       docker-compose: ${{ steps.filter.outputs.docker-compose }}
     steps:
-    - name: Checkout with full history for diffing
+    - name: Checkout with full history
+      # We still need the history to find the common ancestor.
       uses: actions/checkout@v4
       with:
-        # This is non-negotiable for this use case.
-        # It fetches the full history, guaranteeing a merge-base can be found.
         fetch-depth: 0
 
     - name: Identify changed files
       uses: dorny/paths-filter@v2
       id: filter
       with:
-        # With a full history, we can reliably compare against the base ref.
-        base: ${{ github.base_ref }}
+        # THIS IS THE FIX: Use the full name of the remote-tracking branch.
+        # Git knows about 'origin/main', but not 'main'.
+        base: origin/${{ github.base_ref }}
         filters: |
           python:
             - '**/*.py'
@@ -45,13 +45,14 @@ jobs:
             - 'docker-compose*.yml'
             - '.env.example'
 
-    # This debug step will now finally succeed.
+    # This debug step will now work because we are using the correct ref name.
     - name: Verify Git State
       run: |
         echo "--- Verifying Git State ---"
-        echo "--> Manual Git Diff against ${{ github.base_ref }}:"
-        # The '...' operator is correct for finding changes since the merge-base
-        git diff --name-only ${{ github.base_ref }}...HEAD
+        echo "--> All available branches:"
+        git branch -a
+        echo "--> Manual Git Diff against origin/${{ github.base_ref }}:"
+        git diff --name-only origin/${{ github.base_ref }}...HEAD
         echo "--------------------------"
 
   lint-and-format:
